@@ -18,8 +18,7 @@ from makeit.retrosynthetic.transformer import RetroTransformer
 from rdkit import RDLogger
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
-CORRESPONDING_QUEUE = 'tb_c_worker'
-CORRESPONDING_RESERVABLE_QUEUE = 'tb_c_worker_reservable'
+CORRESPONDING_QUEUE = 'tb_c_worker_preload'
 retroTransformer = None
 
 
@@ -39,7 +38,7 @@ def configure_worker(options={}, **kwargs):
 
     # Instantiate and load retro transformer
     global retroTransformer
-    retroTransformer = RetroTransformer(celery=True)
+    retroTransformer = RetroTransformer(celery=True, load_all=True)
 
     retroTransformer.load(chiral=True)
     print(retroTransformer.fast_filter.evaluate('CCCCCCO.CCCCBr', 'CCCCCCOCCCC'))
