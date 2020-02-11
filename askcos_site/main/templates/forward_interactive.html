@@ -26,17 +26,26 @@
                                 <input class='form-control' type="text" v-model="reactants"/> 
                             </label>
                         </div>
+                        <div v-show="!!reactants">
+                            <img :src='"/draw/smiles/"+encodeURIComponent(reactants)' :alt="reactants">
+                        </div>
                         <div class="form-inline">
                             <label style="margin: 5px">
                                 Reagents: 
                                 <input class='form-control' type="text" v-model="reagents"/> 
                                 </label>
                         </div>
+                        <div v-show="!!reagents">
+                            <img :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
+                        </div>
                         <div class="form-inline">
                             <label style="margin: 5px">
                                 Solvent: 
                                 <input class='form-control' type="text" v-model="solvent"/> 
                                 </label>
+                        </div>
+                        <div v-show="!!solvent">
+                            <img :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
                         </div>
                         <div class="form-inline">
                             <button type="submit" class='form-control' style="margin: 0 5px">Submit</button>
