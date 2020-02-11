@@ -1,6 +1,5 @@
 from django.http import JsonResponse
 from celery.exceptions import TimeoutError
-from askcos_site.askcos_celery.contextrecommender.cr_nn_worker import get_n_conditions as neighbor_get_n_conditions
 from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
 from rdkit import Chem
 

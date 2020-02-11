@@ -19,6 +19,30 @@
         <div class="col-12">
             <div class="row">
                 <div class="col-12 text-center">
+                    <div class="form-inline">
+                        <label style="margin: 5px">
+                            <div>Prediction mode:</div>
+                            <label class="btn btn-default" for="forwardMode">
+                                <input class='form-control' type="radio" id="forwardMode" value="forward" v-model="mode"/> 
+                                Synthesis prediction
+                            </label>
+
+                            <label class="btn btn-default" for="contextMode">
+                                <input class='form-control' type="radio" id="contextMode" value="context" v-model="mode"/>
+                                Context recommendation
+                            </label>
+
+                            <label class="btn btn-default" for="evaluateMode">
+                                <input class='form-control' type="radio" id="evaluateMode" value="evaluate" v-model="mode"/>
+                                Reaction evaluation
+                            </label>
+
+                            <label class="btn btn-default" for="impurityMode">
+                            <input class='form-control' type="radio" id="impurityMode" value="impurity" v-model="mode"/>    
+                                Impurity prediction    
+                            </label>
+                        </label>
+                    </div>
                     <form v-on:submit.prevent="predict" autocomplete="off">
                         <div class="form-inline">
                             <label style="margin: 5px">
@@ -29,23 +53,72 @@
                         <div v-show="!!reactants">
                             <img :src='"/draw/smiles/"+encodeURIComponent(reactants)' :alt="reactants">
                         </div>
-                        <div class="form-inline">
+
+                        <div v-if="mode!='forward'" class="form-inline">
+                            <label style="margin: 5px">
+                                Product: 
+                                <input class='form-control' type="text" v-model="product"/> 
+                            </label>
+                        </div>
+                        <div v-show="!!product">
+                            <img :src='"/draw/smiles/"+encodeURIComponent(product)' :alt="product">
+                        </div>
+
+                        <div v-if="mode!='context'" class="form-inline">
                             <label style="margin: 5px">
                                 Reagents: 
                                 <input class='form-control' type="text" v-model="reagents"/> 
-                                </label>
+                            </label>
                         </div>
                         <div v-show="!!reagents">
                             <img :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
                         </div>
-                        <div class="form-inline">
+
+                        <div v-if="mode!='context'" class="form-inline">
                             <label style="margin: 5px">
                                 Solvent: 
                                 <input class='form-control' type="text" v-model="solvent"/> 
-                                </label>
+                            </label>
                         </div>
                         <div v-show="!!solvent">
                             <img :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
+                        </div>
+
+                        <div v-if="mode!='context'" class="form-inline">
+                            <label style="margin: 5px">
+                                Forward prediction model: 
+                                <select class='form-control' v-model="forwardModel"> 
+                                    <option value="wln">WLN</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div v-if="(mode=='evaluate') || (mode=='impurity')" class="form-inline">
+                            <label style="margin: 5px">
+                                Reaction inspection model: 
+                                <select class='form-control' v-model="inspectionModel"> 
+                                    <option value="fastFilter">Fast Filter</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div v-if="mode=='impurity'" class="form-inline">
+                            <label style="margin: 5px">
+                                Atom-mapping model: 
+                                <select class='form-control' v-model="atomMappingModel"> 
+                                    <option value="wln">WLN</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div v-if="mode=='impurity'" class="form-inline">
+                            <label style="margin: 5px">
+                                Tok-k from forward prediction: 
+                                <input type='number' class='form-control' v-model="impurityTopk"/>
+                            </label>
+                        </div>
+                        <div v-if="mode=='impurity'" class="form-inline">
+                            <label style="margin: 5px">
+                                Inspection threshold: 
+                                <input type='number' class='form-control' v-model="inspectionThreshold"/>
+                            </label>
                         </div>
                         <div class="form-inline">
                             <button type="submit" class='form-control' style="margin: 0 5px">Submit</button>
@@ -53,7 +126,8 @@
                     </form>
                 </div>
             </div>
-            <table class="table table-hover">
+
+            <table v-show="mode=='forward'" class="table table-hover" style="width: 75%; margin: 0 auto">
                 <thead>
                     <tr>
                         <th class="text-center">Rank</th>
@@ -64,7 +138,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="res in results">
+                    <template v-for="res in forwardResults">
                         <tr>
                             <td class="text-center">%% res.rank %%</td>
                             <td class="text-center">
@@ -76,6 +150,43 @@
                         </tr>
                     </template>
                 </tbody>
+            </table>
+            
+            <table v-show="mode=='context'" class="table table-hover" style="width: 75%; margin: 0 auto">
+                <template v-for="(result, index) in contextResults">
+                    <thead>
+                        <tr>
+                            <th colspan=6><br>Recommendation %% index+1 %%</tr>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Reagents:</td>
+                            <td colspan=5>
+                                <img v-if="!!result.reagent" :src='"/draw/smiles/"+encodeURIComponent(result.reagent)' :alt="result.reagent">
+                                <span v-else>none</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Catalyst:</td>
+                            <td colspan=5>
+                                <img v-if="!!result.catalyst" :src='"/draw/smiles/"+encodeURIComponent(result.catalyst)' :alt="result.catalyst">
+                                <span v-else>none</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Solvents:</td>
+                            <td colspan=5>
+                                <img v-if="!!result.solvent" :src='"/draw/smiles/"+encodeURIComponent(result.solvent)' :alt="result.solvent">
+                                <span v-else>none</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Temperature:</td>
+                            <td colspan=5>%% Math.round(result.temperature) %% Celsius</td>
+                        </tr>
+                    </tbody>
+                </template>
             </table>
         </div>
     </div>
