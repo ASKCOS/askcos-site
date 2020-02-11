@@ -12,6 +12,7 @@ READABLE_NAMES = {
     'sites_worker': 'Site Selectivity Worker',
     'impurity_worker': 'Impurity worker',
     'atom_mapping_worker': 'Atom mapping worker',
+    'tffp_worker': 'Template-free Forward Predictor'
 }
 
 def celery_status(request):

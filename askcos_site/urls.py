@@ -45,7 +45,6 @@ urlpatterns += [
     re_path(r'^retro_interactive_mcts/target=(?P<target>.+)$', views.retro_interactive_mcts, name='retro_interactive_mcts_target'),
     re_path(r'^ajax/smiles_to_image/$', views.ajax_smiles_to_image, name='ajax_smiles_to_image'),
     re_path(r'^ajax/rxn_to_image/$', views.ajax_rxn_to_image, name='ajax_rxn_to_image'),
-    re_path(r'^ajax/start_retro_celery/$', views.ajax_start_retro_celery, name='ajax_start_retro_celery'),
     re_path(r'^ajax/start_retro_mcts_celery/$', views.ajax_start_retro_mcts_celery, name='ajax_start_retro_mcts_celery'),
     re_path(r'^retro_interactive/export/(?P<_id>.+)$', views.export_retro_results, name='export_retro_results'),
 
