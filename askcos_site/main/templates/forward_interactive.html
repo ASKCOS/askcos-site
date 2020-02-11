@@ -59,12 +59,12 @@
                                 Product: 
                                 <input class='form-control' type="text" v-model="product"/> 
                             </label>
-                        </div>
-                        <div v-show="!!product">
-                            <img :src='"/draw/smiles/"+encodeURIComponent(product)' :alt="product">
+                            <div v-show="!!product">
+                                <img :src='"/draw/smiles/"+encodeURIComponent(product)' :alt="product">
+                            </div>
                         </div>
 
-                        <div v-if="mode!='context'" class="form-inline">
+                        <div v-if="(mode=='evaluate') || (mode=='impurity')" class="form-inline">
                             <label style="margin: 5px">
                                 Reagents: 
                                 <input class='form-control' type="text" v-model="reagents"/> 
@@ -74,7 +74,7 @@
                             <img :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
                         </div>
 
-                        <div v-if="mode!='context'" class="form-inline">
+                        <div v-if="(mode=='evaluate') || (mode=='impurity')" class="form-inline">
                             <label style="margin: 5px">
                                 Solvent: 
                                 <input class='form-control' type="text" v-model="solvent"/> 
@@ -135,6 +135,7 @@
                         <th class="text-center">Probability</th>
                         <th class="text-center">Max. Score</th>
                         <th class="text-center">Molecular Weight</th>
+                        <th class="text-center">Predict conditions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,6 +148,9 @@
                             <td class="text-center">%% (Math.round((res.prob + Number.EPSILON) * 10000) / 10000).toFixed(4) %%</td>
                             <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
                             <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
+                            <td class="text-center">
+                                <button class="btn btn-default" @click="goToContext(res.smiles)" title="Recommend context"><i class="fas fa-arrow-right"></i></button>
+                            </td>
                         </tr>
                     </template>
                 </tbody>

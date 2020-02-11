@@ -66,6 +66,11 @@ var app = new Vue({
                 hideLoader()
             })
         },
+        goToContext(smiles) {
+            this.product = smiles
+            this.mode = 'context'
+            this.contextPredict()
+        },
         contextPredict() {
             showLoader()
             var query = this.constructuContextQuery()
