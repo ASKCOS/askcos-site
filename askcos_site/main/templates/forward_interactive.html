@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Synthesis Predictor{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_title %}Synthesis Predictor{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <form v-on:submit.prevent="predict" autocomplete="off">
+                        <div class="form-inline">
+                            <label style="margin: 5px">
+                                Reactants: 
+                                <input class='form-control' type="text" v-model="reactants"/> 
+                            </label>
+                        </div>
+                        <div class="form-inline">
+                            <label style="margin: 5px">
+                                Reagents: 
+                                <input class='form-control' type="text" v-model="reagents"/> 
+                                </label>
+                        </div>
+                        <div class="form-inline">
+                            <label style="margin: 5px">
+                                Solvent: 
+                                <input class='form-control' type="text" v-model="solvent"/> 
+                                </label>
+                        </div>
+                        <div class="form-inline">
+                            <button type="submit" class='form-control' style="margin: 0 5px">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center">Rank</th>
+                        <th class="text-center">Product</th>
+                        <th class="text-center">Probability</th>
+                        <th class="text-center">Max. Score</th>
+                        <th class="text-center">Molecular Weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template v-for="res in results">
+                        <tr>
+                            <td class="text-center">%% res.rank %%</td>
+                            <td class="text-center">
+                                <img :src='"/draw/smiles/"+encodeURIComponent(res.smiles)' :alt="res.smiles">
+                            </td>
+                            <td class="text-center">%% (Math.round((res.prob + Number.EPSILON) * 10000) / 10000).toFixed(4) %%</td>
+                            <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
+                            <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="loader"></div>
+</div>
+
+<script src="{% static 'js/forward.js' %}"></script>
+
+{% endblock %}

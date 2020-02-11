@@ -26,7 +26,7 @@ def configure_worker(options={}, **kwargs):
     global tffp
 
     # Import as needed
-    from makeit.synthetic.evaluation.rexgen_release.predict import TFFP
+    from makeit.synthetic.evaluation.rexgen_direct.predict import TFFP
     print('Imported TFFP')
     try:
         tffp = TFFP()
@@ -42,7 +42,7 @@ def configure_worker(options={}, **kwargs):
 @shared_task
 def get_outcomes(reactants, top_n=10):
     global tffp
-    results = tffp.predict(reactants, top_n=top_n)
+    mapped_smiles, results = tffp.predict(reactants, top_n=top_n)
     results_to_return = {}
     original_reactants = reactants.split('.')
     for res in results:
@@ -73,5 +73,9 @@ def get_outcomes(reactants, top_n=10):
                 'prob': float(res['prob']),
                 'mol_wt': float(Descriptors.MolWt(Chem.MolFromSmiles(smiles)))
             }
-    results_to_return = sorted(list(results_to_return.values()), key=lambda x: x['rank'])
+    results_to_return = sorted(list(results_to_return.values()), key=lambda x: x['prob'], reverse=True)
+    total_prob = sum([outcome['prob'] for outcome in results_to_return])
+    for i, outcome in enumerate(results_to_return):
+        results_to_return[i]['rank'] = i + 1
+        results_to_return[i]['prob'] = outcome['prob'] / total_prob
     return results_to_return
