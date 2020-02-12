@@ -156,42 +156,55 @@
                 </tbody>
             </table>
             
-            <table v-show="mode=='context'" class="table table-hover" style="width: 75%; margin: 0 auto">
-                <template v-for="(result, index) in contextResults">
-                    <thead>
-                        <tr>
-                            <th colspan=6><br>Recommendation %% index+1 %%</tr>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Reagents:</td>
-                            <td colspan=5>
-                                <img v-if="!!result.reagent" :src='"/draw/smiles/"+encodeURIComponent(result.reagent)' :alt="result.reagent">
-                                <span v-else>none</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Catalyst:</td>
-                            <td colspan=5>
-                                <img v-if="!!result.catalyst" :src='"/draw/smiles/"+encodeURIComponent(result.catalyst)' :alt="result.catalyst">
-                                <span v-else>none</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Solvents:</td>
-                            <td colspan=5>
-                                <img v-if="!!result.solvent" :src='"/draw/smiles/"+encodeURIComponent(result.solvent)' :alt="result.solvent">
-                                <span v-else>none</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Temperature:</td>
-                            <td colspan=5>%% Math.round(result.temperature) %% Celsius</td>
-                        </tr>
-                    </tbody>
-                </template>
-            </table>
+            <div v-show="mode=='context'">
+                <div class="text-center">
+                    <button class="btn btn-success" @click="evaluate">
+                        Evaluate reactions
+                    </button>
+                </div>
+                <table class="table table-hover" style="width: 75%; margin: 0 auto">
+                    <template v-for="(result, index) in contextResults">
+                        <thead>
+                            <tr>
+                                <th colspan=6>
+                                    <br>
+                                    Recommendation %% index+1 %% 
+                                    <span v-if="showEvaluation(index)">
+                                        %% found %%
+                                    </span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Reagents:</td>
+                                <td colspan=5>
+                                    <img v-if="!!result.reagent" :src='"/draw/smiles/"+encodeURIComponent(result.reagent)' :alt="result.reagent">
+                                    <span v-else>none</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Catalyst:</td>
+                                <td colspan=5>
+                                    <img v-if="!!result.catalyst" :src='"/draw/smiles/"+encodeURIComponent(result.catalyst)' :alt="result.catalyst">
+                                    <span v-else>none</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Solvents:</td>
+                                <td colspan=5>
+                                    <img v-if="!!result.solvent" :src='"/draw/smiles/"+encodeURIComponent(result.solvent)' :alt="result.solvent">
+                                    <span v-else>none</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Temperature:</td>
+                                <td colspan=5>%% Math.round(result.temperature) %% Celsius</td>
+                            </tr>
+                        </tbody>
+                    </template>
+                </table>
+            </div>
         </div>
     </div>
     <div class="loader"></div>

@@ -19,6 +19,7 @@ var app = new Vue({
         numContextResults: 10,
         forwardResults: [],
         contextResults: [],
+        evaluationResults: [],
         mode: 'forward',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
@@ -29,14 +30,28 @@ var app = new Vue({
     methods: {
         constructForwardQuery() {
             var reactants = encodeURIComponent(this.reactants)
-            var reagents = encodeURIComponent(this.reagents)
-            var solvent = encodeURIComponent(this.solvent)
-            return `reactants=${reactants}&reagents=${reagents}&solvent=${solvent}&num_results=${this.numForwardResults}`
+            return `reactants=${reactants}&num_results=${this.numForwardResults}`
+        },
+        constructEvaluationQuery(reagents, solvent) {
+            var query = `reactants=${encodeURIComponent(this.reactants)}`
+            if (!!reagents) {
+                query += `&reagents=${encodeURIComponent(reagents)}`
+            }
+            if (!!solvent) {
+                query += `&solvent=${encodeURIComponent(solvent)}`
+            }
+            query += `&num_results=${this.numForwardResults}`
+            return query
         },
         constructuContextQuery() {
             var reactants = encodeURIComponent(this.reactants)
             var product = encodeURIComponent(this.product)
             return `reactants=${reactants}&products=${product}&return_scores=True&num_results=${this.numContextResults}`
+        },
+        constructFastFilterQuery() {
+            var reactants = encodeURIComponent(this.reactants)
+            var product = encodeURIComponent(this.product)
+            return `reactants=${reactants}&products=${product}`
         },
         predict() {
             switch(this.mode) {
@@ -80,6 +95,43 @@ var app = new Vue({
                 this.contextResults = json['contexts']
                 hideLoader()
             })
+        },
+        evaluateIndex(index) {
+            var reagents = this.contextResults[index]['reagent']
+            if (!!this.contextResults[index]['catalyst']) {
+                if (!!reagents) {
+                    reagents += '.'
+                }
+                reagents += this.contextResults[index]['catalyst']
+            }
+            var solvent = this.contextResults[index]['solvent']
+            var query = this.constructEvaluationQuery(reagents, solvent)
+            fetch('/api/forward/?'+query)
+            .then(resp => resp.json())
+            .then(json => {
+                this.evaluationResults[index]['found'] = false
+                for (outcome of json['outcomes']) {
+                    if (outcome['smiles'] == this.product) {
+                        this.evaluationResults[index]['found'] = true
+                        break
+                    }
+                }
+            })
+        },
+        evaluate() {
+            var query = this.constructFastFilterQuery()
+            fetch('/api/fast-filter/?'+query)
+            .then(resp => resp.json())
+            .then(json => {
+                this.reactionScore = json['score']
+            })
+            for (index in this.contextResults) {
+                this.evaluationResults.push({})
+                this.evaluateIndex(index)
+            }
+        },
+        showEvaluation(index) {
+            return (!!this.evaluationResults) && (!!this.evaluationResults[index]) && (!!this.evaluationResults[index]['found'])
         }
     },
     delimiters: ['%%', '%%'],
