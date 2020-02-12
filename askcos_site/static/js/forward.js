@@ -1,10 +1,10 @@
 function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
+    var loader = document.getElementById("pageLoader");
     loader.style.display = "block";
 }
 
 function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
+    var loader = document.getElementById("pageLoader");
     loader.style.display = "none";
 }
 
@@ -15,19 +15,42 @@ var app = new Vue({
         product: '',
         reagents: '',
         solvent: '',
+        evaluating: false,
+        showSettings: false,
         numForwardResults: 100,
         numContextResults: 10,
         forwardResults: [],
         contextResults: [],
-        evaluationResults: [],
+        impurityResults: [],
+        reactionScore: null,
         mode: 'forward',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'wln',
         impurityTopk: 3,
-        inspectionThreshold: 0.75
+        inspectionThreshold: 0.75,
+        impurityProgress: {
+            percent: 0,
+            message: ''
+        }
     },
     methods: {
+        clear() {
+            this.reactants = ''
+            this.product = ''
+            this.reagents = ''
+            this.solvent = ''
+            this.forwardResults = []
+            this.contextResults = []
+            this.impurityResults = []
+            this.impurityProgress = {
+                percent: 0,
+                message: ''
+            }
+        },
+        changeMode(mode) {
+            this.mode = mode
+        },
         constructForwardQuery() {
             var reactants = encodeURIComponent(this.reactants)
             return `reactants=${reactants}&num_results=${this.numForwardResults}`
@@ -53,6 +76,17 @@ var app = new Vue({
             var product = encodeURIComponent(this.product)
             return `reactants=${reactants}&products=${product}`
         },
+        constructImpurityQuery() {
+            var query = `reactants=${encodeURIComponent(this.reactants)}`
+            query += `&products=${encodeURIComponent(this.product)}`
+            if (!!this.reagents) {
+                query += `&reagents=${encodeURIComponent(this.reagents)}`
+            }
+            if (!!this.solvent) {
+                query += `&solvent=${encodeURIComponent(this.solvent)}`
+            }
+            return query
+        },
         predict() {
             switch(this.mode) {
                 case 'forward':
@@ -73,6 +107,7 @@ var app = new Vue({
         },
         forwardPredict() {
             showLoader()
+            this.forwardResults = []
             var query = this.constructForwardQuery()
             fetch('/api/forward/?'+query)
             .then(resp => resp.json())
@@ -86,8 +121,25 @@ var app = new Vue({
             this.mode = 'context'
             this.contextPredict()
         },
+        goToImpurity(index) {
+            var context = this.contextResults[index]
+            var reagents = ''
+            if (context['reagent']) {
+                reagents += context['reagent']
+            }
+            if (context['catalyst']) {
+                reagents += '.'+context['catalyst']
+            }
+            this.reagents = reagents
+            if (context['solvent']) {
+                this.solvent = context['solvent']
+            }
+            this.mode = 'impurity'
+            this.impurityPredict()
+        },
         contextPredict() {
             showLoader()
+            this.contextResults = []
             var query = this.constructuContextQuery()
             fetch('/api/context/?'+query)
             .then(resp => resp.json())
@@ -106,33 +158,83 @@ var app = new Vue({
             }
             var solvent = this.contextResults[index]['solvent']
             var query = this.constructEvaluationQuery(reagents, solvent)
-            fetch('/api/forward/?'+query)
+            return fetch('/api/forward/?'+query)
             .then(resp => resp.json())
             .then(json => {
-                this.evaluationResults[index]['found'] = false
-                for (outcome of json['outcomes']) {
+                for (var n in json['outcomes']) {
+                    var outcome = json['outcomes'][n]
                     if (outcome['smiles'] == this.product) {
-                        this.evaluationResults[index]['found'] = true
+                        this.$set(this.contextResults[index], 'evaluation', Number(n)+1)
                         break
                     }
+                }
+                if (!this.contextResults[index]['evaluation']) {
+                    this.$set(this.contextResults[index], 'evaluation', 0)
                 }
             })
         },
         evaluate() {
+            this.evaluating = true
             var query = this.constructFastFilterQuery()
             fetch('/api/fast-filter/?'+query)
             .then(resp => resp.json())
             .then(json => {
                 this.reactionScore = json['score']
             })
+            var promises = []
             for (index in this.contextResults) {
-                this.evaluationResults.push({})
-                this.evaluateIndex(index)
+                promises.push(this.evaluateIndex(index))
             }
+            Promise.all(promises).then(() => {this.evaluating = false})
         },
-        showEvaluation(index) {
-            return (!!this.evaluationResults) && (!!this.evaluationResults[index]) && (!!this.evaluationResults[index]['found'])
+        updateImpurityProgress(taskId) {
+            hideLoader()
+            fetch(`/api/celery/task/?task_id=${taskId}`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json['complete']) {
+                    this.impurityProgress.percent = 1.0
+                    this.impurityProgress.message = 'Prediction complete!'
+                    this.impurityResults = json.results.predict_expand
+                }
+                else if (json['failed']) {
+                    this.impurityProgress.percent = 0.0
+                    this.impurityProgress.message = 'impurity prediction failed!'
+                }
+                else {
+                    this.impurityProgress.percent = json['percent']
+                    this.impurityProgress.message = json['message']
+                    setTimeout(() => {this.updateImpurityProgress(taskId)}, 1000)
+                }
+            })
+        },
+        impurityPredict() {
+            showLoader()
+            this.impurityResults = []
+            var query = this.constructImpurityQuery()
+            fetch('/api/impurity/?'+query)
+            .then(resp => resp.json())
+            .then(json => {
+                this.updateImpurityProgress(json['task_id'])
+            })
+        },
+        startTour() {
+            this.clear()
+            tour.init()
+            tour.restart()
         }
     },
     delimiters: ['%%', '%%'],
+});
+
+var tour = new Tour({
+    storage: false,
+    steps: [
+        {
+            title: "A guided tour through synthesis prediction",
+            content: "Welcome to this guided tour",
+            orphan: true,
+            backdropContainer: '#body'
+        }
+    ]
 });
