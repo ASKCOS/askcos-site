@@ -136,6 +136,7 @@ urlpatterns += [
     re_path(r'^api/treebuilder/$', api.tree_builder.tree_builder, name='tree_builder_api'),
     re_path(r'^api/scscore/$', api.scscore.scscore, name='scscore_api'),
     re_path(r'^api/celery/$', api.status.celery_status, name='celery_api'),
+    re_path(r'^api/celery/task/$', api.status.task_status, name='celery_task_api'),
     re_path(r'^api/validate-chem-name/$', api.validate_chem_name.validate_chem_name, name='validate_chem_name_api'),
     re_path(r'^api/buyables/search', api.buyables.buyables, name='all_buyables_api'),
     re_path(r'^api/buyables/add', api.buyables.add_buyable, name='add_buyables_api'),
