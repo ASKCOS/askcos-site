@@ -5,12 +5,9 @@ from celery.exceptions import TimeoutError
 
 READABLE_NAMES = {
     'cr_network_worker': 'Context Recommender Worker',
-    'ft_worker': 'Forward Predictor Worker',
-    'sc_coordinator': 'Forward Predictor Scoring Coordinator',
     'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
     'tb_c_worker_preload': 'One-Step/Tree Builder Retrosynthesis Worker (Pre-loaded)',
     'tb_coordinator_mcts': 'Tree Builder Coordinator',
-    'te_coordinator': 'Tree Evaluation Coordinator',
     'sites_worker': 'Site Selectivity Worker',
     'impurity_worker': 'Impurity worker',
     'atom_mapping_worker': 'Atom mapping worker',
