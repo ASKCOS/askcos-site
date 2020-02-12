@@ -131,6 +131,7 @@ urlpatterns += [
     re_path(r'^api/fast-filter/$', api.fast_filter.fast_filter, name='fast_filter_api'),
     re_path(r'^api/context/$', api.context.neural_network, name='context_api'),
     re_path(r'^api/forward/$', api.forward.template_free, name='forward_api'),
+    re_path(r'^api/impurity/$', api.impurity.impurity_predict, name='impurity_api'),
     re_path(r'^api/template/$', api.template.template, name='template_api'),
     re_path(r'^api/treebuilder/$', api.tree_builder.tree_builder, name='tree_builder_api'),
     re_path(r'^api/scscore/$', api.scscore.scscore, name='scscore_api'),
