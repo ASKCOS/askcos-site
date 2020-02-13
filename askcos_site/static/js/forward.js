@@ -34,6 +34,30 @@ var app = new Vue({
             message: ''
         }
     },
+    mounted: function() {
+        var urlParams = new URLSearchParams(window.location.search)
+        let mode = urlParams.get('mode')
+        let reactants = urlParams.get('reactants')
+        if (!!reactants) {
+            this.reactants = reactants
+        }
+        let product = urlParams.get('product')
+        if (!!product) {
+            this.product = product
+        }
+        let reagents = urlParams.get('reagents')
+        if (!!reagents) {
+            this.reagents = reagents
+        }
+        let solvent = urlParams.get('solvent')
+        if (!!solvent) {
+            this.solvent = solvent
+        }
+        if (!!mode) {
+            this.changeMode(mode)
+            this.predict()
+        }
+    },
     methods: {
         clear() {
             this.reactants = ''
@@ -51,11 +75,7 @@ var app = new Vue({
         changeMode(mode) {
             this.mode = mode
         },
-        constructForwardQuery() {
-            var reactants = encodeURIComponent(this.reactants)
-            return `reactants=${reactants}&num_results=${this.numForwardResults}`
-        },
-        constructEvaluationQuery(reagents, solvent) {
+        constructForwardQuery(reagents, solvent) {
             var query = `reactants=${encodeURIComponent(this.reactants)}`
             if (!!reagents) {
                 query += `&reagents=${encodeURIComponent(reagents)}`
@@ -108,7 +128,7 @@ var app = new Vue({
         forwardPredict() {
             showLoader()
             this.forwardResults = []
-            var query = this.constructForwardQuery()
+            var query = this.constructForwardQuery(this.reagents, this.solvent)
             fetch('/api/forward/?'+query)
             .then(resp => resp.json())
             .then(json => {
@@ -120,6 +140,22 @@ var app = new Vue({
             this.product = smiles
             this.mode = 'context'
             this.contextPredict()
+        },
+        goToForward(index) {
+            var context = this.contextResults[index]
+            var reagents = ''
+            if (context['reagent']) {
+                reagents += context['reagent']
+            }
+            if (context['catalyst']) {
+                reagents += '.'+context['catalyst']
+            }
+            this.reagents = reagents
+            if (context['solvent']) {
+                this.solvent = context['solvent']
+            }
+            this.mode = 'forward'
+            this.forwardPredict()
         },
         goToImpurity(index) {
             var context = this.contextResults[index]
@@ -157,7 +193,7 @@ var app = new Vue({
                 reagents += this.contextResults[index]['catalyst']
             }
             var solvent = this.contextResults[index]['solvent']
-            var query = this.constructEvaluationQuery(reagents, solvent)
+            var query = this.constructForwardQuery(reagents, solvent)
             return fetch('/api/forward/?'+query)
             .then(resp => resp.json())
             .then(json => {

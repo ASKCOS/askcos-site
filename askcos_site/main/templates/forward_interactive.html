@@ -60,7 +60,7 @@ Synthesis Predictor
         <h3>Settings</h3>
     </div>
     <div slot="body" class="text-left">
-        <div v-if="mode!='context'" class="form-inline">
+        <div class="form-inline">
             <label style="margin: 5px">
                 Forward prediction model: 
                 <select class='form-control' v-model="forwardModel"> 
@@ -68,7 +68,7 @@ Synthesis Predictor
                 </select>
             </label>
         </div>
-        <div v-if="(mode=='evaluate') || (mode=='impurity')" class="form-inline">
+        <div class="form-inline">
             <label style="margin: 5px">
                 Reaction inspection model: 
                 <select class='form-control' v-model="inspectionModel"> 
@@ -76,7 +76,7 @@ Synthesis Predictor
                 </select>
             </label>
         </div>
-        <div v-if="mode=='impurity'" class="form-inline">
+        <div class="form-inline">
             <label style="margin: 5px">
                 Atom-mapping model: 
                 <select class='form-control' v-model="atomMappingModel"> 
@@ -84,13 +84,13 @@ Synthesis Predictor
                 </select>
             </label>
         </div>
-        <div v-if="mode=='impurity'" class="form-inline">
+        <div class="form-inline">
             <label style="margin: 5px">
                 Tok-k from forward prediction: 
                 <input type='number' class='form-control' v-model="impurityTopk"/>
             </label>
         </div>
-        <div v-if="mode=='impurity'" class="form-inline">
+        <div class="form-inline">
             <label style="margin: 5px">
                 Inspection threshold: 
                 <input type='number' step="any" class='form-control' v-model="inspectionThreshold"/>
@@ -146,7 +146,7 @@ Synthesis Predictor
                             <div class="col-md-3 col-md-offset-3 form-inline">
                                 <label>
                                     Reagents: 
-                                    <input class='form-control' type="text" v-model="reagents" :disabled="mode=='forward' || mode=='context'"/> 
+                                    <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'"/> 
                                 </label>
                                 <div v-if="!!reagents" class="text-center">
                                     <img :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
@@ -156,7 +156,7 @@ Synthesis Predictor
                             <div class="col-md-3 form-inline">
                                 <label>
                                     Solvent: 
-                                    <input class='form-control' type="text" v-model="solvent" :disabled="mode=='forward' || mode=='context'"/> 
+                                    <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'"/> 
                                 </label>
                                 <div v-show="!!solvent" class="text-center">
                                     <img :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
@@ -210,9 +210,21 @@ Synthesis Predictor
                     <template v-for="(result, index) in contextResults">
                         <thead>
                             <tr>
-                                <th colspan=6>
-                                    <br>
+                                <th class="text-center" colspan=6 style="padding: 50px 8px 8px 8px">
+                                    <span style="float:left">
+                                        <button class="btn btn-default" @click="goToForward(index)">
+                                            <i class="fas fa-arrow-left"></i> Predict with conditions
+                                        </button>
+                                    </span>
+
                                     Recommendation %% index+1 %% 
+
+                                    <span style="float:right">
+                                        <button class="btn btn-default" @click="goToImpurity(index)">
+                                            Check impurities <i class="fas fa-arrow-right"></i>
+                                        </button>
+                                    </span>
+                                    <br>
                                     <span v-if="evaluating && result.evaluation === undefined">
                                         <div class="loader-in-place"></div>
                                     </span>
@@ -221,11 +233,6 @@ Synthesis Predictor
                                     </span>
                                     <span v-else-if="result.evaluation != undefined && !result.evaluation">
                                         <i class="fas fa-times"></i> (rank: N/A)
-                                    </span>
-                                    <span>
-                                        <button class="btn btn-default" @click="goToImpurity(index)">
-                                            Check impurities  <i class="fas fa-arrow-right"></i>
-                                        </button>
                                     </span>
                                 </th>
                             </tr>

@@ -154,7 +154,7 @@ function liberalSettings() {
                     {% endif %}
                 </font>
                 {% if not forloop.last %} + {% endif %}{% endfor %}
-                <a href="{% url 'context_rxnsmiles_target2' precursor.smiles target.smiles %}">&rarr; ?</a>
+                <a href="/synth_interactive?mode=context&reactants={{ precursor.smiles }}&product={{ target.smiles }}">&rarr; ?</a>
                 <br>
                 <a><img src="" data-async-load="{% url 'draw_highlight' smiles=precursor.mapped_smiles reacting_atoms=precursor.reacting_atoms bonds='false' %}" alt="{{ precursor.smiles }}" onclick="toggle_visibility('expand{{ precursor.rank }}');"></a>
                 
