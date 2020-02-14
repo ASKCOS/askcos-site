@@ -8,6 +8,10 @@ function hideLoader() {
     loader.style.display = "none";
 }
 
+Vue.component('modal', {
+    template: '#modal-template'
+})
+
 var app = new Vue({
     el: '#app',
     data: {
@@ -23,7 +27,7 @@ var app = new Vue({
         contextResults: [],
         impurityResults: [],
         reactionScore: null,
-        mode: 'forward',
+        mode: 'context',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'wln',
@@ -37,6 +41,11 @@ var app = new Vue({
     mounted: function() {
         var urlParams = new URLSearchParams(window.location.search)
         let mode = urlParams.get('mode')
+
+        let rxnsmiles = urlParams.get('rxnsmiles')
+        var split = rxnsmiles.split('>>')
+        this.reactants = split[0]
+        this.product = split[split.length-1]
         let reactants = urlParams.get('reactants')
         if (!!reactants) {
             this.reactants = reactants
@@ -136,11 +145,6 @@ var app = new Vue({
                 hideLoader()
             })
         },
-        goToContext(smiles) {
-            this.product = smiles
-            this.mode = 'context'
-            this.contextPredict()
-        },
         goToForward(index) {
             var context = this.contextResults[index]
             var reagents = ''
@@ -157,19 +161,8 @@ var app = new Vue({
             this.mode = 'forward'
             this.forwardPredict()
         },
-        goToImpurity(index) {
-            var context = this.contextResults[index]
-            var reagents = ''
-            if (context['reagent']) {
-                reagents += context['reagent']
-            }
-            if (context['catalyst']) {
-                reagents += '.'+context['catalyst']
-            }
-            this.reagents = reagents
-            if (context['solvent']) {
-                this.solvent = context['solvent']
-            }
+        goToImpurity(smiles) {
+            this.product = smiles
             this.mode = 'impurity'
             this.impurityPredict()
         },

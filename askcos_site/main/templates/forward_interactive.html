@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/bootstrap-tour.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/forward.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
 <script src="{% static 'js/bootstrap-tour.min.js' %}"></script>
 {% endblock %}
 
@@ -105,12 +106,12 @@ Synthesis Predictor
                 <div class="col-12">
                     <div class="arrow-step-wrapper">
                         <div class="arrow-steps clearfix">
-                            <div id="forwardArrowStep" class="step" :class="{current: mode=='forward'}" for="forwardMode" @click="changeMode('forward')">
-                                <span> Synthesis prediction </span>
-                            </div>
-
                             <div id="contextArrowStep" class="step" :class="{current: mode=='context'}" for="contextMode" @click="changeMode('context')">
                                 <span> Condition recommendation </span>
+                            </div>
+
+                            <div id="forwardArrowStep" class="step" :class="{current: mode=='forward'}" for="forwardMode" @click="changeMode('forward')">
+                                <span> Synthesis prediction </span>
                             </div>
 
                             <div id="impurityArrowStep" class="step" :class="{current: mode=='impurity'}" for="impurityMode" @click="changeMode('impurity')">  
@@ -169,35 +170,6 @@ Synthesis Predictor
                     </form>
                 </div>
             </div>
-
-            <table v-show="mode=='forward' && !!forwardResults.length" class="table table-hover" style="width: 75%; margin: 0 auto">
-                <thead>
-                    <tr>
-                        <th class="text-center">Rank</th>
-                        <th class="text-center">Product</th>
-                        <th class="text-center">Probability</th>
-                        <th class="text-center">Max. Score</th>
-                        <th class="text-center">Molecular Weight</th>
-                        <th class="text-center">Predict conditions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template v-for="res in forwardResults">
-                        <tr>
-                            <td class="text-center">%% res.rank %%</td>
-                            <td class="text-center">
-                                <img :src='"/draw/smiles/"+encodeURIComponent(res.smiles)' :alt="res.smiles">
-                            </td>
-                            <td class="text-center">%% (Math.round((res.prob + Number.EPSILON) * 10000) / 10000).toFixed(4) %%</td>
-                            <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
-                            <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
-                            <td class="text-center">
-                                <button class="btn btn-default" @click="goToContext(res.smiles)" title="Recommend context"><i class="fas fa-arrow-right"></i></button>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
             
             <div v-show="mode=='context' && !!contextResults.length">
                 <div class="text-center" style="margin: 10px auto">
@@ -210,18 +182,13 @@ Synthesis Predictor
                     <template v-for="(result, index) in contextResults">
                         <thead>
                             <tr>
-                                <th class="text-center" colspan=6 style="padding: 50px 8px 8px 8px">
-                                    <span style="float:left">
-                                        <button class="btn btn-default" @click="goToForward(index)">
-                                            <i class="fas fa-arrow-left"></i> Predict with conditions
-                                        </button>
-                                    </span>
+                                <th class="" colspan=6 style="padding: 50px 8px 8px 8px">
 
                                     Recommendation %% index+1 %% 
 
                                     <span style="float:right">
-                                        <button class="btn btn-default" @click="goToImpurity(index)">
-                                            Check impurities <i class="fas fa-arrow-right"></i>
+                                        <button class="btn btn-default" @click="goToForward(index)">
+                                            <i class="fas fa-arrow-right"></i> Predict with conditions
                                         </button>
                                     </span>
                                     <br>
@@ -267,6 +234,35 @@ Synthesis Predictor
                     </template>
                 </table>
             </div>
+
+            <table v-show="mode=='forward' && !!forwardResults.length" class="table table-hover" style="width: 75%; margin: 0 auto">
+                <thead>
+                    <tr>
+                        <th class="text-center">Rank</th>
+                        <th class="text-center">Product</th>
+                        <th class="text-center">Probability</th>
+                        <th class="text-center">Max. Score</th>
+                        <th class="text-center">Molecular Weight</th>
+                        <th class="text-center">Predict impurities</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template v-for="res in forwardResults">
+                        <tr>
+                            <td class="text-center">%% res.rank %%</td>
+                            <td class="text-center">
+                                <img :src='"/draw/smiles/"+encodeURIComponent(res.smiles)' :alt="res.smiles">
+                            </td>
+                            <td class="text-center">%% (Math.round((res.prob + Number.EPSILON) * 10000) / 10000).toFixed(4) %%</td>
+                            <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
+                            <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
+                            <td class="text-center">
+                                <button class="btn btn-default" @click="goToImpurity(res.smiles)" title="Recommend context"><i class="fas fa-arrow-right"></i></button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
 
             <div v-show="mode=='impurity'">
                 <div>
