@@ -16,6 +16,12 @@ def impurity_predict(request):
     solvents = request.GET.get('solvents', '')
     reagents = request.GET.get('reagents', '')
     products = request.GET.get('products', '')
+    top_k = int(request.GET.get('top_k', 3))
+    threshold = float(request.GET.get('threshold', 0.75))
+    predictor = request.GET.get('predictor', 'WLN forward predictor')
+    inspector = request.GET.get('inspector', 'Reaxys inspector')
+    mapper = request.GET.get('mapper', 'WLN atom mapper')
+    check_mapping = request.GET.get('check_mapping', 'True') in ['True', 'true']
 
     # TODO: add model selections
 
@@ -45,7 +51,13 @@ def impurity_predict(request):
 
     # TODO: need work
     res = get_impurities.delay(
-        reactants, reagents=reagents, products=products, solvents=solvents)
+        reactants, reagents=reagents, products=products, solvents=solvents,
+        top_k=top_k, threshold=threshold,
+        predictor_selection=predictor,
+        inspector_selection=inspector,
+        mapper_selection=mapper,
+        check_mapping=check_mapping
+    )
 
     resp['task_id'] = res.task_id
     return JsonResponse(resp)

@@ -33,6 +33,7 @@ var app = new Vue({
         atomMappingModel: 'wln',
         impurityTopk: 3,
         inspectionThreshold: 0.75,
+        impurityCheckMapping: true,
         impurityProgress: {
             percent: 0,
             message: ''
@@ -114,6 +115,7 @@ var app = new Vue({
             if (!!this.solvent) {
                 query += `&solvent=${encodeURIComponent(this.solvent)}`
             }
+            query += `&top_k=${impurityTopk}&threshold=${inspectionThreshold}&check_mapping=${impurityCheckMapping}`
             return query
         },
         predict() {
