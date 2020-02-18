@@ -173,7 +173,10 @@
         <footer class="footer">
             <div class="container">
                 {% block footer %}
-                ASKCOS v{{ version_number }} Copyright &copy; 2019,
+                ASKCOS version: {{ version_number }} Copyright &copy; {% now "Y" %}.
+                {% if update_date %}
+                Last updated {{ update_date }}.
+                {% endif %}
                 Created using <a href="http://www.djangoproject.com/">Django</a>.
                 <!--
                 Secret changelog!
