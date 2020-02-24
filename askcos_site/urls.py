@@ -146,6 +146,9 @@ urlpatterns += [
     re_path(r'^api/cluster/$', api.cluster.cluster, name='cluster_api'),
     re_path(r'^api/selectivity/$', api.selectivity.selectivity, name='selectivity'),
 
+    re_path(r'^api/rdkit/smiles-to-molfile/$', api.rdkit.smiles_to_molfile, name='smiles_to_molfile_api'),
+    re_path(r'^api/rdkit/molfile-to-smiles/$', api.rdkit.molfile_to_smiles, name='molfile_to_smiles_api'),
+
     # async results
     re_path(r'^api/get-result/$', api.results.get_result, name='get_async_result'),
     re_path(r'^api/my-results/$', api.results.my_results, name='api_my_results'),

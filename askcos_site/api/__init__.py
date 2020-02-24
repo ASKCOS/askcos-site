@@ -3,6 +3,7 @@ from . import context
 from . import fast_filter
 from . import forward
 from . import price
+from . import rdkit
 from . import results
 from . import retro
 from . import scscore
