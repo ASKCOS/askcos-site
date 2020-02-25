@@ -139,16 +139,22 @@ Synthesis Predictor
                     <form v-on:submit.prevent="predict" autocomplete="off">
                         <div class="row" style="margin-top:50px">
                             <div class="col-md-3 col-md-offset-3 form-inline">
-                                <label>
-                                    Reactants: 
-                                    <input class='form-control' type="text" v-model="reactants"/> 
-                                </label>
+                                <label>Reactants: </label>
+                                <div class="input-group">
+                                    <input class='form-control' type="text" v-model="reactants" id="reactants"/> 
+                                    <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')">
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                </div>
                             </div>
                             <div class="col-md-3 form-inline">
-                                <label>
-                                    Product: 
-                                    <input class='form-control' type="text" v-model="product" :disabled="mode=='forward'"/> 
-                                </label>
+                                <label>Product: </label>
+                                <div class="input-group">
+                                    <input class='form-control' type="text" v-model="product" :disabled="mode=='forward'" id="product"/> 
+                                    <span class='btn input-group-addon'data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'">
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -156,23 +162,29 @@ Synthesis Predictor
                             <img :src='"/draw/reaction/"+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
                         </div>
 
-                        <div class="row">
+                        <div class="row" v-show="mode!='context'">
                             <div class="col-md-3 col-md-offset-3 form-inline">
-                                <label>
-                                    Reagents: 
-                                    <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'"/> 
-                                </label>
+                                <label>Reagents: </label>
+                                <div class="input-group">
+                                    <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'" id="reagents"/> 
+                                    <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'">
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                </div>
                                 <div v-if="!!reagents" class="text-center">
                                     <img :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
                                 </div>
                             </div>
                             
                             <div class="col-md-3 form-inline">
-                                <label>
-                                    Solvent: 
-                                    <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'"/> 
-                                </label>
-                                <div v-show="!!solvent" class="text-center">
+                                <label>Solvent: </label>
+                                <div class="input-group">
+                                    <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'" id="solvent"/> 
+                                    <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'">
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                </div>
+                                <div v-if="!!solvent" class="text-center">
                                     <img :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
                                 </div>
                             </div>
@@ -199,12 +211,7 @@ Synthesis Predictor
 
                                     Recommendation %% index+1 %% 
 
-                                    <span style="float:right">
-                                        <button class="btn btn-default" @click="goToForward(index)">
-                                            <i class="fas fa-arrow-right"></i> Predict with conditions
-                                        </button>
-                                    </span>
-                                    <br>
+
                                     <span v-if="evaluating && result.evaluation === undefined">
                                         <div class="loader-in-place"></div>
                                     </span>
@@ -213,6 +220,12 @@ Synthesis Predictor
                                     </span>
                                     <span v-else-if="result.evaluation != undefined && !result.evaluation">
                                         <i class="fas fa-times"></i> (rank: N/A)
+                                    </span>
+
+                                    <span style="float:right">
+                                        <button class="btn btn-default" @click="goToForward(index)">
+                                            <i class="fas fa-arrow-right"></i> Predict with conditions
+                                        </button>
                                     </span>
                                 </th>
                             </tr>
@@ -315,7 +328,25 @@ Synthesis Predictor
         </div>
     </div>
     <div id="pageLoader" class="loader"></div>
+
+    <!-- Popup drawing tool -->
+    <div class="modal fade" id="drawingbox">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" style="height:430px;">
+            <div id="jsme_container" style="margin:auto"></div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" @click="updateSmilesFromJSME">Done drawing</button>
+            </div>
+            
+        </div>
+        </div>
+    </div>
+
 </div>
+
 
 <script src="{% static 'js/forward.js' %}"></script>
 

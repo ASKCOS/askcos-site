@@ -44,9 +44,11 @@ var app = new Vue({
         let mode = urlParams.get('mode')
 
         let rxnsmiles = urlParams.get('rxnsmiles')
-        var split = rxnsmiles.split('>>')
-        this.reactants = split[0]
-        this.product = split[split.length-1]
+        if (!!rxnsmiles) {
+            var split = rxnsmiles.split('>>')
+            this.reactants = split[0]
+            this.product = split[split.length-1]
+        }
         let reactants = urlParams.get('reactants')
         if (!!reactants) {
             this.reactants = reactants
@@ -69,18 +71,37 @@ var app = new Vue({
         }
     },
     methods: {
-        clear() {
-            this.reactants = ''
-            this.product = ''
-            this.reagents = ''
-            this.solvent = ''
-            this.forwardResults = []
+        clearContext() {
             this.contextResults = []
+            this.reactionScore = null
+        },
+        clearEvaluation() {
+            this.reactionScore = null
+            for (var res of this.contextResults) {
+                res.evaluation = undefined
+            }
+        },
+        clearForward() {
+            this.forwardResults = []
+        },
+        clearImpurity() {
             this.impurityResults = []
             this.impurityProgress = {
                 percent: 0,
                 message: ''
             }
+        },
+        clearSmiles() {
+            this.reactants = ''
+            this.product = ''
+            this.reagents = ''
+            this.solvent = ''
+        },
+        clear() {
+            this.clearSmiles()
+            this.clearContext()
+            this.clearForward()
+            this.clearImpurity()
         },
         changeMode(mode) {
             this.mode = mode
@@ -121,15 +142,15 @@ var app = new Vue({
         predict() {
             switch(this.mode) {
                 case 'forward':
+                    this.clearForward()
                     this.forwardPredict()
                     break;
                 case 'context':
+                    this.clearContext()
                     this.contextPredict()
                     break;
-                case 'evaluate':
-                    this.evaluatePredict()
-                    break;
                 case 'impurity':
+                    this.clearImpurity()
                     this.impurityPredict()
                     break;
                 default:
@@ -205,6 +226,7 @@ var app = new Vue({
             })
         },
         evaluate() {
+            this.clearEvaluation()
             this.evaluating = true
             var query = this.constructFastFilterQuery()
             fetch('/api/fast-filter/?'+query)
@@ -248,6 +270,10 @@ var app = new Vue({
             .then(json => {
                 this.updateImpurityProgress(json['task_id'])
             })
+        },
+        updateSmilesFromJSME() {
+            var smiles = jsmeApplet.smiles();
+            this[drawBoxId] = smiles
         },
         startTour() {
             this.clear()
