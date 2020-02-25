@@ -198,7 +198,7 @@ Synthesis Predictor
             
             <div v-show="mode=='context' && !!contextResults.length">
                 <div class="text-center" style="margin: 10px auto">
-                    <button class="btn btn-success" @click="evaluate">Evaluate reaction(s)</button>
+                    <button class="btn btn-success" @click="evaluate" :disabled="evaluating==true">Evaluate reaction(s)</button>
                 </div>
                 <div v-if="!!reactionScore" class="text-center">
                     <b>Reaction score: %% reactionScore.toFixed(3) %%</b>

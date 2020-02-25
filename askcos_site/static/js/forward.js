@@ -226,6 +226,9 @@ var app = new Vue({
             })
         },
         evaluate() {
+            if (this.evaluating) {
+                return
+            }
             this.clearEvaluation()
             this.evaluating = true
             var query = this.constructFastFilterQuery()
