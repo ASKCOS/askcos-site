@@ -310,9 +310,13 @@ var app = new Vue({
             })
         },
         startTour() {
-            this.clear()
-            tour.init()
-            tour.restart()
+            var res = confirm('Starting the tutorial will clear all current results, continue?')
+            if (res) {
+                this.clear()
+                this.mode = 'context'
+                tour.init()
+                tour.restart()
+            }
         }
     },
     delimiters: ['%%', '%%'],
@@ -376,7 +380,7 @@ Reactants and products have been prepopulated for you, and you can run the predi
 `,
             relfex: true,
             onNext: () => {
-                if (!app.contextResults) {
+                if (app.contextResults.length == 0) {
                     app.predict()
                 }
             }
@@ -387,8 +391,65 @@ Reactants and products have been prepopulated for you, and you can run the predi
             placement: "top",
             content: `
 After the prediction on the server has finished, the top 10 results will be displayed below.
+`,
+            onNext: () => {
+                app.evaluate()
+            }
+        },
+        {
+            title: "Evaluating reactions and conditions",
+            element: "#context-results",
+            placement: "top",
+            content: `
+You can evaluate the reaction and the reaction conditions using this evaluation button here (we just clicked it for you). 
+For evaluation, each set of reaction conditions is sent through a forward reaction prediction. 
+If the product is found in the top 10 forward prediction results, a green checkmark will appear next to the recommendation (with the rank assigned to the product).
+Additionally, the reaction evluator (which does not currently consider reaction conditions) will give a reaction score for the transformation from reactants to products.
 `
-        }
-
+        },
+        {
+            title: "Moving to the forward prediction",
+            element: "#predict-conditions-0",
+            placement: "top",
+            content: `
+When you've picked a set of conditions you'd like to explore further, you can click this button to make a forward prediction and see all of the possible results. 
+Either click this button or click 'Next >>' to continue.
+`,
+            reflex: true,
+            onNext: () => {
+                app.goToForward(0)
+            }
+        },
+        {
+            title: "Viewing results",
+            orphan: true,
+            backdropContainer: '#body',
+            content: `
+All of the results from the prediction after including the reaction conditions will be displayed here. 
+This is always a good check to see if the product you entered appears at the top of this list, and with what probability. 
+`
+        },
+        {
+            title: "Predicting impurities",
+            element: "#predict-impurities-0",
+            placement: "top",
+            content: `
+When you've picked a major product from the list you can move on to predict impurities that may come from a variety of imurity modes (i.e. - over reaction, dimerization). 
+Click this button or click "Next >>" to continue and make the impurity prediction.
+`,
+            reflex: true,
+            onNext: () => {
+                app.goToImpurity(app.product)
+            }
+        },
+        {
+            title: "Impurity prediction",
+            orphan: true,
+            backdropContainer: '#body',
+            content: `
+The impurity prediction will start on the server, and the progress will be displayed here. 
+Once the task finishes, the results wil be shown here. That ends this tour of the interface!
+`
+        },
     ]
 });

@@ -223,7 +223,7 @@ Synthesis Predictor
                                     </span>
 
                                     <span style="float:right">
-                                        <button class="btn btn-default" @click="goToForward(index)">
+                                        <button class="btn btn-default" @click="goToForward(index)" :id="'predict-conditions-'+index">
                                             <i class="fas fa-arrow-right"></i> Predict with conditions
                                         </button>
                                     </span>
@@ -261,7 +261,7 @@ Synthesis Predictor
                 </table>
             </div>
 
-            <table v-show="mode=='forward' && !!forwardResults.length" class="table table-hover" style="width: 75%; margin: 0 auto">
+            <table id="forward-results" v-show="mode=='forward' && !!forwardResults.length" class="table table-hover" style="width: 75%; margin: 0 auto">
                 <thead>
                     <tr>
                         <th class="text-center">Rank</th>
@@ -273,7 +273,7 @@ Synthesis Predictor
                     </tr>
                 </thead>
                 <tbody>
-                    <template v-for="res in forwardResults">
+                    <template v-for="(res, index) in forwardResults">
                         <tr>
                             <td class="text-center">%% res.rank %%</td>
                             <td class="text-center">
@@ -283,7 +283,7 @@ Synthesis Predictor
                             <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
                             <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
                             <td class="text-center">
-                                <button class="btn btn-default" @click="goToImpurity(res.smiles)" title="Recommend context"><i class="fas fa-arrow-right"></i></button>
+                                <button :id="'predict-impurities-' + index" class="btn btn-default" @click="goToImpurity(res.smiles)" title="Recommend context"><i class="fas fa-arrow-right"></i></button>
                             </td>
                         </tr>
                     </template>
