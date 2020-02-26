@@ -386,7 +386,7 @@ Reactants and products have been prepopulated for you, and you can run the predi
             element: "#context-results",
             placement: "top",
             content: `
-After the prediction on the server has finished, the top 10 results will be displayed below. As you can see, the top results suggest 
+After the prediction on the server has finished, the top 10 results will be displayed below.
 `
         }
 
