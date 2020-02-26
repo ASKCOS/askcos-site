@@ -156,22 +156,25 @@ var app = new Vue({
             return query
         },
         predict() {
-            switch(this.mode) {
-                case 'forward':
-                    this.clearForward()
-                    this.forwardPredict()
-                    break;
-                case 'context':
-                    this.clearContext()
-                    this.contextPredict()
-                    break;
-                case 'impurity':
-                    this.clearImpurity()
-                    this.impurityPredict()
-                    break;
-                default:
-                    alert('unsupported mode')
-            }
+            this.canonicalizeAll()
+            .then(() => {
+                switch(this.mode) {
+                    case 'forward':
+                        this.clearForward()
+                        this.forwardPredict()
+                        break;
+                    case 'context':
+                        this.clearContext()
+                        this.contextPredict()
+                        break;
+                    case 'impurity':
+                        this.clearImpurity()
+                        this.impurityPredict()
+                        break;
+                    default:
+                        alert('unsupported mode')
+                }
+            })
         },
         forwardPredict() {
             showLoader()
@@ -185,25 +188,31 @@ var app = new Vue({
             })
         },
         goToForward(index) {
-            var context = this.contextResults[index]
-            var reagents = ''
-            if (context['reagent']) {
-                reagents += context['reagent']
-            }
-            if (context['catalyst']) {
-                reagents += '.'+context['catalyst']
-            }
-            this.reagents = reagents
-            if (context['solvent']) {
-                this.solvent = context['solvent']
-            }
-            this.mode = 'forward'
-            this.forwardPredict()
+            this.canonicalizeAll()
+            .then(() => {
+                var context = this.contextResults[index]
+                var reagents = ''
+                if (context['reagent']) {
+                    reagents += context['reagent']
+                }
+                if (context['catalyst']) {
+                    reagents += '.'+context['catalyst']
+                }
+                this.reagents = reagents
+                if (context['solvent']) {
+                    this.solvent = context['solvent']
+                }
+                this.mode = 'forward'
+                this.forwardPredict()
+            })
         },
         goToImpurity(smiles) {
-            this.product = smiles
-            this.mode = 'impurity'
-            this.impurityPredict()
+            this.canonicalizeAll()
+            .then(() => {
+                this.product = smiles
+                this.mode = 'impurity'
+                this.impurityPredict()
+            })
         },
         contextPredict() {
             showLoader()
@@ -240,6 +249,36 @@ var app = new Vue({
                     this.$set(this.contextResults[index], 'evaluation', 0)
                 }
             })
+        },
+        canonicalize(smiles, input) {
+            return fetch(
+                '/api/rdkit/canonicalize/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        smiles: smiles
+                    })
+                }
+            )
+            .then(resp => resp.json())
+            .then(json => {
+                this[input] = json.smiles
+            })
+        },
+        canonicalizeAll() {
+            var promises = []
+            for (var smi of ['reactants', 'product', 'reagents', 'solvent']) {
+                if (!!this[smi]) {
+                    promises.push(
+                        this.canonicalize(this[smi], smi)
+                    )
+                }
+            }
+            return Promise.all(promises)
         },
         evaluate() {
             if (this.evaluating) {
@@ -292,23 +331,7 @@ var app = new Vue({
         },
         updateSmilesFromJSME() {
             var smiles = jsmeApplet.smiles();
-            fetch(
-                '/api/rdkit/canonicalize/',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: JSON.stringify({
-                        smiles: smiles
-                    })
-                }
-            )
-            .then(resp => resp.json())
-            .then(json => {
-                this[drawBoxId] = json.smiles
-            })
+            this.canonicalize(smiles, drawBoxId)
         },
         startTour() {
             var res = confirm('Starting the tutorial will clear all current results, continue?')
