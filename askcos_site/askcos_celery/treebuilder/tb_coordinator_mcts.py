@@ -24,7 +24,7 @@ from rdkit import RDLogger
 import makeit.global_config as gc
 from makeit.utilities.buyable.pricer import Pricer
 from makeit.utilities.historian.chemicals import ChemHistorian
-from makeit.retrosynthetic.mcts.tree_builder import MCTS as MCTSTreeBuilder
+from makeit.retrosynthetic.mcts.v2.tree_builder import MCTSCelery as MCTSTreeBuilder
 from django.db import models
 from askcos_site.main.models import SavedResults
 lg = RDLogger.logger()
