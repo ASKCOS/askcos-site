@@ -362,8 +362,8 @@ If a SMILES string is already present in the input field, the drawing interface 
 Give it a try now if you'd like.
 `,
             onNext: () => {
-                app.reactants = "N#CC(O)c1ccccc1.O=Cc1ccccc1"
-                app.product = "c1ccc(-c2cnc(-c3ccccc3)o2)cc1"
+                app.reactants = "Brc1ccccc1.OB(O)c1ccccc1"
+                app.product = "c1ccc(-c2ccccc2)cc1"
             }
         },
         {
