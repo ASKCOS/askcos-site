@@ -8,6 +8,21 @@ function hideLoader() {
     loader.style.display = "none";
 }
 
+function getCookie(cname) {
+    var name = cname + "=";
+    var cookie_str = document.cookie;
+    if (cookie_str && cookie_str != '') {
+        var cookie_splitted = cookie_str.split(';');
+        for(var i = 0; i <cookie_splitted.length; i++) {
+            var c = cookie_splitted[i].trim();
+            if (c.indexOf(name) == 0) {
+                return decodeURIComponent(c.substring(name.length, c.length));
+            }
+        }
+    }
+  return undefined;
+}
+
 Vue.component('modal', {
     template: '#modal-template'
 })
@@ -136,7 +151,7 @@ var app = new Vue({
             if (!!this.solvent) {
                 query += `&solvent=${encodeURIComponent(this.solvent)}`
             }
-            query += `&top_k=${impurityTopk}&threshold=${inspectionThreshold}&check_mapping=${impurityCheckMapping}`
+            query += `&top_k=${this.impurityTopk}&threshold=${this.inspectionThreshold}&check_mapping=${this.impurityCheckMapping}`
             return query
         },
         predict() {
@@ -276,7 +291,23 @@ var app = new Vue({
         },
         updateSmilesFromJSME() {
             var smiles = jsmeApplet.smiles();
-            this[drawBoxId] = smiles
+            fetch(
+                '/api/rdkit/canonicalize/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        smiles: smiles
+                    })
+                }
+            )
+            .then(resp => resp.json())
+            .then(json => {
+                this[drawBoxId] = json.smiles
+            })
         },
         startTour() {
             this.clear()
@@ -292,9 +323,72 @@ var tour = new Tour({
     steps: [
         {
             title: "A guided tour through synthesis prediction",
-            content: "Welcome to this guided tour",
+            content: `
+Welcome to this guided tour through synthesis prediction in ASKCOS, which will demonstrate how to use the different parts of the user interface (UI). 
+Thanks to <a href='http://bootstraptour.com/' target='_blank'>bootstrap-tour</a> for the JavaScript package making it very easy to provide this tour to you!
+`,
             orphan: true,
             backdropContainer: '#body'
+        },
+        {
+            element: "#contextArrowStep",
+            placement: "bottom",
+            title: "Entrypoint to a synthesis prediction",
+            content: `
+The entrypoint is predicting possible reaction conditions given known reactants and products, for example, after making a retrosynthetic prediction for a given target.
+`,
+
+        },
+        {
+            title: "Providing molecular structures",
+            element: "#reactants",
+            placement: "left",
+            content: `
+Ultimately, the software will need SMILES strings for each compound. 
+These can be entered directly (i.e. - copy and pasted from ChemDraw) or drawn using the JSME molecular editor we have provided in the UI.
+When you start entering a SMILES string in each input field, the structure will be rendered, on-the-fly, as you type. 
+Don't be alarmed if you are in the middle of writing a ring structure and the image looks broken. 
+Give it a try by writing a simple molecule like "CCOCC" in the reactants input field to the right.
+`
+        },
+        {
+            title: "Drawing structures",
+            element: "#reactants-edit-icon",
+            placement: "bottom",
+            content: `
+Alternatively, structures can be drawn using a simple molecular editor by clicking this edit (pencil) button. 
+Each input field has it's own button you should click to draw a structure for that field.
+If a SMILES string is already present in the input field, the drawing interface will be prepopulated with that structure for you to edit.
+Give it a try now if you'd like.
+`,
+            onNext: () => {
+                app.reactants = "N#CC(O)c1ccccc1.O=Cc1ccccc1"
+                app.product = "c1ccc(-c2cnc(-c3ccccc3)o2)cc1"
+            }
+        },
+        {
+            title: "An example prediction",
+            element: "#submit-button",
+            placement: "top",
+            content: `
+For this tutorial, let's take a look at an example suzuki coupling reaction. 
+Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click continue and we'll pretend you clicked submit)
+`,
+            relfex: true,
+            onNext: () => {
+                if (!app.contextResults) {
+                    app.predict()
+                }
+            }
+        },
+        {
+            title: "Condition results",
+            element: "#context-results",
+            placement: "top",
+            content: `
+After the prediction on the server has finished, the top 10 results will be displayed below. As you can see, the top results suggest 
+`
         }
+
     ]
 });

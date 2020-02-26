@@ -142,7 +142,7 @@ Synthesis Predictor
                                 <label>Reactants: </label>
                                 <div class="input-group">
                                     <input class='form-control' type="text" v-model="reactants" id="reactants"/> 
-                                    <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')">
+                                    <span id="reactants-edit-icon" class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')">
                                         <i class="fas fa-edit"></i>
                                     </span>
                                 </div>
@@ -190,13 +190,13 @@ Synthesis Predictor
                             </div>
                         </div>
                         <div class="form-inline text-center">
-                            <button type="submit" class='form-control' style="margin: 0 5px">Submit</button>
+                            <button id="submit-button" type="submit" class='form-control' style="margin: 0 5px">Submit</button>
                         </div>
                     </form>
                 </div>
             </div>
             
-            <div v-show="mode=='context' && !!contextResults.length">
+            <div id="context-results" v-show="mode=='context' && !!contextResults.length">
                 <div class="text-center" style="margin: 10px auto">
                     <button class="btn btn-success" @click="evaluate" :disabled="evaluating==true">Evaluate reaction(s)</button>
                 </div>
