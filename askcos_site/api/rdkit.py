@@ -1,5 +1,29 @@
+import json
 from rdkit import Chem
 from django.http import JsonResponse
+
+def canonicalize(request):
+    resp = {}
+    if request.method != 'POST':
+        resp['error'] = 'Must use POST request'
+        return JsonResponse(resp, status=400)
+    if not request.body:
+        resp['error'] = 'Did not recieve request body'
+        return JsonResponse(resp, status=400)
+    original_smiles = json.loads(request.body.decode('utf-8')).get('smiles')
+    if not original_smiles:
+        resp['error'] = 'SMILES was not sent or body could not be parsed'
+        return JsonResponse(resp, status=400)
+    mol = Chem.MolFromSmiles(original_smiles)
+    if not mol:
+        resp['error'] = 'Cannot parse smiles with rdkit'
+        return JsonResponse(resp, status=400)
+    smiles = Chem.MolToSmiles(mol)
+    if not smiles:
+        resp['error'] = 'Cannot canonicalize smiles with rdkit'
+        return JsonResponse(resp, status=400)
+    resp['smiles'] = smiles
+    return JsonResponse(resp)
 
 def molfile_to_smiles(request):
     resp = {}

@@ -148,6 +148,7 @@ urlpatterns += [
 
     re_path(r'^api/rdkit/smiles-to-molfile/$', api.rdkit.smiles_to_molfile, name='smiles_to_molfile_api'),
     re_path(r'^api/rdkit/molfile-to-smiles/$', api.rdkit.molfile_to_smiles, name='molfile_to_smiles_api'),
+    re_path(r'^api/rdkit/canonicalize/$', api.rdkit.canonicalize, name='canonicalize_api'),
 
     # async results
     re_path(r'^api/get-result/$', api.results.get_result, name='get_async_result'),
