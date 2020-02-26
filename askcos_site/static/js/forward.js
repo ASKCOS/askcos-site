@@ -43,6 +43,7 @@ var app = new Vue({
         impurityResults: [],
         reactionScore: null,
         mode: 'context',
+        contextModel: 'neuralnetwork',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'wln',
@@ -403,7 +404,7 @@ After the prediction on the server has finished, the top 10 results will be disp
             content: `
 You can evaluate the reaction and the reaction conditions using this evaluation button here (we just clicked it for you). 
 For evaluation, each set of reaction conditions is sent through a forward reaction prediction. 
-If the product is found in the top 10 forward prediction results, a green checkmark will appear next to the recommendation (with the rank assigned to the product).
+If the product is found in the top 10 forward prediction results, a checkmark will appear next to the recommendation (with the rank assigned to the product).
 Additionally, the reaction evluator (which does not currently consider reaction conditions) will give a reaction score for the transformation from reactants to products.
 `
         },

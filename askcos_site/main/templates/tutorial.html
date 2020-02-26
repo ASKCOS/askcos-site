@@ -19,12 +19,9 @@
 <h1>Contents</h1>
 <ul>
     <li><a href="#introduction">Introduction</a></li>
-    <li><a href="#onestep">One-Step Retrosynthesis</a></li>
     <li><a href="#pathplanning">Interactive Path Planning</a></li>
     <li><a href="#treebuilder">Tree Builder</a></li>
-    <li><a href="#context">Context Recommendation</a></li>
-    <li><a href="#forwardpred">Forward Prediction</a></li>
-    <li><a href="#evaluation">Reaction Evaluation</a></li>
+    <li><a href="#synthpred">Synthesis Predictor</a></li>
 </ul>
 
 <h1 id="introduction">Introduction</h1>
@@ -33,11 +30,6 @@
 <table class="table table-nonfluid table_outcomes">
 <tr>
 <th>Application</th><th>Brief Description</th><th>Use Case</th>
-</tr>
-<tr>
-<td>One-Step Retrosynthesis</td>
-<td>Single-step retrosynthesis</td>
-<td>Identifying precursors (buyable or non-buyable) that can be used to synthesize a target compound via a single reaction</td>
 </tr>
     
 <tr>
@@ -53,21 +45,9 @@
 </tr>
 
 <tr>
-<td>Context Recommendation</td>
-<td>Reaction condition recommendations</td>
-<td>Suggesting conditions (reagent, catalyst, solvents, temperature) under which a specified reaction can be run successfully</td>
-</tr>
-
-<tr>
-<td>Forward Prediction</td>
-<td>Product distribution</td>
-<td>Predicting the products that are likely to be generated when two reactants are combined under specified conditions (reagent, catalyst, solvents, temperature)</td>
-</tr>
-
-<tr>
-<td>Reaction Evaluation</td>
-<td>Probability of reaction success</td>
-<td>Predicting whether or not a target compound of interest will be generated when specified precursors react with one another, and simultaneously identifying conditions that are most likely to promote creation of the specified target compound</td>
+<td>Synthesis Predictor</td>
+<td>Reaction evaluation considering conditions and impurities</td>
+<td>Predicting whether or not a target compound of interest will be generated when specified precursors react with one another, identifying conditions that are most likely to promote creation of the specified target compound, and identifying common types of impurities that may form during the reaction</td>
 </tr>
 
 <tr>
@@ -92,102 +72,59 @@
 
 <p>Generally, the website takes target compound inputs as SMILES strings, although there are some compounds for which the common name (aspirin, ibuprofen, etc.) can be entered in the input window and converted to a SMILES string automatically.  For more information about SMILES strings, click <a href="https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system">here</a>.  Compound SMILES strings can be obtained by first drawing the molecule of interest in ChemDraw, selecting the molecule with the selector tool, right-clicking, and choosing 'Molecule', 'Copy As', and finally, 'SMILES'.  Alternatively, much of the website also supports drawing compounds of interest directly.  This can be done by clicking the Draw links adjacent to input text fields, where applicable.</p>
 
-<h1 id="onestep">One-Step Retrosynthesis</h1>
+<h1 id="onestep">Interactive Path Planning</h1>
 
-<p> One-Step Retro is used to identify precursor molecules that can be combined to generate a target compound via a single reaction.</p>
+<p> The interactive path planner uses one-step retrosynthesis tools to identify precursor molecules that can be combined to generate a target compound via a single reaction.</p>
 
 <h4>Usage</h4>
-<ol>
-<li>Enter target compound SMILES string into "Target compound" field</li>
-<li>Select template prioritization option ("apply relevant templates" preferred)</li>
-<li>Select precursor scoring option (Relevance+Heuristic preferred)</li>
-<li>Define minimum plausibility [0 to 1]</li>
-<li>Click Search</li>
-</ol>
+<ul>
+    <li>There is a guided tutorial built into the user interface. Click the "?" button to get started on the interactive path planning page</li>
+</ul>
 
 <h4>Options</h4>
 <ul>
-<li>Reaction templates have been culled from the Reaxys database.  There are two options for template prioritization:
+<li>Reaction templates have been culled from the Reaxys database. The templates are applied to the target molecule in an order determined by a machine learning prediction. There are two options for template prioritization: Num. Templates and Max. Cum. Prob. The search will terminate either when:
     <ul>
-        <li>Apply relevant templates
-            <ul>
-                <li>A neural network has been trained to identify the probability that a template is applicable to a compound in question</li>
-                <li>The maximum number of templates (num. templates) and the maximum cumulative probability (max. cum. prob.) can be specified; the search will terminate either when the maximum number of templates or the maximum cumulative probability is reached, whichever comes first</li>
-            </ul>
-        </li>
-        <li>Apply all templates
-            <ul>
-                <li>All of the templates that have been collected from the database are applied</li>
-                <li>This is relatively slow</li>
-            </ul>
-        </li>
+        <li>the maximum number of templates have been applied to the target, regardless of template application success</li>
+        <li>the maximum cumulative probability of the template scores (from the machine learning model) has been surpassed</li>
     </ul>
 </li>
-<li>Precursor recommendations are selected and sorted based on a scoring function. There are four options for precursor scoring:
+<li>Precursor recommendations are selected and sorted based on a scoring function. There are three options for precursor scoring:
 <ul>
     <li>Heuristic: crude synthetic accessibility score</li>
     <li>Relevance+Heuristic: combination of heuristic and template relevance</li>
     <li>SCScore: learned synthetic complexity score</li>
-    <li>Natural ordering: as the name implies</li>
 </ul>
 </li>In addition, a minimum plausibility may be specified. The plausibility metric represents the likelihood that a pair of candidate precursors can be successfully used to generate the target compound under any set of conditions.
 </li>
 </ul>
 
 <h4>Output</h4>
-<p>The one-step retrosynthesis tool generates a list of recommended precursor pairs.  The pairs are rank-ordered based on the scoring function specified by the user.  For each pair, the following information is displayed:</p>
+<p>The one-step retrosynthesis tool generates a list of recommended precursor pairs shwon on the right side of the page.  The pairs are rank-ordered based on the scoring function specified by the user.  For each pair, the following information is displayed:</p>
 <ol>
     <li>Skeletal structures</li>
-    <li>SMILES strings</li>
-    <li>Information about buyability </li>
-    <li>"Score": the value of the score defined by the chosen scoring function
+    <li>"Score": the value of the score defined by the chosen scoring function</li>
     <li>"# Examples": the number of entries in Reaxys that support the template(s) that was (were) applied to generate the precursors </li>
-    <li>"Max template relevance": the relevance score (or maximum thereof) assigned by the neural network to the template(s) that was (were) applied to generate the precursors</li>
+    <li>"Template score": the relevance score (or maximum thereof) assigned by the neural network to the template(s) that was (were) applied to generate the precursors</li>
+    <li>"Plausibility": the score given to the reaction from the fast filter model</li>
+    <li>"Reaction cluster": each precursor is assigned a cluster according to similarity calculated through the clustering method selected in the user settings. By default, only the top ranked precursor from each cluster is shown in the list, but the cluster icon (four squares) can be used to view other suggestions in the cluster.</li>
 </ol>
 
-<p>Adjacent to each pair of precursor SMILES strings is a link, "-->?”, that copies the strings over to the context recommender (see below) for easy acquisition of context recommendations. </p>
+<p>Clicking on a reaction node in the graph visualization (on the left side of the page - circles with numbers) changes the information displayed on the right side of the page. For each reaction, the following information is displayed:</p>
+<ol>
+    <li>Reaction smiles</li>
+    <li>Reaction skeletal image</li>
+    <li>A link to evaluate the reaction in a new tab - this link takes you to the Interactive Reaction Evaluator</li>
+    <li>"Retroscore": the value of the score defined by the chosen scoring function</li>
+    <li>"Template score": the relevance score (or maximum thereof) assigned by the neural network to the template(s) that was (were) applied to generate the precursors</li>
+    <li>"Plausibility": the score given to the reaction from the fast filter model</li>
+    <li>"Num. Examples": the number of entries in Reaxys that support the template(s) that was (were) applied to generate the precursors</li>
+    <li>"Supporting templates": a list of links to view the templates (and possibly reaction precedents) used to generate this precursor</li>
+</ol>
 
 
 <h4>Example</h4>
-<p>To demonstrate the use of the one-step retrosynthesis tool, consider the potential target compound Atropine.  To obtain a list of precursors that can be used to generate Atropine via a single reaction, click the “One-step Retro” link on the left-hand side of the ASKCOS homepage.  The following screen will appear:</p>
-
-<img src="/static/images/tut_onestep_home.png" class="center tutorialimage">
-
-<p>Enter Atropine (by name or SMILES string: CN1C2CCC1CC(C2)OC(=O)C(CO)c3ccccc3) into the “Target compound” field.  The default algorithm options generally work well, and may be left as-is.  Click Search.  Below the Search button, the parsed molecule structure will appear, along with the rank-ordered list of precursor candidates.  The first three candidates are shown in the image below.  If a candidate is buyable, its price per gram will appear next to its SMILES string; if not, the phrase “cannot buy” is listed:</p>
-
-<img src="/static/images/tut_onestep_atropine.png" class="center tutorialimage">
-
-<p>The SMILES strings of the proposed candidates are links that the user can click to run the one-step retrosynthesis on a candidate.  This allows users to design full syntheses manually, in a step-by-step fashion.  For example, clicking the SMILES string of the non-buyable precursor that is ranked second in the output above automatically runs the one-step expansion on that candidate:</p>
-
-<img src="/static/images/tut_onestep_atropine_d2.png" class="center tutorialimage">
-
-<p>Alternatively, the user can click the link designated by "-->?"" adjacent to the precursor SMILES strings in the one-step output.  This automatically runs the context recommender.  For example, clicking the context recommendation link for the first pair of precursors in the one-step retrosynthesis we generated for Atropine gives:</p>
-
-
-<img src="/static/images/tut_onestep_context.png" class="center tutorialimage">
-
-<p>You can also click on the image of the reactants themselves to expand a list of the templates that were used to suggest that transformation.  Multiple templates can lead to the same precursor, so there may be many with different degrees of specificity and different numbers of precedents. </p>
-
-<img src="/static/images/tut_onestep_atropine_click.png" class="center tutorialimage">
-
-<p>Clicking through provides more details about the template, including its SMARTS string. It displays a selection of precedents from Reaxys sorted by decreasing yield.</p>
-
-<img src="/static/images/tut_template.png" class="center tutorialimage">
-
-
-<h1 id="pathplanning">Interactive Path Planning</h1>
-
-<p>This tool is used to interactively explore synthetic pathways comprised of multiple one-step retrosynthesis predictions.</p>
-
-<h4>Usage</h4>
-<ol>
-<li>There is a guided tutorial built into the user interface. Click the "?" button to get started on the interactive path planning page.</li>
-</ol>
-
-<h4>Options</h4>
-<ol>
-<li>The options for the interactive path planning tools are the same as the one-step retrosynthesis tool.</li>
-</ol>
+<p>The interactive tutorial built into the Interactive Path Planning page will walk you through an example use case. Click the "?" button to get started on the Interactive Path Planning page.</p>
 
 
 <h1 id="treebuilder">Tree Builder</h1>
@@ -292,209 +229,49 @@ The summary of the expansion results shows the number of chemicals (or, at half-
 <p>Now that we’ve blacklisted this chemical, it is possible to return to the Tree Builder tab and rerun the Fluconazole expansion.  This time, none of the trees that the algorithm recommends will contain the blacklisted chemical. </p>
 
 
-<h1 id="context">Context Recommendation</h1>
+<h1 id="synthpred">Synthesis Predictor</h1>
 
-<p>The context recommender is useful for cases when you know the chemical transformation you want to make, and you’d like recommendations for the reaction conditions.  This might be the case, for example, after you’ve run the Tree Builder on a target compound and you have a series of transformations in-hand: each reaction in the series can then be passed through the context recommender to obtain suggested reaction conditions.  At this time, the context recommender is capable of recommending a catalyst, reagent, solvent (up to 2), and temperature.</p>
+<p>The Synthesis Predictor module now combines what were previously four separate modules: context recommendation, forward prediction, reaction evaluator, and impurity predictor.
+The interface is divided into three parts: condition (context) recommendation, synthesis prediction, and impurity prediction</p>
 
 <h4>Usage</h4>
-<ol>
-<li>Specify reactants:
-<ol>
-<li>Enter reactant SMILES strings into “Reactants” field.  Separate distinct reactants using a period, “.”</li>
-OR
-<li>Click “Draw” link adjacent to “Reactants” field and draw reactants in window that appears</li>
-</ol>
-</li>
-<li>Specify products:
-<ol>
-<li>Enter product SMILES strings into "Products” field</li>
-OR
-<li>Click “Draw” link adjacent to "Products” field and draw products in window that appears</li>
-</ol>
-</li>
-<li>Select context recommender option (see Options, below; Neural Network preferred)</li>
-<li>Click Get Context Recommendations</li>
-</ol>
+<ul>
+<li>There is a guided tutorial built into the user interface. Click the "?" button to get started on the Synthesis Predictor page</li>
+</ul>
 
 <h4>Options</h4>
 
-<p>Two options for the context recommender are available: a neural network and a nearest neighbor search.  The nearest neighbor approach is an early version of the context recommender that relies on computationally expensive similarity calculations.  It is slower and less accurate than the neural network.</p>
+<p>There are four different models that are used in various stages of the workflow described below. Only one version of each model is currently available, however we are always training and testing new models that may get added in the future</p>
+
+<ul>
+    <li>Condition recommednation model: Predicts the best set of reaction conditions given reactants and products</li>
+    <li>Forward prediction model: Predicts the most likely major product given reactants (and conditions)</li>
+    <li>Reaction scoring model: Predicts a reaction plausibility score given reactants and products</li>
+    <li>Atom-mapping model: Predicts atom mapping for a reaction</li>
+</ul>
 
 <h4>Output</h4>
 
-<p>The context recommender produces a list of recommendations for reaction conditions.  Each recommendation contains a subset of the following features: reagent, catalyst, solvent (1 or 2), and temperature.  We define reagents as compounds that do not contribute heavy atoms to the product.  In some cases, the distinction between a reagent and a catalyst in Reaxys is ambiguous, such that the distinction between these categories in the recommendations may be ambiguous as well, although data cleaning has been performed to help mitigate this.  Note that the context recommender will not produce an error if the proposed chemical transformation is not achievable via a single reaction.</p>
-
-<h4>Example</h4>
-
-<p>Consider the FMOC deprotection in the scheme below.  A weak base would effectively remove the FMOC group without altering the other functionality in the molecule.  This example will show that the context recommender is sensitive to this type of requirement.</p>
-
-<p>To begin, click the Context Recommendation option on the left-hand side of the ASKCOS homepage.  This will bring up a screen where you can enter the SMILES strings of the reactant(s) and product of the reaction of interest (or, alternatively, you can click the Draw link adjacent to the text fields).</p>
-
-<p>In the “Reactants” text field, enter the SMILES strings of the reactant in the FMOC deprotection:
-
-Reactant SMILES: O=C([C@H](CO[C@@H]1O[C@@H]([C@@H]([C@@H]([C@H]1NC(C)=O)OC(C)=O)OC(C)=O)COC(C)=O)NC(OCC2C3=C(C4=C2C=CC=C4)C=CC=C3)=O)NCCCCCCCCCCCCCC
-
-For reactions that include multiple reactants, distinct reactant SMILES strings should be separated with a period.  In the “Products” text field, enter the SMILES string of the product of the FMOC deprotection:
-
-Product SMILES: O=C([C@H](CO[C@@H]1O[C@@H]([C@@H]([C@@H]([C@H]1NC(C)=O)OC(C)=O)OC(C)=O)COC(C)=O)N)NCCCCCCCCCCCCCC
-
-Once you enter the strings, the parsed structures will appear:</p>
-
-<img src="/static/images/tut_contextrec.png" class="center tutorialimage">
-
-<p>For the context recommender, choose the neural network.  Click Get Context Recommendations.  Below the Get Context Recommendations button, a list of ten recommendations will appear:
+<p>
+The context recommender produces a list of recommendations for reaction conditions. 
+Each recommendation contains a subset of the following features: reagent, catalyst, solvent (1 or 2), and temperature. 
+We define reagents as compounds that do not contribute heavy atoms to the product. 
+In some cases, the distinction between a reagent and a catalyst in Reaxys is ambiguous, such that the distinction between these categories in the recommendations may be ambiguous as well, although data cleaning has been performed to help mitigate this. 
+Note that the context recommender will not produce an error if the proposed chemical transformation is not achievable via a single reaction.
 </p>
 
-<img src="/static/images/tut_contextrec_results.png" class="center tutorialimage">
+<p>
+The forward predictor produces a list of candidate reaction outcomes that are rank-ordered by a probability score that reflects the model’s confidence that each outcome will appear. 
+The probabilities for a set of candidates should not be interpreted together to comprise an expected product distribution, nor should an individual probability be interpreted as an expected yield; 
+rather, a probability for a given outcome purely reflects the model’s confidence regarding whether or not that compound will appear at all (the model is not trained on specific yield-related data).
+</p>
 
-
-<p>The results, which include weak bases and low temperatures, reflect the need to selectively deprotect the Fmoc group.</p>
-
-
-<h1 id="forwardpred">Forward Prediction</h1>
-
-<p>The forward predictor can be used to predict the outcome of a reaction between any number of compounds. </p>
-
-<h4>Usage</h4>
-<ol>
-<li>1. Specify reactants.  Note that compounds that can contribute atoms to the product should be included as reactants:
-    <ol>
-        <li>Enter SMILES strings of reactants, separated by a period, in the "Reactants" field</li>
-        OR
-        <li>Click the "Draw" link adjacent to the “Reactants” field and draw reactant structures in window that appears</li>
-    </ol>
-</li>
-<li>Select prediction approach (see Options, below)</li>
-<li>Specify reagents (any non-solvent and non-catalyst compounds that do not contribute heavy atoms to the product):
-    <ol>
-        <li>Enter SMILES strings of reagents, separated by a period, in the “Reagents” field</li>
-        <li>Click the “Draw” link adjacent to the “Reagents” field and draw reagent structures in window that appears</li>
-    </ol>
-</li>
-<li>Select solvent</li>
-<li>Specify the maximum number of products you would like the algorithm to return (see Options, below)</li>
-<li>If using template-based prediction, specify temperature and minimum template count (see Options, below)</li>
-</ol>
-
-
-<h4>Options</h4>
-
-<p>Prediction approach – two options exist:</p>
-<ul>
-<li>
-Template-free
-    <ul>
-        <li>Faster and more accurate than template-based approach</li>
-        <li>May allow for prediction of more inventive chemistries than template-based approach</li>
-        <li>Does not yet take reaction conditions (context) into account, although reagents and solvents may be specified</li>
-    </ul>
-</li>
-<li>Template-based
-    <ul>
-        <li>Traditional approach</li>
-        <li>Somewhat context-dependent</li>
-        <li>Allows user to specify the solvent, reagent, and temperature of interest</li>
-        <li>Using the template-based approach requires specification of the minimum template count – this feature determines the minimum frequency of Reaxys instances that support the templates that are applied to generate predictions.  The default value of 25 is the minimum that may be specified, as 25 has been found to be an appropriate minimum for getting reasonable predictions; higher values bias the search toward more popular chemistries</li>
-    </ul>
-</li>
-</ul>
-
-
-<p>Maximum number of products</p>
-<ul>
-<li>This feature adjusts the number of candidate outcomes that are returned</li>
-<li>Large values do not affect computational time, but do affect the amount of time it takes to render the images</li>
-</ul>
-
-<h4>Output</h4>
-<p>The forward predictor produces a list of candidate reaction outcomes that are rank-ordered by a Probability score that reflects the model’s confidence that each outcome will appear.  The probabilities for a set of candidates should not be interpreted together to comprise an expected product distribution, nor should an individual probability be interpreted as an expected yield; rather, a probability for a given outcome purely reflects the model’s confidence regarding whether or not that compound will appear at all (the model is not trained on specific yield-related data).</p>
+<p>
+The impurity predictor produces a list of common types of impurities that could form given the reactants, products, and reaction conditions.
+</p>
 
 <h4>Example</h4>
-<p>Consider the p-toluenesulfonic acid-promoted etherification of benzhydrol by dimethylaminoethanol that can be used to synthesize diphenhydramine.  To predict the outcome of a reaction between benzhydrol and DMAE in the presence of p-toluenesulfonic acid, start by entering the SMILES strings of the two reactants, separated by a period, in the "Reactants" field (or, alternatively, draw the structures in the window that appears after clicking the Draw link adjacent to the Reactants field).</p>
 
-<p>SMILES string of DMAE: CN(C)CCO
-SMILES string of benzhydrol: OC(c1ccccc1)c1ccccc1
-
-The parsed structures will appear so the user can confirm that their input was interpreted correctly.</p>
-
-<p>Next, choose the <b>Prediction approach</b>.  Since we have a reagent that we would like to specify, we can use either approach, although the template-based approach does not make any explicit consideration of the fact that p-toluenesulfonic acid is expected to act as a reagent and not a reactant.</p>
-
-<img src="/static/images/tut_synthpredictor.png" class="center tutorialimage">
-
-<p>Choosing the template-free expansion method gives the predicted outcomes according to the Template-free forward predictor:</p>
-
-<img src="/static/images/tut_synthpred_res.png" class="center tutorialimage">
-
-
-<h1 id="evaluation">Reaction Evaluation</h1>
-
-<p>The reaction evaluator allows you to specify a pair of precursor compounds and a potential target compound, and reports the model’s confidence (probability) that the target compound will be generated via a reaction between the specified precursors.</p>
-
-<h4>Usage</h4>
-<ol>
-<li>Specify reactants:
-    <ol>
-        <li>Enter SMILES strings of reactants, separated by a period, in the “Reactants” field</li>
-        OR
-        <li> Click the “Draw” link adjacent to the “Reactants” field and draw reactant structures in window that appears</li>
-    </ol>
-</li>
-<li>Specify target compound/product of interest:
-    <ol>
-        <li>Enter SMILES string of target compound in the “Product” field</li>
-        OR
-        <li>Click the “Draw” link adjacent to the “Product” field and draw product structure in window that appears</li>
-    </ol>
-</li>
-<li>Select prediction approach (see Options, below)</li>
-<li>Select context recommender (see Options, below; Neural Network preferred)</li>
-<li>Decide whether or not reagents should contribute heavy atoms to the product (see Options, below)</li>
-<li>Click Evaluate</li>
-</ol>
-
-<h4>Options</h4>
-<p>Prediction approach – two options exist:</p>
-<ul>
-<li>Template-free
-    <ul>
-        <li>Faster and more accurate than template-based approach</li>
-        <li>May allow for better assessment of relatively inventive chemistries than template-based approach</li>
-    </ul>
-</li>
-<li>Template-based
-    <ul>
-        <li>Traditional approach</li>
-        <li>Somewhat context-dependent</li>
-    </ul>
-</li>
-<li>Fast filter
-    <ul>
-        <li>Does not consider context explicitly</li>
-        <li>Tries to evaluate the likelihood that the reaction could succeed under <i>some</i> context</li>
-        <li>Can also be used during one- or multi-step retrosynthesis to automatically filter results</li>
-    </ul>
-</ul>
-<p>Context recommender – two options exist when applicable (see Context Recommendation - Options for more information):</p>
-<ul>
-    <li>Neural network</li>
-    <li>Nearest neighbor</li>
-</ul>
-
-<h4>Output</h4>
-<p>The primary output of the reaction evaluator is the plausibility score, which indicates the model’s confidence that the compound specified by the user in the “Product” field will be generated when the specified precursors react with one another.</p>
-
-<h4>Example</h4>
-<p>Consider the simplest one-step retrosynthesis for diphenhydramine. We can enter the reactant and product SMILES strings into the Evaluator:</p>
-
-<img src="/static/images/tut_evaluator.png" class="center tutorialimage">
-
-<p>Using the Template-free method, we can virtually screen 10 different reaction conditions to find which one seems to be most promising, i.e., which one leads to the intended product with the highest confidence.</p>
-
-<img src="/static/images/tut_evaluator_res.png" class="center tutorialimage">
-
-Alternately, we can ask if this reaction is possible under <i>any</i> set of conditions, which is the question that the Fast filter is designed to answer. Choosing this option gives a very confident prediction that this reaction is possible.
-
-<img src="/static/images/tut_evaluator_fastfilter.png" class="center tutorialimage">
-
+<p>The interactive tutorial built into the Synthesis Predictor page will walk you through an example use case. Click the "?" button to get started on the Synthesis Predictor page.</p>
 
 {% endblock %}
