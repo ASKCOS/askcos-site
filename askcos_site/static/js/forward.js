@@ -387,8 +387,8 @@ Reactants and products have been prepopulated for you, and you can run the predi
         },
         {
             title: "Condition results",
-            element: "#context-results",
-            placement: "top",
+            orphan: true,
+            backdropContainer: '#body',
             content: `
 After the prediction on the server has finished, the top 10 results will be displayed below.
 `,
@@ -447,7 +447,7 @@ Click this button or click "Next >>" to continue and make the impurity predictio
             orphan: true,
             backdropContainer: '#body',
             content: `
-The impurity prediction will start on the server, and the progress will be displayed here. 
+The impurity prediction will start on the server, and the progress will be updated here. 
 Once the task finishes, the results wil be shown here. That ends this tour of the interface!
 `
         },
