@@ -210,6 +210,7 @@ Synthesis Predictor
                 </div>
                 <div v-if="!!reactionScore" class="text-center">
                     <b>Reaction score: %% reactionScore.toFixed(3) %%</b>
+                    <i class="fas fa-info-circle" title="The reaction score is determined by the reaction scoring prediction model specified by the user (currently only the fast filter model is supported)"></i>
                 </div>
                 <table class="table table-hover" style="width: 75%; margin: 0 auto">
                     <template v-for="(result, index) in contextResults">
