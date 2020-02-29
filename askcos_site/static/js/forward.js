@@ -121,6 +121,7 @@ var app = new Vue({
         },
         changeMode(mode) {
             this.mode = mode
+            window.history.pushState({mode: mode}, mode, '?mode='+mode)
         },
         constructForwardQuery(reagents, solvent) {
             var query = `reactants=${encodeURIComponent(this.reactants)}`
@@ -156,6 +157,7 @@ var app = new Vue({
             return query
         },
         predict() {
+            showLoader()
             this.canonicalizeAll()
             .then(() => {
                 switch(this.mode) {
@@ -188,6 +190,7 @@ var app = new Vue({
             })
         },
         goToForward(index) {
+            window.history.pushState({mode: 'forward'}, 'forward', '?mode=forward')
             this.canonicalizeAll()
             .then(() => {
                 var context = this.contextResults[index]
@@ -207,6 +210,7 @@ var app = new Vue({
             })
         },
         goToImpurity(smiles) {
+            window.history.pushState({mode: 'impurity'}, 'impurity', '?mode=impurity')
             this.canonicalizeAll()
             .then(() => {
                 this.product = smiles
@@ -332,6 +336,34 @@ var app = new Vue({
         updateSmilesFromJSME() {
             var smiles = jsmeApplet.smiles();
             this.canonicalize(smiles, drawBoxId)
+        },
+        downloadForwardResults() {
+            if (!!!this.forwardResults) {
+                alert('There are no forward predictor results to download!')
+            }
+            var downloadData = "Rank,SMILES,Probability,Score,MolWt\n"
+            this.forwardResults.forEach((res) => {
+                downloadData += `${res.rank},${res.smiles},${res.prob},${res.score},${res.mol_wt}\n`
+            })
+            var dataStr = "data:text/json;charset=utf-8," + downloadData
+            var dlAnchorElem = document.getElementById('downloadForwardAnchorElem')
+            dlAnchorElem.setAttribute("href",     dataStr     )
+            dlAnchorElem.setAttribute("download", "askcos_forward_export.csv")
+            dlAnchorElem.click()
+        },
+        downloadImpurityResults() {
+            if (!!!this.impurityResults) {
+                alert('There are no impurity predictor results to download!')
+            }
+            var downloadData = "No.,SMILES,Mechanism,InspectorScore,SimilarityScore\n"
+            this.impurityResults.forEach((res) => {
+                downloadData += `${res.no},${res.prd_smiles},${res.modes_name},${res.avg_insp_score},${res.similarity_to_major}\n`
+            })
+            var dataStr = "data:text/json;charset=utf-8," + downloadData
+            var dlAnchorElem = document.getElementById('downloadImpurityAnchorElem')
+            dlAnchorElem.setAttribute("href",     dataStr     )
+            dlAnchorElem.setAttribute("download", "askcos_impurity_export.csv")
+            dlAnchorElem.click()
         },
         startTour() {
             var res = confirm('Starting the tutorial will clear all current results, continue?')
