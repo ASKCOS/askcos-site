@@ -81,8 +81,10 @@ var app = new Vue({
         if (!!solvent) {
             this.solvent = solvent
         }
-        if (!!mode && !!this.reactants) {
+        if (!!mode) {
             this.changeMode(mode)
+        }
+        if (!!this.reactants) {
             this.predict()
         }
     },
