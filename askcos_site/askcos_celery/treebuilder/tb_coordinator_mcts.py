@@ -9,24 +9,20 @@ The coordinator, finally, returns a set of buyable trees obtained
 from an IDDFS.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf import settings
-import celery
 from celery import shared_task
 from celery.signals import celeryd_init
 from pymongo import MongoClient
-from collections import defaultdict
-from celery.result import allow_join_result
-# NOTE: allow_join_result is only because the treebuilder worker is separate
-from celery.exceptions import Terminated
-import time
 from rdkit import RDLogger
+
 import makeit.global_config as gc
+from makeit.retrosynthetic.mcts.tree_builder import MCTS, WAITING
+from makeit.retrosynthetic.transformer import RetroTransformer
 from makeit.utilities.buyable.pricer import Pricer
 from makeit.utilities.historian.chemicals import ChemHistorian
-from makeit.retrosynthetic.mcts.v2.tree_builder import MCTSCelery as MCTSTreeBuilder
-from django.db import models
+
+import askcos_site.askcos_celery.treebuilder.tb_c_worker as tb_c_worker
 from askcos_site.main.models import SavedResults
+
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
@@ -40,11 +36,153 @@ client = MongoClient(
 results_db = client['results']
 results_collection = results_db['results']
 
+
+class MCTSCelery(MCTS):
+    """
+    This is a subclass of MCTS which uses celery for multiprocessing.
+
+    Note regarding model and data loading: This class uses pricing data,
+    chemhistorian data, template prioritizer, and retro transformer. The retro
+    transformer additionally needs the precursor prioritizer and fast filter.
+    If instantiating this class with no arguments, only Pricer and ChemHistorian
+    data will be loaded (using database) by default. The RetroTransformer
+    is provided via ``tb_c_worker`` which is configured separately. The
+    template prioritizer should be passed directly to ``get_buyable_paths``.
+
+    Attributes:
+
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        from celery.result import allow_join_result
+        self.allow_join_result = allow_join_result
+
+    @staticmethod
+    def load_pricer():
+        """
+        Loads pricer.
+        """
+        pricer = Pricer(use_db=True)
+        pricer.load()
+        return pricer
+
+    @staticmethod
+    def load_chemhistorian():
+        """
+        Loads chemhistorian.
+        """
+        chemhistorian = ChemHistorian(use_db=True, hashed=True)
+        chemhistorian.load()
+        return chemhistorian
+
+    @staticmethod
+    def load_retro_transformer(**kwargs):
+        """
+        Loads retro transformer model.
+        """
+        # Still need to load to have num refs, etc.
+        retro_transformer = RetroTransformer(
+            template_prioritizer=None,
+            precursor_prioritizer=None,
+            fast_filter=None
+        )
+        retro_transformer.load()
+        return retro_transformer
+
+    def reset_workers(self, soft_reset=False):
+        # general parameters in celery format
+        # TODO: anything goes here?
+        self.pending_results = []
+
+    def expand(self, _id, smiles, template_idx):  # TODO: make Celery workers
+        """Adds pathway to be worked on with Celery.
+
+        Args:
+            _id (int): ID of pending pathway.
+            smiles (str): SMILES string of molecule to be exanded.
+            template_idx (int): ID of template to apply to molecule.
+        """
+        # Chiral transformation or heuristic prioritization requires
+        # same database. _id is _id of active pathway
+        self.pending_results.append(tb_c_worker.apply_one_template_by_idx.apply_async(
+            args=(_id, smiles, template_idx),
+            kwargs={'max_num_templates': self.template_count,
+                    'max_cum_prob': self.max_cum_template_prob,
+                    'fast_filter_threshold': self.filter_threshold,
+                    'template_prioritizer': self.template_prioritizer},
+            # queue=self.private_worker_queue, ## CWC TEST: don't reserve
+        ))
+        self.status[(smiles, template_idx)] = WAITING
+        self.active_pathways_pending[_id] += 1
+
+    def prepare(self):
+        """Starts parallelization with Celery."""
+        try:
+            ## CWC TEST: don't reserve
+            res = tb_c_worker.apply_one_template_by_idx.delay(
+                1,
+                'CCOC(=O)[C@H]1C[C@@H](C(=O)N2[C@@H](c3ccccc3)CC[C@@H]2c2ccccc2)[C@@H](c2ccccc2)N1',
+                1,
+                template_prioritizer='reaxys'
+            )
+            res.get(20)
+        except Exception as e:
+            res.revoke()
+            raise IOError('Did not find any workers? Try again later ({})'.format(e))
+
+    def get_ready_result(self):
+        """Yields processed results from Celery.
+
+        Yields:
+            list of 5-tuples of (int, string, int, list, float): Results
+                from workers after applying a template to a molecule.
+        """
+        # Update which processes are ready
+        self.is_ready = [i for (i, res) in enumerate(self.pending_results) if res.ready()]
+        for i in self.is_ready:
+            yield self.pending_results[i].get(timeout=0.1)
+            self.pending_results[i].forget()
+        self.pending_results = [res for (i, res) in enumerate(self.pending_results) if i not in self.is_ready]
+
+    def stop(self, soft_stop=False):
+        """Stops work with Celery.
+
+        Args:
+            soft_stop (bool, optional): Unused. (default: {false})
+        """
+        self.running = False
+        if self.pending_results != []:  # clear anything left over - might not be necessary
+            for i in range(len(self.pending_results)):
+                self.pending_results[i].revoke()
+
+    def get_initial_prioritization(self):
+        """
+        Get template prioritizer predictions to initialize the tree search.
+        """
+        res = tb_c_worker.template_relevance.delay(self.smiles, self.template_count, self.max_cum_template_prob)
+        return res.get(10)
+
+    def work(self, i):
+        """
+        Explicitly override work method of MCTS since Celery does not use it.
+        """
+        raise NotImplementedError('MCTSCelery does not support the work method. Did you mean to use MCTS?')
+
+    def wait_until_ready(self):
+        """
+        No need to wait for Celery workers since they should be pre-initialized.
+        """
+        pass
+
+
 def update_result_state(id_, state):
     result = SavedResults.objects.get(result_id=id_)
     result.result_state = state
     result.save()
     return
+
 
 def save_results(result, settings, task_id):
     doc = {
@@ -53,6 +191,7 @@ def save_results(result, settings, task_id):
         'settings': settings
     }
     results_collection.insert_one(doc)
+
 
 @celeryd_init.connect
 def configure_coordinator(options={}, **kwargs):
@@ -70,12 +209,8 @@ def configure_coordinator(options={}, **kwargs):
     print('### STARTING UP A TREE BUILDER MCTS COORDINATOR ###')
 
     global treeBuilder
-    # QUESTION: Is evaluator needed?
-    global evaluator
 
-    historian = ChemHistorian(use_db=True, hashed=True)
-    historian.load()
-    treeBuilder = MCTSTreeBuilder(celery=True, nproc=8, chemhistorian=historian) # 8 active pathways
+    treeBuilder = MCTSCelery(celery=True, nproc=8)  # 8 active pathways
     print('Finished initializing treebuilder MCTS coordinator')
 
 
