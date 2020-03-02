@@ -167,7 +167,7 @@ Synthesis Predictor
                         </div>
 
                         <div v-if="!!reactants" class="row text-center">
-                            <img :src='"/draw/reaction/"+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
+                            <img class ="hide-broken" :src='"/draw/reaction/"+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
                         </div>
 
                         <div class="row" v-show="mode!='context'">
@@ -180,7 +180,7 @@ Synthesis Predictor
                                     </span>
                                 </div>
                                 <div v-if="!!reagents" class="text-center">
-                                    <img :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
+                                    <img class ="hide-broken" :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
                                 </div>
                             </div>
                             
@@ -193,7 +193,7 @@ Synthesis Predictor
                                     </span>
                                 </div>
                                 <div v-if="!!solvent" class="text-center">
-                                    <img :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
+                                    <img class ="hide-broken" :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
                                 </div>
                             </div>
                         </div>

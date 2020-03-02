@@ -1,32 +1,29 @@
-img {
+img.hide-broken {
   font-family: 'Helvetica';
   font-weight: 300;
   line-height: 2;  
   position: relative;
 }
 
-img:before { 
+img.hide-broken:before { 
   content: " ";
   display: block;
-
   position: absolute;
   height: 100%;
   width: 100%;
   background-color: #fff;
 }
 
-img:after { 
-  content: " ";
+img.hide-broken:after { 
+  content: " Invalid SMILES! ";
   display: block;
   font-size: 16px;
   font-style: normal;
   font-family: FontAwesome;
   color: rgb(100, 100, 100);
-  
   position: absolute;
-  top: 5px;
-  left: 0;
-  width: 100%;
+  left: -90px;
+  width: 200px;
   text-align: center;
 }
 
