@@ -33,37 +33,37 @@
 </tr>
     
 <tr>
-<td>Interactive Path Planning</td>
+<td><a href="/retro/network/" target="_blank">Interactive Path Planning</a></td>
 <td>Multi-step retrosynthesis (manual)</td>
 <td>Interactively explore synthetic pathways comprised of multiple one-step retrosynthesis predictions</td>
 </tr>
 
 <tr>
-<td>Tree-Builder</td>
+<td><a href="/retro_interactive_mcts/" target="_blank">Tree-Builder</a></td>
 <td>Multi-step retrosynthesis (automatic)</td>
 <td>Identifying synthetic pathways that can be used to synthesize a target compound via a series of reactions (allows for creation of pathways from buyable chemicals to a target)</td>
 </tr>
 
 <tr>
-<td>Synthesis Predictor</td>
+<td><a href="/synth_interactive/" target="_blank">Synthesis Predictor</a></td>
 <td>Reaction evaluation considering conditions and impurities</td>
 <td>Predicting whether or not a target compound of interest will be generated when specified precursors react with one another, identifying conditions that are most likely to promote creation of the specified target compound, and identifying common types of impurities that may form during the reaction</td>
 </tr>
 
 <tr>
-<td>SCScore Evaluator</td>
+<td><a href="/scscore/" target="_blank">SCScore Evaluator</a></td>
 <td>Estimate synthetic complexity</td>
 <td>Predicting the synthetic complexity of a molecule [1-5 scale] using a trained neural network model</td>
 </tr>
 
 <tr>
-<td>Buyable Look-Up</td>
+<td><a href="/buyables/" target="_blank">Buyable Look-Up</a></td>
 <td>Database of commercially-available compounds</td>
 <td>Determining whether or not a chemical is listed in our Buyables database and, if so, for what price (in USD per gram)</td>
 </tr>
 
 <tr>
-<td>Drawing</td>
+<td><a href="/draw/" target="_blank">Drawing</a></td>
 <td>Structures from SMILES/SMARTS</td>
 <td>Converting molecule/reaction SMILES strings or template SMARTS strings to skeletal formulas</td>
 </tr>
@@ -72,7 +72,7 @@
 
 <p>Generally, the website takes target compound inputs as SMILES strings, although there are some compounds for which the common name (aspirin, ibuprofen, etc.) can be entered in the input window and converted to a SMILES string automatically.  For more information about SMILES strings, click <a href="https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system">here</a>.  Compound SMILES strings can be obtained by first drawing the molecule of interest in ChemDraw, selecting the molecule with the selector tool, right-clicking, and choosing 'Molecule', 'Copy As', and finally, 'SMILES'.  Alternatively, much of the website also supports drawing compounds of interest directly.  This can be done by clicking the Draw links adjacent to input text fields, where applicable.</p>
 
-<h1 id="onestep">Interactive Path Planning</h1>
+<h1 id="pathplanning"><a href="/retro/network/" target="_blank">Interactive Path Planning</a></h1>
 
 <p> The interactive path planner uses one-step retrosynthesis tools to identify precursor molecules that can be combined to generate a target compound via a single reaction.</p>
 
@@ -127,7 +127,7 @@
 <p>The interactive tutorial built into the Interactive Path Planning page will walk you through an example use case. Click the "?" button to get started on the Interactive Path Planning page.</p>
 
 
-<h1 id="treebuilder">Tree Builder</h1>
+<h1 id="treebuilder"><a href="/retro_interactive_mcts/" target="_blank">Tree Builder</a></h1>
 <p>The Tree Builder is used to identify precursor molecules that can be combined to generate a target compound via a series of reactions (a “tree”).  This is a multi-step retrosynthetic planner.</p>
 
 <h4>Usage</h4>
@@ -229,7 +229,7 @@ The summary of the expansion results shows the number of chemicals (or, at half-
 <p>Now that we’ve blacklisted this chemical, it is possible to return to the Tree Builder tab and rerun the Fluconazole expansion.  This time, none of the trees that the algorithm recommends will contain the blacklisted chemical. </p>
 
 
-<h1 id="synthpred">Synthesis Predictor</h1>
+<h1 id="synthpred"><a href="/synth_interactive/" target="_blank">Synthesis Predictor</a></h1>
 
 <p>The Synthesis Predictor module now combines what were previously four separate modules: context recommendation, forward prediction, reaction evaluator, and impurity predictor.
 The interface is divided into three parts: condition (context) recommendation, synthesis prediction, and impurity prediction</p>
