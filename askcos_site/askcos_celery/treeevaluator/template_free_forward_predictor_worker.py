@@ -73,7 +73,7 @@ def get_outcomes(reactants, top_n=10):
                 'prob': float(res['prob']),
                 'mol_wt': float(Descriptors.MolWt(Chem.MolFromSmiles(smiles)))
             }
-    results_to_return = sorted(list(results_to_return.values()), key=lambda x: x['prob'], reverse=True)
+    results_to_return = sorted(results_to_return.values(), key=lambda x: x['prob'], reverse=True)
     total_prob = sum([outcome['prob'] for outcome in results_to_return])
     for i, outcome in enumerate(results_to_return):
         results_to_return[i]['rank'] = i + 1
