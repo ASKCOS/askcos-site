@@ -420,7 +420,6 @@ var app = new Vue({
         var urlParams = new URLSearchParams(window.location.search);
         let loadTreeBuilder = urlParams.get('tb')
         let numTrees = urlParams.get('view')
-        console.log(loadTreeBuilder)
         if (loadTreeBuilder) {
             this.loadFromTreeBuilder(loadTreeBuilder, numTrees)
         }
@@ -1489,7 +1488,32 @@ var app = new Vue({
               }
             })
             .finally(() => hideLoader())
-        }
+        },
+        canonicalize(smiles, input) {
+            return fetch(
+                '/api/rdkit/canonicalize/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        smiles: smiles
+                    })
+                }
+            )
+            .then(resp => resp.json())
+            .then(json => {
+                this[input] = json.smiles
+            })
+        },
+        updateSmilesFromJSME() {
+            var smiles = jsmeApplet.smiles();
+            this.target = smiles
+            this.canonicalize(smiles, drawBoxId)
+        },
+
     },
     computed: {
         // {'target_smiles0':[[{result0}, {result1}, ...], [...]], ...}
