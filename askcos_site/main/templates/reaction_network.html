@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="{% static 'css/vis.min.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/network.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/bootstrap-tour.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
 <script src="{% static 'js/vis.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-tour.min.js' %}"></script>
 {% endblock %}
@@ -728,7 +729,7 @@
                                                 <img v-bind:src="'/draw/reaction/'+encodeURIComponent(selected.reactionSmiles)" style="max-width: 100%"/>
                                             </div>
                                             <div class="text-center" style="margin: 10px 0">
-                                                <a :href="'/context/smiles='+encodeURIComponent(selected.reactionSmiles)" target="_blank">
+                                                <a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.reactionSmiles)" target="_blank">
                                                     Evaluate reaction in new tab
                                                 </a>
                                             </div>

@@ -43,10 +43,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="{% url 'modules' %}">Overview</a></li>
                         <li role="separator" class="divider"></li>
-                        <li>
-                            <a href="{% url 'retro_home' %}">One-step Retrosynthesis</a>
-                        </li>
-
+                        <li style="padding-left: 10px"><b>Modules</b></li>
                         <li>
                             <a href="{% url 'retro_network' %}">Interactive Path Planning</a>
                         </li>
@@ -56,15 +53,7 @@
                         </li>
 
                         <li>
-                            <a href="{% url 'context_rxnsmiles' %}">Context Recommendation</a>
-                        </li>
-
-                        <li>
-                            <a href="{% url 'synth_interactive' %}">Forward Prediction</a>
-                        </li>
-
-                        <li>
-                            <a href="{% url 'evaluate_rxnsmiles' %}">Reaction Evaluation</a>
+                            <a href="/synth_interactive/">Synthesis Predictor</a>
                         </li>
 
                         <li>
@@ -81,16 +70,31 @@
                         </li>
 
                         <li>
-                            <a href="{% url 'impurity_interactive' %}">Impurity Prediction</a>
-                        </li>
-
-                        <li>
                             <a href="{% url 'atom_mapping' %}">Atom Mapping</a>
-
                         </li>
 
                         <li>
                             <a href="{% url 'draw' %}">Drawing</a>
+                        </li>
+
+                        <!-- Keep these links around for now, to remove later -->
+                        <li role="separator" class="divider"></li>
+                        <li style="padding-left: 10px"><b>Legacy links</b></li>
+
+                        <li>
+                            <a href="/retro/">One-step Retrosynthesis</a>
+                        </li>
+
+                        <li>
+                            <a href="/synth_interactive/?mode=context">Context Recommendation</a>
+                        </li>
+
+                        <li>
+                            <a href="/synth_interactive/?mode=forward">Forward Prediction</a>
+                        </li>
+
+                        <li>
+                            <a href="/synth_interactive/?mode=impurity">Impurity Prediction</a>
                         </li>
                     </ul>
                 </li>
@@ -210,7 +214,7 @@
         <option value="pathplanner">Interactive Path Planning</option>
         <option value="treebuilder">Tree Builder</option>
         <option value="context">Context Recommendation</option>
-        <option value="forward">Forward Prediction</option>
+        <option value="synthpred">Synthesis Predictor</option>
         <option value="general">General</option>
       </select>
     </div>

@@ -45,28 +45,11 @@ urlpatterns += [
     re_path(r'^retro_interactive_mcts/target=(?P<target>.+)$', views.retro_interactive_mcts, name='retro_interactive_mcts_target'),
     re_path(r'^ajax/smiles_to_image/$', views.ajax_smiles_to_image, name='ajax_smiles_to_image'),
     re_path(r'^ajax/rxn_to_image/$', views.ajax_rxn_to_image, name='ajax_rxn_to_image'),
-    re_path(r'^ajax/start_retro_celery/$', views.ajax_start_retro_celery, name='ajax_start_retro_celery'),
     re_path(r'^ajax/start_retro_mcts_celery/$', views.ajax_start_retro_mcts_celery, name='ajax_start_retro_mcts_celery'),
     re_path(r'^retro_interactive/export/(?P<_id>.+)$', views.export_retro_results, name='export_retro_results'),
 
-    # Evaluation
-    re_path(r'^evaluate/$', views.evaluate_rxnsmiles, name='evaluate_rxnsmiles'),
-    re_path(r'^ajax/evaluate_rxnsmiles/$', views.ajax_evaluate_rxnsmiles, name='ajax_evaluate_rxnsmiles'),
-
-    # Context
-    re_path(r'^context/$', views.context_rxnsmiles, name='context_rxnsmiles'),
-    re_path(r'^context/reactants=(?P<reactants>.+)&product=(?P<product>.+)$', views.context_rxnsmiles_target2, name='context_rxnsmiles_target2'),
-    re_path(r'^context/smiles=(?P<smiles>.+)$', views.context_rxnsmiles_target, name='context_rxnsmiles_target'),
-    re_path(r'^ajax/context_rxnsmiles/$', views.ajax_context_rxnsmiles, name='ajax_context_rxnsmiles'),
-
     # Interactive forward prediction
     re_path(r'^synth_interactive/$', views.synth_interactive, name='synth_interactive'),
-    re_path(r'^synth_interactive/reactants=(?P<reactants>.+)&reagents=(?P<reagents>.*)&solvent=(?P<solvent>.*)&temperature=(?P<temperature>.*)$', views.synth_interactive, name='synth_interactive_contextspec'),
-    re_path(r'^synth_interactive/reactants=(?P<reactants>.+)&product=(?P<product>.+)$', views.synth_interactive, name='synth_interactive_target2'),
-    re_path(r'^synth_interactive/reactants=(?P<reactants>.+)$', views.synth_interactive, name='synth_interactive_target'),
-    re_path(r'^synth_interactive/smiles=(?P<smiles>.+)$', views.synth_interactive_smiles, name='synth_interactive_target_smiles'),
-    re_path(r'^ajax/start_synth/$', views.ajax_start_synth, name='ajax_start_synth'),
-    re_path(r'^synth_interactive/download$', views.export_synth_results, name='export_synth_results'),
 
     # Site Selectivity prediction
     re_path(r'^site_prediction/$', views.site_prediction, name='site_prediction'),
@@ -132,10 +115,12 @@ urlpatterns += [
     re_path(r'^api/fast-filter/$', api.fast_filter.fast_filter, name='fast_filter_api'),
     re_path(r'^api/context/$', api.context.neural_network, name='context_api'),
     re_path(r'^api/forward/$', api.forward.template_free, name='forward_api'),
+    re_path(r'^api/impurity/$', api.impurity.impurity_predict, name='impurity_api'),
     re_path(r'^api/template/$', api.template.template, name='template_api'),
     re_path(r'^api/treebuilder/$', api.tree_builder.tree_builder, name='tree_builder_api'),
     re_path(r'^api/scscore/$', api.scscore.scscore, name='scscore_api'),
     re_path(r'^api/celery/$', api.status.celery_status, name='celery_api'),
+    re_path(r'^api/celery/task/$', api.status.task_status, name='celery_task_api'),
     re_path(r'^api/validate-chem-name/$', api.validate_chem_name.validate_chem_name, name='validate_chem_name_api'),
     re_path(r'^api/buyables/search', api.buyables.buyables, name='all_buyables_api'),
     re_path(r'^api/buyables/add', api.buyables.add_buyable, name='add_buyables_api'),
@@ -144,6 +129,10 @@ urlpatterns += [
 
     re_path(r'^api/cluster/$', api.cluster.cluster, name='cluster_api'),
     re_path(r'^api/selectivity/$', api.selectivity.selectivity, name='selectivity'),
+
+    re_path(r'^api/rdkit/smiles-to-molfile/$', api.rdkit.smiles_to_molfile, name='smiles_to_molfile_api'),
+    re_path(r'^api/rdkit/molfile-to-smiles/$', api.rdkit.molfile_to_smiles, name='molfile_to_smiles_api'),
+    re_path(r'^api/rdkit/canonicalize/$', api.rdkit.canonicalize, name='canonicalize_api'),
 
     # async results
     re_path(r'^api/get-result/$', api.results.get_result, name='get_async_result'),
@@ -159,11 +148,6 @@ urlpatterns += [
 
     # Celery status
     re_path(r'^status/$', views.status),
-
-    # Interactive impurity prediction
-    re_path(r'^impurity_interactive/$', views.impurity_interactive, name='impurity_interactive'),
-    re_path(r'^ajax/start_impurity/$', views.ajax_start_impurity, name='ajax_start_impurity'),
-    re_path(r'^ajax/impurity_status/(?P<task_id>[\w-]+)/$', views.ajax_get_progress, name='ajax_impurity_status'),
 
     # Atom mapping
     re_path(r'^atom_mapping/$', views.atom_mapping, name='atom_mapping'),

@@ -22,8 +22,6 @@ from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
 from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
-from askcos_site.askcos_celery.treebuilder.tb_worker import get_top_precursors
-from askcos_site.askcos_celery.treebuilder.tb_coordinator import get_buyable_paths
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 
 from celery.result import AsyncResult
@@ -269,100 +267,6 @@ def retro_interactive_mcts(request, target=None):
         context['logged_in'] = False
 
     return render(request, 'retro_interactive_mcts.html', context)
-
-
-@ajax_error_wrapper
-def ajax_start_retro_celery(request):
-    '''Start builder'''
-    data = {'err': False}
-
-    smiles = request.GET.get('smiles', None)
-    max_depth = int(request.GET.get('max_depth', 4))
-    max_branching = int(request.GET.get('max_branching', 25))
-    retro_mincount = int(request.GET.get('retro_mincount', 0))
-    expansion_time = int(request.GET.get('expansion_time', 60))
-    max_ppg = int(request.GET.get('max_ppg', 10))
-    chiral = json.loads(request.GET.get('chiral', 'true'))
-    precursor_prioritization = request.GET.get(
-        'precursor_prioritization', 'RelevanceHeuristic')
-    template_prioritization = request.GET.get(
-        'template_prioritization', 'Relevance')
-    template_count = int(request.GET.get('template_count', '100'))
-    max_cum_prob = float(request.GET.get('max_cum_prob', '0.995'))
-    chemical_property_logic = str(request.GET.get('chemical_property_logic', 'none'))
-    max_chemprop_c = int(request.GET.get('max_chemprop_c', '0'))
-    max_chemprop_n = int(request.GET.get('max_chemprop_n', '0'))
-    max_chemprop_o = int(request.GET.get('max_chemprop_o', '0'))
-    max_chemprop_h = int(request.GET.get('max_chemprop_h', '0'))
-    chemical_popularity_logic = str(request.GET.get('chemical_popularity_logic', 'none'))
-    min_chempop_reactants = int(request.GET.get('min_chempop_reactants', 5))
-    min_chempop_products = int(request.GET.get('min_chempop_products', 5))
-
-    filter_threshold = float(request.GET.get('filter_threshold', 0.75))
-    apply_fast_filter = filter_threshold > 0
-
-    blacklisted_reactions = list(set(
-        [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
-    forbidden_molecules = list(set(
-        [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
-
-    if template_prioritization == 'Popularity':
-            template_count = 1e9
-
-    default_val = 1e9 if chemical_property_logic == 'and' else 0
-    max_natom_dict = defaultdict(lambda: default_val, {
-        'logic': chemical_property_logic,
-        'C': max_chemprop_c,
-        'N': max_chemprop_n,
-        'O': max_chemprop_o,
-        'H': max_chemprop_h,
-    })
-    min_chemical_history_dict = {
-        'logic': chemical_popularity_logic,
-        'as_reactant': min_chempop_reactants,
-        'as_product': min_chempop_products,
-    }
-    print('Tree building {} for user {} ({} forbidden reactions)'.format(
-        smiles, request.user, len(blacklisted_reactions)))
-    print('Using chemical property logic: {}'.format(max_natom_dict))
-    print('Using chemical popularity logic: {}'.format(min_chemical_history_dict))
-
-    res = get_buyable_paths.delay(smiles, template_prioritization, precursor_prioritization,
-                                  mincount=retro_mincount, max_branching=max_branching, max_depth=max_depth,
-                                  max_ppg=max_ppg, max_time=expansion_time, max_trees=500, reporting_freq=5,
-                                  chiral=chiral, known_bad_reactions=blacklisted_reactions,
-                                  forbidden_molecules=forbidden_molecules,
-                                  max_cum_template_prob=max_cum_prob, template_count=template_count,
-                                  max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
-                                  apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold)
-    (tree_status, trees) = res.get(expansion_time * 3)
-
-    # print(trees)
-
-    (num_chemicals, num_reactions, at_depth) = tree_status
-    data['html_stats'] = 'After expanding (with {} banned reactions, {} banned chemicals), {} total chemicals and {} total reactions'.format(
-        len(blacklisted_reactions), len(forbidden_molecules), num_chemicals, num_reactions)
-    for (depth, count) in sorted(at_depth.items(), key=lambda x: x[0]):
-        label = 'Could not format label...?'
-        if int(float(depth)) == float(depth):
-            label = 'chemicals'
-        else:
-            label = 'reactions'
-        data[
-            'html_stats'] += '<br>   at depth {}, {} {}'.format(depth, count, label)
-
-    if trees:
-        data['html_trees'] = render_to_string('trees_only.html',
-                                              {'trees': trees, 'can_control_robot': can_control_robot(request)})
-    else:
-        data['html_trees'] = render_to_string('trees_none.html', {})
-
-    # Save to session in case user wants to export
-    request.session['last_retro_interactive'] = trees
-    print('Saved {} trees to {} session'.format(
-        len(trees), request.user.get_username()))
-
-    return JsonResponse(data)
 
 
 @ajax_error_wrapper

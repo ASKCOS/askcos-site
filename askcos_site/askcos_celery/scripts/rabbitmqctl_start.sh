@@ -1,1 +1,0 @@
-sudo rabbitmq-server -detached

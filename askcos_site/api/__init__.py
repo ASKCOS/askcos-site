@@ -3,6 +3,7 @@ from . import context
 from . import fast_filter
 from . import forward
 from . import price
+from . import rdkit
 from . import results
 from . import retro
 from . import scscore
@@ -12,3 +13,4 @@ from . import tree_builder
 from . import validate_chem_name
 from . import cluster
 from . import selectivity
+from . import impurity
