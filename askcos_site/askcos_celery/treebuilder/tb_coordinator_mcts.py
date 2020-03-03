@@ -16,9 +16,6 @@ from rdkit import RDLogger
 
 import makeit.global_config as gc
 from makeit.retrosynthetic.mcts.tree_builder import MCTS, WAITING
-from makeit.retrosynthetic.transformer import RetroTransformer
-from makeit.utilities.buyable.pricer import Pricer
-from makeit.utilities.historian.chemicals import ChemHistorian
 
 import askcos_site.askcos_celery.treebuilder.tb_c_worker as tb_c_worker
 from askcos_site.main.models import SavedResults
@@ -53,43 +50,17 @@ class MCTSCelery(MCTS):
 
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, template_prioritizer=None, precursor_prioritizer=None, fast_filter=None, use_db=True, **kwargs):
+        super().__init__(
+            template_prioritizer=template_prioritizer,
+            precursor_prioritizer=precursor_prioritizer,
+            fast_filter=fast_filter,
+            use_db=use_db,
+            **kwargs
+        )
 
         from celery.result import allow_join_result
         self.allow_join_result = allow_join_result
-
-    @staticmethod
-    def load_pricer():
-        """
-        Loads pricer.
-        """
-        pricer = Pricer(use_db=True)
-        pricer.load()
-        return pricer
-
-    @staticmethod
-    def load_chemhistorian():
-        """
-        Loads chemhistorian.
-        """
-        chemhistorian = ChemHistorian(use_db=True, hashed=True)
-        chemhistorian.load()
-        return chemhistorian
-
-    @staticmethod
-    def load_retro_transformer(**kwargs):
-        """
-        Loads retro transformer model.
-        """
-        # Still need to load to have num refs, etc.
-        retro_transformer = RetroTransformer(
-            template_prioritizer=None,
-            precursor_prioritizer=None,
-            fast_filter=None
-        )
-        retro_transformer.load()
-        return retro_transformer
 
     def reset_workers(self, soft_reset=False):
         # general parameters in celery format
