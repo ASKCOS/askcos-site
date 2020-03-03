@@ -1511,7 +1511,7 @@ var app = new Vue({
         updateSmilesFromJSME() {
             var smiles = jsmeApplet.smiles();
             this.target = smiles
-            // this.canonicalize(smiles, drawBoxId)
+            this.canonicalize(smiles, drawBoxId)
         },
 
     },
