@@ -44,7 +44,8 @@ class MCTSCelery(MCTS):
     If instantiating this class with no arguments, only Pricer and ChemHistorian
     data will be loaded (using database) by default. The RetroTransformer
     is provided via ``tb_c_worker`` which is configured separately. The
-    template prioritizer should be passed directly to ``get_buyable_paths``.
+    template prioritizer type should be provided to ``get_buyable_paths`` to
+    indicate which model to use.
 
     Attributes:
 
