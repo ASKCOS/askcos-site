@@ -9,6 +9,7 @@ The coordinator, finally, returns a set of buyable trees obtained
 from an IDDFS.
 """
 
+import os
 from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
@@ -174,7 +175,8 @@ def configure_coordinator(options={}, **kwargs):
 
     global treeBuilder
 
-    treeBuilder = MCTSCelery(celery=True, nproc=8)  # 8 active pathways
+    historian_hashed = os.environ.get('HISTORIAN_HASHED', 'True') == 'True'
+    treeBuilder = MCTSCelery(celery=True, nproc=8, hashed=historian_hashed)  # 8 active pathways
     print('Finished initializing treebuilder MCTS coordinator')
 
 

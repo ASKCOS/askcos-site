@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Template Info{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_title %}Template Info{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+	<div class="row">
+        <div class="col-12">Template: %% templateInfo.reaction_smarts %% </div>
+    </div>
+	<div class="row">
+		<div class="col-12">%% templateInfo.count %% total references</div>
+    </div>
+	<div class="row">
+		<div class="col-12"><img :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
+    </div>
+	<div class="row">
+		<div class="col-12">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th class="text-center">RXN ID</th>
+						<th class="text-center">Reaction</th>
+						<th class="text-center">Spectators</th>
+					</tr>
+				</thead>
+				<tbody>
+					<template v-for="reaction in templateReactions">
+						<tr data-id='%% reaction._id %%'>
+							<td class="text-center">%% reaction.reaction_id %%</td>
+							<td class="text-center">
+                                <img :src="'/draw/reaction/'+encodeURIComponent(reaction.reaction_smiles)"></img>
+                            </td>
+							<td class="text-center">%% reaction.spectators %%</td>
+						</tr>
+					</template>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-12">
+            Reaction reference IDs:<br>
+            %% reactionReferences %%
+		</div>
+    </div>
+	<div class="loader"></div>
+</div>
+
+<script src="{% static 'js/template.js' %}"></script>
+
+{% endblock %}
