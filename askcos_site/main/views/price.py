@@ -7,7 +7,7 @@ from django.conf import settings
 import json
 
 from askcos_site.main.views.users import can_modify_buyables
-from ..globals import Pricer
+from askcos_site.globals import Pricer
 from ..utils import ajax_error_wrapper
 
 def price_smiles_func(smiles):

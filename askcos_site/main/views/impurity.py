@@ -17,7 +17,7 @@ from celery.result import AsyncResult
 from ...askcos_celery.contextrecommender.cr_coordinator import get_context_recommendations
 from askcos_site.askcos_celery.impurity.impurity_worker import get_impurities
 
-from ..globals import PREDICTOR_FOOTNOTE, solvent_choices
+from askcos_site.globals import PREDICTOR_FOOTNOTE, solvent_choices
 from ..utils import ajax_error_wrapper, fix_rgt_cat_slvt, \
     trim_trailing_period
 from makeit.utilities.contexts import clean_context

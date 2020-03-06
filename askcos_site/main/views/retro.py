@@ -13,7 +13,7 @@ import numpy as np
 import json
 import os
 
-from ..globals import RetroTransformer, RETRO_CHIRAL_FOOTNOTE, Pricer
+from askcos_site.globals import RetroTransformer, RETRO_CHIRAL_FOOTNOTE, Pricer
 
 from ..utils import ajax_error_wrapper, resolve_smiles
 from .users import can_control_robot
