@@ -1,7 +1,7 @@
 from django.http import JsonResponse
+
 from makeit.utilities.cluster import group_results
-import rdkit.Chem as Chem
-from rdkit.Chem import AllChem
+
 
 def cluster(request):
     '''Cluster the similar transformed outcomes together

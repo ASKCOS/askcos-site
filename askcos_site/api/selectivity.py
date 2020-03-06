@@ -1,7 +1,9 @@
-from rdkit import Chem
-from django.http import JsonResponse
 from celery.exceptions import TimeoutError
+from django.http import JsonResponse
+from rdkit import Chem
+
 from askcos_site.askcos_celery.siteselectivity.sites_worker import get_sites
+
 
 def selectivity(request):
     '''Evaluate rxn_smiles'''

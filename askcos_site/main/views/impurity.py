@@ -1,27 +1,14 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-from pymongo.message import bson
-from bson.objectid import ObjectId
-import time
-import numpy as np
 import json
-import os
+import time
+
 from celery.result import AsyncResult
+from django.http import JsonResponse
+from django.shortcuts import render, HttpResponse
+from django.template.loader import render_to_string
 
-# TODO: fix this Celery reference
-from ...askcos_celery.contextrecommender.cr_coordinator import get_context_recommendations
 from askcos_site.askcos_celery.impurity.impurity_worker import get_impurities
+from askcos_site.main.utils import ajax_error_wrapper
 
-from ..utils import ajax_error_wrapper, fix_rgt_cat_slvt, \
-    trim_trailing_period
-from makeit.utilities.contexts import clean_context
-from celery.result import AsyncResult, allow_join_result
-from abc import ABCMeta, abstractmethod
 
 #@login_required
 def impurity_interactive(request,

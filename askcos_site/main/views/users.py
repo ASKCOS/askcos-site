@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 
 from askcos_site.globals import db_client
-from ..models import SavedResults, BlacklistedReactions, BlacklistedChemicals
+from askcos_site.main.models import SavedResults, BlacklistedReactions, BlacklistedChemicals
 
 results_collection = db_client['results']['results']
 

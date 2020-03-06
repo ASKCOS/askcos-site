@@ -1,24 +1,13 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-from pymongo.message import bson
-from bson.objectid import ObjectId
 import time
-import numpy as np
-import json
-import os
 
-# TODO: fix this Celery reference
-from ...askcos_celery.contextrecommender.cr_network_worker import get_n_conditions
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.template.loader import render_to_string
+
 from askcos_site.askcos_celery.treeevaluator.scoring_coordinator import evaluate
-
-from ..utils import ajax_error_wrapper, fix_rgt_cat_slvt, \
-    trim_trailing_period
+from askcos_site.main.utils import ajax_error_wrapper
 from makeit.utilities.contexts import clean_context
+
 
 def synth_interactive(request):
     context = {}

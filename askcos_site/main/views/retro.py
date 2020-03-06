@@ -13,9 +13,9 @@ from django.urls import reverse
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
-from .users import can_control_robot
-from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
-from ..utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
+from askcos_site.main.utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.views.users import can_control_robot
 
 
 #@login_required

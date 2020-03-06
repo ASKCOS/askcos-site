@@ -1,19 +1,12 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
 import json
-import os
 
-import rdkit.Chem as Chem
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, HttpResponse
 
-from ...askcos_celery.contextrecommender.cr_coordinator import get_context_recommendations
+from askcos_site.askcos_celery.contextrecommender.cr_coordinator import get_context_recommendations
+from askcos_site.main.utils import get_name_from_smiles
+from askcos_site.main.views.users import can_control_robot
 
-from ..utils import get_name_from_smiles
-from .users import can_control_robot
 
 #@login_required
 def export_synth_results(request):

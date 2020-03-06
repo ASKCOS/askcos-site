@@ -1,25 +1,18 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-from datetime import datetime
-import time
-import numpy as np
 import json
-import os
-import rdkit.Chem as Chem
-import makeit.global_config as makeit_gc
 
-# TODO: fix this Celery reference
-from ...askcos_celery.contextrecommender.cr_network_worker import get_n_conditions
-from ...askcos_celery.treeevaluator.scoring_coordinator import evaluate
-from ...askcos_celery.treebuilder.tb_c_worker import fast_filter_check
-from ..utils import ajax_error_wrapper, fix_rgt_cat_slvt, \
-    trim_trailing_period
+import numpy as np
+import rdkit.Chem as Chem
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.urls import reverse
+
+import makeit.global_config as makeit_gc
+from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import fast_filter_check
+from askcos_site.askcos_celery.treeevaluator.scoring_coordinator import evaluate
+from askcos_site.main.utils import ajax_error_wrapper
 from makeit.utilities.contexts import clean_context
+
 
 #@login_required
 def evaluate_rxnsmiles(request):
