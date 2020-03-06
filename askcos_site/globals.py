@@ -2,16 +2,21 @@
 Data and model instances for global use in ``askcos_site``.
 """
 
+from pymongo import MongoClient
 # Setting logging low
 from rdkit import RDLogger
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
 import makeit.global_config as gc
-from database import db_client
 from makeit.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
 from makeit.retrosynthetic.transformer import RetroTransformer
 from makeit.utilities.buyable.pricer import Pricer
+
+
+################################################################################
+# Database client
+db_client = MongoClient(gc.MONGO['path'], gc.MONGO['id'], connect=gc.MONGO['connect'])
 
 ################################################################################
 # Database collections
