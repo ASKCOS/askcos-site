@@ -1,24 +1,8 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-from pymongo.message import bson
 from bson.objectid import ObjectId
-from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError
-import makeit.global_config as gc
+from django.shortcuts import render, HttpResponse
 
-from .users import can_view_reaxys
+from askcos_site.globals import retro_templates
 
-client = MongoClient(
-    gc.MONGO['path'],
-    gc.MONGO['id'],
-    connect=gc.MONGO['connect']
-)
-db_name = gc.RETRO_TEMPLATES['database']
-collection = gc.RETRO_TEMPLATES['collection']
-retro_templates = client[db_name][collection]
 
 def template_target_export(request, id):
     rx_ids = template_target(request, id, return_refs_only=True)

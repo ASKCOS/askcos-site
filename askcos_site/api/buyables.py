@@ -1,16 +1,13 @@
-import json
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from makeit import global_config as gc
-from askcos_site.main.views.users import can_modify_buyables
-from pymongo import MongoClient
-from bson import ObjectId
-import pandas as pd
 import io
+import json
+
+import pandas as pd
+from bson import ObjectId
+from django.http import JsonResponse
 from rdkit import Chem
 
-mongo = MongoClient(gc.MONGO['path'])
-buyables_db = mongo[gc.BUYABLES['database']][gc.BUYABLES['collection']]
+from askcos_site.globals import buyables_db
+from askcos_site.main.views.users import can_modify_buyables
 
 
 def add_buyable_list_to_db(buyable_list, allow_overwrite=True):

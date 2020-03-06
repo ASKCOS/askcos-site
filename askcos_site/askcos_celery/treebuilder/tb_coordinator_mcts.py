@@ -11,27 +11,19 @@ from an IDDFS.
 
 from celery import shared_task
 from celery.signals import celeryd_init
-from pymongo import MongoClient
 from rdkit import RDLogger
 
-import makeit.global_config as gc
-from makeit.retrosynthetic.mcts.tree_builder import MCTS, WAITING
-
 import askcos_site.askcos_celery.treebuilder.tb_c_worker as tb_c_worker
+from askcos_site.globals import db_client
 from askcos_site.main.models import SavedResults
+from makeit.retrosynthetic.mcts.tree_builder import MCTS, WAITING
 
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
 CORRESPONDING_QUEUE = 'tb_coordinator_mcts'
 
-client = MongoClient(
-    gc.MONGO['path'],
-    gc.MONGO['id'],
-    connect=gc.MONGO['connect']
-)
-results_db = client['results']
-results_collection = results_db['results']
+results_collection = db_client['results']['results']
 
 
 class MCTSCelery(MCTS):
