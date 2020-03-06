@@ -1,16 +1,8 @@
 from bson.objectid import ObjectId
 from django.http import JsonResponse
-import makeit.global_config as gc
-from pymongo import MongoClient
 
-client = MongoClient(
-    gc.MONGO['path'],
-    gc.MONGO['id'],
-    connect=gc.MONGO['connect']
-)
-db_name = gc.RETRO_TEMPLATES['database']
-collection = gc.RETRO_TEMPLATES['collection']
-retro_templates = client[db_name][collection]
+from askcos_site.globals import retro_templates
+
 
 def template(request):
     resp = {}

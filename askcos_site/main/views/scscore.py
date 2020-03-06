@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from ..globals import scscorer
+from askcos_site.globals import scscorer
 from ..utils import ajax_error_wrapper
 
 @ajax_error_wrapper

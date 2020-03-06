@@ -1,19 +1,11 @@
-from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from celery.result import AsyncResult
-from askcos_site.celery import app
-from askcos_site.main.models import SavedResults
-from pymongo import MongoClient
-from makeit import global_config as gc
-from celery.result import AsyncResult
+from django.http import JsonResponse
 
-client = MongoClient(
-    gc.MONGO['path'],
-    gc.MONGO['id'],
-    connect=gc.MONGO['connect']
-)
-results_db = client['results']
-results_collection = results_db['results']
+from askcos_site.globals import db_client
+from askcos_site.main.models import SavedResults
+
+results_collection = db_client['results']['results']
+
 
 @login_required
 def poll_result(request):

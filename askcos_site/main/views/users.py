@@ -1,29 +1,17 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
+import os
+from datetime import datetime
+
+import django.contrib.auth.views
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-from pymongo.message import bson
-from bson.objectid import ObjectId
-from datetime import datetime
-import os, sys
+from django.shortcuts import render
 
-from pymongo import MongoClient
-from makeit import global_config as gc
+from askcos_site.globals import db_client
+from ..models import SavedResults, BlacklistedReactions, BlacklistedChemicals
 
-client = MongoClient(
-    gc.MONGO['path'],
-    gc.MONGO['id'],
-    connect=gc.MONGO['connect']
-)
-results_db = client['results']
-results_collection = results_db['results']
+results_collection = db_client['results']['results']
 
 AUTH_MODIFY_BUYABLES = os.environ.get('AUTH_MODIFY_BUYABLES') == 'True'
-
-from ..models import SavedResults, BlacklistedReactions, BlacklistedChemicals
 
 can_control_robot = lambda request: request.user.get_username() in ['ccoley']
 

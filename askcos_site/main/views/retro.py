@@ -13,7 +13,7 @@ import numpy as np
 import json
 import os
 
-from ..globals import RetroTransformer, RETRO_CHIRAL_FOOTNOTE, Pricer
+from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
 
 from ..utils import ajax_error_wrapper, resolve_smiles
 from .users import can_control_robot
@@ -157,13 +157,13 @@ def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
         # Also add up total number of examples
         for (i, precursor) in enumerate(context['precursors']):
             context['precursors'][i]['tforms'] = \
-                [dict(RetroTransformer.lookup_id(_id), **{'id': str(_id)}) for _id in precursor['tforms']]
+                [dict(retro_transformer.lookup_id(_id), **{'id': str(_id)}) for _id in precursor['tforms']]
             context['precursors'][i]['mols'] = []
             # Overwrite num examples
             context['precursors'][i]['num_examples'] = sum(
                 tform['count'] for tform in precursor['tforms'])
             for smiles in precursor['smiles_split']:
-                ppg = Pricer.lookup_smiles(smiles)
+                ppg = pricer.lookup_smiles(smiles)
                 context['precursors'][i]['mols'].append({
                     'smiles': smiles,
                     'ppg': '${}/g'.format(ppg) if ppg else 'cannot buy',

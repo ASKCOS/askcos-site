@@ -1,9 +1,8 @@
 from django.http import JsonResponse
 from rdkit import Chem
-from makeit.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
 
-scscorer = SCScorePrecursorPrioritizer()
-scscorer.load_model(model_tag='1024bool')
+from askcos_site.globals import scscorer
+
 
 def scscore(request):
     resp = {}
