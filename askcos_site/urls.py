@@ -6,14 +6,13 @@ admin.autodiscover()
 import django.contrib.auth.urls
 from django.views.generic import TemplateView
 import askcos_site.main.views as views
-from askcos_site import api
 
 # Static (not good for deployment)
-urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-urlpatterns += static(settings.MEDIA_URL,  document_root=settings.MEDIA_ROOT)
+# urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# urlpatterns += static(settings.MEDIA_URL,  document_root=settings.MEDIA_ROOT)
 
 # The rest
-urlpatterns += [
+urlpatterns = [
     # Examples:
     # re_path(r'^$', 'askcos_site.views.home', name='home'),
     # re_path(r'^blog/', include('blog.urls')),
@@ -111,37 +110,7 @@ urlpatterns += [
     re_path(r'^ajax/user_deactivate_chemical/$', views.ajax_user_deactivate_chemical, name='ajax_user_deactivate_chemical'),
     re_path(r'^ajax/user_activate_chemical/$', views.ajax_user_activate_chemical, name='ajax_user_activate_chemical'),
 
-    # API endpoints
-    re_path(r'^api/retro/$', api.retro.singlestep, name='retro_api'),
-    re_path(r'^api/fast-filter/$', api.fast_filter.fast_filter, name='fast_filter_api'),
-    re_path(r'^api/context/$', api.context.neural_network, name='context_api'),
-    re_path(r'^api/forward/$', api.forward.template_free, name='forward_api'),
-    re_path(r'^api/impurity/$', api.impurity.impurity_predict, name='impurity_api'),
-    re_path(r'^api/template/$', api.template.template, name='template_api'),
-    re_path(r'^api/template/download/$', api.template.reaxys_export, name='api_template_reaxys_export'),
-    re_path(r'^api/reactions/$', api.reactions.reactions, name='reactions_api'),
-    re_path(r'^api/treebuilder/$', api.tree_builder.tree_builder, name='tree_builder_api'),
-    re_path(r'^api/scscore/$', api.scscore.scscore, name='scscore_api'),
-    re_path(r'^api/celery/$', api.status.celery_status, name='celery_api'),
-    re_path(r'^api/celery/task/$', api.status.task_status, name='celery_task_api'),
-    re_path(r'^api/validate-chem-name/$', api.validate_chem_name.validate_chem_name, name='validate_chem_name_api'),
-    re_path(r'^api/buyables/search', api.buyables.buyables, name='all_buyables_api'),
-    re_path(r'^api/buyables/add', api.buyables.add_buyable, name='add_buyables_api'),
-    re_path(r'^api/buyables/upload', api.buyables.upload_buyable, name='upload_buyables_api'),
-    re_path(r'^api/buyables/delete', api.buyables.delete_buyable, name='delete_buyables_api'),
-
-    re_path(r'^api/cluster/$', api.cluster.cluster, name='cluster_api'),
-    re_path(r'^api/selectivity/$', api.selectivity.selectivity, name='selectivity'),
-
-    re_path(r'^api/rdkit/smiles-to-molfile/$', api.rdkit.smiles_to_molfile, name='smiles_to_molfile_api'),
-    re_path(r'^api/rdkit/molfile-to-smiles/$', api.rdkit.molfile_to_smiles, name='molfile_to_smiles_api'),
-    re_path(r'^api/rdkit/canonicalize/$', api.rdkit.canonicalize, name='canonicalize_api'),
-
     # async results
-    re_path(r'^api/get-result/$', api.results.get_result, name='get_async_result'),
-    re_path(r'^api/my-results/$', api.results.my_results, name='api_my_results'),
-    re_path(r'^api/remove-result/$', api.results.remove_result, name='api_remove_results'),
-    re_path(r'^api/poll-result/$', api.results.poll_result, name='api_poll_result'),
     re_path(r'^view-result/$', views.view_result, name='view_result'),
     re_path(r'^view-tree-graph/$', views.view_tree_graph, name='view_tree_graph'),
     re_path(r'^my-results/$', views.my_results, name='my_results'),
@@ -155,4 +124,7 @@ urlpatterns += [
     # Atom mapping
     re_path(r'^atom_mapping/$', views.atom_mapping, name='atom_mapping'),
     re_path(r'^ajax/find_atom_mapping/$', views.ajax_find_atom_mapping, name='ajax_find_atom_mapping'),
+
+    # API endpoints
+    path('api/v1/', include('askcos_site.api.urls'))
 ]
