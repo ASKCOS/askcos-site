@@ -38,6 +38,8 @@ def tree_builder(request):
     min_chempop_products = int(request.GET.get('min_chempop_products', 5))
     filter_threshold = float(request.GET.get('filter_threshold', 0.75))
     apply_fast_filter = filter_threshold > 0
+    template_prioritizer = request.GET.get('template_prioritizer', 'reaxys')
+    template_set = request.GET.get('template_set', 'reaxys')
     return_first = request.GET.get('return_first', 'True') in ['True', 'true']
     
     blacklisted_reactions = request.GET.get('blacklisted_reactions', '')
@@ -66,6 +68,7 @@ def tree_builder(request):
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
                                   apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold,
+                                  template_prioritizer=template_prioritizer, template_set=template_set,
                                   return_first=return_first)
     
     if run_async:
