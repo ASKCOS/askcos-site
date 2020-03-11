@@ -492,7 +492,7 @@ This is always a good check to see if the product you entered appears at the top
             element: "#predict-impurities-0",
             placement: "top",
             content: `
-When you've picked a major product from the list you can move on to predict impurities that may come from a variety of imurity modes (i.e. - over reaction, dimerization). 
+When you've picked a major product from the list you can move on to predict impurities that may come from a variety of impurity modes (i.e. - over reaction, dimerization). 
 Click this button or click "Next >>" to continue and make the impurity prediction.
 `,
             reflex: true,
