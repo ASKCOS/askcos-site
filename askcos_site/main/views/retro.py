@@ -257,6 +257,8 @@ def retro_interactive_mcts(request, target=None):
     context['precursor_prioritization'] = 'RelevanceHeuristic'
     context['forward_scorer'] = 'Template_Free'
     context['filter_threshold_default'] = 0.75
+    context['template_prioritizer'] = 'reaxys'
+    context['template_set'] = 'reaxys'
 
     if target is not None:
         context['target_mol'] = target
@@ -294,6 +296,8 @@ def ajax_start_retro_mcts_celery(request):
     min_chempop_products = int(request.GET.get('min_chempop_products', 5))
     filter_threshold = float(request.GET.get('filter_threshold', 0.75))
     apply_fast_filter = filter_threshold > 0
+    template_prioritizer = request.GET.get('template_prioritizer', 'reaxys')
+    template_set = request.GET.get('template_set', 'reaxys')
     return_first = json.loads(request.GET.get('return_first', 'false'))
 
     if request.user.is_authenticated:
@@ -331,6 +335,7 @@ def ajax_start_retro_mcts_celery(request):
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
                                   apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold,
+                                  template_prioritizer=template_prioritizer, template_set=template_set,
                                   return_first=return_first,
                                   run_async=run_async)
 
