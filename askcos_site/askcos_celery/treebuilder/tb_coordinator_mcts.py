@@ -76,7 +76,8 @@ class MCTSCelery(MCTS):
             kwargs={'max_num_templates': self.template_count,
                     'max_cum_prob': self.max_cum_template_prob,
                     'fast_filter_threshold': self.filter_threshold,
-                    'template_prioritizer': self.template_prioritizer},
+                    'template_prioritizer': self.template_prioritizer,
+                    'template_set': self.template_set},
             # queue=self.private_worker_queue, ## CWC TEST: don't reserve
         ))
         self.status[(smiles, template_idx)] = WAITING
