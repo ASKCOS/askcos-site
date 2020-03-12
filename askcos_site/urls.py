@@ -126,5 +126,7 @@ urlpatterns = [
     re_path(r'^ajax/find_atom_mapping/$', views.ajax_find_atom_mapping, name='ajax_find_atom_mapping'),
 
     # API endpoints
-    path('api/v1/', include('askcos_site.api.urls'))
+    path('api/', include('askcos_site.api.urls')),
+    path('api/v1/', include('askcos_site.api.urls')),
+    path('api/v2/', include('askcos_site.api2.urls')),
 ]
