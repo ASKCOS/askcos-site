@@ -80,7 +80,19 @@ var app = new Vue({
             copyToClipboard(this.reactionReferences)
             copyTooltip.innerHTML = 'Copied!'
             setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
-        }
+        },
+        downloadReactionQuery() {
+            fetch(`/api/template/download/?id=${this.templateId}`)
+            .then(resp => resp.json())
+            .then(json => {
+                var dataStr = "data:text/json;charset=utf-8," + JSON.stringify(json)
+                var dlAnchorElem = document.getElementById('downloadAnchorElem')
+                dlAnchorElem.setAttribute("href",     dataStr     )
+                dlAnchorElem.setAttribute("download", "reaxys_query.json")
+                dlAnchorElem.click()
+            })
+                
+        },
     },
     computed: {
         reactionReferences() {

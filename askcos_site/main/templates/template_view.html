@@ -16,11 +16,15 @@
 {% block page_body %}
 
 <div id="app" class="container-fluid">
+    <a id="downloadAnchorElem" style="display:none"></a>
 	<div class="row">
         <div class="col-12">Template: %% templateInfo.reaction_smarts %% </div>
     </div>
 	<div class="row">
 		<div class="col-12">%% templateInfo.count %% total references</div>
+        <div class="col-12">
+            <a style="cursor: pointer" @click="downloadReactionQuery">Export Reaxys query for precedents</a>
+        </div>
     </div>
 	<div class="row">
 		<div class="col-12"><img :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
