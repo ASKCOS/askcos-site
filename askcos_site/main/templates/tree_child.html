@@ -33,7 +33,7 @@
         {% if target.necessary_reagent %}Needs source of {{ target.necessary_reagent }}<br>{% endif %}
         <br>Based on templates...
         {% for tform in target.tforms %}
-        <br><span class="pseudolink" onclick="window.open('{% url 'template_target' tform %}')">Template {{ tform }}</span>
+        <br><span class="pseudolink" onclick="window.open('/template/?id={{ tform }}')">Template {{ tform }}</span>
         {% endfor %}
     </center>
 </div>

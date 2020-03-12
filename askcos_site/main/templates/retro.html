@@ -163,7 +163,7 @@ function liberalSettings() {
                     <font class="smiles"><b>Based on retrosynthetic transform template(s):</b></font><br>
                     {% for tform in precursor.tforms %}
                         <font class="smiles">
-                            <a href="{% url 'template_target' tform.id %}">Template {{ tform.id }} ({{ tform.count }} examples)</a>
+                            <a href="/template/?id={{ tform.id }}">Template {{ tform.id }} ({{ tform.count }} examples)</a>
                         </font>{% if not forloop.last %}<br>{% endif %}
                     {% endfor %}
                     {% endif %}
