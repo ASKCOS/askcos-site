@@ -176,8 +176,7 @@ def configure_coordinator(options={}, **kwargs):
 
     global treeBuilder
 
-    historian_hashed = os.environ.get('HISTORIAN_HASHED', 'True') == 'True'
-    treeBuilder = MCTSCelery(celery=True, nproc=8, hashed=historian_hashed)  # 8 active pathways
+    treeBuilder = MCTSCelery(celery=True, nproc=8)  # 8 active pathways
     print('Finished initializing treebuilder MCTS coordinator')
 
 
