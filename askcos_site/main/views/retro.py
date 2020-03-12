@@ -328,6 +328,8 @@ def ajax_start_retro_mcts_celery(request):
     print('Using chemical popularity logic: {}'.format(min_chemical_history_dict))
     print('Returning as soon as any pathway found? {}'.format(return_first))
 
+    historian_hashed = template_set == 'reaxys'
+
     res = get_buyable_paths_mcts.delay(smiles, max_branching=max_branching, max_depth=max_depth,
                                   max_ppg=max_ppg, expansion_time=expansion_time, max_trees=500,
                                   known_bad_reactions=blacklisted_reactions,
@@ -336,7 +338,7 @@ def ajax_start_retro_mcts_celery(request):
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
                                   apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold,
                                   template_prioritizer=template_prioritizer, template_set=template_set,
-                                  return_first=return_first,
+                                  return_first=return_first, hashed=historian_hashed,
                                   run_async=run_async)
 
     if run_async:
