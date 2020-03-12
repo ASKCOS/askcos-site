@@ -8,6 +8,7 @@
 <script src="{% static 'js/vue.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/tooltip.css' %}" type="text/css">
 {% endblock %}
 
 {% block page_title %}Template Info{% endblock %}
@@ -50,8 +51,21 @@
 	</div>
 	<div class="row">
 		<div class="col-12">
-            Reaction reference IDs:<br>
-            %% reactionReferences %%
+            <div 
+                id="rxn-ids"
+                class="customtooltip"
+                @click="copyRxnIds"
+            >
+                    <i class="far fa-copy"></i>
+                <b>Reaction reference IDs: </b>
+                %% reactionReferences %%
+                <span 
+                    id="copy-tooltip"
+                    class="customtooltiptext"
+                >
+                    Click to copy!
+                </span>
+            </div>
 		</div>
     </div>
 	<div class="loader"></div>

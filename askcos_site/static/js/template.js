@@ -23,6 +23,15 @@ function getCookie(cname) {
     return undefined;
 }
 
+function copyToClipboard(text) {
+    var dummy = document.createElement("textarea");
+    document.body.appendChild(dummy);
+    dummy.value = text;
+    dummy.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummy);
+}
+
 var app = new Vue({
     el: '#app',
     data: {
@@ -65,12 +74,26 @@ var app = new Vue({
             .then(json => {
                 this.templateReactions = json.reactions
             })
+        },
+        copyRxnIds() {
+            var copyTooltip = document.querySelector('#copy-tooltip')
+            copyToClipboard(this.reactionReferences)
+            copyTooltip.innerHTML = 'Copied!'
+            setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
         }
     },
     computed: {
         reactionReferences() {
             if (!!this.templateInfo && !!this.templateInfo.references) {
                 return this.templateInfo.references.join('; ')
+            }
+            else {
+                return ''
+            }
+        },
+        topReactionReferences() {
+            if (!!this.templateInfo && !!this.templateInfo.references) {
+                return this.templateInfo.references.splice(0, 100).join(';')
             }
             else {
                 return ''
