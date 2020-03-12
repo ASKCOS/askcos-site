@@ -211,7 +211,6 @@ def get_top_precursors(
 def template_relevance(smiles, max_num_templates, max_cum_prob, relevance_model='reaxys'):
     global retroTransformer
     hostname = 'template-relevance-{}'.format(relevance_model)
-    print('temprel hostname: {}'.format(hostname))
     template_prioritizer = TemplateRelevanceAPIModel(
         hostname=hostname, model_name='template_relevance'
     )
