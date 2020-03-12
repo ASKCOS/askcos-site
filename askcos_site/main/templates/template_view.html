@@ -22,7 +22,7 @@
     </div>
 	<div class="row">
 		<div class="col-12">%% templateInfo.count %% total references</div>
-        <div class="col-12">
+        <div v-if="this.templateInfo.template_set=='reaxys'" class="col-12">
             <a style="cursor: pointer" @click="downloadReactionQuery">Export Reaxys query for precedents</a>
         </div>
     </div>
