@@ -219,6 +219,8 @@ $("#start_retro").click(function () {
                 return_first: $("#return_first").is(":checked"),
                 async: $('#async').is(":checked"),
                 description: $('#description').val(),
+                template_prioritizer: $('#template_prioritizer').val(),
+                template_set: $('#template_set').val()
             },
             dataType: 'json',
             success: function (data) {
@@ -389,6 +391,28 @@ $(document).ready(function() {
     <button type="button" style="width:100%" onclick="strugglingSettings();">Just give me <i>something</i> to look at</button>
 </td></tr>
 
+
+<tr><th>Template relevance model: </th>
+
+<td>
+    Template prioritization model: 
+    <a href="#" data-toggle="tooltip" title="Which template relevance machine learning model would you like to use?"><span class="glyphicon glyphicon-info-sign"></span></a>
+</td>
+<td>
+    <select id="template_prioritizer" name="template_prioritizer">
+        <option value="reaxys">Reaxys</option>
+    </select>
+</td>
+
+<td>
+    Template set: 
+    <a href="#" data-toggle="tooltip" title="Which template set would you like to use? There must be a template prioritization model trained for the template set you select."><span class="glyphicon glyphicon-info-sign"></span></a>
+</td>
+<td>
+    <select id="template_set" name="template_set">
+        <option value="reaxys">Reaxys</option>
+    </select>
+</td>
 
 <tr><th>Expansion settings: </th>
 

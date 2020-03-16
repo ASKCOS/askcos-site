@@ -38,6 +38,9 @@ def tree_builder(request):
     min_chempop_products = int(request.GET.get('min_chempop_products', 5))
     filter_threshold = float(request.GET.get('filter_threshold', 0.75))
     apply_fast_filter = filter_threshold > 0
+    template_prioritizer = request.GET.get('template_prioritizer', 'reaxys')
+    template_set = request.GET.get('template_set', 'reaxys')
+    hashed_historian = request.GET.get('hashed_historian') in ['True', 'true']
     return_first = request.GET.get('return_first', 'True') in ['True', 'true']
     
     blacklisted_reactions = request.GET.get('blacklisted_reactions', '')
@@ -58,6 +61,9 @@ def tree_builder(request):
         'as_reactant': min_chempop_reactants,
         'as_product': min_chempop_products,
     }
+
+    if request.GET.get('hashed_historian') is None:
+        historian_hashed = template_set == 'reaxys'
     
     res = get_buyable_paths_mcts.delay(smiles, max_branching=max_branching, max_depth=max_depth,
                                   max_ppg=max_ppg, expansion_time=expansion_time, max_trees=500,
@@ -66,7 +72,8 @@ def tree_builder(request):
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
                                   apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold,
-                                  return_first=return_first)
+                                  template_prioritizer=template_prioritizer, template_set=template_set,
+                                  hashed=historian_hashed, return_first=return_first)
     
     if run_async:
         resp['id'] = res.id

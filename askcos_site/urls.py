@@ -56,6 +56,7 @@ urlpatterns += [
     re_path(r'^ajax/get_sites/$', views.ajax_get_sites, name='ajax_get_sites'),
 
     # Template examination (by str(ObjectID))
+    re_path(r'^template/$', views.template_view, name='template_view'),
     re_path(r'^template/target=(?P<id>.+)$', views.template_target, name='template_target'),
     re_path(r'^template/download/target=(?P<id>.+)$', views.template_target_export, name='template_target_export'),
 
@@ -117,6 +118,8 @@ urlpatterns += [
     re_path(r'^api/forward/$', api.forward.template_free, name='forward_api'),
     re_path(r'^api/impurity/$', api.impurity.impurity_predict, name='impurity_api'),
     re_path(r'^api/template/$', api.template.template, name='template_api'),
+    re_path(r'^api/template/download/$', api.template.reaxys_export, name='api_template_reaxys_export'),
+    re_path(r'^api/reactions/$', api.reactions.reactions, name='reactions_api'),
     re_path(r'^api/treebuilder/$', api.tree_builder.tree_builder, name='tree_builder_api'),
     re_path(r'^api/scscore/$', api.scscore.scscore, name='scscore_api'),
     re_path(r'^api/celery/$', api.status.celery_status, name='celery_api'),

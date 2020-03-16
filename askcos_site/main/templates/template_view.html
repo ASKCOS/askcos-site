@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Template Info{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/tooltip.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_title %}Template Info{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+    <a id="downloadAnchorElem" style="display:none"></a>
+	<div class="row">
+        <div class="col-12">Template: <span style="font-family: Courier New">%% templateInfo.reaction_smarts %% </span></div>
+    </div>
+	<div class="row">
+		<div class="col-12">%% templateInfo.count %% total references</div>
+        <div v-if="this.templateInfo.template_set=='reaxys'" class="col-12">
+            <a class="btn btn-default" @click="downloadReactionQuery">
+                <i class="fas fa-file-download"></i>
+                Export Reaxys query for precedents
+            </a>
+        </div>
+    </div>
+	<div class="row">
+		<div class="col-12"><img :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
+    </div>
+	<div class="row">
+		<div class="col-12">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th class="text-center">RXN ID</th>
+						<th class="text-center">Reaction</th>
+						<th class="text-center">Spectators</th>
+					</tr>
+				</thead>
+				<tbody>
+					<template v-for="reaction in templateReactions">
+						<tr data-id='%% reaction._id %%'>
+							<td class="text-center">%% reaction.reaction_id %%</td>
+							<td class="text-center">
+                                <img :src="'/draw/reaction/'+encodeURIComponent(reaction.reaction_smiles)"></img>
+                            </td>
+							<td class="text-center">%% reaction.spectators %%</td>
+						</tr>
+					</template>
+				</tbody>
+			</table>
+            <h2 v-if="templateReactions.length==0" class="text-center">
+                Reaction data not available!
+            </h2>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-12">
+            <b>Reaction reference IDs: </b>
+            <div 
+                id="rxn-ids"
+                class="customtooltip"
+                @click="copyRxnIds"
+            >
+                    <i class="far fa-copy"></i>
+                %% reactionReferences %%
+                <span 
+                    id="copy-tooltip"
+                    class="customtooltiptext"
+                >
+                    Click to copy!
+                </span>
+            </div>
+		</div>
+    </div>
+	<div class="loader"></div>
+</div>
+
+<script src="{% static 'js/template.js' %}"></script>
+
+{% endblock %}

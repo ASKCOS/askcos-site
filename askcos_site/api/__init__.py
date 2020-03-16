@@ -14,3 +14,4 @@ from . import validate_chem_name
 from . import cluster
 from . import selectivity
 from . import impurity
+from . import reactions

@@ -23,6 +23,9 @@ def template_target_export(request, id):
     response['Content-Disposition'] = 'attachment;filename=reaxys_query.json'
     return response
 
+def template_view(request):
+    return render(request, 'template_view.html')
+
 #@login_required
 def template_target(request, id, return_refs_only=False):
     '''
@@ -36,9 +39,12 @@ def template_target(request, id, return_refs_only=False):
     '''
     context = {}
 
-    transform = retro_templates.find_one({'_id': ObjectId(id)})
+    transform = retro_templates.find_one({'_id': id})
     if not transform:
-        transform = retro_templates.find_one({'_id': id})
+        try:
+            transform = retro_templates.find_one({'_id': ObjectId(id)})
+        except:
+            transform = None
 
     if not transform:
         context['err'] = 'Transform not found'

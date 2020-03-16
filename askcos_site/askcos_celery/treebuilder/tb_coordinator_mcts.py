@@ -9,6 +9,7 @@ The coordinator, finally, returns a set of buyable trees obtained
 from an IDDFS.
 """
 
+import os
 from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
@@ -75,7 +76,8 @@ class MCTSCelery(MCTS):
             kwargs={'max_num_templates': self.template_count,
                     'max_cum_prob': self.max_cum_template_prob,
                     'fast_filter_threshold': self.filter_threshold,
-                    'template_prioritizer': self.template_prioritizer},
+                    'template_prioritizer': self.template_prioritizer,
+                    'template_set': self.template_set},
             # queue=self.private_worker_queue, ## CWC TEST: don't reserve
         ))
         self.status[(smiles, template_idx)] = WAITING
@@ -125,7 +127,7 @@ class MCTSCelery(MCTS):
         """
         Get template prioritizer predictions to initialize the tree search.
         """
-        res = tb_c_worker.template_relevance.delay(self.smiles, self.template_count, self.max_cum_template_prob)
+        res = tb_c_worker.template_relevance.delay(self.smiles, self.template_count, self.max_cum_template_prob, relevance_model=self.template_prioritizer)
         return res.get(10)
 
     def work(self, i):
