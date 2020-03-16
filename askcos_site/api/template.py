@@ -42,27 +42,25 @@ def reaxys_export(request):
     if transform.get('template_set') != 'reaxys':
         resp['error'] = 'Template is not in the reaxys template set'
         return JsonResponse(resp)
+    references = '; '.join(map(lambda ref: ref.split('-')[0], transform['references']))
     resp['fileName'] = 'reaxys_query.json'
     resp['version'] = '1.0'
     resp['content'] = {
         'id': 'root',
-        'facts': []
+        'facts': [{
+            'id': 'Reaxys487',
+            'fields': [{
+                'value': references,
+                'boundOperator': 'op_num_equal',
+                'id': 'RX.ID',
+                'displayName': 'Reaction ID'
+            }],
+            'fieldsLogicOperator': 'AND',
+            'exist': False,
+            'bio': False
+        }]
     }
     resp['exist'] = False
     resp['bio'] = False
-    for reference in transform['references']:
-        resp['content']['facts'].append({
-            'id': 'Reaxys487',
-            'logicOperator': 'OR',
-            'fields': [{
-                'value': reference.split('-')[0],
-                "boundOperator": "op_num_equal",
-                "id": "RX.ID",
-                "displayName": "Reaction ID"
-            }],
-            "fieldsLogicOperator":"AND",
-            "exist": False,
-            "bio": False
-        })
     resp['content']['facts'][0].pop('logicOperator', None)
     return JsonResponse(resp)
