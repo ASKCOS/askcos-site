@@ -71,6 +71,36 @@ class TestAPI(unittest.TestCase):
         result = response.json()
         self.assertTrue(result['success'])
 
+    def test_fast_filter(self):
+        """Test /fast-filter endpoint"""
+        data = {
+            'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+            'products': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+        }
+        response = self.client.post('https://localhost/api/v2/fast-filter/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['products'], data['products'])
+
+        # Check result
+        self.assertAlmostEqual(result['score'], 0.998, places=2)
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/fast-filter/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['This field is required.'],
+                                           'products': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/fast-filter/', data={'reactants': 'X', 'products': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
+                                           'products': ['Cannot parse products smiles with rdkit.']})
+
     def test_retro(self):
         """Test /retro endpoint"""
         data = {
