@@ -71,6 +71,45 @@ class TestAPI(unittest.TestCase):
         result = response.json()
         self.assertTrue(result['success'])
 
+    def test_context(self):
+        """Test /context endpoint"""
+        data = {
+            'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+            'products': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'num_results': 5,
+            'return_scores': 'true',
+        }
+        response = self.client.post('https://localhost/api/v2/context/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['products'], data['products'])
+        self.assertEqual(request['num_results'], data['num_results'])
+        self.assertTrue(request['return_scores'])
+
+        self.assertEqual(len(result['contexts']), 5)
+        c = result['contexts'][0]
+        self.assertEqual(c['catalyst'], '')
+        self.assertEqual(c['reagent'], 'Cc1ccccc1.[H][N-][H].[Na+]')
+        self.assertAlmostEqual(c['score'], 0.339, places=2)
+        self.assertEqual(c['solvent'], '')
+        self.assertAlmostEqual(c['temperature'], 94.48, places=1)
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/context/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['This field is required.'],
+                                           'products': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/context/', data={'reactants': 'X', 'products': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
+                                           'products': ['Cannot parse products smiles with rdkit.']})
+
     def test_fast_filter(self):
         """Test /fast-filter endpoint"""
         data = {
