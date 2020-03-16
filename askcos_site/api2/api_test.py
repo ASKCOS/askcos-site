@@ -175,6 +175,40 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.']})
 
+    def test_impurity(self):
+        """Test /impurity endpoint"""
+        data = {
+            'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+        }
+        response = self.client.post('https://localhost/api/v2/impurity/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['reagents'], '')
+        self.assertEqual(request['products'], '')
+        self.assertEqual(request['solvent'], '')
+        self.assertEqual(request['top_k'], 3)
+        self.assertEqual(request['threshold'], 0.75)
+        self.assertEqual(request['predictor'], 'WLN forward predictor')
+        self.assertEqual(request['inspector'], 'Reaxys predictor')
+        self.assertEqual(request['mapper'], 'WLN atom mapper')
+        self.assertTrue(request['check_mapping'])
+
+        self.assertIsNotNone(result['task_id'])
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/impurity/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/impurity/', data={'reactants': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse smiles with rdkit.']})
+
     def test_retro(self):
         """Test /retro endpoint"""
         data = {
