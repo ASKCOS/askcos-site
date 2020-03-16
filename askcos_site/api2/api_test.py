@@ -140,6 +140,41 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
                                            'products': ['Cannot parse products smiles with rdkit.']})
 
+    def test_forward(self):
+        """Test /forward endpoint"""
+        data = {
+            'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+            'num_results': 5,
+        }
+        response = self.client.post('https://localhost/api/v2/forward/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['reagents'], '')
+        self.assertEqual(request['solvent'], '')
+        self.assertEqual(request['num_results'], data['num_results'])
+
+        self.assertEqual(len(result['outcomes']), 5)
+        o = result['outcomes'][0]
+        self.assertEqual(o['smiles'], 'CN(C)CCOC(c1ccccc1)c1ccccc1')
+        self.assertAlmostEqual(o['mol_wt'], 255.36, places=2)
+        self.assertEqual(o['rank'], 1)
+        self.assertAlmostEqual(o['score'], -63.3, places=1)
+        self.assertAlmostEqual(o['prob'], 0.91, places=2)
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/forward/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/forward/', data={'reactants': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.']})
+
     def test_retro(self):
         """Test /retro endpoint"""
         data = {
