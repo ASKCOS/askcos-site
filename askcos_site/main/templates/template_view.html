@@ -54,8 +54,12 @@
 					</template>
 				</tbody>
 			</table>
+            <h2 v-if="templateReactions.length==0" class="text-center">
+                Reaction data not available!
+            </h2>
 		</div>
 	</div>
+
 	<div class="row">
 		<div class="col-12">
             <b>Reaction reference IDs: </b>
