@@ -18,5 +18,6 @@ urlpatterns += [
     re_path(r'^impurity/$', api2.impurity.impurity_predict, name='impurity_api'),
     re_path(r'^reactions/$', api2.reactions.reactions, name='reactions_api'),
     re_path(r'^retro/$', api2.retro.singlestep, name='retro_api'),
+    re_path(r'^scscore/$', api2.scscore.scscore, name='scscore_api'),
     re_path(r'^treebuilder/$', api2.tree_builder.tree_builder, name='tree_builder_api'),
 ]

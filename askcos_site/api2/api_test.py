@@ -259,6 +259,32 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
 
+    def test_scscore(self):
+        """Test /scscore endpoint"""
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+        }
+        response = self.client.post('https://localhost/api/v2/scscore/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+
+        # Check that we got expected result
+        self.assertAlmostEqual(result['score'], 2.159, places=3)
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/scscore/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/scscore/', data={'smiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
+
     def test_template(self):
         """Test /template endpoint"""
         # Get request for specific template endpoint
