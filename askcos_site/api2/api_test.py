@@ -243,6 +243,42 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
 
+    def test_template(self):
+        """Test /template endpoint"""
+        # Get request for specific template endpoint
+        template_id = '5e1f4b6f63488328509a594e'
+        response = self.client.get('https://localhost/api/v2/template/{0}/'.format(template_id))
+        self.assertEqual(response.status_code, 200)
+
+        # Check retrieved template
+        result = response.json()
+        template = result['template']
+        self.assertIsNotNone(template)
+        self.assertEqual(template['template_set'], 'reaxys')
+        self.assertEqual(template['_id'], template_id)
+        self.assertEqual(template['references'], ['100336', '100337', '555364', '3948785', '3948834',
+                                                  '28127174', '35585623', '38022824', '38022828',
+                                                  '38022830', '38022834', '38022833', '38022835',
+                                                  '38022845', '41610599', '41610601', '41610620'])
+
+        # Get request for specific template reaxys query export endpoint
+        response = self.client.get('https://localhost/api/v2/template/{0}/export'.format(template_id))
+        self.assertEqual(response.status_code, 200)
+
+        # Check exported json
+        result = response.json()
+        self.assertEqual(result['fileName'], 'reaxys_query.json')
+        self.assertEqual(len(result['content']['facts']), 1)
+        fact = result['content']['facts'][0]
+        self.assertEqual(fact['id'], 'Reaxys487')
+        self.assertEqual(len(fact['fields']), 1)
+        field = fact['fields'][0]
+        self.assertEqual(field['id'], 'RX.ID')
+        self.assertEqual(field['displayName'], 'Reaction ID')
+        self.assertEqual(field['boundOperator'], 'op_num_equal')
+        self.assertEqual(field['value'],
+                         '100336; 100337; 555364; 3948785; 3948834; 28127174; 35585623; 38022824; 38022828; 38022830; 38022834; 38022833; 38022835; 38022845; 41610599; 41610601; 41610620')
+
     @classmethod
     def tearDownClass(cls):
         """This method is run once after all tests in this class."""

@@ -4,3 +4,4 @@ from . import fast_filter
 from . import forward
 from . import impurity
 from . import retro
+from . import template
