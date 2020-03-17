@@ -71,6 +71,24 @@ class TestAPI(unittest.TestCase):
         result = response.json()
         self.assertTrue(result['success'])
 
+    def test_celery_status(self):
+        """Test /celery endpoint"""
+        response = self.client.get('https://localhost/api/v2/celery/')
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertIsInstance(result['queues'], list)
+
+    def test_celery_task_status(self):
+        """Test /celery/task endpoint"""
+        response = self.client.get('https://localhost/api/v2/celery/task/')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'task_id': ['This field is required.']})
+
+        response = self.client.get('https://localhost/api/v2/celery/task/?task_id=abc')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'complete': False})
+
     def test_context(self):
         """Test /context endpoint"""
         data = {
