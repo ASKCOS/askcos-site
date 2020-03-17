@@ -209,6 +209,22 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse smiles with rdkit.']})
 
+    def test_reactions(self):
+        """Test /reactions endpoint"""
+        data = {
+            'ids': ['1'],
+        }
+        response = self.client.post('https://localhost/api/v2/reactions/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertEqual(result['reactions'], [])
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/reactions/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'ids': ['This field is required.']})
+
     def test_retro(self):
         """Test /retro endpoint"""
         data = {
