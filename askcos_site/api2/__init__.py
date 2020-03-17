@@ -6,3 +6,4 @@ from . import impurity
 from . import reactions
 from . import retro
 from . import template
+from . import tree_builder

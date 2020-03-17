@@ -295,6 +295,42 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(field['value'],
                          '100336; 100337; 555364; 3948785; 3948834; 28127174; 35585623; 38022824; 38022828; 38022830; 38022834; 38022833; 38022835; 38022845; 41610599; 41610601; 41610620')
 
+    def test_tree_builder(self):
+        """Test /treebuilder endpoint"""
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'async': False,
+            'return_first': True,
+        }
+        response = self.client.post('https://localhost/api/v2/treebuilder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+        self.assertEqual(request['async'], False)
+        self.assertEqual(request['return_first'], True)
+        self.assertEqual(request['chemical_property_logic'], 'none')
+        self.assertEqual(request['chemical_popularity_logic'], 'none')
+        self.assertEqual(request['template_set'], 'reaxys')
+        self.assertEqual(request['template_prioritizer'], 'reaxys')
+
+        # Check that we got a result (can't check values because it's non-deterministic)
+        self.assertIsInstance(result['trees'], list)
+        self.assertIsInstance(result['trees'][0], dict)
+        self.assertIsInstance(result['trees'][0]['children'], list)
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/treebuilder/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/treebuilder/', data={'smiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
+
     @classmethod
     def tearDownClass(cls):
         """This method is run once after all tests in this class."""
