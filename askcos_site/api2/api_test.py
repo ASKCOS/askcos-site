@@ -243,6 +243,87 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'ids': ['This field is required.']})
 
+    def test_rdkit_smiles(self):
+        """Test /rdkit/smiles endpoints"""
+        data = {
+            'smiles': 'c1ccccc1C(OCCN(C)C)c1ccccc1',
+        }
+
+        # Test canonicalization
+        response = self.client.post('https://localhost/api/v2/rdkit/smiles/canonicalize/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Check that we got expected result
+        self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1'})
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/rdkit/smiles/canonicalize/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['This field is required.']})
+
+        # Test validation
+        response = self.client.post('https://localhost/api/v2/rdkit/smiles/validate/', data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'correct_syntax': True, 'valid_chem_name': True})
+
+        molfile = {
+            'molfile': """
+     RDKit          2D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+    1.5000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500   -1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7500   -1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    3.8971    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    5.1962    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    6.4952    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    7.7942    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    9.0933    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0000    7.7942    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2500    3.8971    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7500    3.8971    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0
+  2  3  1  0
+  3  4  2  0
+  4  5  1  0
+  5  6  2  0
+  6  7  1  0
+  7  8  1  0
+  8  9  1  0
+  9 10  1  0
+ 10 11  1  0
+ 11 12  1  0
+ 11 13  1  0
+  7 14  1  0
+ 14 15  2  0
+ 15 16  1  0
+ 16 17  2  0
+ 17 18  1  0
+ 18 19  2  0
+  6  1  1  0
+ 19 14  1  0
+M  END
+""",
+        }
+
+        # Test molfile generation
+        response = self.client.post('https://localhost/api/v2/rdkit/smiles/to_molfile/', data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), molfile)
+
+        # Test molfile parsing
+        response = self.client.post('https://localhost/api/v2/rdkit/smiles/from_molfile/', data=molfile)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1'})
+
     def test_retro(self):
         """Test /retro endpoint"""
         data = {

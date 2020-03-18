@@ -7,6 +7,7 @@ app_name = 'v2'
 
 router = SimpleRouter()
 router.register(r'buyables', api2.buyables.BuyablesViewSet, basename='buyables')
+router.register(r'rdkit/smiles', api2.rdkit.SmilesViewSet, basename='smiles')
 router.register(r'template', api2.template.TemplateViewSet, basename='template')
 
 urlpatterns = router.urls

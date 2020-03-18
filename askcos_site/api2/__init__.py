@@ -3,6 +3,7 @@ from . import context
 from . import fast_filter
 from . import forward
 from . import impurity
+from . import rdkit
 from . import reactions
 from . import retro
 from . import scscore
