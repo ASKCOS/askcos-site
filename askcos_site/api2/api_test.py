@@ -406,6 +406,33 @@ M  END
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
 
+    def test_selectivity(self):
+        """Test /selectivity endpoint"""
+        data = {
+            'smiles': 'Cc1ccccc1',
+        }
+        response = self.client.post('https://localhost/api/v2/selectivity/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+
+        # Check that we got expected result
+        self.assertIsInstance(result['result'], list)
+        self.assertEqual(len(result['result']), 123)
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/selectivity/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/selectivity/', data={'smiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
+
     def test_template(self):
         """Test /template endpoint"""
         # Get request for specific template endpoint

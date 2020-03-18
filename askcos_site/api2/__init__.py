@@ -8,6 +8,7 @@ from . import rdkit
 from . import reactions
 from . import retro
 from . import scscore
+from . import selectivity
 from . import status
 from . import template
 from . import tree_builder
