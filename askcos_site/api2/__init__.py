@@ -6,6 +6,7 @@ from . import forward
 from . import impurity
 from . import rdkit
 from . import reactions
+from . import results
 from . import retro
 from . import scscore
 from . import selectivity
