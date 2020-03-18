@@ -15,6 +15,7 @@ urlpatterns = router.urls
 urlpatterns += [
     re_path(r'^celery/$', api2.status.celery_status, name='celery_api'),
     re_path(r'^celery/task/$', api2.status.task_status, name='celery_task_api'),
+    re_path(r'^cluster/$', api2.cluster.cluster, name='cluster_api'),
     re_path(r'^context/$', api2.context.neural_network, name='context_api'),
     re_path(r'^fast-filter/$', api2.fast_filter.fast_filter, name='fast_filter_api'),
     re_path(r'^forward/$', api2.forward.template_free, name='forward_api'),

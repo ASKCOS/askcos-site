@@ -89,6 +89,28 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'complete': False})
 
+    def test_cluster(self):
+        """Test /cluster endpoint"""
+        data = {
+            'original': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'outcomes': ['OC(c1ccccc1)c1ccccc1.CN(C)CCCl',
+                         'ClC(c1ccccc1)c1ccccc1.CN(C)CCO',
+                         'O=C(c1ccccc1)c1ccccc1.CN(C)CCO']
+        }
+        response = self.client.post('https://localhost/api/v2/cluster/', data=data)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['request']['original'], data['original'])
+        self.assertEqual(result['request']['outcomes'], data['outcomes'])
+
+        self.assertIsInstance(result['group_id'], list)
+        self.assertEqual(result['group_id'], [0, 0, 1])
+
+        response = self.client.post('https://localhost/api/v2/cluster/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'original': ['This field is required.'],
+                                           'outcomes': ['This field is required.']})
+
     def test_context(self):
         """Test /context endpoint"""
         data = {
