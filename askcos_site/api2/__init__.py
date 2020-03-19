@@ -1,4 +1,5 @@
 from . import buyables
+from . import celery
 from . import cluster
 from . import context
 from . import fast_filter
@@ -10,6 +11,5 @@ from . import results
 from . import retro
 from . import scscore
 from . import selectivity
-from . import status
 from . import template
 from . import tree_builder
