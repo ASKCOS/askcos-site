@@ -1,6 +1,9 @@
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from askcos_site.globals import db_client
 from askcos_site.main.models import SavedResults
@@ -12,6 +15,8 @@ class ResultsViewSet(ViewSet):
     """
     A ViewSet for accessing a user's job results.
     """
+    authentication_classes = [SessionAuthentication, JSONWebTokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         """Get all results belonging to the authenticated user."""

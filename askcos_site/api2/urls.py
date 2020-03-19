@@ -1,5 +1,6 @@
 from django.urls import re_path
 from rest_framework.routers import SimpleRouter
+from rest_framework_jwt.views import obtain_jwt_token
 
 from askcos_site import api2
 
@@ -26,4 +27,6 @@ urlpatterns += [
     re_path(r'^scscore/$', api2.scscore.scscore, name='scscore_api'),
     re_path(r'^selectivity/$', api2.selectivity.selectivity, name='selectivity'),
     re_path(r'^treebuilder/$', api2.tree_builder.tree_builder, name='tree_builder_api'),
+
+    re_path(r'^token-auth/$', obtain_jwt_token, name='token_api'),
 ]
