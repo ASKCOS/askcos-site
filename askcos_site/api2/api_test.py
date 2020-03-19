@@ -346,6 +346,59 @@ M  END
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1'})
 
+    @unittest.skip('Requires login credentials.')
+    def test_results(self):
+        """Test /results endpoint and token authentication"""
+        # Test that access is denied without authentication
+        response = self.client.get('https://localhost/api/v2/results/')
+        self.assertEqual(response.status_code, 401)
+
+        # Test that we can get a token (need to provide valid credentials, even for testing)
+        data = {
+            'username': '',
+            'password': '',
+        }
+        response = self.client.post('https://localhost/api/v2/token-auth/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertIn('token', result)
+        token = result['token']
+
+        # Test that we can access using the token
+        headers = {
+            'Authorization': 'Bearer {0}'.format(token),
+        }
+        response = self.client.get('https://localhost/api/v2/results/', headers=headers)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertIsInstance(result['results'], list)
+        result_id = result['results'][0]['id']
+
+        # Test checking the status of a result
+        response = self.client.get('https://localhost/api/v2/results/{0}/check'.format(result_id), headers=headers)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['id'], result_id)
+        self.assertEqual(result['state'], 'completed')
+        self.assertIsNone(result['error'])
+
+        # Test retrieving a result
+        response = self.client.get('https://localhost/api/v2/results/{0}/'.format(result_id), headers=headers)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['id'], result_id)
+        self.assertIsInstance(result['result'], dict)
+        self.assertIsNone(result['error'])
+
+        # Test deleting a non-existent result
+        response = self.client.delete('https://localhost/api/v2/results/{0}/'.format('random'), headers=headers)
+        self.assertEqual(response.status_code, 404)
+        result = response.json()
+        self.assertFalse(result['success'])
+        self.assertEqual(result['error'], 'Result not found!')
+
     def test_retro(self):
         """Test /retro endpoint"""
         data = {
