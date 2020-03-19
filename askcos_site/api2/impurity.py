@@ -1,11 +1,8 @@
 from rdkit import Chem
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
 
 from askcos_site.askcos_celery.impurity.impurity_worker import get_impurities
-
-TIMEOUT = 30
+from .celery import CeleryTaskAPIView
 
 
 class ImpurityPredictorSerializer(serializers.Serializer):
@@ -20,6 +17,7 @@ class ImpurityPredictorSerializer(serializers.Serializer):
     inspector = serializers.CharField(default='Reaxys predictor')
     mapper = serializers.CharField(default='WLN atom mapper')
     check_mapping = serializers.BooleanField(default=True)
+    async = serializers.BooleanField(default=True)
 
     def check_smiles(self, value):
         """Verify that the requested SMILES string is valid. Returns canonicalized SMILES."""
@@ -47,29 +45,29 @@ class ImpurityPredictorSerializer(serializers.Serializer):
         return self.check_smiles(value)
 
 
-@api_view(['POST'])
-def impurity_predict(request):
+class ImpurityAPIView(CeleryTaskAPIView):
     """API endpoint for impurity prediction task."""
-    serializer = ImpurityPredictorSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
 
-    resp = {'request': data}
+    serializer_class = ImpurityPredictorSerializer
 
-    # TODO: need work
-    res = get_impurities.delay(
-        data['reactants'],
-        reagents=data['reagents'],
-        products=data['products'],
-        solvents=data['solvent'],
-        top_k=data['top_k'],
-        threshold=data['threshold'],
-        predictor_selection=data['predictor'],
-        inspector_selection=data['inspector'],
-        mapper_selection=data['mapper'],
-        check_mapping=data['check_mapping']
-    )
+    def execute(self, data):
+        """
+        Execute an impurity task and return the celery result object.
+        """
+        result = get_impurities.delay(
+            data['reactants'],
+            reagents=data['reagents'],
+            products=data['products'],
+            solvents=data['solvent'],
+            top_k=data['top_k'],
+            threshold=data['threshold'],
+            predictor_selection=data['predictor'],
+            inspector_selection=data['inspector'],
+            mapper_selection=data['mapper'],
+            check_mapping=data['check_mapping']
+        )
 
-    resp['task_id'] = res.task_id
+        return result
 
-    return Response(resp)
+
+impurity_predict = ImpurityAPIView.as_view()

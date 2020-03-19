@@ -1,15 +1,14 @@
-from celery.exceptions import TimeoutError
 from rdkit import Chem
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
 
 from askcos_site.askcos_celery.siteselectivity.sites_worker import get_sites
+from .celery import CeleryTaskAPIView
 
 
 class SelectivitySerializer(serializers.Serializer):
     """Serializer for site selectivity task parameters."""
     smiles = serializers.CharField()
+    async = serializers.BooleanField(default=True)
 
     def validate_smiles(self, value):
         """Verify that the requested smiles is valid."""
@@ -18,28 +17,17 @@ class SelectivitySerializer(serializers.Serializer):
         return value
 
 
-@api_view(['POST'])
-def selectivity(request):
+class SelectivityAPIView(CeleryTaskAPIView):
     """API endpoint for site selectivity prediction task."""
-    serializer = SelectivitySerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
 
-    resp = {'request': data}
+    serializer_class = SelectivitySerializer
 
-    res = get_sites.delay(data['smiles'])
+    def execute(self, data):
+        """
+        Execute site selectivity task and return celery result object.
+        """
+        result = get_sites.delay(data['smiles'])
+        return result
 
-    try:
-        result = res.get(30)
-    except TimeoutError:
-        resp['error'] = 'API request timed out (limit 30s)'
-        res.revoke()
-        return Response(resp, status=408)
-    except Exception as e:
-        resp['error'] = str(e)
-        res.revoke()
-        return Response(resp, status=400)
 
-    resp['result'] = result
-
-    return Response(resp)
+selectivity = SelectivityAPIView.as_view()

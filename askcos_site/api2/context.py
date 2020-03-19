@@ -1,12 +1,8 @@
-from celery.exceptions import TimeoutError
 from rdkit import Chem
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
 
 from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
-
-TIMEOUT = 30
+from .celery import CeleryTaskAPIView
 
 
 class ContextRecommenderSerializer(serializers.Serializer):
@@ -14,9 +10,10 @@ class ContextRecommenderSerializer(serializers.Serializer):
     reactants = serializers.CharField()
     products = serializers.CharField()
     with_smiles = serializers.BooleanField(default=True)
-    singleSlvt = serializers.BooleanField(default=True)
+    single_solvent = serializers.BooleanField(default=True)
     return_scores = serializers.BooleanField(default=False)
     num_results = serializers.IntegerField(default=10)
+    async = serializers.BooleanField(default=True)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid."""
@@ -31,52 +28,50 @@ class ContextRecommenderSerializer(serializers.Serializer):
         return value
 
 
-@api_view(['POST'])
-def neural_network(request):
+class ContextRecommenderAPIView(CeleryTaskAPIView):
     """API endpoint for context recommendation prediction using neural network model."""
-    serializer = ContextRecommenderSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
 
-    reactants = data['reactants']
-    products = data['products']
-    with_smiles = data['with_smiles']
-    singleSlvt = data['singleSlvt']
-    return_scores = data['return_scores']
-    n = data['num_results']
-    rxn = reactants + '>>' + products
+    serializer_class = ContextRecommenderSerializer
 
-    resp = {'request': data}
+    def execute(self, data):
+        """
+        Execute context recommendation task.
+        """
+        rxn = data['reactants'] + '>>' + data['products']
 
-    res = network_get_n_conditions.delay(rxn, n, singleSlvt, with_smiles, return_scores)
+        result = network_get_n_conditions.delay(
+            rxn,
+            n=data['num_results'],
+            singleSlvt=data['single_solvent'],
+            with_smiles=data['with_smiles'],
+            return_scores=data['return_scores'],
+        )
 
-    try:
-        if return_scores:
-            contexts, scores = res.get(TIMEOUT)
+        return result
+
+    def process(self, data, output):
+        """
+        Post-process output from context recommendation task.
+        """
+        if data['return_scores']:
+            contexts, scores = output
         else:
-            contexts = res.get(TIMEOUT)
-    except TimeoutError:
-        resp['error'] = 'API request timed out (limit {}s)'.format(TIMEOUT)
-        res.revoke()
-        return Response(resp, status=408)
-    except Exception as e:
-        resp['error'] = str(e)
-        res.revoke()
-        return Response(resp, status=400)
+            contexts = output
 
-    json_contexts = []
-    for context in contexts:
-        json_contexts.append({
-            'temperature': context[0],
-            'solvent': context[1],
-            'reagent': context[2],
-            'catalyst': context[3]
-        })
+        json_contexts = []
+        for context in contexts:
+            json_contexts.append({
+                'temperature': context[0],
+                'solvent': context[1],
+                'reagent': context[2],
+                'catalyst': context[3]
+            })
 
-    if return_scores:
-        for c, s in zip(json_contexts, scores):
-            c['score'] = s
+        if data['return_scores']:
+            for c, s in zip(json_contexts, scores):
+                c['score'] = s
 
-    resp['contexts'] = json_contexts
+        return json_contexts
 
-    return Response(resp)
+
+neural_network = ContextRecommenderAPIView.as_view()

@@ -1,6 +1,8 @@
+from celery.exceptions import TimeoutError
 from celery.result import AsyncResult
 from rest_framework import serializers
 from rest_framework.decorators import api_view
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from askcos_site.celery import app
@@ -15,6 +17,57 @@ READABLE_NAMES = {
     'atom_mapping_worker': 'Atom mapping worker',
     'tffp_worker': 'Template-free Forward Predictor'
 }
+
+
+class CeleryTaskAPIView(GenericAPIView):
+    """
+    Base API view for a celery task.
+    """
+
+    TIMEOUT = 30
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for a generic celery task endpoint.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        result = self.execute(data)
+
+        resp = {'request': data}
+
+        if data['async']:
+            resp['task_id'] = result.id
+            return Response(resp)
+
+        try:
+            output = result.get(self.TIMEOUT)
+        except TimeoutError:
+            resp['error'] = 'API request timed out (limit {}s).'.format(self.TIMEOUT)
+            result.revoke()
+            return Response(resp, status=408)
+        except Exception as e:
+            resp['error'] = str(e)
+            result.revoke()
+            return Response(resp, status=400)
+
+        resp['output'] = self.process(data, output)
+
+        return Response(resp)
+
+    def execute(self, data):
+        """
+        Execute the celery task and return a celery result object.
+        """
+        raise NotImplementedError('Should be implemented by child class.')
+
+    def process(self, data, output):
+        """
+        Post-process output from a celery task.
+        """
+        return output
 
 
 class TaskSerializer(serializers.Serializer):

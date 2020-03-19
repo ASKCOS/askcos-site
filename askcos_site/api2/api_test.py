@@ -117,7 +117,8 @@ class TestAPI(unittest.TestCase):
             'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
             'products': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
             'num_results': 5,
-            'return_scores': 'true',
+            'return_scores': True,
+            'async': False
         }
         response = self.client.post('https://localhost/api/v2/context/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -130,13 +131,13 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['num_results'], data['num_results'])
         self.assertTrue(request['return_scores'])
 
-        self.assertEqual(len(result['contexts']), 5)
-        c = result['contexts'][0]
-        self.assertEqual(c['catalyst'], '')
-        self.assertEqual(c['reagent'], 'Cc1ccccc1.[H][N-][H].[Na+]')
-        self.assertAlmostEqual(c['score'], 0.339, places=2)
-        self.assertEqual(c['solvent'], '')
-        self.assertAlmostEqual(c['temperature'], 94.48, places=1)
+        self.assertEqual(len(result['output']), 5)
+        o = result['output'][0]
+        self.assertEqual(o['catalyst'], '')
+        self.assertEqual(o['reagent'], 'Cc1ccccc1.[H][N-][H].[Na+]')
+        self.assertAlmostEqual(o['score'], 0.339, places=2)
+        self.assertEqual(o['solvent'], '')
+        self.assertAlmostEqual(o['temperature'], 94.48, places=1)
 
         # Test insufficient data
         response = self.client.post('https://localhost/api/v2/context/', data={})
@@ -166,7 +167,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['products'], data['products'])
 
         # Check result
-        self.assertAlmostEqual(result['score'], 0.998, places=2)
+        self.assertAlmostEqual(result['output'], 0.998, places=2)
 
         # Test insufficient data
         response = self.client.post('https://localhost/api/v2/fast-filter/', data={})
@@ -185,6 +186,7 @@ class TestAPI(unittest.TestCase):
         data = {
             'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
             'num_results': 5,
+            'async': False,
         }
         response = self.client.post('https://localhost/api/v2/forward/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -197,8 +199,8 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['solvent'], '')
         self.assertEqual(request['num_results'], data['num_results'])
 
-        self.assertEqual(len(result['outcomes']), 5)
-        o = result['outcomes'][0]
+        self.assertEqual(len(result['output']), 5)
+        o = result['output'][0]
         self.assertEqual(o['smiles'], 'CN(C)CCOC(c1ccccc1)c1ccccc1')
         self.assertAlmostEqual(o['mol_wt'], 255.36, places=2)
         self.assertEqual(o['rank'], 1)
@@ -219,6 +221,7 @@ class TestAPI(unittest.TestCase):
         """Test /impurity endpoint"""
         data = {
             'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+            'async': True,
         }
         response = self.client.post('https://localhost/api/v2/impurity/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -403,6 +406,7 @@ M  END
         """Test /retro endpoint"""
         data = {
             'target': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'async': False,
         }
         response = self.client.post('https://localhost/api/v2/retro/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -422,6 +426,8 @@ M  END
         self.assertEqual(request['cluster_fp_type'], 'morgan')
         self.assertEqual(request['cluster_fp_length'], 512)
         self.assertEqual(request['cluster_fp_radius'], 1)
+
+        self.assertIsInstance(result['output'], list)
 
         # Test insufficient data
         response = self.client.post('https://localhost/api/v2/retro/', data={})
@@ -463,6 +469,7 @@ M  END
         """Test /selectivity endpoint"""
         data = {
             'smiles': 'Cc1ccccc1',
+            'async': False,
         }
         response = self.client.post('https://localhost/api/v2/selectivity/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -473,8 +480,8 @@ M  END
         self.assertEqual(request['smiles'], data['smiles'])
 
         # Check that we got expected result
-        self.assertIsInstance(result['result'], list)
-        self.assertEqual(len(result['result']), 123)
+        self.assertIsInstance(result['output'], list)
+        self.assertEqual(len(result['output']), 123)
 
         # Test insufficient data
         response = self.client.post('https://localhost/api/v2/selectivity/', data={})
@@ -544,9 +551,9 @@ M  END
         self.assertEqual(request['template_prioritizer'], 'reaxys')
 
         # Check that we got a result (can't check values because it's non-deterministic)
-        self.assertIsInstance(result['trees'], list)
-        self.assertIsInstance(result['trees'][0], dict)
-        self.assertIsInstance(result['trees'][0]['children'], list)
+        self.assertIsInstance(result['output'], list)
+        self.assertIsInstance(result['output'][0], dict)
+        self.assertIsInstance(result['output'][0]['children'], list)
 
         # Test insufficient data
         response = self.client.post('https://localhost/api/v2/treebuilder/', data={})

@@ -1,12 +1,8 @@
-from celery.exceptions import TimeoutError
 from rdkit import Chem
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
 
 from askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker import get_outcomes
-
-TIMEOUT = 30
+from .celery import CeleryTaskAPIView
 
 
 class ForwardPredictorSerializer(serializers.Serializer):
@@ -15,6 +11,7 @@ class ForwardPredictorSerializer(serializers.Serializer):
     reagents = serializers.CharField(default='')
     solvent = serializers.CharField(default='')
     num_results = serializers.IntegerField(default=100)
+    async = serializers.BooleanField(default=True)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid. Returns canonicalized SMILES."""
@@ -42,39 +39,29 @@ class ForwardPredictorSerializer(serializers.Serializer):
         return value
 
 
-@api_view(['POST'])
-def template_free(request):
+class ForwardPredictorAPIView(CeleryTaskAPIView):
     """API endpoint for template-free forward prediction task."""
-    serializer = ForwardPredictorSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
 
-    reactants = data['reactants']
-    reagents = data['reagents']
-    solvent = data['solvent']
-    num_results = data['num_results']
+    serializer_class = ForwardPredictorSerializer
 
-    resp = {'request': data, 'error': None}
+    def execute(self, data):
+        """
+        Execute forward prediction task and return celery result object.
+        """
+        reactants = data['reactants']
+        reagents = data['reagents']
+        solvent = data['solvent']
+        num_results = data['num_results']
 
-    combined_smiles = reactants
-    if reagents:
-        combined_smiles += '.{}'.format(reagents)
-    if solvent:
-        combined_smiles += '.{}'.format(solvent)
+        combined_smiles = reactants
+        if reagents:
+            combined_smiles += '.{}'.format(reagents)
+        if solvent:
+            combined_smiles += '.{}'.format(solvent)
 
-    res = get_outcomes.delay(combined_smiles, top_n=num_results)
+        result = get_outcomes.delay(combined_smiles, top_n=num_results)
 
-    try:
-        outcomes = res.get(TIMEOUT)
-    except TimeoutError:
-        resp['error'] = 'API request timed out (limit {}s)'.format(TIMEOUT)
-        res.revoke()
-        return Response(resp, status=408)
-    except Exception as e:
-        resp['error'] = str(e)
-        res.revoke()
-        return Response(resp, status=400)
+        return result
 
-    resp['outcomes'] = outcomes
 
-    return Response(resp)
+template_free = ForwardPredictorAPIView.as_view()

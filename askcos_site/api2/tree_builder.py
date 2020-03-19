@@ -1,16 +1,13 @@
-from celery.exceptions import TimeoutError
 from rdkit import Chem
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
 
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+from .celery import CeleryTaskAPIView
 
 
 class TreeBuilderSerializer(serializers.Serializer):
     """Serializer for tree builder task parameters."""
     smiles = serializers.CharField()
-    async = serializers.BooleanField(default=True)
     max_depth = serializers.IntegerField(default=4)
     max_branching = serializers.IntegerField(default=25)
     expansion_time = serializers.IntegerField(default=60)
@@ -33,6 +30,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     template_set = serializers.CharField(default='reaxys')
     hashed_historian = serializers.BooleanField(required=False)
     return_first = serializers.BooleanField(default=True)
+    async = serializers.BooleanField(default=True)
 
     blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
     forbidden_molecules = serializers.ListField(child=serializers.CharField(), required=False)
@@ -57,75 +55,70 @@ class TreeBuilderSerializer(serializers.Serializer):
         return value
 
 
-@api_view(['POST'])
-def tree_builder(request):
+class TreeBuilderAPIView(CeleryTaskAPIView):
     """API endpoint for tree builder prediction task."""
-    serializer = TreeBuilderSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
 
-    chemical_property_logic = data['chemical_property_logic']
-    if chemical_property_logic != 'none':
-        param_dict = {
-            'C': 'max_chemprop_c',
-            'N': 'max_chemprop_n',
-            'O': 'max_chemprop_o',
-            'H': 'max_chemprop_h',
-        }
-        max_natom_dict = {k: data[v] for k, v in param_dict if v in data}
-        max_natom_dict['logic'] = chemical_property_logic
-    else:
-        max_natom_dict = None
+    serializer_class = TreeBuilderSerializer
 
-    chemical_popularity_logic = data['chemical_popularity_logic']
-    if chemical_popularity_logic != 'none':
-        min_chemical_history_dict = {
-            'logic': chemical_popularity_logic,
-            'as_reactant': data.get('min_chempop_reactants', 5),
-            'as_product': data.get('min_chempop_products', 5),
-        }
-    else:
-        min_chemical_history_dict = None
+    def execute(self, data):
+        """
+        Execute tree builder task and return celery result object.
+        """
+        self.TIMEOUT = data['expansion_time'] * 3
 
-    res = get_buyable_paths_mcts.delay(
-        data['smiles'],
-        max_depth=data['max_depth'],
-        max_branching=data['max_branching'],
-        expansion_time=data['expansion_time'],
-        max_trees=500,
-        max_ppg=data['max_ppg'],
-        known_bad_reactions=data.get('blacklisted_reactions'),
-        forbidden_molecules=data.get('forbidden_molecules'),
-        template_count=data['template_count'],
-        max_cum_template_prob=data['max_cum_prob'],
-        max_natom_dict=max_natom_dict,
-        min_chemical_history_dict=min_chemical_history_dict,
-        apply_fast_filter=data['filter_threshold'] > 0,
-        filter_threshold=data['filter_threshold'],
-        template_prioritizer=data['template_prioritizer'],
-        template_set=data['template_set'],
-        hashed=data.get('hashed_historian', data['template_set'] == 'reaxys'),
-        return_first=data['return_first'],
-    )
+        chemical_property_logic = data['chemical_property_logic']
+        if chemical_property_logic != 'none':
+            param_dict = {
+                'C': 'max_chemprop_c',
+                'N': 'max_chemprop_n',
+                'O': 'max_chemprop_o',
+                'H': 'max_chemprop_h',
+            }
+            max_natom_dict = {k: data[v] for k, v in param_dict if v in data}
+            max_natom_dict['logic'] = chemical_property_logic
+        else:
+            max_natom_dict = None
 
-    resp = {'request': data}
+        chemical_popularity_logic = data['chemical_popularity_logic']
+        if chemical_popularity_logic != 'none':
+            min_chemical_history_dict = {
+                'logic': chemical_popularity_logic,
+                'as_reactant': data.get('min_chempop_reactants', 5),
+                'as_product': data.get('min_chempop_products', 5),
+            }
+        else:
+            min_chemical_history_dict = None
 
-    if data['async']:
-        resp['id'] = res.id
-        resp['state'] = res.state
-        return Response(resp)
+        result = get_buyable_paths_mcts.delay(
+            data['smiles'],
+            max_depth=data['max_depth'],
+            max_branching=data['max_branching'],
+            expansion_time=data['expansion_time'],
+            max_trees=500,
+            max_ppg=data['max_ppg'],
+            known_bad_reactions=data.get('blacklisted_reactions'),
+            forbidden_molecules=data.get('forbidden_molecules'),
+            template_count=data['template_count'],
+            max_cum_template_prob=data['max_cum_prob'],
+            max_natom_dict=max_natom_dict,
+            min_chemical_history_dict=min_chemical_history_dict,
+            apply_fast_filter=data['filter_threshold'] > 0,
+            filter_threshold=data['filter_threshold'],
+            template_prioritizer=data['template_prioritizer'],
+            template_set=data['template_set'],
+            hashed=data.get('hashed_historian', data['template_set'] == 'reaxys'),
+            return_first=data['return_first'],
+        )
 
-    try:
-        (tree_status, trees) = res.get(data['expansion_time'] * 3)
-    except TimeoutError:
-        resp['error'] = 'API request timed out (after {})'.format(data['expansion_time'] * 3)
-        res.revoke()
-        return Response(resp, status=408)
-    except Exception as e:
-        resp['error'] = str(e)
-        res.revoke()
-        return Response(resp, status=400)
+        return result
 
-    resp['trees'] = trees
+    def process(self, data, output):
+        """
+        Post-process output from tree builder task.
+        """
+        tree_status, trees = output
 
-    return Response(resp)
+        return trees
+
+
+tree_builder = TreeBuilderAPIView.as_view()
