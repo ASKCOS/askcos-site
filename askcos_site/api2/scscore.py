@@ -1,7 +1,7 @@
 from rdkit import Chem
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
+from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
 
 from askcos_site.globals import scscorer
 
@@ -17,16 +17,27 @@ class SCScorerSerializer(serializers.Serializer):
         return value
 
 
-@api_view(['POST'])
-def scscore(request):
-    """API endpoint for scscore prediction task."""
-    serializer = SCScorerSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
+class SCScorerAPIView(GenericAPIView):
+    """
+    API endpoint for scscore prediction task.
+    """
 
-    resp = {
-        'request': data,
-        'score': scscorer.get_score_from_smiles(data['smiles'], noprice=True),
-    }
+    serializer_class = SCScorerSerializer
 
-    return Response(resp)
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for scscore prediction.
+        """
+        serializer = SCScorerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        resp = {
+            'request': data,
+            'score': scscorer.get_score_from_smiles(data['smiles'], noprice=True),
+        }
+
+        return Response(resp)
+
+
+scscore = SCScorerAPIView.as_view()

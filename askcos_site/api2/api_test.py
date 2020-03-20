@@ -81,11 +81,7 @@ class TestAPI(unittest.TestCase):
 
     def test_celery_task_status(self):
         """Test /celery/task endpoint"""
-        response = self.client.get('https://localhost/api/v2/celery/task/')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'task_id': ['This field is required.']})
-
-        response = self.client.get('https://localhost/api/v2/celery/task/?task_id=abc')
+        response = self.client.get('https://localhost/api/v2/celery/task/abc/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'complete': False})
 
@@ -103,8 +99,8 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(result['request']['original'], data['original'])
         self.assertEqual(result['request']['outcomes'], data['outcomes'])
 
-        self.assertIsInstance(result['group_id'], list)
-        self.assertEqual(result['group_id'], [0, 0, 1])
+        self.assertIsInstance(result['output'], list)
+        self.assertEqual(result['output'], [0, 0, 1])
 
         response = self.client.post('https://localhost/api/v2/cluster/', data={})
         self.assertEqual(response.status_code, 400)

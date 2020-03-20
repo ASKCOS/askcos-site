@@ -11,12 +11,12 @@ router.register(r'buyables', api2.buyables.BuyablesViewSet, basename='buyables')
 router.register(r'rdkit/smiles', api2.rdkit.SmilesViewSet, basename='smiles')
 router.register(r'template', api2.template.TemplateViewSet, basename='template')
 router.register(r'results', api2.results.ResultsViewSet, basename='results')
+router.register(r'celery/task', api2.celery.CeleryTaskViewSet, basename='celery_task')
 
 urlpatterns = router.urls
 
 urlpatterns += [
     re_path(r'^celery/$', api2.celery.celery_status, name='celery_api'),
-    re_path(r'^celery/task/$', api2.celery.task_status, name='celery_task_api'),
     re_path(r'^cluster/$', api2.cluster.cluster, name='cluster_api'),
     re_path(r'^context/$', api2.context.neural_network, name='context_api'),
     re_path(r'^fast-filter/$', api2.fast_filter.fast_filter, name='fast_filter_api'),

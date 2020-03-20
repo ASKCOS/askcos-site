@@ -1,9 +1,8 @@
 from celery.exceptions import TimeoutError
 from celery.result import AsyncResult
-from rest_framework import serializers
-from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
 from askcos_site.celery import app
 
@@ -70,94 +69,97 @@ class CeleryTaskAPIView(GenericAPIView):
         return output
 
 
-class TaskSerializer(serializers.Serializer):
-    """Serializer for celery task lookup."""
-    task_id = serializers.CharField()
+class CeleryStatusAPIView(GenericAPIView):
+    """
+    API endpoint for retrieving celery worker status.
+    """
 
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for scscore prediction.
+        """
+        resp = {}
+        status = {}
+        stats = app.control.inspect().stats()
+        active = app.control.inspect().active()
 
-@api_view(['GET'])
-def celery_status(request):
-    """API endpoint for retrieving celery worker status."""
+        if not stats or not active:
+            return Response(resp)
 
-    resp = {}
-    status = {}
-    stats = app.control.inspect().stats()
-    active = app.control.inspect().active()
+        for worker in stats:
+            name, server = worker.split('@')
+            if not status.get(name):
+                status[name] = {'available': 0, 'busy': 0}
+            status[name]['busy'] += len(active[worker])
+            status[name]['available'] += stats[worker]['pool']['max-concurrency'] - status[name]['busy']
 
-    if not stats or not active:
-        return Response(resp)
-
-    for worker in stats:
-        name, server = worker.split('@')
-        if not status.get(name):
-            status[name] = {'available': 0, 'busy': 0}
-        status[name]['busy'] += len(active[worker])
-        status[name]['available'] += stats[worker]['pool']['max-concurrency'] - status[name]['busy']
-
-    status_list = []
-    for key in status:
-        status_list.append({
-            'name': READABLE_NAMES.get(key),
-            'queue': key,
-            'busy': status[key]['busy'],
-            'available': status[key]['available']
-        })
-
-    for key, val in READABLE_NAMES.items():
-        if key not in status:
+        status_list = []
+        for key in status:
             status_list.append({
                 'name': READABLE_NAMES.get(key),
                 'queue': key,
-                'busy': 0,
-                'available': 0
+                'busy': status[key]['busy'],
+                'available': status[key]['available']
             })
 
-    resp['queues'] = sorted(status_list, key=lambda x: x['name'])
+        for key, val in READABLE_NAMES.items():
+            if key not in status:
+                status_list.append({
+                    'name': READABLE_NAMES.get(key),
+                    'queue': key,
+                    'busy': 0,
+                    'available': 0
+                })
 
-    return Response(resp)
+        resp['queues'] = sorted(status_list, key=lambda x: x['name'])
+
+        return Response(resp)
 
 
-@api_view(['GET'])
-def task_status(request):
-    """API endpoint for retrieving celery task status."""
-    serializer = TaskSerializer(data=request.query_params)
-    serializer.is_valid(raise_exception=True)
-    task_id = serializer.validated_data['task_id']
+class CeleryTaskViewSet(ViewSet):
+    """
+    ViewSet for accessing celery task results.
+    """
 
-    resp = {}
+    def retrieve(self, request, pk):
+        """Get the status and result a single celery task by task_id."""
+        resp = {}
 
-    result = AsyncResult(task_id)
-    if not result:
-        resp['error'] = 'Cannot find task with task_id: {}'.format(task_id)
-        return Response(resp, status=400)
-
-    state = result.state
-
-    try:
-        info = result.info
-        resp['percent'] = info.get('percent')
-        resp['message'] = info.get('message')
-    except AttributeError:
-        # info is weird, unsure how to handle it
-        pass
-
-    if state == 'running' or state == 'PENDING':
-        resp['complete'] = False
-    elif state == 'failed' or state == 'FAILURE':
-        resp['complete'] = False
-        resp['failed'] = True
-    else:
-        resp['state'] = state
-        resp['complete'] = True
-        resp['percent'] = 1
-        resp['message'] = 'Task complete!'
-        try:
-            outcomes = result.get(10)  # should not take very long to get results of a completed task
-        except Exception as e:
-            resp['error'] = str(e)
-            result.revoke()
+        result = AsyncResult(pk)
+        if not result:
+            resp['error'] = 'Cannot find task with task_id: {}'.format(pk)
             return Response(resp, status=400)
 
-        resp['results'] = outcomes
+        state = result.state
 
-    return Response(resp)
+        try:
+            info = result.info
+            resp['percent'] = info.get('percent')
+            resp['message'] = info.get('message')
+        except AttributeError:
+            # info is weird, unsure how to handle it
+            pass
+
+        if state == 'running' or state == 'PENDING':
+            resp['complete'] = False
+        elif state == 'failed' or state == 'FAILURE':
+            resp['complete'] = False
+            resp['failed'] = True
+        else:
+            resp['state'] = state
+            resp['complete'] = True
+            resp['percent'] = 1
+            resp['message'] = 'Task complete!'
+            try:
+                outcomes = result.get(10)  # should not take very long to get results of a completed task
+            except Exception as e:
+                resp['error'] = str(e)
+                result.revoke()
+                return Response(resp, status=400)
+
+            resp['results'] = outcomes
+
+        return Response(resp)
+
+
+celery_status = CeleryStatusAPIView.as_view()

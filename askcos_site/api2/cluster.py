@@ -1,6 +1,6 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import serializers
+from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
 
 from makeit.utilities.cluster import group_results
 
@@ -43,10 +43,9 @@ class ClusterSerializer(serializers.Serializer):
         return attrs
 
 
-@api_view(['POST'])
-def cluster(request):
+class ClusterAPIView(GenericAPIView):
     """
-    Cluster the similar transformed outcomes together
+    API endpoint for clustering similar transformed outcomes
 
     Method: GET
 
@@ -62,32 +61,42 @@ def cluster(request):
         clustermethod (str): cluster method ['hdbscan', 'kmeans']
         scores (list): list of scores of precursors
 
-    Output:
+    Returns:
         request: dictionary of request parameters
-        group_id: list of cluster indices for outcomes
+        output: list of cluster indices for outcomes
 
     Test case:
         %3B=';'
         curl -k 'https://localhost/api/cluster/' -d 'original=CCOC&outcomes=CCO%3BCC'
     """
-    serializer = ClusterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
 
-    idx = group_results(
-        data['original'],
-        data['outcomes'],
-        feature=data['feature'],
-        fp_type=data['fingerprint'],
-        fp_length=data['fpnbits'],
-        fp_radius=data['fpradius'],
-        cluster_method=data['clustermethod'],
-        scores=data.get('scores')
-    )
+    serializer_class = ClusterSerializer
 
-    resp = {
-        'request': data,
-        'group_id': idx,
-    }
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for clustering task.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-    return Response(resp)
+        idx = group_results(
+            data['original'],
+            data['outcomes'],
+            feature=data['feature'],
+            fp_type=data['fingerprint'],
+            fp_length=data['fpnbits'],
+            fp_radius=data['fpradius'],
+            cluster_method=data['clustermethod'],
+            scores=data.get('scores')
+        )
+
+        resp = {
+            'request': data,
+            'output': idx,
+        }
+
+        return Response(resp)
+
+
+cluster = ClusterAPIView.as_view()
