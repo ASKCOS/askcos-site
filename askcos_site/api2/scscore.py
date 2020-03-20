@@ -20,6 +20,16 @@ class SCScorerSerializer(serializers.Serializer):
 class SCScorerAPIView(GenericAPIView):
     """
     API endpoint for scscore prediction task.
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): SMILES string of target
+
+    Returns:
+
+    - `output`: synthetic complexity score
     """
 
     serializer_class = SCScorerSerializer

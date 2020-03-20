@@ -27,7 +27,21 @@ class FastFilterSerializer(serializers.Serializer):
 
 
 class FastFilterAPIView(CeleryTaskAPIView):
-    """API endpoint for fast-filter prediction task."""
+    """
+    API endpoint for fast-filter prediction task.
+
+    Method: POST
+
+    Parameters:
+
+    - `reactants` (str): SMILES string of reactants
+    - `products` (str): SMILES string of products
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+
+    Returns:
+
+    - `output`: fast filter score
+    """
 
     serializer_class = FastFilterSerializer
 

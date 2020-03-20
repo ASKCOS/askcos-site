@@ -47,27 +47,23 @@ class ClusterAPIView(GenericAPIView):
     """
     API endpoint for clustering similar transformed outcomes
 
-    Method: GET
+    Method: POST
 
     Parameters:
-        original (str): smiles string
-        outcomes (list): list of smiles strings of outcomes
 
-    Optional Parameters:
-        feature (str): features to use [original', 'outcomes', 'all']
-        fingerprint (str): fingerprint type ['morgan']
-        fpradius (int): fingerprint radius, default 1
-        fpnbits (int): fingerprint bits, default 512
-        clustermethod (str): cluster method ['hdbscan', 'kmeans']
-        scores (list): list of scores of precursors
+    - `original` (str): smiles string
+    - `outcomes` (list): list of smiles strings of outcomes
+    - `feature` (str, optional): features to use [original', 'outcomes', 'all']
+    - `fingerprint` (str, optional): fingerprint type ['morgan']
+    - `fpradius` (int, optional): fingerprint radius, default 1
+    - `fpnbits` (int, optional): fingerprint bits, default 512
+    - `clustermethod` (str, optional): cluster method ['hdbscan', 'kmeans']
+    - `scores` (list, optional): list of scores of precursors
 
     Returns:
-        request: dictionary of request parameters
-        output: list of cluster indices for outcomes
 
-    Test case:
-        %3B=';'
-        curl -k 'https://localhost/api/cluster/' -d 'original=CCOC&outcomes=CCO%3BCC'
+    - `request`: dictionary of request parameters
+    - `output`: list of cluster indices for outcomes
     """
 
     serializer_class = ClusterSerializer

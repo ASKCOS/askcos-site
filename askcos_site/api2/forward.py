@@ -40,7 +40,23 @@ class ForwardPredictorSerializer(serializers.Serializer):
 
 
 class ForwardPredictorAPIView(CeleryTaskAPIView):
-    """API endpoint for template-free forward prediction task."""
+    """
+    API endpoint for template-free forward prediction task.
+
+    Method: POST
+
+    Parameters:
+
+    - `reactants` (str): SMILES string of reactants
+    - `reagents` (str, optional): SMILES string of reagents
+    - `solvent` (str, optional): SMILES string of solvent
+    - `num_results` (int, optional): max number of results to return
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+
+    Returns:
+
+    - `output`: list of reaction outcomes
+    """
 
     serializer_class = ForwardPredictorSerializer
 

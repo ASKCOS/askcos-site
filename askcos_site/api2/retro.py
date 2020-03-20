@@ -43,7 +43,31 @@ class RetroSerializer(serializers.Serializer):
 
 
 class RetroAPIView(CeleryTaskAPIView):
-    """API endpoint for single-step retrosynthesis task."""
+    """
+    API endpoint for single-step retrosynthesis task.
+
+    Method: POST
+
+    Parameters:
+
+    - `target` (str): SMILES string of target
+    - `num_templates` (int, optional): number of templates to consider
+    - `max_cum_prob` (float, optional): maximum cumulative probability of templates
+    - `filter_threshold` (float, optional): fast filter threshold
+    - `template_set` (str, optional): reaction template set to use
+    - `template_prioritizer` (str, optional): template prioritization model to use
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+    - `cluster` (bool, optional): whether or not to cluster results
+    - `cluster_method` (str, optional): method for clustering results
+    - `cluster_feature` (str, optional): which feature to use for clustering
+    - `cluster_fp_type` (str, optional): fingerprint type for clustering
+    - `cluster_fp_length` (int, optional): fingerprint length for clustering
+    - `cluster_fp_radius` (int, optional): fingerprint radius for clustering
+
+    Returns:
+
+    - `output`: list of reaction precursors
+    """
 
     serializer_class = RetroSerializer
     TIMEOUT = 120

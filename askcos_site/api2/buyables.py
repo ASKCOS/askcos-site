@@ -43,13 +43,63 @@ class BuyableQuerySerializer(serializers.Serializer):
     q = serializers.CharField(default='')
     source = serializers.CharField(default='')
     regex = serializers.BooleanField(default=False)
-    limit = serializers.IntegerField(default=100)
+    returnLimit = serializers.IntegerField(default=100)
     canonicalize = serializers.BooleanField(default=True)
 
 
 class BuyablesViewSet(ViewSet):
     """
-    A ViewSet for accessing buyables data.
+    API endpoint for accessing buyables database.
+
+    Method: GET
+
+    Query Parameters:
+
+    - `q` (str): search query, e.g. SMILES string
+    - `source` (str): source of buyables data
+    - `regex` (bool): whether or not to treat `q` as regex pattern
+    - `returnLimit` (int): maximum number of results to return
+    - `canonicalize` (bool): whether or not to canonicalize `q`
+
+    Returns:
+
+    - `search`: query pattern used for search
+    - `result`: list of buyables matching search query
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): SMILES string of buyable
+    - `ppg` (float): price of buyable
+    - `source` (float): source of data
+    - `allowOverwrite` (bool): whether or not to overwrite existing duplicates
+
+    Returns:
+
+    - `success`: true if buyable was created successfully
+    - `error`: error message if not successful
+    - `duplicate`: true if buyable was not added because it already existed
+    - `inserted`: buyables entry which was created if it didn't exist
+    - `updated`: buyables entry which was updated if it existed and `allowOverwrite = True`
+
+    ----------
+    For a particular buyable, specified as URI parameter (`/api/v2/buyables/<buyable id>/`):
+
+    Method: GET
+
+    Returns:
+
+    - `_id`: the requested buyable id
+    - `result`: the requested buyable
+    - `error`: error message if encountered
+
+    Method: DELETE
+
+    Returns:
+
+    - `success`: true if deletion was successful
+    - `error`: error message if encountered
     """
 
     authentication_classes = [SessionAuthentication, JSONWebTokenAuthentication]
@@ -63,7 +113,7 @@ class BuyablesViewSet(ViewSet):
         search = data['q']
         source = data['source']
         regex = data['regex']
-        limit = data['limit']
+        limit = data['returnLimit']
         canon = data['canonicalize']
 
         query = {}
@@ -160,7 +210,30 @@ class BuyablesViewSet(ViewSet):
 
     @action(detail=False, methods=['post'])
     def upload(self, request):
-        """Upload a list of buyables"""
+        """
+        API endpoint for uploading buyables data.
+
+        Method: POST
+
+        Parameters:
+
+        - `upload_file` (file): file containing buyables data
+        - `format` (str): file format, either json or csv
+        - `returnLimit` (int): maximum number of results to return
+        - `allowOverwrite` (bool): whether or not to overwrite existing duplicates
+
+        Returns:
+
+        - `success`: true if buyable was created successfully
+        - `error`: error message if not successful
+        - `inserted`: list of new buyable entries, up to `returnLimit`
+        - `updated`: list of updated buyable entries, up to `returnLimit`
+        - `inserted_count`: total number of inserted entries
+        - `updated_count`: total number of updated entries
+        - `duplicate_count`: total number of duplicate entries if `allowOverwrite = False`
+        - `count`: total number of successfully uploaded entries
+        - `total`: total number of uploaded entries, including errors
+        """
         resp = {'error': None, 'success': False}
 
         if not can_modify_buyables(request):
@@ -213,9 +286,9 @@ class BuyablesViewSet(ViewSet):
             resp['error'] = result['error']
 
         resp['success'] = True
-        resp['added'] = result['added'][:return_limit]
+        resp['inserted'] = result['inserted'][:return_limit]
         resp['updated'] = result['updated'][:return_limit]
-        resp['added_count'] = result['added_count']
+        resp['inserted_count'] = result['inserted_count']
         resp['updated_count'] = result['updated_count']
         resp['duplicate_count'] = result['duplicate_count']
         resp['count'] = result['count']
@@ -228,9 +301,9 @@ class BuyablesViewSet(ViewSet):
         result = {
             'error': None,
             'count': 0,
-            'added': [],
+            'inserted': [],
             'updated': [],
-            'added_count': 0,
+            'inserted_count': 0,
             'updated_count': 0,
             'duplicate_count': 0,
             'total': len(buyable_list)
@@ -242,8 +315,8 @@ class BuyablesViewSet(ViewSet):
                 if res.get('duplicate'):
                     result['duplicate_count'] += 1
                 if res.get('inserted'):
-                    result['added'].append(res['inserted'])
-                    result['added_count'] += 1
+                    result['inserted'].append(res['inserted'])
+                    result['inserted_count'] += 1
                 if res.get('updated'):
                     result['updated'].append(res['updated'])
                     result['updated_count'] += 1

@@ -29,7 +29,25 @@ class ContextRecommenderSerializer(serializers.Serializer):
 
 
 class ContextRecommenderAPIView(CeleryTaskAPIView):
-    """API endpoint for context recommendation prediction using neural network model."""
+    """
+    API endpoint for context recommendation prediction using neural network model.
+
+    Method: POST
+
+    Parameters:
+
+    - `reactants` (str): SMILES string of reactants
+    - `products` (str): SMILES string of products
+    - `with_smiles` (bool, optional): whether to use SMILES for prediction
+    - `single_solvent` (bool, optional): whether to use single solvent for prediction
+    - `return_scores` (bool, optional): whether to also return scores
+    - `num_results` (int, optional): max number of results to return
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+
+    Returns:
+
+    - `output`: list of reaction conditions
+    """
 
     serializer_class = ContextRecommenderSerializer
 

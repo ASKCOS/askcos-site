@@ -18,7 +18,20 @@ class SelectivitySerializer(serializers.Serializer):
 
 
 class SelectivityAPIView(CeleryTaskAPIView):
-    """API endpoint for site selectivity prediction task."""
+    """
+    API endpoint for site selectivity prediction task.
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): SMILES string of target
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+
+    Returns:
+
+    - `output`: site selectivity prediction
+    """
 
     serializer_class = SelectivitySerializer
 

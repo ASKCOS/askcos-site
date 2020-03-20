@@ -26,6 +26,17 @@ class SmilesViewSet(ViewSet):
     def canonicalize(self, request):
         """
         Canonicalize the specified SMILES using RDKit.
+
+        Method: POST
+
+        Parameters:
+
+        - `smiles` (str): SMILES string to canonicalize
+        - `isomericSmiles` (bool, optional): whether to generate isomeric SMILES
+
+        Returns:
+
+        - `smiles` (str): canonicalized SMILES
         """
         serializer = SmilesSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -53,12 +64,16 @@ class SmilesViewSet(ViewSet):
         """
         Check the syntax and validity of a SMILES string.
 
+        Method: POST
+
         Parameters:
-            smiles (str): SMILES string
+
+        - `smiles` (str): SMILES string
 
         Returns:
-            correct_syntax (bool): correctness of the SMILES syntax
-            valid_chem_name (bool): validity of the chemical
+
+        - `correct_syntax` (bool): correctness of the SMILES syntax
+        - `valid_chem_name` (bool): validity of the chemical
 
         RDKit ref: https://github.com/rdkit/rdkit/issues/2430
         """
@@ -91,6 +106,17 @@ class SmilesViewSet(ViewSet):
     def from_molfile(self, request):
         """
         Convert the provided Molfile to a SMILES string.
+
+        Method: POST
+
+        Parameters:
+
+        - `molfile` (str): Molfile input
+        - `isomericSmiles` (bool, optional): whether to generate isomeric SMILES
+
+        Returns:
+
+        - `smiles` (str): canonical SMILES
         """
         serializer = MolfileSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -118,6 +144,16 @@ class SmilesViewSet(ViewSet):
     def to_molfile(self, request):
         """
         Convert the provided SMILES string to a Molfile.
+
+        Method: POST
+
+        Parameters:
+
+        - `smiles` (str): SMILES input
+
+        Returns:
+
+        - `molfile` (str): Molfile output
         """
         serializer = SmilesSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

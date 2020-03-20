@@ -21,6 +21,13 @@ READABLE_NAMES = {
 class CeleryTaskAPIView(GenericAPIView):
     """
     Base API view for a celery task.
+
+    Method: POST
+
+    Returns:
+
+    - `task_id`: ID of celery task if async request
+    - `output`: output of celery task if not async request
     """
 
     TIMEOUT = 30
@@ -72,6 +79,12 @@ class CeleryTaskAPIView(GenericAPIView):
 class CeleryStatusAPIView(GenericAPIView):
     """
     API endpoint for retrieving celery worker status.
+
+    Method: GET
+
+    Returns:
+
+    - `queues`: list of worker information for each celery queue
     """
 
     def get(self, request, *args, **kwargs):
@@ -118,11 +131,25 @@ class CeleryStatusAPIView(GenericAPIView):
 
 class CeleryTaskViewSet(ViewSet):
     """
-    ViewSet for accessing celery task results.
+    API endpoint for retrieving status and result of a celery task.
+
+    For a particular task, specified as URI parameter (/api/v2/celery/task/<task id>/):
+
+    Method: GET
+
+    Returns:
+
+    - `complete`: boolean indicating whether job is complete
+    - `failed`: boolean indicating if job failed
+    - `percent`: completion percent of job
+    - `message`: message regarding job status
+    - `state`: state of the job
+    - `error`: any error message if encountered
+    - `results`: result of celery task if complete
     """
 
     def retrieve(self, request, pk):
-        """Get the status and result a single celery task by task_id."""
+        """Get the status and result of a single celery task by task_id."""
         resp = {}
 
         result = AsyncResult(pk)

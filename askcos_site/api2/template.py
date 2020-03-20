@@ -8,7 +8,24 @@ from askcos_site.globals import retro_templates
 
 class TemplateViewSet(ViewSet):
     """
-    A ViewSet for accessing template data.
+    API endpoint for accessing template data.
+
+    For a particular template, specified as URI parameter (`/api/v2/template/<template id>/`):
+
+    Method: GET
+
+    Returns:
+
+    - `template`: reaction template
+
+    ----------
+    Export Reaxys query (`/api/v2/template/<template id>/export/`):
+
+    Method: GET
+
+    Returns:
+
+    - JSON format Reaxys query
     """
 
     def retrieve(self, request, pk):

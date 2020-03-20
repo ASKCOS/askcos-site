@@ -14,6 +14,17 @@ class ReactionsSerializer(serializers.Serializer):
 class ReactionsAPIView(GenericAPIView):
     """
     API endpoint for reaction lookup task.
+
+    Method: POST
+
+    Parameters:
+
+    - `ids` (list): list of reaction ids to retrieve
+    - `template_set` (str, optional): template set to search within
+
+    Returns:
+
+    - `reactions`: list of reactions
     """
 
     serializer_class = ReactionsSerializer

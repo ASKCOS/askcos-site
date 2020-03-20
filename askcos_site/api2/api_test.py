@@ -46,7 +46,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
-        self.assertEqual(result['added'], [])
+        self.assertEqual(result['inserted'], [])
         self.assertEqual(result['updated'], [])
         self.assertEqual(result['duplicate_count'], 2)
         self.assertEqual(result['total'], 2)

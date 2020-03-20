@@ -56,7 +56,41 @@ class TreeBuilderSerializer(serializers.Serializer):
 
 
 class TreeBuilderAPIView(CeleryTaskAPIView):
-    """API endpoint for tree builder prediction task."""
+    """
+    API endpoint for tree builder prediction task.
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): SMILES string of target
+    - `max_depth` (int, optional): maximum depth of returned trees
+    - `max_branching` (int, optional): maximum branching in returned trees
+    - `expansion_time` (int, optional): time limit for tree expansion
+    - `max_ppg` (int, optional): maximum price for buyable termination
+    - `template_count` (int, optional): number of templates to consider
+    - `max_cum_prob` (float, optional): maximum cumulative probability of templates
+    - `chemical_property_logic` (str, optional): logic type for chemical property termination
+    - `max_chemprop_c` (int, optional): maximum carbon count for termination
+    - `max_chemprop_n` (int, optional): maximum nitrogen count for termination
+    - `max_chemprop_o` (int, optional): maximum oxygen count for termination
+    - `max_chemprop_h` (int, optional): maximum hydrogen count for termination
+    - `chemical_popularity_logic` (str, optional): logic type for chemical popularity termination
+    - `min_chempop_reactants` (int, optional): minimum reactant precedents for termination
+    - `min_chempop_products` (int, optional): minimum product precedents for termination
+    - `filter_threshold` (float, optional): fast filter threshold
+    - `template_prioritizer` (str, optional): template prioritization model to use
+    - `template_set` (str, optional): template set to use
+    - `hashed_historian` (bool, optional): whether historian entries are hashed
+    - `return_first` (bool, optional): whether to return upon finding the first pathway
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+    - `blacklisted_reactions` (list, optional): list of reactions to not consider
+    - `forbidden_molecules` (list, optional): list of molecules to not consider
+
+    Returns:
+
+    - `output`: list of paths to buyable precursors
+    """
 
     serializer_class = TreeBuilderSerializer
 

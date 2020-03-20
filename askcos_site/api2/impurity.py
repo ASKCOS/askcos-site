@@ -46,7 +46,29 @@ class ImpurityPredictorSerializer(serializers.Serializer):
 
 
 class ImpurityAPIView(CeleryTaskAPIView):
-    """API endpoint for impurity prediction task."""
+    """
+    API endpoint for impurity prediction task.
+
+    Method: POST
+
+    Parameters:
+
+    - `reactants` (str): SMILES string of reactants
+    - `reagents` (str, optional): SMILES string of reagents
+    - `products` (str, optional): SMILES string of products
+    - `solvent` (str, optional): SMILES string of solvent
+    - `top_k` (int, optional): max number of results to return
+    - `threshold` (float, optional): probability threshold
+    - `predictor` (str, optional): forward predictor to use
+    - `inspector` (str, optional): reaction scorer to use
+    - `mapper` (str, optional): reaction atom mapper to use
+    - `check_mapping` (bool, optional): whether to check atom mapping
+    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
+
+    Returns:
+
+    - `output`: reaction impurity predictions
+    """
 
     serializer_class = ImpurityPredictorSerializer
 

@@ -13,7 +13,41 @@ results_collection = db_client['results']['results']
 
 class ResultsViewSet(ViewSet):
     """
-    A ViewSet for accessing a user's job results.
+    API endpoint for accessing a user's job results. Authentication required.
+
+    Method: GET
+
+    Returns:
+
+    - `results`: list of results belonging to the current user
+
+    ----------
+    For a particular result, specified as URI parameter (`/api/v2/results/<result id>/`):
+
+    Method: GET
+
+    Returns:
+
+    - `id`: the requested result id
+    - `result`: the requested result
+    - `error`: error message if encountered
+
+    Method: DELETE
+
+    Returns:
+
+    - `success`: true if deletion was successful
+    - `error`: error message if encountered
+
+    ----------
+    Check result status (`/api/v2/results/<result id>/check/`):
+
+    Method: GET
+
+    Returns:
+
+    - `state`: current state of the job
+    - `error`: error message if encountered
     """
     authentication_classes = [SessionAuthentication, JSONWebTokenAuthentication]
     permission_classes = [IsAuthenticated]
