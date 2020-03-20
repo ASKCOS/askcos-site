@@ -5,9 +5,11 @@ import pandas as pd
 from bson import ObjectId
 from rdkit import Chem
 from rest_framework import serializers
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from askcos_site.globals import buyables_db
 from askcos_site.main.views.users import can_modify_buyables
@@ -49,6 +51,8 @@ class BuyablesViewSet(ViewSet):
     """
     A ViewSet for accessing buyables data.
     """
+
+    authentication_classes = [SessionAuthentication, JSONWebTokenAuthentication]
 
     def list(self, request):
         """List all buyables in database matching query parameters"""
