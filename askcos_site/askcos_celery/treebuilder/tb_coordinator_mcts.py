@@ -190,6 +190,8 @@ def get_buyable_paths(*args, **kwargs):
             defines a synthetic route.
     """
     run_async = kwargs.pop('run_async', False)
+    paths_only = kwargs.pop('paths_only', False)
+
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(args[0]))
     _id = get_buyable_paths.request.id
     try:
@@ -210,4 +212,8 @@ def get_buyable_paths(*args, **kwargs):
         settings.update(kwargs)
         save_results(result_doc, settings, _id)
     print('Task completed, returning results.')
-    return (status, paths)
+
+    if paths_only:
+        return paths
+    else:
+        return status, paths
