@@ -115,7 +115,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(result['request']['outcomes'], data['outcomes'])
 
         self.assertIsInstance(result['output'], list)
-        self.assertEqual(result['output'], [0, 0, 1])
+        self.assertIn(result['output'], [[0, 0, 1], [1, 1, 0]])
 
         response = self.client.post('https://localhost/api/v2/cluster/', data={})
         self.assertEqual(response.status_code, 400)
