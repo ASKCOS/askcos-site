@@ -1,8 +1,7 @@
-from celery.exceptions import TimeoutError
 from celery.result import AsyncResult
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import GenericViewSet
 
 from askcos_site.celery import app
 
@@ -18,21 +17,82 @@ READABLE_NAMES = {
 }
 
 
+class CeleryTaskViewSet(GenericViewSet):
+    """
+    API endpoint for retrieving status and result of a celery task.
+
+    For a particular task, specified as URI parameter (/api/v2/celery/task/<task id>/):
+
+    Method: GET
+
+    Returns:
+
+    - `complete`: boolean indicating whether job is complete
+    - `failed`: boolean indicating if job failed
+    - `percent`: completion percent of job
+    - `message`: message regarding job status
+    - `state`: state of the job
+    - `error`: any error message if encountered
+    - `results`: result of celery task if complete
+    """
+
+    def retrieve(self, request, pk):
+        """
+        Get the status and result of a single celery task by task_id.
+        """
+        resp = {}
+
+        result = AsyncResult(pk)
+        if not result:
+            resp['error'] = 'Cannot find task with task_id: {}'.format(pk)
+            return Response(resp, status=400)
+
+        state = result.state
+
+        try:
+            info = result.info
+            resp['percent'] = info.get('percent')
+            resp['message'] = info.get('message')
+        except AttributeError:
+            # info is weird, unsure how to handle it
+            pass
+
+        if state == 'running' or state == 'PENDING':
+            resp['complete'] = False
+        elif state == 'failed' or state == 'FAILURE':
+            resp['complete'] = False
+            resp['failed'] = True
+        else:
+            resp['state'] = state
+            resp['complete'] = True
+            resp['percent'] = 1
+            resp['message'] = 'Task complete!'
+            try:
+                output = result.get(10)  # should not take very long to get results of a completed task
+            except Exception as e:
+                resp['error'] = str(e)
+                result.revoke()
+                return Response(resp, status=400)
+
+            resp['output'] = output
+
+        return Response(resp)
+
+
 class CeleryTaskAPIView(GenericAPIView):
     """
-    Base API view for a celery task.
+    API endpoint for initiating a celery task.
+
+    Should be subclassed to provide celery task execution method.
 
     Method: POST
 
     Returns:
 
-    - `task_id`: ID of celery task if async request
-    - `output`: output of celery task if not async request
+    - `task_id`: celery task ID
     """
 
-    TIMEOUT = 30
-
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         """
         Handle POST requests for a generic celery task endpoint.
         """
@@ -42,24 +102,7 @@ class CeleryTaskAPIView(GenericAPIView):
 
         result = self.execute(data)
 
-        resp = {'request': data}
-
-        if data['async']:
-            resp['task_id'] = result.id
-            return Response(resp)
-
-        try:
-            output = result.get(self.TIMEOUT)
-        except TimeoutError:
-            resp['error'] = 'API request timed out (limit {}s).'.format(self.TIMEOUT)
-            result.revoke()
-            return Response(resp, status=408)
-        except Exception as e:
-            resp['error'] = str(e)
-            result.revoke()
-            return Response(resp, status=400)
-
-        resp['output'] = self.process(data, output)
+        resp = {'request': data, 'task_id': result.id}
 
         return Response(resp)
 
@@ -68,12 +111,6 @@ class CeleryTaskAPIView(GenericAPIView):
         Execute the celery task and return a celery result object.
         """
         raise NotImplementedError('Should be implemented by child class.')
-
-    def process(self, data, output):
-        """
-        Post-process output from a celery task.
-        """
-        return output
 
 
 class CeleryStatusAPIView(GenericAPIView):
@@ -125,66 +162,6 @@ class CeleryStatusAPIView(GenericAPIView):
                 })
 
         resp['queues'] = sorted(status_list, key=lambda x: x['name'])
-
-        return Response(resp)
-
-
-class CeleryTaskViewSet(ViewSet):
-    """
-    API endpoint for retrieving status and result of a celery task.
-
-    For a particular task, specified as URI parameter (/api/v2/celery/task/<task id>/):
-
-    Method: GET
-
-    Returns:
-
-    - `complete`: boolean indicating whether job is complete
-    - `failed`: boolean indicating if job failed
-    - `percent`: completion percent of job
-    - `message`: message regarding job status
-    - `state`: state of the job
-    - `error`: any error message if encountered
-    - `results`: result of celery task if complete
-    """
-
-    def retrieve(self, request, pk):
-        """Get the status and result of a single celery task by task_id."""
-        resp = {}
-
-        result = AsyncResult(pk)
-        if not result:
-            resp['error'] = 'Cannot find task with task_id: {}'.format(pk)
-            return Response(resp, status=400)
-
-        state = result.state
-
-        try:
-            info = result.info
-            resp['percent'] = info.get('percent')
-            resp['message'] = info.get('message')
-        except AttributeError:
-            # info is weird, unsure how to handle it
-            pass
-
-        if state == 'running' or state == 'PENDING':
-            resp['complete'] = False
-        elif state == 'failed' or state == 'FAILURE':
-            resp['complete'] = False
-            resp['failed'] = True
-        else:
-            resp['state'] = state
-            resp['complete'] = True
-            resp['percent'] = 1
-            resp['message'] = 'Task complete!'
-            try:
-                outcomes = result.get(10)  # should not take very long to get results of a completed task
-            except Exception as e:
-                resp['error'] = str(e)
-                result.revoke()
-                return Response(resp, status=400)
-
-            resp['results'] = outcomes
 
         return Response(resp)
 

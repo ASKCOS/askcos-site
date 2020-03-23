@@ -4,14 +4,11 @@ from rest_framework import serializers
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import fast_filter_check
 from .celery import CeleryTaskAPIView
 
-TIMEOUT = 30
-
 
 class FastFilterSerializer(serializers.Serializer):
     """Serializer for fast-filter task parameters."""
     reactants = serializers.CharField()
     products = serializers.CharField()
-    async = serializers.BooleanField(default=False)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid."""
@@ -36,11 +33,10 @@ class FastFilterAPIView(CeleryTaskAPIView):
 
     - `reactants` (str): SMILES string of reactants
     - `products` (str): SMILES string of products
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
 
     Returns:
 
-    - `output`: fast filter score
+    - `task_id`: celery task ID
     """
 
     serializer_class = FastFilterSerializer

@@ -13,7 +13,6 @@ class ContextRecommenderSerializer(serializers.Serializer):
     single_solvent = serializers.BooleanField(default=True)
     return_scores = serializers.BooleanField(default=False)
     num_results = serializers.IntegerField(default=10)
-    async = serializers.BooleanField(default=True)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid."""
@@ -42,11 +41,10 @@ class ContextRecommenderAPIView(CeleryTaskAPIView):
     - `single_solvent` (bool, optional): whether to use single solvent for prediction
     - `return_scores` (bool, optional): whether to also return scores
     - `num_results` (int, optional): max number of results to return
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
 
     Returns:
 
-    - `output`: list of reaction conditions
+    - `task_id`: celery task ID
     """
 
     serializer_class = ContextRecommenderSerializer
@@ -63,33 +61,10 @@ class ContextRecommenderAPIView(CeleryTaskAPIView):
             singleSlvt=data['single_solvent'],
             with_smiles=data['with_smiles'],
             return_scores=data['return_scores'],
+            postprocess=True,
         )
 
         return result
-
-    def process(self, data, output):
-        """
-        Post-process output from context recommendation task.
-        """
-        if data['return_scores']:
-            contexts, scores = output
-        else:
-            contexts = output
-
-        json_contexts = []
-        for context in contexts:
-            json_contexts.append({
-                'temperature': context[0],
-                'solvent': context[1],
-                'reagent': context[2],
-                'catalyst': context[3]
-            })
-
-        if data['return_scores']:
-            for c, s in zip(json_contexts, scores):
-                c['score'] = s
-
-        return json_contexts
 
 
 neural_network = ContextRecommenderAPIView.as_view()

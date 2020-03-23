@@ -8,7 +8,6 @@ from .celery import CeleryTaskAPIView
 class SelectivitySerializer(serializers.Serializer):
     """Serializer for site selectivity task parameters."""
     smiles = serializers.CharField()
-    async = serializers.BooleanField(default=True)
 
     def validate_smiles(self, value):
         """Verify that the requested smiles is valid."""
@@ -26,11 +25,10 @@ class SelectivityAPIView(CeleryTaskAPIView):
     Parameters:
 
     - `smiles` (str): SMILES string of target
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
 
     Returns:
 
-    - `output`: site selectivity prediction
+    - `task_id`: celery task ID
     """
 
     serializer_class = SelectivitySerializer

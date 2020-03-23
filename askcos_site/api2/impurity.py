@@ -14,10 +14,9 @@ class ImpurityPredictorSerializer(serializers.Serializer):
     top_k = serializers.IntegerField(default=3)
     threshold = serializers.FloatField(default=0.75)
     predictor = serializers.CharField(default='WLN forward predictor')
-    inspector = serializers.CharField(default='Reaxys predictor')
+    inspector = serializers.CharField(default='Reaxys inspector')
     mapper = serializers.CharField(default='WLN atom mapper')
     check_mapping = serializers.BooleanField(default=True)
-    async = serializers.BooleanField(default=True)
 
     def check_smiles(self, value):
         """Verify that the requested SMILES string is valid. Returns canonicalized SMILES."""
@@ -63,11 +62,10 @@ class ImpurityAPIView(CeleryTaskAPIView):
     - `inspector` (str, optional): reaction scorer to use
     - `mapper` (str, optional): reaction atom mapper to use
     - `check_mapping` (bool, optional): whether to check atom mapping
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
 
     Returns:
 
-    - `output`: reaction impurity predictions
+    - `task_id`: celery task ID
     """
 
     serializer_class = ImpurityPredictorSerializer

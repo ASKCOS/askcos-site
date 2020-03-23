@@ -30,7 +30,6 @@ class TreeBuilderSerializer(serializers.Serializer):
     template_set = serializers.CharField(default='reaxys')
     hashed_historian = serializers.BooleanField(required=False)
     return_first = serializers.BooleanField(default=True)
-    async = serializers.BooleanField(default=True)
 
     blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
     forbidden_molecules = serializers.ListField(child=serializers.CharField(), required=False)
@@ -83,13 +82,12 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `template_set` (str, optional): template set to use
     - `hashed_historian` (bool, optional): whether historian entries are hashed
     - `return_first` (bool, optional): whether to return upon finding the first pathway
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
     - `blacklisted_reactions` (list, optional): list of reactions to not consider
     - `forbidden_molecules` (list, optional): list of molecules to not consider
 
     Returns:
 
-    - `output`: list of paths to buyable precursors
+    - `task_id`: celery task ID
     """
 
     serializer_class = TreeBuilderSerializer
@@ -98,8 +96,6 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         """
         Execute tree builder task and return celery result object.
         """
-        self.TIMEOUT = data['expansion_time'] * 3
-
         chemical_property_logic = data['chemical_property_logic']
         if chemical_property_logic != 'none':
             param_dict = {
@@ -142,17 +138,10 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             template_set=data['template_set'],
             hashed=data.get('hashed_historian', data['template_set'] == 'reaxys'),
             return_first=data['return_first'],
+            paths_only=True,
         )
 
         return result
-
-    def process(self, data, output):
-        """
-        Post-process output from tree builder task.
-        """
-        tree_status, trees = output
-
-        return trees
 
 
 tree_builder = TreeBuilderAPIView.as_view()

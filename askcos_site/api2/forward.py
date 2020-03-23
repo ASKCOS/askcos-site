@@ -11,7 +11,6 @@ class ForwardPredictorSerializer(serializers.Serializer):
     reagents = serializers.CharField(default='')
     solvent = serializers.CharField(default='')
     num_results = serializers.IntegerField(default=100)
-    async = serializers.BooleanField(default=True)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid. Returns canonicalized SMILES."""
@@ -51,11 +50,10 @@ class ForwardPredictorAPIView(CeleryTaskAPIView):
     - `reagents` (str, optional): SMILES string of reagents
     - `solvent` (str, optional): SMILES string of solvent
     - `num_results` (int, optional): max number of results to return
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
 
     Returns:
 
-    - `output`: list of reaction outcomes
+    - `task_id`: celery task ID
     """
 
     serializer_class = ForwardPredictorSerializer

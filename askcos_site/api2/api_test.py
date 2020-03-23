@@ -4,6 +4,7 @@ Live test suite for askcos web api
 This will test api functionality for a live instance of the askcos site
 """
 
+import time
 import unittest
 
 from requests import Session
@@ -17,6 +18,20 @@ class TestAPI(unittest.TestCase):
         """This method is run once before all tests in this class."""
         cls.client = Session()
         cls.client.verify = False
+
+    def get_result(self, task_id):
+        """Retrieve celery task output"""
+        # Try to get result 10 times in 2 sec intervals
+        for _ in range(10):
+            response = self.client.get('https://localhost/api/v2/celery/task/{0}/'.format(task_id))
+            result = response.json()
+            if result.get('complete'):
+                return result
+            else:
+                if result.get('failed'):
+                    self.fail('Celery task failed.')
+                else:
+                    time.sleep(2)
 
     def test_buyables(self):
         """Test /buyables endpoint"""
@@ -114,7 +129,6 @@ class TestAPI(unittest.TestCase):
             'products': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
             'num_results': 5,
             'return_scores': True,
-            'async': False
         }
         response = self.client.post('https://localhost/api/v2/context/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -127,6 +141,12 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['num_results'], data['num_results'])
         self.assertTrue(request['return_scores'])
 
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
         self.assertEqual(len(result['output']), 5)
         o = result['output'][0]
         self.assertEqual(o['catalyst'], '')
@@ -162,7 +182,12 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['reactants'], data['reactants'])
         self.assertEqual(request['products'], data['products'])
 
-        # Check result
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
         self.assertAlmostEqual(result['output'], 0.998, places=2)
 
         # Test insufficient data
@@ -182,7 +207,6 @@ class TestAPI(unittest.TestCase):
         data = {
             'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
             'num_results': 5,
-            'async': False,
         }
         response = self.client.post('https://localhost/api/v2/forward/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -195,6 +219,12 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['solvent'], '')
         self.assertEqual(request['num_results'], data['num_results'])
 
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
         self.assertEqual(len(result['output']), 5)
         o = result['output'][0]
         self.assertEqual(o['smiles'], 'CN(C)CCOC(c1ccccc1)c1ccccc1')
@@ -217,7 +247,6 @@ class TestAPI(unittest.TestCase):
         """Test /impurity endpoint"""
         data = {
             'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
-            'async': True,
         }
         response = self.client.post('https://localhost/api/v2/impurity/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -232,11 +261,12 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['top_k'], 3)
         self.assertEqual(request['threshold'], 0.75)
         self.assertEqual(request['predictor'], 'WLN forward predictor')
-        self.assertEqual(request['inspector'], 'Reaxys predictor')
+        self.assertEqual(request['inspector'], 'Reaxys inspector')
         self.assertEqual(request['mapper'], 'WLN atom mapper')
         self.assertTrue(request['check_mapping'])
 
-        self.assertIsNotNone(result['task_id'])
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
 
         # Test insufficient data
         response = self.client.post('https://localhost/api/v2/impurity/', data={})
@@ -402,7 +432,6 @@ M  END
         """Test /retro endpoint"""
         data = {
             'target': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
-            'async': False,
         }
         response = self.client.post('https://localhost/api/v2/retro/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -423,6 +452,12 @@ M  END
         self.assertEqual(request['cluster_fp_length'], 512)
         self.assertEqual(request['cluster_fp_radius'], 1)
 
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
         self.assertIsInstance(result['output'], list)
 
         # Test insufficient data
@@ -465,7 +500,6 @@ M  END
         """Test /selectivity endpoint"""
         data = {
             'smiles': 'Cc1ccccc1',
-            'async': False,
         }
         response = self.client.post('https://localhost/api/v2/selectivity/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -475,7 +509,12 @@ M  END
         request = result['request']
         self.assertEqual(request['smiles'], data['smiles'])
 
-        # Check that we got expected result
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
         self.assertIsInstance(result['output'], list)
         self.assertEqual(len(result['output']), 123)
 
@@ -529,7 +568,6 @@ M  END
         """Test /treebuilder endpoint"""
         data = {
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
-            'async': False,
             'return_first': True,
         }
         response = self.client.post('https://localhost/api/v2/treebuilder/', data=data)
@@ -539,14 +577,18 @@ M  END
         result = response.json()
         request = result['request']
         self.assertEqual(request['smiles'], data['smiles'])
-        self.assertEqual(request['async'], False)
         self.assertEqual(request['return_first'], True)
         self.assertEqual(request['chemical_property_logic'], 'none')
         self.assertEqual(request['chemical_popularity_logic'], 'none')
         self.assertEqual(request['template_set'], 'reaxys')
         self.assertEqual(request['template_prioritizer'], 'reaxys')
 
-        # Check that we got a result (can't check values because it's non-deterministic)
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
         self.assertIsInstance(result['output'], list)
         self.assertIsInstance(result['output'][0], dict)
         self.assertIsInstance(result['output'][0]['children'], list)

@@ -14,7 +14,6 @@ class RetroSerializer(serializers.Serializer):
     filter_threshold = serializers.FloatField(default=0.75)
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer = serializers.CharField(default='reaxys')
-    async = serializers.BooleanField(default=True)
 
     cluster = serializers.BooleanField(default=True)
     cluster_method = serializers.CharField(default='kmeans')
@@ -56,7 +55,6 @@ class RetroAPIView(CeleryTaskAPIView):
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): reaction template set to use
     - `template_prioritizer` (str, optional): template prioritization model to use
-    - `async` (bool, optional): whether to directly return celery task id instead of waiting for result
     - `cluster` (bool, optional): whether or not to cluster results
     - `cluster_method` (str, optional): method for clustering results
     - `cluster_feature` (str, optional): which feature to use for clustering
@@ -66,11 +64,10 @@ class RetroAPIView(CeleryTaskAPIView):
 
     Returns:
 
-    - `output`: list of reaction precursors
+    - `task_id`: celery task ID
     """
 
     serializer_class = RetroSerializer
-    TIMEOUT = 120
 
     def execute(self, data):
         """
@@ -103,7 +100,8 @@ class RetroAPIView(CeleryTaskAPIView):
                 cluster_feature=cluster_feature,
                 cluster_fp_type=cluster_fp_type,
                 cluster_fp_length=cluster_fp_length,
-                cluster_fp_radius=cluster_fp_radius
+                cluster_fp_radius=cluster_fp_radius,
+                postprocess=True,
             )
         else:
             result = get_top_precursors_c.delay(
@@ -118,21 +116,11 @@ class RetroAPIView(CeleryTaskAPIView):
                 cluster_feature=cluster_feature,
                 cluster_fp_type=cluster_fp_type,
                 cluster_fp_length=cluster_fp_length,
-                cluster_fp_radius=cluster_fp_radius
+                cluster_fp_radius=cluster_fp_radius,
+                postprocess=True,
             )
 
         return result
-
-    def process(self, data, output):
-        """
-        Post-process output from single step retrosynthesis task.
-        """
-        smiles, precursors = output
-
-        for precursor in precursors:
-            precursor['templates'] = precursor.pop('tforms')
-
-        return precursors
 
 
 singlestep = RetroAPIView.as_view()
