@@ -1,3 +1,4 @@
+from . import atom_mapper
 from . import buyables
 from . import celery
 from . import cluster

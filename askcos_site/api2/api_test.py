@@ -33,6 +33,42 @@ class TestAPI(unittest.TestCase):
                 else:
                     time.sleep(2)
 
+    def test_atom_mapper(self):
+        """Test /atom-mapper endpoint"""
+        data = {
+            'rxnsmiles': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1',
+        }
+        response = self.client.post('https://localhost/api/v2/atom-mapper/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
+        self.assertEqual(request['mapper'], 'WLN atom mapper')
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertEqual(result['output'], '[CH3:1][N:2]([CH3:3])[CH2:4][CH2:5][Cl:6].[OH:7][CH:8]([c:9]1[cH:10][cH:11][cH:12][cH:13][cH:14]1)[c:15]1[cH:16][cH:17][cH:18][cH:19][cH:20]1>>[CH3:1][N:2]([CH3:3])[CH2:4][CH2:5][O:7][CH:8]([c:9]1[cH:10][cH:11][cH:12][cH:13][cH:14]1)[c:15]1[cH:16][cH:17][cH:18][cH:19][cH:20]1')
+
+        # Test insufficient data
+        response = self.client.post('https://localhost/api/v2/atom-mapper/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.client.post('https://localhost/api/v2/atom-mapper/', data={'rxnsmiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reaction smiles.']})
+
+        response = self.client.post('https://localhost/api/v2/atom-mapper/', data={'rxnsmiles': 'X>>Y'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reactants using rdkit.']})
+
     def test_buyables(self):
         """Test /buyables endpoint"""
         # Get request for main endpoint
