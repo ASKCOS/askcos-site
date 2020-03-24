@@ -565,12 +565,12 @@ M  END
                          '100336; 100337; 555364; 3948785; 3948834; 28127174; 35585623; 38022824; 38022828; 38022830; 38022834; 38022833; 38022835; 38022845; 41610599; 41610601; 41610620')
 
     def test_tree_builder(self):
-        """Test /treebuilder endpoint"""
+        """Test /tree-builder endpoint"""
         data = {
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
             'return_first': True,
         }
-        response = self.client.post('https://localhost/api/v2/treebuilder/', data=data)
+        response = self.client.post('https://localhost/api/v2/tree-builder/', data=data)
         self.assertEqual(response.status_code, 200)
 
         # Confirm that request was interpreted correctly
@@ -594,12 +594,12 @@ M  END
         self.assertIsInstance(result['output'][0]['children'], list)
 
         # Test insufficient data
-        response = self.client.post('https://localhost/api/v2/treebuilder/', data={})
+        response = self.client.post('https://localhost/api/v2/tree-builder/', data={})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'smiles': ['This field is required.']})
 
         # Test unparseable smiles
-        response = self.client.post('https://localhost/api/v2/treebuilder/', data={'smiles': 'X'})
+        response = self.client.post('https://localhost/api/v2/tree-builder/', data={'smiles': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
 
