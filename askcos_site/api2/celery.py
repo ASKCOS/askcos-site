@@ -19,9 +19,9 @@ READABLE_NAMES = {
 
 class CeleryTaskViewSet(GenericViewSet):
     """
-    API endpoint for retrieving status and result of a celery task.
+    API endpoint for retrieving status and output of a celery task.
 
-    For a particular task, specified as URI parameter (/api/v2/celery/task/<task id>/):
+    For a particular task, specified as URI parameter (`/api/v2/celery/task/<task id>/`):
 
     Method: GET
 
@@ -33,7 +33,7 @@ class CeleryTaskViewSet(GenericViewSet):
     - `message`: message regarding job status
     - `state`: state of the job
     - `error`: any error message if encountered
-    - `results`: result of celery task if complete
+    - `output`: output of celery task if complete
     """
 
     def retrieve(self, request, pk):
