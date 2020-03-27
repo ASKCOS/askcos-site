@@ -64,7 +64,7 @@ Returns:
 ### Atom mapping tool
 API endpoint for generating atom mappings for reactions.
 
-URL: `/api/v2/atom_mapper`
+URL: `/api/v2/atom-mapper`
 
 Method: POST
 
