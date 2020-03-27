@@ -1,16 +1,9 @@
 import json
-from django.http import JsonResponse
-import makeit.global_config as gc
-from pymongo import MongoClient
 
-client = MongoClient(
-    gc.MONGO['path'],
-    gc.MONGO['id'],
-    connect=gc.MONGO['connect']
-)
-db_name = gc.REACTIONS['database']
-collection = gc.REACTIONS['collection']
-reactions_collection = client[db_name][collection]
+from django.http import JsonResponse
+
+from askcos_site.globals import reaction_db
+
 
 def reactions(request):
     resp = {}
@@ -26,6 +19,6 @@ def reactions(request):
     query = {'reaction_id': {'$in': _ids}}
     if template_set:
         query['template_set'] = template_set
-    reactions_by_ids = list(reactions_collection.find(query))
+    reactions_by_ids = list(reaction_db.find(query))
     resp['reactions'] = reactions_by_ids
     return JsonResponse(resp)

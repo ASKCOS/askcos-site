@@ -51,7 +51,8 @@ def get_top_precursors(
         fast_filter=None, max_num_templates=1000,
         max_cum_prob=1, fast_filter_threshold=0.75,
         cluster=True, cluster_method='kmeans', cluster_feature='original',
-        cluster_fp_type='morgan', cluster_fp_length=512, cluster_fp_radius=1
+        cluster_fp_type='morgan', cluster_fp_length=512, cluster_fp_radius=1,
+        postprocess=False,
     ):
     """Get the precursors for a chemical defined by its SMILES.
 
@@ -103,8 +104,13 @@ def get_top_precursors(
         fast_filter_threshold=fast_filter_threshold, template_prioritizer=template_prioritizer,
         precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter
     )
-    
-    return (smiles, result)
+
+    if postprocess:
+        for r in result:
+            r['templates'] = r.pop('tforms')
+        return result
+    else:
+        return smiles, result
 
 @shared_task
 def template_relevance(smiles, max_num_templates, max_cum_prob, relevance_model='reaxys'):
