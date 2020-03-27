@@ -16,6 +16,7 @@ router.register(r'celery/task', api2.celery.CeleryTaskViewSet, basename='celery_
 urlpatterns = router.urls
 
 urlpatterns += [
+    re_path(r'^atom-mapper/$', api2.atom_mapper.atom_mapper, name='atom_mapper_api'),
     re_path(r'^celery/$', api2.celery.celery_status, name='celery_api'),
     re_path(r'^cluster/$', api2.cluster.cluster, name='cluster_api'),
     re_path(r'^context/$', api2.context.neural_network, name='context_api'),
