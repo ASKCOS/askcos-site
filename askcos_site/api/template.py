@@ -4,6 +4,13 @@ from django.http import JsonResponse
 from askcos_site.globals import retro_templates
 
 
+def template_sets(request):
+    resp = {}
+    resp['request'] = dict(**request.GET)
+    resp['template_sets'] = retro_templates.distinct('template_set')
+    return JsonResponse(resp)
+
+
 def template(request):
     resp = {}
     resp['request'] = dict(**request.GET)

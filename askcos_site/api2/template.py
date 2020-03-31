@@ -54,6 +54,12 @@ class TemplateViewSet(ViewSet):
 
         return Response(resp)
 
+    @action(detail=False, methods=['GET'])
+    def sets(self, request):
+        """Returns available template sets that exist in mongodb"""
+        resp = {'template_sets': retro_templates.distinct('template_set')}
+        return Response(resp)
+
     @action(detail=True, methods=['GET'])
     def export(self, request, pk):
         """Return single template entry by mongo _id as a reaxys query."""
