@@ -110,17 +110,20 @@
         <div class="form-group">
             <label>Target: </label>
             <div class="input-group">
+                <span class="btn input-group-addon" @click="toggleResolver">
+                    <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
+                    <i v-else style="color: darkred" class="fas fa-server" title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon."></i>
+                </span>
                 <input id="target" type="text" class="form-control text-center" v-model="target">
                 <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
                     <i class="fas fa-edit"></i>
                 </span>
             </div>
-            <input id="submit" type="submit" value="Submit" class="btn btn-default" />
-            <span @click="toggleResolver" style="cursor: pointer;">
-                <i class="fas fa-server"></i>
-                <span v-if="allowResolve" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon.">&#10003;</span>
-                <span v-else title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon.">&#10005;</span>
-            </span>
+            <input id="submit" type="submit" value="One-Step" class="btn btn-default" />
+            <button id="tb-submit" type="button" class="btn btn-default" @click="sendTreeBuilderJob">
+                Build tree
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
 
     </form>

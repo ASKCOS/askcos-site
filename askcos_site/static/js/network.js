@@ -453,6 +453,28 @@ var app = new Vue({
             this.window.width = window.innerWidth;
             this.window.height = window.innerHeight;
         },
+        sendTreeBuilderJob() {
+            this.validatesmiles(this.target, !this.allowResolve)
+            .then(isvalidsmiles => {
+                if (isvalidsmiles) {
+                    return this.target
+                } else {
+                    return this.resolveChemName(this.target)
+                }
+            })
+            .then(smiles => {
+                this.target = smiles
+                this.mctsTreeBuilderAPICall()
+            })
+            notificationOptions = {
+                requireInteraction: true,
+                body: "The job will run in the background. You can manually explore until the results are ready, at which time you will see a new notification. Click here to make a one-step prediction for your target."
+            }
+            app = this
+            this.makeNotification("Tree builder job submitted!", notificationOptions, (event) => {
+                app.changeTarget()
+            })
+        },
         mctsTreeBuilderAPICall: function() {
             var url = '/api/v2/tree-builder/'
             var body = {
@@ -483,7 +505,7 @@ var app = new Vue({
                     this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
                 })
         },
-        notifyTbResults() {
+        makeNotification(title, options, callback) {
             if (!("Notification" in window)) {
                 alert("This browser does not support desktop notification! The tree builder job is complete. Please go to your results page to view results");
             }
@@ -491,11 +513,9 @@ var app = new Vue({
             // Let's check whether notification permissions have already been granted
             else if (Notification.permission === "granted") {
                 // If it's okay let's create a notification
-                var notification = new Notification("Tree builder job complete! Click to view results in a new tab.");
-                notification.onclick = function(event) {
-                    event.preventDefault(); // prevent the browser from focusing the Notification's tab
-                    window.open('/retro/network/?tb='+this.tb.taskID, '_blank');
-                }
+                var notification = new Notification(title, options);
+                app = this
+                notification.onclick = callback
             }
 
             // Otherwise, we need to ask the user for permission
@@ -503,11 +523,9 @@ var app = new Vue({
                 Notification.requestPermission().then(function (permission) {
                 // If the user accepts, let's create a notification
                 if (permission === "granted") {
-                    var notification = new Notification("Tree builder job complete! Click to view results in a new tab.");
-                    notification.onclick = function(event) {
-                        event.preventDefault(); // prevent the browser from focusing the Notification's tab
-                        window.open('/retro/network/?tb='+this.tb.taskID, '_blank');
-                    }
+                    var notification = new Notification(title, options);
+                    app = this
+                    notification.onclick = callback
                 }
                 });
             }
@@ -516,9 +534,23 @@ var app = new Vue({
             fetch('/api/v2/celery/task/'+this.tb.taskID)
                 .then(resp => resp.json())
                 .then(json => {
+                    notificationOptions = {
+                        requireInteraction: true,
+                    }
                     if (json.complete) {
-                        notifyTbResults()
+                        notifyMessage = "Tree builder job complete! Click to view results in a new tab."
+                        app = this
+                        notifyCallback = function(event) {
+                            event.preventDefault(); // prevent the browser from focusing the Notification's tab
+                            window.open('/retro/network/?view=25&tb='+app.tb.taskID, '_blank');
+                        }
+                        notificationOptions.body = "Click here to open a new tab with results."
+                        this.makeNotification("Tree builder results", notificationOptions, notifyCallback)
                         this.tb.poll = null
+                    }
+                    else if (json.failed) {
+                        notificationOptions.body = "Job failed. Try submitting a new job."
+                        this.makeNotification("Tree builder results", notificationOptions, (event) => {})
                     }
                     else {
                         setTimeout(() => this.pollForTbResult(), 1000)
