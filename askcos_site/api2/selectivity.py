@@ -33,7 +33,7 @@ class SelectivityAPIView(CeleryTaskAPIView):
 
     serializer_class = SelectivitySerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute site selectivity task and return celery result object.
         """

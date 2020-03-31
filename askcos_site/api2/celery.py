@@ -100,13 +100,13 @@ class CeleryTaskAPIView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        result = self.execute(data)
+        result = self.execute(request, data)
 
         resp = {'request': data, 'task_id': result.id}
 
         return Response(resp)
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute the celery task and return a celery result object.
         """

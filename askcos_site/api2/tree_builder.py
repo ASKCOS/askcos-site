@@ -1,6 +1,8 @@
 from rdkit import Chem
 from rest_framework import serializers
+from datetime import datetime
 
+from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 from .celery import CeleryTaskAPIView
 
@@ -30,6 +32,9 @@ class TreeBuilderSerializer(serializers.Serializer):
     template_set = serializers.CharField(default='reaxys')
     hashed_historian = serializers.BooleanField(required=False)
     return_first = serializers.BooleanField(default=True)
+
+    store_results = serializers.BooleanField(default=True)
+    description = serializers.CharField(default='')
 
     blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
     forbidden_molecules = serializers.ListField(child=serializers.CharField(), required=False)
@@ -92,7 +97,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
     serializer_class = TreeBuilderSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute tree builder task and return celery result object.
         """
@@ -139,7 +144,21 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             hashed=data.get('hashed_historian', data['template_set'] == 'reaxys'),
             return_first=data['return_first'],
             paths_only=True,
+            run_async=data['store_results']
         )
+
+        if data['store_results']:
+            now = datetime.now()
+
+            saved_result = SavedResults.objects.create(
+                user=request.user,
+                created=now,
+                dt=now.strftime('%B %d, %Y %H:%M:%S %p'),
+                result_id=result.id,
+                result_state='pending',
+                result_type='tree_builder',
+                description=data['description']
+            )
 
         return result
 

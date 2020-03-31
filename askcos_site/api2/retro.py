@@ -69,7 +69,7 @@ class RetroAPIView(CeleryTaskAPIView):
 
     serializer_class = RetroSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute single step retro task and return celery result object.
         """
