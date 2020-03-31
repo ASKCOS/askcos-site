@@ -66,7 +66,7 @@ var app = new Vue({
                     },
                     body: JSON.stringify({
                         template_set: this.templateInfo.template_set,
-                        ids: this.templateInfo.references
+                        ids: this.templateInfo.references.splice(0, 100)
                     })
                 }
             )
