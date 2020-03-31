@@ -371,6 +371,17 @@ var app = new Vue({
         showAddNewPrecursorModal: false,
         downloadName: "network.json",
         modalData: {},
+        tb: {
+            settings: {
+                maxDepth: 4,
+                maxBranching: 20,
+                expansionTime: 30,
+                maxPPG: 100,
+                chemicalPropertyLogic: {},
+                chemicalPopularityLogic: {},
+                returnFirst: false
+            }
+        },
         clusterPopoutModalData: {
             optionsDisplay : {
                 showScore: false,
@@ -419,6 +430,10 @@ var app = new Vue({
     },
     mounted: function() {
         var urlParams = new URLSearchParams(window.location.search);
+        let urlTarget = urlParams.get('target')
+        if (urlTarget) {
+            this.target = urlTarget
+        }
         let loadTreeBuilder = urlParams.get('tb')
         let numTrees = urlParams.get('view')
         if (loadTreeBuilder) {
@@ -437,6 +452,78 @@ var app = new Vue({
         handleResize: function() {
             this.window.width = window.innerWidth;
             this.window.height = window.innerHeight;
+        },
+        mctsTreeBuilderAPICall: function() {
+            var url = '/api/v2/tree-builder/'
+            var body = {
+                smiles: this.target,
+                template_set: this.templateSet,
+                template_prioritizer: this.templateSet,
+                max_depth: this.tb.settings.maxDepth,
+                max_branching: this.tb.settings.maxBranching,
+                expansion_time: this.tb.settings.expansionTime,
+                max_ppg: this.tb.settings.maxPPG,
+                num_templates: this.numTemplates,
+                max_cum_prob: this.maxCumProb,
+                filter_threshold: this.minPlausibility,
+                return_first: this.tb.settings.returnFirst,
+                store_results: true
+            }
+            fetch(url, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': getCookie('csrftoken')
+                }, 
+                body: JSON.stringify(body)
+            })
+                .then(resp => resp.json())
+                .then(json => {
+                    this.tb.taskID = json.task_id
+                    this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
+                })
+        },
+        notifyTbResults() {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notification! The tree builder job is complete. Please go to your results page to view results");
+            }
+
+            // Let's check whether notification permissions have already been granted
+            else if (Notification.permission === "granted") {
+                // If it's okay let's create a notification
+                var notification = new Notification("Tree builder job complete! Click to view results in a new tab.");
+                notification.onclick = function(event) {
+                    event.preventDefault(); // prevent the browser from focusing the Notification's tab
+                    window.open('/retro/network/?tb='+this.tb.taskID, '_blank');
+                }
+            }
+
+            // Otherwise, we need to ask the user for permission
+            else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                // If the user accepts, let's create a notification
+                if (permission === "granted") {
+                    var notification = new Notification("Tree builder job complete! Click to view results in a new tab.");
+                    notification.onclick = function(event) {
+                        event.preventDefault(); // prevent the browser from focusing the Notification's tab
+                        window.open('/retro/network/?tb='+this.tb.taskID, '_blank');
+                    }
+                }
+                });
+            }
+        },
+        pollForTbResult() {
+            fetch('/api/v2/celery/task/'+this.tb.taskID)
+                .then(resp => resp.json())
+                .then(json => {
+                    if (json.complete) {
+                        notifyTbResults()
+                        this.tb.poll = null
+                    }
+                    else {
+                        setTimeout(() => this.pollForTbResult(), 1000)
+                    }
+                })
         },
         requestUrl: function(smiles) {
             var url = '/api/retro/?';
