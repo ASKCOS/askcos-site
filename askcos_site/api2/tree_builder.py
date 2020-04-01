@@ -109,7 +109,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
                 'O': 'max_chemprop_o',
                 'H': 'max_chemprop_h',
             }
-            max_natom_dict = {k: data[v] for k, v in param_dict if v in data}
+            max_natom_dict = {k: data[v] for k, v in param_dict.items() if v in data}
             max_natom_dict['logic'] = chemical_property_logic
         else:
             max_natom_dict = None
