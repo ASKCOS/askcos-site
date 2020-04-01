@@ -56,6 +56,7 @@ var app = new Vue({
             }
         },
         lookupReactions() {
+            var references = [...this.templateInfo.references]
             fetch(
                 '/api/reactions/',
                 {
@@ -66,7 +67,7 @@ var app = new Vue({
                     },
                     body: JSON.stringify({
                         template_set: this.templateInfo.template_set,
-                        ids: this.templateInfo.references
+                        ids: references.splice(0, 100)
                     })
                 }
             )

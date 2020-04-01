@@ -358,6 +358,7 @@ var app = new Vue({
             edges: {}
         },
         results: {},
+        templateSets: [],
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: true,
@@ -423,6 +424,11 @@ var app = new Vue({
         if (loadTreeBuilder) {
             this.loadFromTreeBuilder(loadTreeBuilder, numTrees)
         }
+        fetch('/api/template-sets/')
+            .then(resp => resp.json())
+            .then(json => {
+                this.templateSets = json.template_sets
+            })
     },
     destroyed: function() {
         window.removeEventListener('resize', this.handleResize);
@@ -437,7 +443,7 @@ var app = new Vue({
             var params = {
                 target: smiles,
                 template_set: this.templateSet,
-                template_prioritizer: this.templatePrioritization,
+                template_prioritizer: this.templateSet,
                 precursor_prioritization: this.precursorScoring,
                 num_templates: this.numTemplates,
                 max_cum_prob: this.maxCumProb,

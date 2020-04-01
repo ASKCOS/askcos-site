@@ -10,6 +10,7 @@ urlpatterns = [
     re_path(r'^context/$', api.context.neural_network, name='context_api'),
     re_path(r'^forward/$', api.forward.template_free, name='forward_api'),
     re_path(r'^impurity/$', api.impurity.impurity_predict, name='impurity_api'),
+    re_path(r'^template-sets/$', api.template.template_sets, name='template_sets_api'),
     re_path(r'^template/$', api.template.template, name='template_api'),
     re_path(r'^template/download/$', api.template.reaxys_export, name='api_template_reaxys_export'),
     re_path(r'^reactions/$', api.reactions.reactions, name='reactions_api'),

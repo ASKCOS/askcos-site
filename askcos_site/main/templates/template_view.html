@@ -21,19 +21,26 @@
         <div class="col-12">Template: <span style="font-family: Courier New">%% templateInfo.reaction_smarts %% </span></div>
     </div>
 	<div class="row">
-		<div class="col-12">%% templateInfo.count %% total references</div>
-        <div v-if="this.templateInfo.template_set=='reaxys'" class="col-12">
-            <a class="btn btn-default" @click="downloadReactionQuery">
-                <i class="fas fa-file-download"></i>
-                Export Reaxys query for precedents
-            </a>
-        </div>
-    </div>
-	<div class="row">
-		<div class="col-12"><img :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
+		<div class="col-12 text-center"><img v-if="!!templateInfo" :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
     </div>
 	<div class="row">
 		<div class="col-12">
+            <div class="text-center">
+                %% templateInfo.count %% total references
+                <button class="btn btn-default customtooltip" @click="copyRxnIds" style="margin-left: 5px">
+                    <i class="far fa-copy"></i> Copy all reaction IDs
+                     <span 
+                        id="copy-tooltip"
+                        class="customtooltiptext"
+                    >
+                        Click to copy!
+                    </span>
+                </button>
+                <button v-if="this.templateInfo.template_set=='reaxys'" class="btn btn-default" @click="downloadReactionQuery" style="margin-left: 5px">
+                    <i class="fas fa-file-download"></i> Export Reaxys query for precedents
+                </button>
+            </div>
+            <h2>First 100 reaction precedents:</h2>
 			<table class="table table-hover">
 				<thead>
 					<tr>
@@ -68,7 +75,7 @@
                 class="customtooltip"
                 @click="copyRxnIds"
             >
-                    <i class="far fa-copy"></i>
+                <i class="far fa-copy"></i>
                 %% reactionReferences %%
                 <span 
                     id="copy-tooltip"
