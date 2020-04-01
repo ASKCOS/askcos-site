@@ -274,7 +274,6 @@ var app = new Vue({
             if (this.trees.length) {
                 this.allTreeStats()
                 this.sortTrees(this.treeSortOption, true)
-                console.log(this.trees)
                 this.buildTree(this.currentTreeId, this.networkContainer);
             }
             hideLoader()
@@ -369,7 +368,18 @@ var app = new Vue({
         }
       },
       showNode: function(nodeId) {
-        this.selected = this.networkData.nodes.get(nodeId)
+        var node = this.networkData.nodes.get(nodeId)
+        this.selected = node
+        if (node.type=='chemical' && !!!node.source) {
+            fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
+                .then(resp => resp.json())
+                .then(json => {
+                    if (!!json.result) {
+                        this.networkData.nodes.update({id: node.id, source: json.result[0].source})
+                        this.$set(this.selected, 'source', json.result[0].source)
+                    }
+                })
+        }
       }
     },
     delimiters: ['%%', '%%'],
