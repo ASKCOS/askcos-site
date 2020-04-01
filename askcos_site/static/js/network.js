@@ -386,7 +386,8 @@ var app = new Vue({
                 chemicalPopularityReactants: 0,
                 chemicalPopularityProducts: 0,
                 returnFirst: false
-            }
+            },
+            redirectToGraph: false
         },
         clusterPopoutModalData: {
             optionsDisplay : {
@@ -483,6 +484,7 @@ var app = new Vue({
             app = this
             this.makeNotification("Tree builder job submitted!", notificationOptions, (event) => {
                 app.changeTarget()
+                this.close()
             })
         },
         mctsTreeBuilderAPICall: function() {
@@ -560,7 +562,14 @@ var app = new Vue({
                         app = this
                         notifyCallback = function(event) {
                             event.preventDefault(); // prevent the browser from focusing the Notification's tab
-                            window.open('/view-tree-graph/?id='+app.tb.taskID, '_blank');
+                            if (app.tb.redirectToGraph) {
+                                window.open('/retro/network/?view=25&tb='+app.tb.taskID, '_blank')
+                                this.close()
+                            }
+                            else {
+                                window.open('/view-tree-graph/?id='+app.tb.taskID, '_blank')
+                                this.close()
+                            }
                         }
                         notificationOptions.body = "Click here to open a new tab with results."
                         this.makeNotification("Tree builder results", notificationOptions, notifyCallback)
@@ -568,7 +577,7 @@ var app = new Vue({
                     }
                     else if (json.failed) {
                         notificationOptions.body = "Job failed. Try submitting a new job."
-                        this.makeNotification("Tree builder results", notificationOptions, (event) => {})
+                        this.makeNotification("Tree builder results", notificationOptions, (event) => {this.close()})
                     }
                     else {
                         setTimeout(() => this.pollForTbResult(), 1000)
