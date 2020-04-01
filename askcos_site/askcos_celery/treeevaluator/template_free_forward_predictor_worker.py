@@ -62,15 +62,15 @@ def get_outcomes(reactants, top_n=10):
             continue
         if smiles in results_to_return:
             results_to_return[smiles]['rank'] = min(results_to_return[smiles]['rank'], res['rank'])
-            results_to_return[smiles]['score'] = np.log(np.exp(results_to_return[smiles]['score']) + np.exp(res['score']))
-            results_to_return[smiles]['prob'] += res['prob']
+            results_to_return[smiles]['score'] = np.nan_to_num(np.log(np.exp(results_to_return[smiles]['score']) + np.exp(res['score'])))
+            results_to_return[smiles]['prob'] += np.nan_to_num(res['prob'])
         else:
             # Append outcome information
             results_to_return[smiles] = {
                 'rank': res['rank'],
                 'smiles': smiles,
-                'score': float(res['score']),
-                'prob': float(res['prob']),
+                'score': float(np.nan_to_num(res['score'])),
+                'prob': float(np.nan_to_num(res['prob'])),
                 'mol_wt': float(Descriptors.MolWt(Chem.MolFromSmiles(smiles)))
             }
     results_to_return = sorted(results_to_return.values(), key=lambda x: x['prob'], reverse=True)
