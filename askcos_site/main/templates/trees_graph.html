@@ -124,6 +124,9 @@
             <div class="text-center">
               <div><b>Smiles: </b>%% selected.smiles %%</div>
               <div><b>Price ($/g): </b>%% selected.ppg %%</div>
+              <div v-if="selected.source">
+                <b>Source: </b>%% selected.source %%</div>
+              </div>
               <div style="margin-bottom: 10px">
                   <img v-bind:src="selected.image" style="max-width: 100%"/>
               </div>
