@@ -370,14 +370,16 @@ var app = new Vue({
       showNode: function(nodeId) {
         var node = this.networkData.nodes.get(nodeId)
         this.selected = node
-        fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
-            .then(resp => resp.json())
-            .then(json => {
-                if (node.type=='chemical' && !node.source && !!json.result) {
-                    this.networkData.nodes.update({id: node.id, source: json.result[0].source})
-                    this.$set(this.selected, 'source', json.result[0].source)
-                }
-            })
+        if (node.type=='chemical' && !!!node.source) {
+            fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
+                .then(resp => resp.json())
+                .then(json => {
+                    if (!!json.result) {
+                        this.networkData.nodes.update({id: node.id, source: json.result[0].source})
+                        this.$set(this.selected, 'source', json.result[0].source)
+                    }
+                })
+        }
       }
     },
     delimiters: ['%%', '%%'],

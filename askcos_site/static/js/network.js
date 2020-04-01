@@ -891,14 +891,15 @@ var app = new Vue({
             }
             this.selected = node;
             this.reorderResults();
-            if (node.type == 'chemical') {
-                console.log('chemical', node);
-                if (typeof(this.results[node.smiles]) != 'undefined') {
-                    console.log(this.results[node.smiles])
-                }
-            }
-            else if (node.type == 'reaction') {
-                console.log('reaction', node)
+            if (node.type == 'chemical' && !!!node.source) {
+                fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
+                    .then(resp => resp.json())
+                    .then(json => {
+                        if (!!json.result) {
+                            this.data.nodes.update({id: node.id, source: json.result[0].source})
+                            this.$set(this.selected, 'source', json.result[0].source)
+                        }
+                    })
             }
         },
         openModal: function(modalName) {
