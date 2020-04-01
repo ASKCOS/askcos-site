@@ -377,8 +377,14 @@ var app = new Vue({
                 maxBranching: 20,
                 expansionTime: 30,
                 maxPPG: 100,
-                chemicalPropertyLogic: {},
-                chemicalPopularityLogic: {},
+                chemicalPropertyLogic: 'none',
+                chemicalPropertyC: 0,
+                chemicalPropertyN: 0,
+                chemicalPropertyO: 0,
+                chemicalPropertyH: 0,
+                chemicalPopularityLogic: 'none',
+                chemicalPopularityReactants: 0,
+                chemicalPopularityProducts: 0,
                 returnFirst: false
             }
         },
@@ -493,7 +499,15 @@ var app = new Vue({
                 max_cum_prob: this.maxCumProb,
                 filter_threshold: this.minPlausibility,
                 return_first: this.tb.settings.returnFirst,
-                store_results: true
+                store_results: true,
+                chemical_property_logic: this.tb.settings.chemicalPropertyLogic,
+                max_chemprop_c: this.tb.settings.chemicalPropertyC,
+                max_chemprop_n: this.tb.settings.chemicalPropertyN,
+                max_chemprop_o: this.tb.settings.chemicalPropertyO,
+                max_chemprop_h: this.tb.settings.chemicalPropertyH,
+                chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
+                min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
+                min_chempop_products: this.tb.settings.chemicalPopularityProducts
             }
             fetch(url, {
                 method: 'POST', 
@@ -546,7 +560,7 @@ var app = new Vue({
                         app = this
                         notifyCallback = function(event) {
                             event.preventDefault(); // prevent the browser from focusing the Notification's tab
-                            window.open('/retro/network/?view=25&tb='+app.tb.taskID, '_blank');
+                            window.open('/view-tree-graph/?id='+app.tb.taskID, '_blank');
                         }
                         notificationOptions.body = "Click here to open a new tab with results."
                         this.makeNotification("Tree builder results", notificationOptions, notifyCallback)

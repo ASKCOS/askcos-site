@@ -249,6 +249,74 @@
             </div>
         </div>
         <div class="form-inline mb-10">
+            <div class="form-group">
+                Chemical property logic:
+                <select v-model="tb.settings.chemicalPropertyLogic" class="form-control">
+                    <option value="none">None</option>
+                    <option value="or">Or</option>
+                    <option value="and">And</option>
+                </select>
+            </div>
+        </div>
+        <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-10">
+            <div>Max atoms:</div>
+            <div class="form-group">
+                C:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyC"
+                >
+            </div>
+            <div class="form-group">
+                N:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyN"
+                >
+            </div>
+            <div class="form-group">
+                O:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyO"
+                >
+            </div>
+            <div class="form-group">
+                H:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyH"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Chemical popularity logic:
+                <select v-model="tb.settings.chemicalPopularityLogic" class="form-control">
+                    <option value="none">None</option>
+                    <option value="or">Or</option>
+                    <option value="and">And</option>
+                </select>
+            </div>
+        </div>
+        <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-10">
+            <div>Minimum occurrences:</div>
+            <div class="form-group">
+                As reactant:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPopularityReactants"
+                >
+            </div>
+            <div class="form-group">
+                As product:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPopularityProducts"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
             <div>
                 <input type="checkbox" v-model="tb.settings.returnFirst" {{ tb.settings.returnFirst }}/>
                 Return ASAP?
