@@ -434,6 +434,10 @@ var app = new Vue({
         if (urlTarget) {
             this.target = urlTarget
         }
+        let run = urlParams.get('run')
+        if (run && JSON.parse(run)) {
+            this.changeTarget()
+        }
         let loadTreeBuilder = urlParams.get('tb')
         let numTrees = urlParams.get('view')
         if (loadTreeBuilder) {
