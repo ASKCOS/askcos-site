@@ -102,6 +102,10 @@ class CeleryTaskAPIView(GenericAPIView):
 
         result = self.execute(request, data)
 
+        if result is None:
+            resp = {'request': data, 'error': True}
+            return Response(resp, status=400)
+
         resp = {'request': data, 'task_id': result.id}
 
         return Response(resp)

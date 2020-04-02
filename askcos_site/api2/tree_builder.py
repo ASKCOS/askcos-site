@@ -33,7 +33,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     hashed_historian = serializers.BooleanField(required=False)
     return_first = serializers.BooleanField(default=True)
 
-    store_results = serializers.BooleanField(default=True)
+    store_results = serializers.BooleanField(default=False)
     description = serializers.CharField(default='')
 
     blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
@@ -101,6 +101,9 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         """
         Execute tree builder task and return celery result object.
         """
+        if data['store_results'] and not request.user.is_authenticated:
+            return None
+
         chemical_property_logic = data['chemical_property_logic']
         if chemical_property_logic != 'none':
             param_dict = {
@@ -158,7 +161,6 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
         if data['store_results']:
             now = datetime.now()
-
             saved_result = SavedResults.objects.create(
                 user=request.user,
                 created=now,
