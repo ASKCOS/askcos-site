@@ -528,15 +528,6 @@ var app = new Vue({
                 this.target = smiles
                 this.mctsTreeBuilderAPICall()
             })
-            notificationOptions = {
-                requireInteraction: true,
-                body: "The job will run in the background. You can manually explore until the results are ready, at which time you will see a new notification. Click here to make a one-step prediction for your target."
-            }
-            app = this
-            this.makeNotification("Tree builder job submitted!", notificationOptions, (event) => {
-                app.changeTarget()
-                this.close()
-            })
         },
         mctsTreeBuilderAPICall: function() {
             var url = '/api/v2/tree-builder/'
@@ -579,6 +570,15 @@ var app = new Vue({
                     else {
                         this.tb.taskID = json.task_id
                         this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
+                        notificationOptions = {
+                            requireInteraction: true,
+                            body: "The job will run in the background. You can manually explore until the results are ready, at which time you will see a new notification. Click here to make a one-step prediction for your target."
+                        }
+                        app = this
+                        this.makeNotification("Tree builder job submitted!", notificationOptions, (event) => {
+                            app.changeTarget()
+                            this.close()
+                        })
                     }
                 })
         },
