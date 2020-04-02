@@ -124,6 +124,15 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         else:
             min_chemical_history_dict = None
 
+        # Retrieve user specific blacklists
+        blacklisted_reactions = data.get('blacklisted_reactions', [])
+        forbidden_molecules = data.get('forbidden_molecules', [])
+        if request.user.is_authenticated:
+            blacklisted_reactions += list(set(
+                [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
+            forbidden_molecules += list(set(
+                [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
+
         result = get_buyable_paths_mcts.delay(
             data['smiles'],
             max_depth=data['max_depth'],
@@ -131,8 +140,8 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             expansion_time=data['expansion_time'],
             max_trees=500,
             max_ppg=data['max_ppg'],
-            known_bad_reactions=data.get('blacklisted_reactions'),
-            forbidden_molecules=data.get('forbidden_molecules'),
+            known_bad_reactions=blacklisted_reactions,
+            forbidden_molecules=forbidden_molecules,
             template_count=data['template_count'],
             max_cum_template_prob=data['max_cum_prob'],
             max_natom_dict=max_natom_dict,
