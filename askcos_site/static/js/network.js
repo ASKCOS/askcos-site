@@ -373,6 +373,7 @@ var app = new Vue({
         modalData: {},
         tb: {
             settings: {
+                quick: "normal",
                 maxDepth: 4,
                 maxBranching: 20,
                 expansionTime: 30,
@@ -463,6 +464,51 @@ var app = new Vue({
         handleResize: function() {
             this.window.width = window.innerWidth;
             this.window.height = window.innerHeight;
+        },
+        tbSettings(mode) {
+            if (mode == "quickest") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 4
+                this.tb.settings.expansionTime = 30
+                this.tb.settings.returnFirst = true
+                this.tb.settings.maxBranching = 20
+                this.numTemplates = 100
+                this.maxCumProb = 0.995
+                this.minPlausibility = 0.001
+            }
+            else if (mode == "shallow") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 4
+                this.tb.settings.expansionTime = 30
+                this.tb.settings.returnFirst = false
+                this.tb.settings.maxBranching = 20
+                this.numTemplates = 100
+                this.maxCumProb = 0.995
+                this.minPlausibility = 0.75
+            }
+            else if (mode == "normal") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 5
+                this.tb.settings.expansionTime = 60
+                this.tb.settings.returnFirst = false
+                this.tb.settings.maxBranching = 20
+                this.numTemplates = 1000
+                this.maxCumProb = 0.999
+                this.minPlausibility = 0.1
+            }
+            else if (mode == "deep") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 6
+                this.tb.settings.expansionTime = 120
+                this.tb.settings.returnFirst = false
+                this.tb.settings.maxBranching = 25
+                this.numTemplates = 1000
+                this.maxCumProb = 0.9999
+                this.minPlausibility = 0.01
+            }
+            else {
+                return
+            }
         },
         sendTreeBuilderJob() {
             this.validatesmiles(this.target, !this.allowResolve)

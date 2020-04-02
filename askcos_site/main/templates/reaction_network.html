@@ -120,10 +120,50 @@
                 </span>
             </div>
             <input id="submit" type="submit" value="One-Step" class="btn btn-default" />
-            <button id="tb-submit" type="button" class="btn btn-default" @click="sendTreeBuilderJob">
-                Build tree
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
+            <div class="btn-group">
+                <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-default">
+                    <i class="fas fa-sign-out-alt"></i> Build tree
+                </button>
+                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i>
+                    
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li style="padding-top: 5px; padding-left: 5px"><b>Quick Settings</b></li>
+                    <li role="separator" class="divider"></li>
+                    <li>
+                        <a @click="tbSettings('quickest')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'quickest'" class="fas fa-check"></i>
+                            Quickest search (ASAP)
+                        </a>
+                    </li>
+                    <li>
+                        <a @click="tbSettings('shallow')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'shallow'" class="fas fa-check"></i>
+                            Shallow search (15s)
+                        </a>
+                    </li>
+                    <li>
+                        <a @click="tbSettings('normal')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'normal'" class="fas fa-check"></i>
+                            Normal search (30s)
+                        </a>
+                    </li>
+                    <li>
+                        <a @click="tbSettings('deep')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'deep'" class="fas fa-check"></i>
+                            Deep search (60s)
+                        </a>
+                    </li>
+                    <li role="separator" class="divider"></li>
+                    <li>
+                        <a @click="showSettingsModal = true" style="cursor: pointer">
+                            Advanced...
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
 
     </form>
