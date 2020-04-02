@@ -347,6 +347,7 @@ Vue.component('modal', {
 var app = new Vue({
     el: '#app',
     data: {
+        isAuth: isAuth,
         window: {
             width: 0,
             height: 0,
@@ -511,6 +512,10 @@ var app = new Vue({
             }
         },
         sendTreeBuilderJob() {
+            if (!isAuth) {
+                alert('Error: must be logged in to start tree builder')
+                return
+            }
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
                 if (isvalidsmiles) {
@@ -567,8 +572,14 @@ var app = new Vue({
             })
                 .then(resp => resp.json())
                 .then(json => {
-                    this.tb.taskID = json.task_id
-                    this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
+                    if (json.error) {
+                        alert('Error: could not start tree builder. Try again later.')
+                        return
+                    }
+                    else {
+                        this.tb.taskID = json.task_id
+                        this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
+                    }
                 })
         },
         makeNotification(title, options, callback) {

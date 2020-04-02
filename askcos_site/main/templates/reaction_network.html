@@ -120,7 +120,7 @@
                 </span>
             </div>
             <input id="submit" type="submit" value="One-Step" class="btn btn-default" />
-            <div class="btn-group">
+            <div v-if="isAuth" class="btn-group">
                 <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-default">
                     <i class="fas fa-sign-out-alt"></i> Build tree
                 </button>
@@ -937,7 +937,9 @@
         </div>
 <a id="downloadAnchorElem" style="display:none"></a>
 
-
+<script>
+var isAuth = '{{ user.is_authenticated }}' == 'True'
+</script>
 
 <script src="{% static 'js/network.js' %}"></script>
 {% endblock %}
