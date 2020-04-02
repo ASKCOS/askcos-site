@@ -329,43 +329,36 @@ var app = new Vue({
         }
       },
       blacklist: function() {
-        n = 0
-        for (network of this.networks) {
-          var nodeId = network.getSelectedNodes();
-          if (nodeId.length) {
-            var desc = prompt("Please enter a reason (for your records only)", "no reason");
-            var now = Date.now();
-            var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
-            var nodes = this.networkData[n].nodes;
-            node = nodes.get(nodeId[0]);
-            if (node['type'] == 'chemical') {
-              var url =   '/ajax/user_blacklist_chemical/'
-            }
-            else {
-              var url = '/ajax/user_blacklist_reaction/'
-            }
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    smiles: node.smiles,
-                    csrfmiddlewaretoken: csrftoken,
-                    desc: desc,
-                    datetime: datetime,
-                },
-                dataType: 'json',
-                success: function (data) {
-                    if (data.err) {
-                        alert(data.err);
-                    } else {
-                        alert('Blacklisted chemical "' + node.smiles + '" at ' + datetime);
-                    }
-                }
-            })
-            break
-          }
-          n += 1;
+        var nodeId = this.network.getSelectedNodes();
+        if (!nodeId.length) { return }
+        var desc = prompt("Please enter a reason (for your records only)", "no reason");
+        var now = Date.now();
+        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
+        node = this.networkData.nodes.get(nodeId[0]);
+        if (node['type'] == 'chemical') {
+            var url =   '/ajax/user_blacklist_chemical/'
         }
+        else {
+            var url = '/ajax/user_blacklist_reaction/'
+        }
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                smiles: node.smiles,
+                csrfmiddlewaretoken: csrftoken,
+                desc: desc,
+                datetime: datetime,
+            },
+            dataType: 'json',
+            success: function (data) {
+                if (data.err) {
+                    alert(data.err);
+                } else {
+                    alert('Blacklisted chemical "' + node.smiles + '" at ' + datetime);
+                }
+            }
+        })
       },
       showNode: function(nodeId) {
         var node = this.networkData.nodes.get(nodeId)
@@ -374,7 +367,7 @@ var app = new Vue({
             fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
                 .then(resp => resp.json())
                 .then(json => {
-                    if (!!json.result) {
+                    if (json.result.length) {
                         this.networkData.nodes.update({id: node.id, source: json.result[0].source})
                         this.$set(this.selected, 'source', json.result[0].source)
                     }
