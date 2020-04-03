@@ -141,19 +141,19 @@
                     <li>
                         <a @click="tbSettings('shallow')" style="cursor: pointer">
                             <i v-if="tb.settings.quick == 'shallow'" class="fas fa-check"></i>
-                            Shallow search (15s)
+                            Shallow search (30s)
                         </a>
                     </li>
                     <li>
                         <a @click="tbSettings('normal')" style="cursor: pointer">
                             <i v-if="tb.settings.quick == 'normal'" class="fas fa-check"></i>
-                            Normal search (30s)
+                            Normal search (60s)
                         </a>
                     </li>
                     <li>
                         <a @click="tbSettings('deep')" style="cursor: pointer">
                             <i v-if="tb.settings.quick == 'deep'" class="fas fa-check"></i>
-                            Deep search (60s)
+                            Deep search (120s)
                         </a>
                     </li>
                     <li role="separator" class="divider"></li>
