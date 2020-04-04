@@ -183,6 +183,11 @@ var app = new Vue({
         forwardPredict() {
             showLoader()
             this.forwardResults = []
+            if (this.reactants.length < 4) {
+                alert('Please enter a reactant with at least 4 atoms.')
+                hideLoader()
+                return
+            }
             var query = this.constructForwardQuery(this.reagents, this.solvent)
             fetch('/api/forward/?'+query)
             .then(resp => resp.json())
