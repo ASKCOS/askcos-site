@@ -12,6 +12,8 @@ router.register(r'rdkit/smiles', api2.rdkit.SmilesViewSet, basename='smiles')
 router.register(r'template', api2.template.TemplateViewSet, basename='template')
 router.register(r'results', api2.results.ResultsViewSet, basename='results')
 router.register(r'celery/task', api2.celery.CeleryTaskViewSet, basename='celery_task')
+router.register(r'blacklist/chemicals', api2.blacklist.BlacklistedChemicalsViewSet, basename='blacklist_chemicals')
+router.register(r'blacklist/reactions', api2.blacklist.BlacklistedReactionsViewSet, basename='blacklist_reactions')
 
 urlpatterns = router.urls
 
