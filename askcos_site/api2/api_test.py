@@ -50,6 +50,17 @@ class TestAPI(unittest.TestCase):
                 else:
                     time.sleep(2)
 
+    def authenticate(self):
+        """Get authentication token, returns formatted header dict"""
+        response = self.post('/token-auth/', data={'username': username, 'password': password})
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertIn('token', result)
+        token = result['token']
+
+        return {'Authorization': 'Bearer {0}'.format(token)}
+
     def test_atom_mapper(self):
         """Test /atom-mapper endpoint"""
         data = {
@@ -435,22 +446,8 @@ M  END
         response = self.get('/results/')
         self.assertEqual(response.status_code, 401)
 
-        # Test that we can get a token (need to provide valid credentials, even for testing)
-        data = {
-            'username': username,
-            'password': password,
-        }
-        response = self.post('/token-auth/', data=data)
-        self.assertEqual(response.status_code, 200)
-
-        result = response.json()
-        self.assertIn('token', result)
-        token = result['token']
-
         # Test that we can access using the token
-        headers = {
-            'Authorization': 'Bearer {0}'.format(token),
-        }
+        headers = self.authenticate()
         response = self.get('/results/', headers=headers)
         self.assertEqual(response.status_code, 200)
 
