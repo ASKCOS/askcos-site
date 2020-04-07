@@ -1,7 +1,7 @@
+from django.utils import timezone
 from rdkit import Chem
 from rest_framework import serializers
 from rest_framework.exceptions import NotAuthenticated
-from datetime import datetime
 
 from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
@@ -161,7 +161,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         )
 
         if data['store_results']:
-            now = datetime.now()
+            now = timezone.now()
             saved_result = SavedResults.objects.create(
                 user=request.user,
                 created=now,
