@@ -110,6 +110,8 @@ urlpatterns = [
     re_path(r'^ajax/user_deactivate_chemical/$', views.ajax_user_deactivate_chemical, name='ajax_user_deactivate_chemical'),
     re_path(r'^ajax/user_activate_chemical/$', views.ajax_user_activate_chemical, name='ajax_user_activate_chemical'),
 
+    path('blacklist/', views.blacklist, name='user_blacklist'),
+
     # async results
     re_path(r'^view-result/$', views.view_result, name='view_result'),
     re_path(r'^view-tree-graph/$', views.view_tree_graph, name='view_tree_graph'),

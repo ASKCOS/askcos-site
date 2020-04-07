@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Blacklisted Items{% endblock %}
+{% block page_title %}Your blacklisted items{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <p>
+                This page lists chemicals and reactions that you have identified as problematic in some way;
+                any entries listed as <u>active</u> will be excluded from future expansions by the Tree Builder.
+                You can delete or deactivate any of these banned items at any time.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs">
+                <li class="nav-item" :class="{ active: isActive('chemicals') }">
+                    <a class="nav-link" @click.prevent="setActive('chemicals')" href="#chemicals">Chemicals</a>
+                </li>
+                <li class="nav-item" :class="{ active: isActive('reactions') }">
+                    <a class="nav-link" @click.prevent="setActive('reactions')" href="#reactions">Reactions</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div id="chemicals" class="tab-pane fade" :class="{ 'in active': isActive('chemicals') }">
+                    <table class="table table-hover" style="table-layout: fixed">
+                        <thead>
+                            <tr>
+                                <th class="col-md-1">Active</th>
+                                <th class="col-md-2">Created</th>
+                                <th class="col-md-6">Chemical</th>
+                                <th class="col-md-2">Description</th>
+                                <th class="col-md-1">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template v-for="doc in chemicals">
+                                <tr>
+                                    <td>
+                                        <i v-if="doc.active" @click="deactivateChemical(doc.id)" class="far fa-check-circle" style="cursor: pointer;"></i>
+                                        <i v-else @click="activateChemical(doc.id)" class="far fa-times-circle" style="cursor: pointer;"></i>
+                                    </td>
+                                    <td>%% doc.created %%</td>
+                                    <td class="text-center">
+                                        <img
+                                           :src="'/draw/smiles/'+encodeURIComponent(doc.smiles)" :title="doc.smiles"
+                                           style="max-width: 100%"
+                                        >
+                                    </td>
+                                    <td>%% doc.description %%</td>
+                                    <td>
+                                        <i @click="deleteChemical(doc.id)" class="fas fa-trash-alt" style="cursor: pointer;"></i>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="reactions" class="tab-pane fade" :class="{ 'in active': isActive('reactions') }">
+                    <table class="table table-hover" style="table-layout: fixed">
+                        <thead>
+                            <tr>
+                                <th class="col-md-1">Active</th>
+                                <th class="col-md-2">Created</th>
+                                <th class="col-md-6">Reaction</th>
+                                <th class="col-md-2">Description</th>
+                                <th class="col-md-1">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template v-for="doc in reactions">
+                                <tr>
+                                    <td>
+                                        <i v-if="doc.active" @click="deactivateReaction(doc.id)" class="far fa-check-circle" style="cursor: pointer;"></i>
+                                        <i v-else @click="activateReaction(doc.id)" class="far fa-times-circle" style="cursor: pointer;"></i>
+                                    </td>
+                                    <td>%% doc.created %%</td>
+                                    <td class="text-center">
+                                        <img
+                                           :src="'/draw/reaction/'+encodeURIComponent(doc.smiles)" :title="doc.smiles"
+                                           style="max-width: 100%"
+                                        >
+                                    </td>
+                                    <td>%% doc.description %%</td>
+                                    <td>
+                                        <i @click="deleteReaction(doc.id)" class="fas fa-trash-alt" style="cursor: pointer;"></i>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/blacklist.js' %}"></script>
+
+{% endblock %}

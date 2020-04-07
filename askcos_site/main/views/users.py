@@ -198,3 +198,7 @@ def ajax_user_deactivate_chemical(request):
         obj[0].save()
         return JsonResponse({'err': False})
     return JsonResponse({'err': 'Could not deactivate?'})
+
+@login_required
+def blacklist(request):
+    return render(request, 'blacklist.html')
