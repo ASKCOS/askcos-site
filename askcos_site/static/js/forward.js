@@ -183,6 +183,11 @@ var app = new Vue({
         forwardPredict() {
             showLoader()
             this.forwardResults = []
+            if (this.reactants.length < 4) {
+                alert('Please enter a reactant with at least 4 atoms.')
+                hideLoader()
+                return
+            }
             var query = this.constructForwardQuery(this.reagents, this.solvent)
             fetch('/api/forward/?'+query)
             .then(resp => resp.json())
@@ -397,7 +402,7 @@ Thanks to <a href='http://bootstraptour.com/' target='_blank'>bootstrap-tour</a>
             placement: "bottom",
             title: "Entrypoint to a synthesis prediction",
             content: `
-The entrypoint is predicting possible reaction conditions given known reactants and products, for example, after making a retrosynthetic prediction for a given target.
+The entrypoint is predicting possible reaction conditions given known reactants and products. For example, after making a retrosynthetic prediction for a given target (look for a link saying "evaluate reaction in a new tab").
 `,
 
         },
@@ -406,9 +411,9 @@ The entrypoint is predicting possible reaction conditions given known reactants 
             element: "#reactants",
             placement: "left",
             content: `
-Ultimately, the software will need SMILES strings for each compound. 
-These can be entered directly (i.e. - copy and pasted from ChemDraw) or drawn using the JSME molecular editor we have provided in the UI.
-When you start entering a SMILES string in each input field, the structure will be rendered, on-the-fly, as you type. 
+The predictor needs SMILES strings as inputs in the appropriate boxes. 
+SMILES strings can be entered directly (i.e. - copy and paste from another source) or deduced from a drawing made in the provided molecular editor (more in the next tour popup).
+When you start entering a SMILES string in each input field, the structure will be rendered, dynamically, as you type. 
 Don't be alarmed if you are in the middle of writing a ring structure and the image looks broken. 
 Give it a try by writing a simple molecule like "CCOCC" in the reactants input field to the right.
 `
@@ -418,8 +423,7 @@ Give it a try by writing a simple molecule like "CCOCC" in the reactants input f
             element: "#reactants-edit-icon",
             placement: "bottom",
             content: `
-Alternatively, structures can be drawn using a simple molecular editor by clicking this edit (pencil) button. 
-Each input field has it's own button you should click to draw a structure for that field.
+Structures can also be drawn using the simple molecular editor, accessible through the edit (pencil) button.
 If a SMILES string is already present in the input field, the drawing interface will be prepopulated with that structure for you to edit.
 Give it a try now if you'd like.
 `,
@@ -434,7 +438,7 @@ Give it a try now if you'd like.
             placement: "top",
             content: `
 For this tutorial, let's take a look at an example suzuki coupling reaction. 
-Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click continue and we'll pretend you clicked submit)
+Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click next and we'll pretend you clicked submit).
 `,
             relfex: true,
             onNext: () => {
@@ -462,7 +466,7 @@ After the prediction on the server has finished, the top 10 results will be disp
 You can evaluate the reaction and the reaction conditions using this evaluation button here (we just clicked it for you). 
 For evaluation, each set of reaction conditions is sent through a forward reaction prediction. 
 If the product is found in the top 10 forward prediction results, a checkmark will appear next to the recommendation (with the rank assigned to the product).
-Additionally, the reaction evluator (which does not currently consider reaction conditions) will give a reaction score for the transformation from reactants to products.
+Additionally, the reaction evaluator (which does not currently consider reaction conditions) will give a reaction score for the transformation from reactants to products.
 `
         },
         {
@@ -471,7 +475,7 @@ Additionally, the reaction evluator (which does not currently consider reaction 
             placement: "top",
             content: `
 When you've picked a set of conditions you'd like to explore further, you can click this button to make a forward prediction and see all of the possible results. 
-Either click this button or click 'Next >>' to continue.
+Either click this button or click "Next >>" to continue.
 `,
             reflex: true,
             onNext: () => {
@@ -492,8 +496,8 @@ This is always a good check to see if the product you entered appears at the top
             element: "#predict-impurities-0",
             placement: "top",
             content: `
-When you've picked a major product from the list you can move on to predict impurities that may come from a variety of imurity modes (i.e. - over reaction, dimerization). 
-Click this button or click "Next >>" to continue and make the impurity prediction.
+When a major product has been selected, a list of possible impurities can be predicted by clicking on the arrow (or the "Next >>") button below. 
+These impurities may come from a variety of impurity modes (i.e. - over reaction, dimerization).
 `,
             reflex: true,
             onNext: () => {
@@ -505,8 +509,18 @@ Click this button or click "Next >>" to continue and make the impurity predictio
             orphan: true,
             backdropContainer: '#body',
             content: `
-The impurity prediction will start on the server, and the progress will be updated here. 
-Once the task finishes, the results wil be shown here. That ends this tour of the interface!
+The impurity prediction will start on the server, and the progress will be updated in the progress bar below. 
+You may notice that several predictions are made based on various modes (i.e. - over reaction, dimerization). 
+When the task finishes, the results will be shown below the progress bar. 
+The results can be exported by clicking on the Export results button.
+`
+        },
+        {
+            title: "The end!",
+            orphan: true,
+            backdropContainer: '#body',
+            content: `
+That ends this tour of the interface!
 `
         },
     ]
