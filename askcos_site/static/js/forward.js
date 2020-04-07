@@ -402,7 +402,7 @@ Thanks to <a href='http://bootstraptour.com/' target='_blank'>bootstrap-tour</a>
             placement: "bottom",
             title: "Entrypoint to a synthesis prediction",
             content: `
-The entrypoint is predicting possible reaction conditions given known reactants and products, for example, after making a retrosynthetic prediction for a given target (look for a link saying "evaluate reaction in a new tab")
+The entrypoint is predicting possible reaction conditions given known reactants and products. For example, after making a retrosynthetic prediction for a given target (look for a link saying "evaluate reaction in a new tab").
 `,
 
         },
@@ -438,7 +438,7 @@ Give it a try now if you'd like.
             placement: "top",
             content: `
 For this tutorial, let's take a look at an example suzuki coupling reaction. 
-Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click next and we'll pretend you clicked submit)
+Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click next and we'll pretend you clicked submit).
 `,
             relfex: true,
             onNext: () => {
@@ -466,7 +466,7 @@ After the prediction on the server has finished, the top 10 results will be disp
 You can evaluate the reaction and the reaction conditions using this evaluation button here (we just clicked it for you). 
 For evaluation, each set of reaction conditions is sent through a forward reaction prediction. 
 If the product is found in the top 10 forward prediction results, a checkmark will appear next to the recommendation (with the rank assigned to the product).
-Additionally, the reaction evluator (which does not currently consider reaction conditions) will give a reaction score for the transformation from reactants to products.
+Additionally, the reaction evaluator (which does not currently consider reaction conditions) will give a reaction score for the transformation from reactants to products.
 `
         },
         {
