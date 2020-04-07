@@ -1,5 +1,6 @@
 from rdkit import Chem
 from rest_framework import serializers
+from rest_framework.exceptions import NotAuthenticated
 from datetime import datetime
 
 from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
@@ -102,7 +103,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         Execute tree builder task and return celery result object.
         """
         if data['store_results'] and not request.user.is_authenticated:
-            return None
+            raise NotAuthenticated('You must be authenticated to store tree builder results.')
 
         chemical_property_logic = data['chemical_property_logic']
         if chemical_property_logic != 'none':

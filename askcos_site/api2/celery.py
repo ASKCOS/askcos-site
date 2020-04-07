@@ -1,4 +1,5 @@
 from celery.result import AsyncResult
+from rest_framework.exceptions import APIException
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -100,11 +101,11 @@ class CeleryTaskAPIView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        result = self.execute(request, data)
-
-        if result is None:
-            resp = {'request': data, 'error': True}
-            return Response(resp, status=400)
+        try:
+            result = self.execute(request, data)
+        except APIException as e:
+            resp = {'request': data, 'error': e.detail}
+            return Response(resp, status=e.status_code)
 
         resp = {'request': data, 'task_id': result.id}
 
