@@ -98,7 +98,14 @@ class BlacklistViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def activate(self, request, *args, **kwargs):
         """
-        For this blacklisted item, set active to True.
+        API endpoint to activate specified blacklist entry.
+
+        Method: GET
+
+        Returns:
+
+        - `success`: true if successfully activated
+        - `data`: updated entry data
         """
         instance = self.get_object()
         instance.active = True
@@ -109,7 +116,14 @@ class BlacklistViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def deactivate(self, request, *args, **kwargs):
         """
-        For this blacklisted item, set active to False.
+        API endpoint to deactivate specified blacklist entry.
+
+        Method: GET
+
+        Returns:
+
+        - `success`: true if successfully deactivated
+        - `data`: updated entry data
         """
         instance = self.get_object()
         instance.active = False
@@ -121,6 +135,35 @@ class BlacklistViewSet(ModelViewSet):
 class BlacklistedReactionsViewSet(BlacklistViewSet):
     """
     API endpoint for accessing blacklisted reactions.
+
+    Method: GET
+
+    Returns: list of blacklisted reaction entries belonging to the currently authenticated user
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): reaction SMILES string to be added
+    - `description` (str, optional): text description
+    - `datetime` (str, optional): timestamp, default current time
+    - `active` (bool, optional): whether this entry is active, default true
+
+    Returns: created entry
+
+    ----------
+    For a particular entry, specified as URI parameter (`/api/v2/blacklist/reactions/<id>/`):
+
+    Method: GET
+
+    Returns: entry with requested id
+
+    Method: DELETE
+
+    Returns:
+
+    - `success`: true if successfully deleted
+    - `data`: data from deleted entry
     """
     model = BlacklistedReactions
     serializer_class = BlacklistedReactionsSerializer
@@ -129,6 +172,35 @@ class BlacklistedReactionsViewSet(BlacklistViewSet):
 class BlacklistedChemicalsViewSet(BlacklistViewSet):
     """
     API endpoint for accessing blacklisted chemicals.
+
+    Method: GET
+
+    Returns: list of blacklisted chemical entries belonging to the currently authenticated user
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): chemical SMILES string to be added
+    - `description` (str, optional): text description
+    - `datetime` (str, optional): timestamp, default current time
+    - `active` (bool, optional): whether this entry is active, default true
+
+    Returns: created entry
+
+    ----------
+    For a particular entry, specified as URI parameter (`/api/v2/blacklist/chemicals/<id>/`):
+
+    Method: GET
+
+    Returns: entry with requested id
+
+    Method: DELETE
+
+    Returns:
+
+    - `success`: true if successfully deleted
+    - `data`: data from deleted entry
     """
     model = BlacklistedChemicals
     serializer_class = BlacklistedChemicalsSerializer
