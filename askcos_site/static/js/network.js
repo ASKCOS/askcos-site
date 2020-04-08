@@ -584,7 +584,7 @@ var app = new Vue({
         },
         makeNotification(title, options, callback) {
             if (!("Notification" in window)) {
-                alert("This browser does not support desktop notification! The tree builder job is complete. Please go to your results page to view results");
+                alert("This browser does not support desktop notifications! Notifications about tree builder submission and completion will not show.")
             }
 
             // Let's check whether notification permissions have already been granted
