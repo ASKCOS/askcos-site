@@ -15,7 +15,6 @@
     <!-- Our CSS (overrides) -->
     <link href="{% static 'css/default.css' %}?v3" rel="stylesheet" type="text/css"/>
     <script src="{% static 'js/default.js' %}"></script>
-    <script src="{% static 'js/date.js' %}"></script>
     <script src="{% static 'js/dayjs.min.js' %}"></script>
     <!-- Javascript drawing -->
     <script src="{% static 'jsme/jsme/jsme.nocache.js' %}"></script>
@@ -333,8 +332,7 @@ $("#savepage").click(function () {
     console.log('saving this page...');
     var desc = prompt("Please enter a description for this page", "no description");
     if (desc) {
-        var now = Date.now();
-        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
+        var datetime = dayjs().format('MMMM DD, YYYY, hh:mm:ss A');
         $.ajax({
             type: 'POST',
             url: '/ajax/user_save_page/',
