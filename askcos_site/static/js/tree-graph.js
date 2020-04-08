@@ -337,9 +337,11 @@ var app = new Vue({
         node = this.networkData.nodes.get(nodeId[0]);
         if (node['type'] == 'chemical') {
             var url =   '/ajax/user_blacklist_chemical/'
+            var speciesName = 'chemical'
         }
         else {
             var url = '/ajax/user_blacklist_reaction/'
+            var speciesName = 'reaction'
         }
         $.ajax({
             type: 'POST',
@@ -355,7 +357,7 @@ var app = new Vue({
                 if (data.err) {
                     alert(data.err);
                 } else {
-                    alert('Blacklisted chemical "' + node.smiles + '" at ' + datetime);
+                    alert(`Blacklisted ${speciesName} ${node.smiles} at ${datetime}`)
                 }
             }
         })
