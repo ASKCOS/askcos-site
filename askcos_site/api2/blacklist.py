@@ -1,4 +1,5 @@
 from django.utils import timezone
+from rdkit import Chem
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -46,12 +47,50 @@ class BlacklistSerializer(serializers.Serializer):
         return ret
 
 
+def standardize(smiles, isomericSmiles=True):
+    """
+    Split input SMILES into individual molecules, canonicalizes each, then
+    sorts and re-combines canonicalized SMILES into single SMILES.
+    """
+    parts = smiles.split('.')
+    canonicalized_parts = []
+    for part in parts:
+        mol = Chem.MolFromSmiles(part)
+        if not mol:
+            raise ValueError()
+        canonicalized_parts.append(Chem.MolToSmiles(mol, isomericSmiles=isomericSmiles))
+    canonicalized_parts.sort()
+    return '.'.join(canonicalized_parts)
+
+
 class BlacklistedReactionsSerializer(BlacklistSerializer):
     """
     Serializer for a blacklisted reaction.
     """
     class Meta:
         model = BlacklistedReactions
+
+    def validate_smiles(self, value):
+        """
+        Verify that the provided SMILES is valid. Returns canonicalized SMILES.
+        """
+        try:
+            reactants, agents, products = value.split('>')
+        except ValueError:
+            raise serializers.ValidationError('Cannot parse reaction smiles.')
+        try:
+            reactants = standardize(reactants, isomericSmiles=True)
+        except ValueError:
+            raise serializers.ValidationError('Cannot parse reaction reactants.')
+        try:
+            agents = standardize(agents, isomericSmiles=True)
+        except ValueError:
+            raise serializers.ValidationError('Cannot parse reaction agents.')
+        try:
+            products = standardize(products, isomericSmiles=True)
+        except ValueError:
+            raise serializers.ValidationError('Cannot parse reaction products.')
+        return reactants + '>' + agents + '>' + products
 
 
 class BlacklistedChemicalsSerializer(BlacklistSerializer):
@@ -60,6 +99,17 @@ class BlacklistedChemicalsSerializer(BlacklistSerializer):
     """
     class Meta:
         model = BlacklistedChemicals
+
+    def validate_smiles(self, value):
+        """
+        Verify that the provided SMILES is valid. Returns canonicalized SMILES.
+        """
+        if value:
+            mol = Chem.MolFromSmiles(value)
+            if not mol:
+                raise serializers.ValidationError('Cannot parse smiles with rdkit.')
+            return Chem.MolToSmiles(mol, isomericSmiles=True)
+        return value
 
 
 class BlacklistViewSet(ModelViewSet):

@@ -59,6 +59,59 @@ class TreeBuilderSerializer(serializers.Serializer):
             raise serializers.ValidationError("Logic should be one of ['none', 'and', 'or'].")
         return value
 
+    def validate_blacklisted_chemicals(self, value):
+        """
+        Verify that the provided SMILES is valid. Returns canonicalized SMILES.
+        """
+        new_value = []
+        for v in value:
+            mol = Chem.MolFromSmiles(v)
+            if not mol:
+                raise serializers.ValidationError('Cannot parse smiles with rdkit.')
+            new_value.append(Chem.MolToSmiles(mol, isomericSmiles=True))
+        return new_value
+
+    def validate_blacklisted_reactions(self, value):
+        """
+        Verify that the provided SMILES is valid. Returns canonicalized SMILES.
+        """
+        new_value = []
+        for v in value:
+            try:
+                reactants, agents, products = v.split('>')
+            except ValueError:
+                raise serializers.ValidationError('Cannot parse reaction smiles.')
+            try:
+                reactants = standardize(reactants, isomericSmiles=True)
+            except ValueError:
+                raise serializers.ValidationError('Cannot parse reaction reactants.')
+            try:
+                agents = standardize(agents, isomericSmiles=True)
+            except ValueError:
+                raise serializers.ValidationError('Cannot parse reaction agents.')
+            try:
+                products = standardize(products, isomericSmiles=True)
+            except ValueError:
+                raise serializers.ValidationError('Cannot parse reaction products.')
+            new_value.append(reactants + '>' + agents + '>' + products)
+        return new_value
+
+
+def standardize(smiles, isomericSmiles=True):
+    """
+    Split input SMILES into individual molecules, canonicalizes each, then
+    sorts and re-combines canonicalized SMILES into single SMILES.
+    """
+    parts = smiles.split('.')
+    canonicalized_parts = []
+    for part in parts:
+        mol = Chem.MolFromSmiles(part)
+        if not mol:
+            raise ValueError()
+        canonicalized_parts.append(Chem.MolToSmiles(mol, isomericSmiles=isomericSmiles))
+    canonicalized_parts.sort()
+    return '.'.join(canonicalized_parts)
+
 
 class TreeBuilderAPIView(CeleryTaskAPIView):
     """
