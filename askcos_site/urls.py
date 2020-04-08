@@ -96,20 +96,7 @@ urlpatterns = [
     re_path(r'^ajax/user_save_page/$', views.ajax_user_save_page, name='ajax_user_save_page'),
     re_path(r'^saved/delete/id=(?P<_id>.+)$', views.user_saved_results_del, name='user_saved_results_del'),
 
-    # Blacklisted reactions
-    re_path(r'^blacklisted/reactions/$', views.user_blacklisted_reactions, name='user_blacklisted_reactions'),
-    re_path(r'^ajax/user_blacklist_reaction/$', views.ajax_user_blacklist_reaction, name='ajax_user_blacklist_reaction'),
-    re_path(r'^blacklisted/reactions/delete/id=(?P<_id>.+)$', views.user_blacklisted_reactions_del, name='user_blacklisted_reactions_del'),
-    re_path(r'^ajax/user_deactivate_reaction/$', views.ajax_user_deactivate_reaction, name='ajax_user_deactivate_reaction'),
-    re_path(r'^ajax/user_activate_reaction/$', views.ajax_user_activate_reaction, name='ajax_user_activate_reaction'),
-
-    # Blacklisted chemicals
-    re_path(r'^blacklisted/chemicals/$', views.user_blacklisted_chemicals, name='user_blacklisted_chemicals'),
-    re_path(r'^ajax/user_blacklist_chemical/$', views.ajax_user_blacklist_chemical, name='ajax_user_blacklist_chemical'),
-    re_path(r'^blacklisted/chemicals/delete/id=(?P<_id>.+)$', views.user_blacklisted_chemicals_del, name='user_blacklisted_chemicals_del'),
-    re_path(r'^ajax/user_deactivate_chemical/$', views.ajax_user_deactivate_chemical, name='ajax_user_deactivate_chemical'),
-    re_path(r'^ajax/user_activate_chemical/$', views.ajax_user_activate_chemical, name='ajax_user_activate_chemical'),
-
+    # Blacklisted chemicals and reactions
     path('blacklist/', views.blacklist, name='user_blacklist'),
 
     # async results
