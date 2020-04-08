@@ -36,6 +36,26 @@
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div id="chemicals" class="tab-pane fade" :class="{ 'in active': isActive('chemicals') }">
+
+                    <div class="col-12 text-center" style="margin: 10px 0">
+                        <form class="form-inline" v-on:submit.prevent="addChemical">
+                            <div class="form-group">
+                                <label class="sr-only" for="newChemicalSmiles">SMILES</label>
+                                <input type="text" class="form-control" id="newChemicalSmiles" placeholder="SMILES" v-model="newChemicalSmiles" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="sr-only" for="newChemicalDesc">Description</label>
+                                <input type="text" class="form-control" id="newChemicalDesc" placeholder="Description" v-model="newChemicalDesc">
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" v-model="newChemicalActive"> Active
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-default">Add Banned Chemical</button>
+                        </form>
+                    </div>
+
                     <table class="table table-hover" style="table-layout: fixed">
                         <thead>
                             <tr>
@@ -70,6 +90,26 @@
                     </table>
                 </div>
                 <div id="reactions" class="tab-pane fade" :class="{ 'in active': isActive('reactions') }">
+
+                    <div class="col-12 text-center" style="margin: 10px 0">
+                        <form class="form-inline" v-on:submit.prevent="addReaction">
+                            <div class="form-group">
+                                <label class="sr-only" for="newReactionSmiles">SMILES</label>
+                                <input type="text" class="form-control" id="newReactionSmiles" placeholder="SMILES" v-model="newReactionSmiles" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="sr-only" for="newReactionDesc">Description</label>
+                                <input type="text" class="form-control" id="newReactionDesc" placeholder="Description" v-model="newReactionDesc">
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" v-model="newReactionActive"> Active
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-default">Add Banned Reaction</button>
+                        </form>
+                    </div>
+
                     <table class="table table-hover" style="table-layout: fixed">
                         <thead>
                             <tr>

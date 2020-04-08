@@ -19,6 +19,12 @@ new Vue({
         activeItem: 'chemicals',
         chemicals: [],
         reactions: [],
+        newChemicalSmiles: '',
+        newChemicalDesc: '',
+        newChemicalActive: true,
+        newReactionSmiles: '',
+        newReactionDesc: '',
+        newReactionActive: true,
     },
     created: function() {
         this.loadChemicals();
@@ -50,6 +56,46 @@ new Vue({
                     this.reactions = json
                 }
             })
+        },
+        addChemical: function () {
+            var body = {
+                smiles: this.newChemicalSmiles,
+                description: this.newChemicalDesc,
+                active: this.newChemicalActive,
+            };
+            fetch('/api/v2/blacklist/chemicals/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => resp.json())
+                .then(json => {
+                    json.created = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+                    this.chemicals.push(json)
+                })
+        },
+        addReaction: function () {
+            var body = {
+                smiles: this.newReactionSmiles,
+                description: this.newReactionDesc,
+                active: this.newReactionActive,
+            };
+            fetch('/api/v2/blacklist/reactions/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => resp.json())
+                .then(json => {
+                    json.created = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+                    this.reactions.push(json)
+                })
         },
         deleteChemical: function (id) {
             this.deleteEntry(id, 'chemicals')
