@@ -38,7 +38,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     description = serializers.CharField(default='')
 
     blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
-    forbidden_molecules = serializers.ListField(child=serializers.CharField(), required=False)
+    blacklisted_chemicals = serializers.ListField(child=serializers.CharField(), required=False)
 
     def validate_smiles(self, value):
         """Verify that the requested smiles is valid. Returns canonicalized SMILES."""
@@ -89,7 +89,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `hashed_historian` (bool, optional): whether historian entries are hashed
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `blacklisted_reactions` (list, optional): list of reactions to not consider
-    - `forbidden_molecules` (list, optional): list of molecules to not consider
+    - `blacklisted_chemicals` (list, optional): list of molecules to not consider
 
     Returns:
 
@@ -130,11 +130,11 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
         # Retrieve user specific blacklists
         blacklisted_reactions = data.get('blacklisted_reactions', [])
-        forbidden_molecules = data.get('forbidden_molecules', [])
+        blacklisted_chemicals = data.get('blacklisted_chemicals', [])
         if request.user.is_authenticated:
             blacklisted_reactions += list(set(
                 [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
-            forbidden_molecules += list(set(
+            blacklisted_chemicals += list(set(
                 [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
 
         result = get_buyable_paths_mcts.delay(
@@ -145,7 +145,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             max_trees=500,
             max_ppg=data['max_ppg'],
             known_bad_reactions=blacklisted_reactions,
-            forbidden_molecules=forbidden_molecules,
+            forbidden_molecules=blacklisted_chemicals,
             template_count=data['template_count'],
             max_cum_template_prob=data['max_cum_prob'],
             max_natom_dict=max_natom_dict,

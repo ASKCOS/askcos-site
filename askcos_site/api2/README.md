@@ -231,7 +231,7 @@ Parameters:
 - `hashed_historian` (bool, optional): whether historian entries are hashed
 - `return_first` (bool, optional): whether to return upon finding the first pathway
 - `blacklisted_reactions` (list, optional): list of reactions to not consider
-- `forbidden_molecules` (list, optional): list of molecules to not consider
+- `blacklisted_chemicals` (list, optional): list of molecules to not consider
 
 Returns:
 
