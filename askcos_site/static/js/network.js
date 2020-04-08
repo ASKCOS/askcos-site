@@ -1098,7 +1098,7 @@ var app = new Vue({
                 fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
                     .then(resp => resp.json())
                     .then(json => {
-                        if (!!json.result) {
+                        if (json.result.length) {
                             this.data.nodes.update({id: node.id, source: json.result[0].source})
                             this.$set(this.selected, 'source', json.result[0].source)
                         }
