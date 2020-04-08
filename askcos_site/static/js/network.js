@@ -347,6 +347,7 @@ Vue.component('modal', {
 var app = new Vue({
     el: '#app',
     data: {
+        isAuth: isAuth,
         window: {
             width: 0,
             height: 0,
@@ -371,6 +372,25 @@ var app = new Vue({
         showAddNewPrecursorModal: false,
         downloadName: "network.json",
         modalData: {},
+        tb: {
+            settings: {
+                quick: "normal",
+                maxDepth: 4,
+                maxBranching: 20,
+                expansionTime: 30,
+                maxPPG: 100,
+                chemicalPropertyLogic: 'none',
+                chemicalPropertyC: 0,
+                chemicalPropertyN: 0,
+                chemicalPropertyO: 0,
+                chemicalPropertyH: 0,
+                chemicalPopularityLogic: 'none',
+                chemicalPopularityReactants: 0,
+                chemicalPopularityProducts: 0,
+                returnFirst: false
+            },
+            redirectToGraph: false
+        },
         clusterPopoutModalData: {
             optionsDisplay : {
                 showScore: false,
@@ -419,6 +439,14 @@ var app = new Vue({
     },
     mounted: function() {
         var urlParams = new URLSearchParams(window.location.search);
+        let urlTarget = urlParams.get('target')
+        if (urlTarget) {
+            this.target = urlTarget
+        }
+        let run = urlParams.get('run')
+        if (run && JSON.parse(run)) {
+            this.changeTarget()
+        }
         let loadTreeBuilder = urlParams.get('tb')
         let numTrees = urlParams.get('view')
         if (loadTreeBuilder) {
@@ -437,6 +465,180 @@ var app = new Vue({
         handleResize: function() {
             this.window.width = window.innerWidth;
             this.window.height = window.innerHeight;
+        },
+        tbSettings(mode) {
+            if (mode == "quickest") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 4
+                this.tb.settings.expansionTime = 30
+                this.tb.settings.returnFirst = true
+                this.tb.settings.maxBranching = 20
+                this.numTemplates = 100
+                this.maxCumProb = 0.995
+                this.minPlausibility = 0.001
+            }
+            else if (mode == "shallow") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 4
+                this.tb.settings.expansionTime = 30
+                this.tb.settings.returnFirst = false
+                this.tb.settings.maxBranching = 20
+                this.numTemplates = 100
+                this.maxCumProb = 0.995
+                this.minPlausibility = 0.75
+            }
+            else if (mode == "normal") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 5
+                this.tb.settings.expansionTime = 60
+                this.tb.settings.returnFirst = false
+                this.tb.settings.maxBranching = 20
+                this.numTemplates = 1000
+                this.maxCumProb = 0.999
+                this.minPlausibility = 0.1
+            }
+            else if (mode == "deep") {
+                this.tb.settings.quick = mode
+                this.tb.settings.maxDepth = 6
+                this.tb.settings.expansionTime = 120
+                this.tb.settings.returnFirst = false
+                this.tb.settings.maxBranching = 25
+                this.numTemplates = 1000
+                this.maxCumProb = 0.9999
+                this.minPlausibility = 0.01
+            }
+            else {
+                return
+            }
+        },
+        sendTreeBuilderJob() {
+            if (!isAuth) {
+                alert('Error: must be logged in to start tree builder')
+                return
+            }
+            this.validatesmiles(this.target, !this.allowResolve)
+            .then(isvalidsmiles => {
+                if (isvalidsmiles) {
+                    return this.target
+                } else {
+                    return this.resolveChemName(this.target)
+                }
+            })
+            .then(smiles => {
+                this.target = smiles
+                this.mctsTreeBuilderAPICall()
+            })
+        },
+        mctsTreeBuilderAPICall: function() {
+            var url = '/api/v2/tree-builder/'
+            var body = {
+                smiles: this.target,
+                template_set: this.templateSet,
+                template_prioritizer: this.templateSet,
+                max_depth: this.tb.settings.maxDepth,
+                max_branching: this.tb.settings.maxBranching,
+                expansion_time: this.tb.settings.expansionTime,
+                max_ppg: this.tb.settings.maxPPG,
+                num_templates: this.numTemplates,
+                max_cum_prob: this.maxCumProb,
+                filter_threshold: this.minPlausibility,
+                return_first: this.tb.settings.returnFirst,
+                store_results: true,
+                chemical_property_logic: this.tb.settings.chemicalPropertyLogic,
+                max_chemprop_c: this.tb.settings.chemicalPropertyC,
+                max_chemprop_n: this.tb.settings.chemicalPropertyN,
+                max_chemprop_o: this.tb.settings.chemicalPropertyO,
+                max_chemprop_h: this.tb.settings.chemicalPropertyH,
+                chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
+                min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
+                min_chempop_products: this.tb.settings.chemicalPopularityProducts
+            }
+            fetch(url, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': getCookie('csrftoken')
+                }, 
+                body: JSON.stringify(body)
+            })
+                .then(resp => resp.json())
+                .then(json => {
+                    if (json.error) {
+                        alert('Error: could not start tree builder. Try again later.')
+                        return
+                    }
+                    else {
+                        this.tb.taskID = json.task_id
+                        this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
+                        notificationOptions = {
+                            requireInteraction: true,
+                            body: "The job will run in the background. You will see a new notification when the job completes."
+                        }
+                        app = this
+                        this.makeNotification("Tree builder job submitted!", notificationOptions, (event) => {
+                            this.close()
+                        })
+                    }
+                })
+        },
+        makeNotification(title, options, callback) {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notifications! Notifications about tree builder submission and completion will not show.")
+            }
+
+            // Let's check whether notification permissions have already been granted
+            else if (Notification.permission === "granted") {
+                // If it's okay let's create a notification
+                var notification = new Notification(title, options);
+                app = this
+                notification.onclick = callback
+            }
+
+            // Otherwise, we need to ask the user for permission
+            else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                // If the user accepts, let's create a notification
+                if (permission === "granted") {
+                    var notification = new Notification(title, options);
+                    app = this
+                    notification.onclick = callback
+                }
+                });
+            }
+        },
+        pollForTbResult() {
+            fetch('/api/v2/celery/task/'+this.tb.taskID)
+                .then(resp => resp.json())
+                .then(json => {
+                    notificationOptions = {
+                        requireInteraction: true,
+                    }
+                    if (json.complete) {
+                        notifyMessage = "Tree builder job complete! Click to view results in a new tab."
+                        app = this
+                        notifyCallback = function(event) {
+                            event.preventDefault(); // prevent the browser from focusing the Notification's tab
+                            if (app.tb.redirectToGraph) {
+                                window.open('/retro/network/?view=25&tb='+app.tb.taskID, '_blank')
+                                this.close()
+                            }
+                            else {
+                                window.open('/view-tree-graph/?id='+app.tb.taskID, '_blank')
+                                this.close()
+                            }
+                        }
+                        notificationOptions.body = "Click here to open a new tab with results."
+                        this.makeNotification("Tree builder results", notificationOptions, notifyCallback)
+                        this.tb.poll = null
+                    }
+                    else if (json.failed) {
+                        notificationOptions.body = "Job failed. Try submitting a new job."
+                        this.makeNotification("Tree builder results", notificationOptions, (event) => {this.close()})
+                    }
+                    else {
+                        setTimeout(() => this.pollForTbResult(), 1000)
+                    }
+                })
         },
         requestUrl: function(smiles) {
             var url = '/api/retro/?';
@@ -895,7 +1097,7 @@ var app = new Vue({
                 fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
                     .then(resp => resp.json())
                     .then(json => {
-                        if (!!json.result) {
+                        if (json.result.length) {
                             this.data.nodes.update({id: node.id, source: json.result[0].source})
                             this.$set(this.selected, 'source', json.result[0].source)
                         }

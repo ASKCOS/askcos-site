@@ -41,7 +41,7 @@ class AtomMapperAPIView(CeleryTaskAPIView):
 
     serializer_class = AtomMapperSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute fast filter task and return celery result object.
         """

@@ -70,7 +70,7 @@ class ImpurityAPIView(CeleryTaskAPIView):
 
     serializer_class = ImpurityPredictorSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute an impurity task and return the celery result object.
         """

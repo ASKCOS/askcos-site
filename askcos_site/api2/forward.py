@@ -58,7 +58,7 @@ class ForwardPredictorAPIView(CeleryTaskAPIView):
 
     serializer_class = ForwardPredictorSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute forward prediction task and return celery result object.
         """

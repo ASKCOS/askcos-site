@@ -110,17 +110,60 @@
         <div class="form-group">
             <label>Target: </label>
             <div class="input-group">
+                <span class="btn input-group-addon" @click="toggleResolver">
+                    <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
+                    <i v-else style="color: darkred" class="fas fa-server" title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon."></i>
+                </span>
                 <input id="target" type="text" class="form-control text-center" v-model="target">
                 <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
                     <i class="fas fa-edit"></i>
                 </span>
             </div>
-            <input id="submit" type="submit" value="Submit" class="btn btn-default" />
-            <span @click="toggleResolver" style="cursor: pointer;">
-                <i class="fas fa-server"></i>
-                <span v-if="allowResolve" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon.">&#10003;</span>
-                <span v-else title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon.">&#10005;</span>
-            </span>
+            <input id="submit" type="submit" value="One-Step" class="btn btn-default" />
+            <div v-if="isAuth" class="btn-group">
+                <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-default">
+                    <i class="fas fa-sign-out-alt"></i> Build tree
+                </button>
+                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i>
+                    
+                    <span class="caret"></span>
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li style="padding-top: 5px; padding-left: 5px"><b>Quick Settings</b></li>
+                    <li role="separator" class="divider"></li>
+                    <li>
+                        <a @click="tbSettings('quickest')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'quickest'" class="fas fa-check"></i>
+                            Quickest search (ASAP)
+                        </a>
+                    </li>
+                    <li>
+                        <a @click="tbSettings('shallow')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'shallow'" class="fas fa-check"></i>
+                            Shallow search (30s)
+                        </a>
+                    </li>
+                    <li>
+                        <a @click="tbSettings('normal')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'normal'" class="fas fa-check"></i>
+                            Normal search (60s)
+                        </a>
+                    </li>
+                    <li>
+                        <a @click="tbSettings('deep')" style="cursor: pointer">
+                            <i v-if="tb.settings.quick == 'deep'" class="fas fa-check"></i>
+                            Deep search (120s)
+                        </a>
+                    </li>
+                    <li role="separator" class="divider"></li>
+                    <li>
+                        <a @click="showSettingsModal = true" style="cursor: pointer">
+                            Advanced...
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
 
     </form>
@@ -152,6 +195,7 @@
         <h3>Settings</h3>
     </div>
     <div slot="body" class="text-left">
+        <h2>Global settings</h2>
         <div class="form-inline mb-10">
             <div>
                 <input type="checkbox" ref="allowResolve" v-model="allowResolve" {{ allowResolve }}/>
@@ -210,7 +254,122 @@
             </div>
         </div>
         <hr>
-        Clustering settings: <br>
+        <h2>MCTS Tree Builder Settings:</h2>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Expansion time (seconds):
+                <input style="width: 100px" class="form-control text-center"
+                  type="number" min="1" max="300" step="1" 
+                  v-model.number="tb.settings.expansionTime"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Max chemical price ($/g):
+                <input style="width: 100px" class="form-control text-center"
+                  type="number" 
+                  v-model.number="tb.settings.maxPPG"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Max expansion depth:
+                <input style="width: 100px" type="number" min="1" max="9" step="1" v-model.number="tb.settings.maxDepth" class="form-control text-center">
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Max branching:
+                <input style="width: 100px" class="form-control text-center"
+                  type="number" min="1" max="50" step="1" 
+                  v-model.number="tb.settings.maxBranching"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Chemical property logic:
+                <select v-model="tb.settings.chemicalPropertyLogic" class="form-control">
+                    <option value="none">None</option>
+                    <option value="or">Or</option>
+                    <option value="and">And</option>
+                </select>
+            </div>
+        </div>
+        <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-10">
+            <div>Max atoms:</div>
+            <div class="form-group">
+                C:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyC"
+                >
+            </div>
+            <div class="form-group">
+                N:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyN"
+                >
+            </div>
+            <div class="form-group">
+                O:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyO"
+                >
+            </div>
+            <div class="form-group">
+                H:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPropertyH"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div class="form-group">
+                Chemical popularity logic:
+                <select v-model="tb.settings.chemicalPopularityLogic" class="form-control">
+                    <option value="none">None</option>
+                    <option value="or">Or</option>
+                    <option value="and">And</option>
+                </select>
+            </div>
+        </div>
+        <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-10">
+            <div>Minimum occurrences:</div>
+            <div class="form-group">
+                As reactant:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPopularityReactants"
+                >
+            </div>
+            <div class="form-group">
+                As product:
+                <input style="width: 75px" class="form-control text-center"
+                  type="number" min="1" step="1" 
+                  v-model.number="tb.settings.chemicalPopularityProducts"
+                >
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div>
+                <input type="checkbox" v-model="tb.settings.returnFirst" {{ tb.settings.returnFirst }}/>
+                Return ASAP?
+            </div>
+        </div>
+        <div class="form-inline mb-10">
+            <div>
+                <input type="checkbox" v-model="tb.redirectToGraph" {{ tb.redirectToGraph }}/>
+                Redirect to entire graph visualization?
+            </div>
+        </div>
+        <hr>
+        <h2>IPP Clustering Settings:</h2>
         <div class="form-inline mb-10">
             <div>
                 <input type="checkbox" ref="allowCluster" v-model="allowCluster" {{ allowCluster }}/>
@@ -778,7 +937,9 @@
         </div>
 <a id="downloadAnchorElem" style="display:none"></a>
 
-
+<script>
+var isAuth = '{{ user.is_authenticated }}' == 'True'
+</script>
 
 <script src="{% static 'js/network.js' %}"></script>
 {% endblock %}

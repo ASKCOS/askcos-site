@@ -639,6 +639,16 @@ M  END
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
 
+        # Test error when store_results=True without authentication
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'store_results': True,
+        }
+        response = self.client.post('https://localhost/api/v2/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 401)
+        result = response.json()
+        self.assertEqual(result['error'], 'You must be authenticated to store tree builder results.')
+
     @classmethod
     def tearDownClass(cls):
         """This method is run once after all tests in this class."""

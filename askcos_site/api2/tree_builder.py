@@ -1,6 +1,9 @@
+from django.utils import timezone
 from rdkit import Chem
 from rest_framework import serializers
+from rest_framework.exceptions import NotAuthenticated
 
+from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 from .celery import CeleryTaskAPIView
 
@@ -30,6 +33,9 @@ class TreeBuilderSerializer(serializers.Serializer):
     template_set = serializers.CharField(default='reaxys')
     hashed_historian = serializers.BooleanField(required=False)
     return_first = serializers.BooleanField(default=True)
+
+    store_results = serializers.BooleanField(default=False)
+    description = serializers.CharField(default='')
 
     blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
     forbidden_molecules = serializers.ListField(child=serializers.CharField(), required=False)
@@ -92,10 +98,13 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
     serializer_class = TreeBuilderSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute tree builder task and return celery result object.
         """
+        if data['store_results'] and not request.user.is_authenticated:
+            raise NotAuthenticated('You must be authenticated to store tree builder results.')
+
         chemical_property_logic = data['chemical_property_logic']
         if chemical_property_logic != 'none':
             param_dict = {
@@ -104,7 +113,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
                 'O': 'max_chemprop_o',
                 'H': 'max_chemprop_h',
             }
-            max_natom_dict = {k: data[v] for k, v in param_dict if v in data}
+            max_natom_dict = {k: data[v] for k, v in param_dict.items() if v in data}
             max_natom_dict['logic'] = chemical_property_logic
         else:
             max_natom_dict = None
@@ -119,6 +128,15 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         else:
             min_chemical_history_dict = None
 
+        # Retrieve user specific blacklists
+        blacklisted_reactions = data.get('blacklisted_reactions', [])
+        forbidden_molecules = data.get('forbidden_molecules', [])
+        if request.user.is_authenticated:
+            blacklisted_reactions += list(set(
+                [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
+            forbidden_molecules += list(set(
+                [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
+
         result = get_buyable_paths_mcts.delay(
             data['smiles'],
             max_depth=data['max_depth'],
@@ -126,8 +144,8 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             expansion_time=data['expansion_time'],
             max_trees=500,
             max_ppg=data['max_ppg'],
-            known_bad_reactions=data.get('blacklisted_reactions'),
-            forbidden_molecules=data.get('forbidden_molecules'),
+            known_bad_reactions=blacklisted_reactions,
+            forbidden_molecules=forbidden_molecules,
             template_count=data['template_count'],
             max_cum_template_prob=data['max_cum_prob'],
             max_natom_dict=max_natom_dict,
@@ -139,7 +157,20 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             hashed=data.get('hashed_historian', data['template_set'] == 'reaxys'),
             return_first=data['return_first'],
             paths_only=True,
+            run_async=data['store_results']
         )
+
+        if data['store_results']:
+            now = timezone.now()
+            saved_result = SavedResults.objects.create(
+                user=request.user,
+                created=now,
+                dt=now.strftime('%B %d, %Y %H:%M:%S %p'),
+                result_id=result.id,
+                result_state='pending',
+                result_type='tree_builder',
+                description=data['description']
+            )
 
         return result
 

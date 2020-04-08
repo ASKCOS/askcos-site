@@ -49,7 +49,7 @@ class ContextRecommenderAPIView(CeleryTaskAPIView):
 
     serializer_class = ContextRecommenderSerializer
 
-    def execute(self, data):
+    def execute(self, request, data):
         """
         Execute context recommendation task.
         """
