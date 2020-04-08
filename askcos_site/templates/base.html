@@ -118,14 +118,7 @@
                     </ul>
                 </li>
 
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-ban-circle"></span> My Banlist
-                    <span class="caret"></span></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="{% url 'user_blacklisted_reactions' %}">View banned reactions</a></li>
-                        <li><a href="{% url 'user_blacklisted_chemicals' %}">View banned chemicals</a></li>
-                    </ul>
-                </li>
+                <li><a href="{% url 'user_blacklist' %}"><span class="glyphicon glyphicon-ban-circle"></span> My Banlist</a></li>
                 {% endif %}
 
                 <li><a href="/status/"><span class="glyphicon glyphicon-tasks"></span> Server Status</a></li>
