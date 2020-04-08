@@ -572,11 +572,10 @@ var app = new Vue({
                         this.tb.poll = setTimeout(() => this.pollForTbResult(), 1000)
                         notificationOptions = {
                             requireInteraction: true,
-                            body: "The job will run in the background. You can manually explore until the results are ready, at which time you will see a new notification. Click here to make a one-step prediction for your target."
+                            body: "The job will run in the background. You will see a new notification when the job completes."
                         }
                         app = this
                         this.makeNotification("Tree builder job submitted!", notificationOptions, (event) => {
-                            app.changeTarget()
                             this.close()
                         })
                     }
