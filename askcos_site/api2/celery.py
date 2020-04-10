@@ -37,6 +37,10 @@ class CeleryTaskViewSet(GenericViewSet):
     - `output`: output of celery task if complete
     """
 
+    def list(self, request):
+        """Default behavior for GET request. Not supported."""
+        return Response({'detail': 'Celery task list view not supported.'}, status=405)
+
     def retrieve(self, request, pk):
         """
         Get the status and result of a single celery task by task_id.
