@@ -13,18 +13,21 @@ function getCookie(cname) {
     return undefined;
 }
 
+Vue.component('modal', {
+    template: '#modal-template'
+});
+
 new Vue({
     el: "#app",
     data: {
         activeItem: 'chemicals',
         chemicals: [],
         reactions: [],
-        newChemicalSmiles: '',
-        newChemicalDesc: '',
-        newChemicalActive: true,
-        newReactionSmiles: '',
-        newReactionDesc: '',
-        newReactionActive: true,
+        showAddModal: false,
+        newSmiles: '',
+        newDesc: '',
+        newActive: true,
+        newType: 'chemicals',
     },
     created: function() {
         this.loadChemicals();
@@ -57,13 +60,13 @@ new Vue({
                 }
             })
         },
-        addChemical: function () {
+        addEntry: function () {
             var body = {
-                smiles: this.newChemicalSmiles,
-                description: this.newChemicalDesc,
-                active: this.newChemicalActive,
+                smiles: this.newSmiles,
+                description: this.newDesc || 'no description',
+                active: this.newActive,
             };
-            fetch('/api/v2/blacklist/chemicals/', {
+            fetch(`/api/v2/blacklist/${this.newType}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -71,31 +74,24 @@ new Vue({
                 },
                 body: JSON.stringify(body)
             })
-                .then(resp => resp.json())
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp.json();
+                })
                 .then(json => {
                     json.created = dayjs(json.created).format('MMMM D, YYYY h:mm A');
-                    this.chemicals.push(json)
+                    this.showAddModal = false;
+                    if ( this.newType === 'chemicals') {
+                        this.chemicals.push(json);
+                        this.activeItem = 'chemicals'
+                    } else {
+                        this.reactions.push(json);
+                        this.activeItem = 'reactions'
+                    }
                 })
-        },
-        addReaction: function () {
-            var body = {
-                smiles: this.newReactionSmiles,
-                description: this.newReactionDesc,
-                active: this.newReactionActive,
-            };
-            fetch('/api/v2/blacklist/reactions/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(body)
-            })
-                .then(resp => resp.json())
-                .then(json => {
-                    json.created = dayjs(json.created).format('MMMM D, YYYY h:mm A');
-                    this.reactions.push(json)
-                })
+                .catch(error => console.log(error))
         },
         deleteChemical: function (id) {
             this.deleteEntry(id, 'chemicals')
