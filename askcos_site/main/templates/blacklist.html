@@ -106,6 +106,19 @@
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div id="chemicals" class="tab-pane fade" :class="{ 'in active': isActive('chemicals') }">
+                    <div class="col-12 text-right" style="margin: 10px 0">
+                        <div>
+                            <label class="radio-inline">
+                                <input type="radio" value="all" v-model="filterActive">All
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="active" v-model="filterActive">Active
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="inactive" v-model="filterActive">Inactive
+                            </label>
+                        </div>
+                    </div>
 
                     <table class="table table-hover" style="table-layout: fixed">
                         <thead>
@@ -118,7 +131,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template v-for="doc in chemicals">
+                            <template v-for="doc in filteredChemicals">
                                 <tr>
                                     <td>
                                         <i v-if="doc.active" @click="deactivateChemical(doc.id)" class="far fa-check-circle" style="cursor: pointer;"></i>
@@ -141,6 +154,19 @@
                     </table>
                 </div>
                 <div id="reactions" class="tab-pane fade" :class="{ 'in active': isActive('reactions') }">
+                    <div class="col-12 text-right" style="margin: 10px 0">
+                        <div>
+                            <label class="radio-inline">
+                                <input type="radio" value="all" v-model="filterActive">All
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="active" v-model="filterActive">Active
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="inactive" v-model="filterActive">Inactive
+                            </label>
+                        </div>
+                    </div>
 
                     <table class="table table-hover" style="table-layout: fixed">
                         <thead>
@@ -153,7 +179,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template v-for="doc in reactions">
+                            <template v-for="doc in filteredReactions">
                                 <tr>
                                     <td>
                                         <i v-if="doc.active" @click="deactivateReaction(doc.id)" class="far fa-check-circle" style="cursor: pointer;"></i>

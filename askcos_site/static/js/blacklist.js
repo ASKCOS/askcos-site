@@ -17,7 +17,7 @@ Vue.component('modal', {
     template: '#modal-template'
 });
 
-new Vue({
+Vue({
     el: "#app",
     data: {
         activeItem: 'chemicals',
@@ -28,10 +28,31 @@ new Vue({
         newDesc: '',
         newActive: true,
         newType: 'chemicals',
+        filterActive: 'all',
     },
     created: function() {
         this.loadChemicals();
         this.loadReactions();
+    },
+    computed: {
+        filteredChemicals: function () {
+            if (this.filterActive === 'active') {
+                return this.chemicals.filter(entry => entry.active)
+            } else if (this.filterActive === 'inactive') {
+                return this.chemicals.filter(entry => !entry.active)
+            } else {
+                return this.chemicals
+            }
+        },
+        filteredReactions: function () {
+            if (this.filterActive === 'active') {
+                return this.reactions.filter(entry => entry.active)
+            } else if (this.filterActive === 'inactive') {
+                return this.reactions.filter(entry => !entry.active)
+            } else {
+                return this.reactions
+            }
+        },
     },
     methods: {
         isActive: function (menuItem) {
