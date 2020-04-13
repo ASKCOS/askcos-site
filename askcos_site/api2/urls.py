@@ -33,6 +33,6 @@ urlpatterns += [
 
     path('token-auth/', obtain_jwt_token, name='token_auth_api'),
     path('token-refresh/', refresh_jwt_token, name='token_refresh_api'),
-
-    path('', api2.root.apiroot, name='root_api'),
 ]
+
+urlpatterns.append(path('', api2.root.RootAPIView.as_view(namespace=app_name, urlpatterns=urlpatterns), name='root_api'))
