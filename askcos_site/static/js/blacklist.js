@@ -17,7 +17,7 @@ Vue.component('modal', {
     template: '#modal-template'
 });
 
-Vue({
+var app = new Vue({
     el: "#app",
     data: {
         activeItem: 'chemicals',
