@@ -28,6 +28,10 @@ class TemplateViewSet(ViewSet):
     - JSON format Reaxys query
     """
 
+    def list(self, request):
+        """Default behavior for GET request. Not supported."""
+        return Response({'detail': 'Template list view not supported.'}, status=405)
+
     def retrieve(self, request, pk):
         """Return single template entry by mongo _id."""
         resp = {'error': None, 'template': None}

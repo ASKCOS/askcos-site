@@ -11,6 +11,7 @@ from . import rdkit
 from . import reactions
 from . import results
 from . import retro
+from . import root
 from . import scscore
 from . import selectivity
 from . import template

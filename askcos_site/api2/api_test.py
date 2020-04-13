@@ -660,6 +660,11 @@ M  END
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
 
+    def test_root(self):
+        """Test / endpoint"""
+        response = self.get('/')
+        self.assertEqual(response.status_code, 200)
+
     def test_scscore(self):
         """Test /scscore endpoint"""
         data = {
