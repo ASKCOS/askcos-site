@@ -40,9 +40,9 @@ def configure_worker(options={}, **kwargs):
 
 
 @shared_task
-def get_outcomes(reactants, top_n=10):
+def get_outcomes(reactants, top_n=10, atommap=False):
     global tffp
-    mapped_smiles, results = tffp.predict(reactants, top_n=top_n)
+    mapped_smiles, results = tffp.predict(reactants, top_n=top_n, atommap=atommap)
     results_to_return = {}
     original_reactants = reactants.split('.')
     for res in results:
