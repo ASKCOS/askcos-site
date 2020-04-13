@@ -109,6 +109,13 @@ DATABASES = {'default': {
     'PORT': '3306',
 }}
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ]
+}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

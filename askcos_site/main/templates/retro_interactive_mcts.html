@@ -280,64 +280,50 @@ $('#results').on('click', '.blacklistrxn', function () {
       alert('You must be logged in to blacklist a reaction!')
       return
     {% endif %}
-    console.log('trying to blacklist a reaction');
     var smiles = $(this).attr("smiles");
-    console.log(smiles);
     var desc = prompt("Please enter a reason (for your records only)", "no reason");
-    if (desc) {
-        var now = Date.now();
-        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
-        $.ajax({
-            type: 'POST',
-            url: '/ajax/user_blacklist_reaction/',
-            data: {
-                smiles: smiles,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                desc: desc,
-                datetime: datetime,
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.err) {
-                    alert(data.err);
-                } else {
-                    alert('Blacklisted reaction "' + smiles + '" at ' + datetime);
-                }
-            }
-        });
+    const body = {
+        smiles: smiles,
+        description: desc,
     };
+    fetch('/api/v2/blacklist/reactions/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(body)
+    })
+        .then(resp => resp.json())
+        .then(json => {
+            const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+            alert(`Blacklisted reaction ${smiles} at ${datetime}`)
+        });
 });
 $('#results').on('click', '.blacklistchem', function () {
     {% if not logged_in %}
       alert('You must be logged in to blacklist a chemical!')
       return
     {% endif %}
-    console.log('trying to blacklist a chemical');
     var smiles = $(this).attr("smiles");
-    console.log(smiles);
     var desc = prompt("Please enter a reason (for your records only)", "no reason");
-    if (desc) {
-        var now = Date.now();
-        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
-        $.ajax({
-            type: 'POST',
-            url: '/ajax/user_blacklist_chemical/',
-            data: {
-                smiles: smiles,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                desc: desc,
-                datetime: datetime,
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.err) {
-                    alert(data.err);
-                } else {
-                    alert('Blacklisted chemical "' + smiles + '" at ' + datetime);
-                }
-            }
-        });
+    const body = {
+        smiles: smiles,
+        description: desc,
     };
+    fetch('/api/v2/blacklist/chemicals/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(body)
+    })
+        .then(resp => resp.json())
+        .then(json => {
+            const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+            alert(`Blacklisted chemical ${smiles} at ${datetime}`)
+        });
 });
 
 $('#expand-width').click(function() {

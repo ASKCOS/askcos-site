@@ -26,6 +26,10 @@
     - [Main results endpoint](#main-results-endpoint)
     - [Specific result endpoint](#specific-result-endpoint)
     - [Check result endpoint](#check-result-endpoint)
+- [Blacklist API](#blacklist-api)
+    - [Main blacklist endpoints](#main-blacklist-endpoints)
+    - [Specific blacklist entry endpoints](#specific-blacklist-entry-endpoints)
+    - [Blacklist entry activation/deactivation endpoints](#blacklist-entry-activationdeactivation-endpoints)
 - [Authentication Token API](#authentication-token-api)
     - [Request token](#request-token)
     - [Refresh token](#refresh-token)
@@ -227,7 +231,7 @@ Parameters:
 - `hashed_historian` (bool, optional): whether historian entries are hashed
 - `return_first` (bool, optional): whether to return upon finding the first pathway
 - `blacklisted_reactions` (list, optional): list of reactions to not consider
-- `forbidden_molecules` (list, optional): list of molecules to not consider
+- `blacklisted_chemicals` (list, optional): list of molecules to not consider
 
 Returns:
 
@@ -425,7 +429,7 @@ The API endpoints in this section are for accessing saved results.
 Note that these are different from the celery task results.
 Currently, saved results include async tree builder jobs submitted via the web client
 and any web pages which have been manually saved.
-User authentication is required to access these endpoints
+User authentication is required to access these endpoints.
 
 ### Main results endpoint
 API endpoint for accessing a user's job results.
@@ -471,6 +475,72 @@ Returns:
 
 - `state`: current state of the job
 - `error`: error message if encountered
+
+
+## Blacklist API
+The API endpoints in this section are for accessing and modifying user chemical and reaction blacklists.
+User authentication is required to access these endpoints.
+
+### Main blacklist endpoints
+
+URLs:
+
+- `/api/v2/blacklist/chemicals`
+- `/api/v2/blacklist/reactions`
+
+Method: GET
+
+Returns: list of blacklisted chemical or reaction entries belonging to the currently authenticated user
+
+Method: POST
+
+Parameters:
+
+- `smiles` (str): chemical or reaction SMILES string to be added
+- `description` (str, optional): text description
+- `datetime` (str, optional): timestamp, default current time
+- `active` (bool, optional): whether this entry is active, default true
+
+Returns: created entry
+
+### Specific blacklist entry endpoints
+API endpoints for accessing or deleting a particular blacklist entry.
+The entry ID can be obtained from the main blacklist endpoints.
+
+URLs:
+
+- `/api/v2/blacklist/chemicals/<id>`
+- `/api/v2/blacklist/reactions/<id>`
+
+Method: GET
+
+Returns: entry with requested id
+
+Method: DELETE
+
+Returns:
+
+- `success`: true if successfully deleted
+- `data`: data from deleted entry
+
+### Blacklist entry activation/deactivation endpoints
+API endpoints for activating or deactivating a particular blacklist entry.
+The entry ID can be obtained from the main blacklist endpoints.
+
+URLs:
+
+- `/api/v2/blacklist/chemicals/<id>/activate`
+- `/api/v2/blacklist/chemicals/<id>/deactivate`
+- `/api/v2/blacklist/reactions/<id>/activate`
+- `/api/v2/blacklist/reactions/<id>/deactivate`
+
+
+Method: GET
+
+Returns:
+
+- `success`: true if successfully activated
+- `data`: updated entry data
 
 
 ## Authentication Token API

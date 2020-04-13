@@ -332,35 +332,32 @@ var app = new Vue({
         var nodeId = this.network.getSelectedNodes();
         if (!nodeId.length) { return }
         var desc = prompt("Please enter a reason (for your records only)", "no reason");
-        var now = Date.now();
-        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
-        node = this.networkData.nodes.get(nodeId[0]);
-        if (node['type'] == 'chemical') {
-            var url =   '/ajax/user_blacklist_chemical/'
+        var node = this.networkData.nodes.get(nodeId[0]);
+        if (node['type'] === 'chemical') {
+            var url =  '/api/v2/blacklist/chemicals/'
             var speciesName = 'chemical'
         }
         else {
-            var url = '/ajax/user_blacklist_reaction/'
+            var url = '/api/v2/blacklist/reactions/'
             var speciesName = 'reaction'
         }
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: {
-                smiles: node.smiles,
-                csrfmiddlewaretoken: csrftoken,
-                desc: desc,
-                datetime: datetime,
+        const body = {
+            smiles: node.smiles,
+            description: desc,
+        };
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
             },
-            dataType: 'json',
-            success: function (data) {
-                if (data.err) {
-                    alert(data.err);
-                } else {
-                    alert(`Blacklisted ${speciesName} ${node.smiles} at ${datetime}`)
-                }
-            }
+            body: JSON.stringify(body)
         })
+            .then(resp => resp.json())
+            .then(json => {
+                const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+                alert(`Blacklisted ${speciesName} ${node.smiles} at ${datetime}`)
+            });
       },
       showNode: function(nodeId) {
         var node = this.networkData.nodes.get(nodeId)
