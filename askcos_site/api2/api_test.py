@@ -371,6 +371,79 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
                                            'products': ['Cannot parse products smiles with rdkit.']})
 
+    def test_drawing(self):
+        """Test /draw endpoint"""
+        expected = {'smiles': ['This field is required.']}
+        response = self.get('/draw/')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), expected)
+        response = self.post('/draw/')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), expected)
+
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'input_type': 'invalid',
+        }
+        expected = {'input_type': ["Valid input types: ['chemical', 'reaction', 'template']"]}
+        response = self.get('/draw/', params=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), expected)
+        response = self.post('/draw/', data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), expected)
+
+        tests = [
+            # Test chemical smiles
+            {
+                'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            },
+            # Test transparent chemical smiles
+            {
+                'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+                'transparent': True,
+            },
+            # Test reaction smiles
+            {
+                'smiles': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1',
+            },
+            # Test mapped reaction smiles
+            {
+                'smiles': '[CH3:1][N:2]([CH3:3])[CH2:4][CH2:5][Cl:6].[OH:7][CH:8]([c:9]1[cH:10][cH:11][cH:12][cH:13][cH:14]1)[c:15]1[cH:16][cH:17][cH:18][cH:19][cH:20]1>>[CH3:1][N:2]([CH3:3])[CH2:4][CH2:5][O:7][CH:8]([c:9]1[cH:10][cH:11][cH:12][cH:13][cH:14]1)[c:15]1[cH:16][cH:17][cH:18][cH:19][cH:20]1',
+                'draw_mapped': True,
+            },
+            # Test highlighted reaction smiles
+            {
+                'smiles': '[CH3:1][N:2]([CH3:3])[CH2:4][CH2:5][Cl:6].[OH:7][CH:8]([c:9]1[cH:10][cH:11][cH:12][cH:13][cH:14]1)[c:15]1[cH:16][cH:17][cH:18][cH:19][cH:20]1>>[CH3:1][N:2]([CH3:3])[CH2:4][CH2:5][O:7][CH:8]([c:9]1[cH:10][cH:11][cH:12][cH:13][cH:14]1)[c:15]1[cH:16][cH:17][cH:18][cH:19][cH:20]1',
+                'highlight': True,
+            },
+            # Test template smarts
+            {
+                'smiles': '[#7:1]-[C:2](=[O;D1;H0:3])-[CH;@;D3;+0:4]1-[CH2;D2;+0:5]-[CH;@;D3;+0:9](-[C:7](-[#8:6])=[O;D1;H0:8])-[NH;D2;+0:10]-[CH;@;D3;+0:11]-1-[c:12]>>[#7:1]-[C:2](=[O;D1;H0:3])-[CH;D2;+0:4]=[CH2;D1;+0:5].[#8:6]-[C:7](=[O;D1;H0:8])-[CH2;D2;+0:9]/[N;H0;D2;+0:10]=[CH;D2;+0:11]/[c:12]',
+            },
+            # Test site selectivity drawing
+            {
+                'smiles': 'Cc1ccccc1',
+                'highlight': True,
+                'reacting_atoms': [
+                    1.4901161193847656e-07,
+                    2.9802322387695312e-08,
+                    0.32867664098739624,
+                    0.0002092421054840088,
+                    0.9734209775924683,
+                    0.00020927190780639648,
+                    0.32867667078971863
+                ]
+            },
+        ]
+
+        for data in tests:
+            response1 = self.get('/draw/', params=data)
+            self.assertEqual(response1.status_code, 200)
+            response2 = self.post('/draw/', data=data)
+            self.assertEqual(response2.status_code, 200)
+            self.assertEqual(response1.content, response2.content)
+
     def test_fast_filter(self):
         """Test /fast-filter endpoint"""
         data = {

@@ -590,6 +590,31 @@ Returns:
 
 - `queues`: list of worker information for each celery queue
 
+### Drawing
+API endpoint for drawing molecules, reactions, and templates.
+
+Notes:
+
+- Both GET and POST requests are possible. GET requests may be easier
+  for simple linking, while POST requests are better for complex data.
+- If `input_type` is not specified, will attempt to determine type.
+  Specifying `input_type` can provide faster results.
+
+URL: `/api/v2/draw`
+
+Method: GET, POST
+
+Parameters:
+
+- `smiles` (str): input SMILES (or SMARTS) string
+- `input_type` (str, optional): one of 'chemical', 'reaction', or 'template'
+- `transparent` (bool, optional): whether background should be transparent (chemical only)
+- `draw_map` (bool, optional): whether atom mapping should be drawn (reaction only)
+- `highlight` (bool, optional): whether to highlight mapped atoms (reaction or chemical)
+- `reacting_atoms` (list, optional): list of atom scores to highlight and label (chemical only)
+
+Returns: PNG image of input SMILES
+
 ### Reaction clustering
 API endpoint for clustering similar transformed outcomes
 
