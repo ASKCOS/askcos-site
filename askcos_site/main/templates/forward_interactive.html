@@ -180,7 +180,7 @@ Synthesis Predictor
                                     </span>
                                 </div>
                                 <div v-if="!!reagents" class="text-center">
-                                    <img class ="hide-broken" :src='"/draw/smiles/"+encodeURIComponent(reagents)' :alt="reagents">
+                                    <img class ="hide-broken" :src='"/api/v2/draw/?smiles="+encodeURIComponent(reagents)' :alt="reagents">
                                 </div>
                             </div>
                             
@@ -193,7 +193,7 @@ Synthesis Predictor
                                     </span>
                                 </div>
                                 <div v-if="!!solvent" class="text-center">
-                                    <img class ="hide-broken" :src='"/draw/smiles/"+encodeURIComponent(solvent)' :alt="solvent">
+                                    <img class ="hide-broken" :src='"/api/v2/draw/?smiles="+encodeURIComponent(solvent)' :alt="solvent">
                                 </div>
                             </div>
                         </div>
@@ -243,21 +243,21 @@ Synthesis Predictor
                             <tr>
                                 <td>Reagents:</td>
                                 <td colspan=5>
-                                    <img v-if="!!result.reagent" :src='"/draw/smiles/"+encodeURIComponent(result.reagent)' :alt="result.reagent">
+                                    <img v-if="!!result.reagent" :src='"/api/v2/draw/?smiles="+encodeURIComponent(result.reagent)' :alt="result.reagent">
                                     <span v-else>none</span>
                                 </td>
                             </tr>
                             <tr>
                                 <td>Catalyst:</td>
                                 <td colspan=5>
-                                    <img v-if="!!result.catalyst" :src='"/draw/smiles/"+encodeURIComponent(result.catalyst)' :alt="result.catalyst">
+                                    <img v-if="!!result.catalyst" :src='"/api/v2/draw/?smiles="+encodeURIComponent(result.catalyst)' :alt="result.catalyst">
                                     <span v-else>none</span>
                                 </td>
                             </tr>
                             <tr>
                                 <td>Solvents:</td>
                                 <td colspan=5>
-                                    <img v-if="!!result.solvent" :src='"/draw/smiles/"+encodeURIComponent(result.solvent)' :alt="result.solvent">
+                                    <img v-if="!!result.solvent" :src='"/api/v2/draw/?smiles="+encodeURIComponent(result.solvent)' :alt="result.solvent">
                                     <span v-else>none</span>
                                 </td>
                             </tr>
@@ -293,7 +293,7 @@ Synthesis Predictor
                             <tr>
                                 <td class="text-center">%% res.rank %%</td>
                                 <td class="text-center">
-                                    <img :src='"/draw/smiles/"+encodeURIComponent(res.smiles)' :alt="res.smiles">
+                                    <img :src='"/api/v2/draw/?smiles="+encodeURIComponent(res.smiles)' :alt="res.smiles">
                                 </td>
                                 <td class="text-center">%% (Math.round((res.prob + Number.EPSILON) * 10000) / 10000).toFixed(4) %%</td>
                                 <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
@@ -336,7 +336,7 @@ Synthesis Predictor
                                 <td>%% outcome.no %%</td>
                                 <td>
                                     <center>
-                                        <img :src='"/draw/smiles/"+encodeURIComponent(outcome.prd_smiles)' :alt="outcome.prd_smiles"><br>
+                                        <img :src='"/api/v2/draw/?smiles="+encodeURIComponent(outcome.prd_smiles)' :alt="outcome.prd_smiles"><br>
                                         <font class="smiles">%% outcome.prd_smiles %%</font>
                                     </center>
                                 </td>
