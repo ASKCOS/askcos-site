@@ -39,7 +39,7 @@
               Target: %% settings.smiles %%
             </div>
             <div class="text-center">
-              <img v-if="settings.smiles" :src="'/draw/smiles/'+encodeURIComponent(settings.smiles)">
+              <img v-if="settings.smiles" :src="'/api/v2/draw/?smiles='+encodeURIComponent(settings.smiles)">
             </div>
       </div>
       <table class="table">
@@ -132,18 +132,14 @@
               </div>
               <div><b>As reactant: </b>%% selected.as_reactant %%</div>
               <div><b>As product: </b>%% selected.as_product %%</div>
-<<<<<<< HEAD
-              <div><a :href="'/retro_interactive_mcts/target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with new tree builder job</a></div>
-=======
               <div><a :href="'/retro/network/?target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with the Interactive Path Planner</a></div>
->>>>>>> 63f4d819... fix target url
             </div>
           </template>
           <template v-if="selected.type=='reaction'">
               <div class="text-center">
                   <div><b>Smiles: </b>%% selected.smiles %%</div>
                   <div style="margin-bottom: 10px">
-                      <img :src="'/draw/reaction/'+encodeURIComponent(selected.smiles)" style="max-width: 100%" />
+                      <img :src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.smiles)" style="max-width: 100%" />
                   </div>
               </div>
               <div class="text-left">

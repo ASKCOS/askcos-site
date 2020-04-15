@@ -167,7 +167,7 @@ Synthesis Predictor
                         </div>
 
                         <div v-if="!!reactants" class="row text-center">
-                            <img class ="hide-broken" :src='"/draw/reaction/"+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
+                            <img class ="hide-broken" :src='"/api/v2/draw/?smiles="+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
                         </div>
 
                         <div class="row" v-show="mode!='context'">
