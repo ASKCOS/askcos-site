@@ -86,7 +86,7 @@ function ctaToNode(cta, id) {
             type: 'chemical',
             ppg: cta.ppg,
             smiles: cta.smiles,
-            image: "/draw/smiles/"+encodeURIComponent(cta.smiles),
+            image: "/api/v2/draw/?smiles="+encodeURIComponent(cta.smiles),
             shape: 'image',
             borderWidth: 2
         }
@@ -1424,16 +1424,19 @@ var app = new Vue({
                 }
             }
             if (isHighlight && mapped_smiles != undefined && reacting_atoms != undefined) {
-                var res = '/draw/highlight/smiles='+encodeURIComponent(mapped_smiles)+'&reacting_atoms='+encodeURIComponent('['+reacting_atoms.toString()+']')+'&bonds=0'
+                var res = `/api/v2/draw/?smiles=${encodeURIComponent(mapped_smiles)}&highlight=true`
+                for (ra of reacting_atoms) {
+                    res += `&reacting_atoms=${ra}`
+                }
             } else {
                 if (smiles == undefined) {
                     console.log('Error: cannot plot precursor='+precursor)
                     return ''
                 }
-                var res = '/draw/smiles/' + encodeURIComponent(smiles);
+                var res = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
             }
             if (isTransparent) {
-                res += '?transparent=1';
+                res += '&transparent=true';
             }
             return res;
         },

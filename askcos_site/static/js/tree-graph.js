@@ -72,7 +72,7 @@ function makeNode(child, id) {
     node['id'] = id
     node['ppg'] = child['ppg']
     node['smiles'] = child['smiles']
-    node['image'] = "/draw/smiles/"+encodeURIComponent(child['smiles'])
+    node['image'] = "/api/v2/draw/?smiles="+encodeURIComponent(child['smiles'])
     node['shape'] = "image"
     node['type'] = 'chemical'
     var buyableString = (Number(child['ppg'])) ? '$'+child['ppg']+'/g' : 'not buyable'
