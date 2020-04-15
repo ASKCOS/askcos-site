@@ -20,7 +20,6 @@ CELERY_TASK_QUEUES = [
 CELERY_BROKER_HEARTBEAT = 0
 
 # global max priority setting
-CELERY_TASK_ACKS_LATE = True
 CELERYD_PREFETCH_MULTIPLIER = 1
 
 # Task routes (to make sure workers are task-specific)
