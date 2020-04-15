@@ -132,7 +132,11 @@
               </div>
               <div><b>As reactant: </b>%% selected.as_reactant %%</div>
               <div><b>As product: </b>%% selected.as_product %%</div>
+<<<<<<< HEAD
               <div><a :href="'/retro_interactive_mcts/target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with new tree builder job</a></div>
+=======
+              <div><a :href="'/retro/network/?target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with the Interactive Path Planner</a></div>
+>>>>>>> 63f4d819... fix target url
             </div>
           </template>
           <template v-if="selected.type=='reaction'">

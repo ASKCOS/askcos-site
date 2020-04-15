@@ -903,7 +903,7 @@
                                                         Click to copy!
                                                     </span>
                                                 </div>
-                                                <img v-bind:src="'/draw/reaction/'+encodeURIComponent(selected.reactionSmiles)" style="max-width: 100%"/>
+                                                <img v-bind:src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.reactionSmiles)" style="max-width: 100%"/>
                                             </div>
                                             <div class="text-center" style="margin: 10px 0">
                                                 <a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.reactionSmiles)" target="_blank">
