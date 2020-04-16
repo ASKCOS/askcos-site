@@ -136,9 +136,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         numExamples: num2str(reaction['num_examples']),
         templateIds: reaction['templates'],
         reactionSmiles: reaction.smiles+'>>'+sourceNode.smiles,
-        type: 'reaction',
-        value: 1,
-        mass: 1
+        type: 'reaction'
     })
     if (edges.max('id')) {
         var eId = edges.max('id').id+1
@@ -150,18 +148,18 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         id: eId,
         from: sourceNode.id,
         to: rId,
-                scaling: {
-                    min: 1,
-                    max: 5,
-                    customScalingFunction: function(min, max, total, value) {
-                        if (value > 0.25) {
-                            return 1.0
-                        }
-                        else{
-                            return 16*value*value
-                        }
-                    }
-                },
+        scaling: {
+            min: 1,
+            max: 5,
+            customScalingFunction: function(min, max, total, value) {
+                if (value > 0.25) {
+                    return 1.0
+                }
+                else{
+                    return 16*value*value
+                }
+            }
+        },
         color: {
             color: '#000000',
             inherit: false
@@ -198,8 +196,6 @@ function addReaction(reaction, sourceNode, nodes, edges) {
                 shape: "image",
                 borderWidth: 2,
                 type: 'chemical',
-                mass: 1,
-                value: 10,
                 ppg: ppg,
                 source: source,
                 color: {
@@ -305,6 +301,10 @@ function clusteredit_dragleave_handler(event) {
 
 Vue.component('modal', {
     template: '#modal-template'
+})
+
+Vue.component('settings-modal', {
+    template: '#modal-template-settings'
 })
 
 var app = new Vue({
@@ -435,6 +435,9 @@ var app = new Vue({
             nodes: {
                 mass: 1,
                 size: 25,
+                font: {
+                    size: 14,
+                },
                 color: {
                     border: '#000000',
                     background: '#FFFFFF'
@@ -452,8 +455,8 @@ var app = new Vue({
                     blockShifting: true,
                     edgeMinimization: true,
                     parentCentralization: true,
-                    direction: 'UD',        // UD, DU, LR, RL
-                    sortMethod: 'hubsize',  // hubsize, directed
+                    direction: 'UD',
+                    sortMethod: 'directed',
                 }
             },
             interaction:{
@@ -546,6 +549,11 @@ var app = new Vue({
                 ctx.restore();
             })
         },
+        centerGraph() {
+            if (!!this.network) {
+                this.network.fit()
+            }
+        },
         loadJSONCookie(key, obj) {
             cookie = getCookie(key)
             obj = JSON.parse(decodeURIComponent(cookie))
@@ -629,8 +637,9 @@ var app = new Vue({
             this.saveNetworkOptionsCookie()
             this.saveTbSettingsCookie()
             this.saveTargetCookie()
+            var description = this.tb.settings.name ? this.tb.settings.name : this.target
             var body = {
-                description: this.tb.settings.name,
+                description: description,
                 smiles: this.target,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer: this.tb.settings.templateSet,
@@ -879,11 +888,18 @@ var app = new Vue({
                 alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
             })
         },
+        updateNetworkOptions(reInit) {
+            if (typeof(this.network) != 'undefined') {
+                this.network.setOptions(JSON.parse(JSON.stringify(this.networkOptions)))
+                if (reInit) {
+                    this.initializeNetwork(this.data)
+                }
+            }
+            
+        },
         toggleHierarchical: function() {
-          this.networkOptions.layout.hierarchical.enabled = !this.networkOptions.layout.hierarchical.enabled
-          if (typeof(this.network) != 'undefined') {
-            this.network.setOptions(JSON.parse(JSON.stringify(this.networkOptions)))
-          }
+            this.networkOptions.layout.hierarchical.enabled = !this.networkOptions.layout.hierarchical.enabled
+            this.updateNetworkOptions()
         },
         expandNode: function() {
             if (this.isModalOpen() || typeof(this.network) == "undefined") {
@@ -940,6 +956,7 @@ var app = new Vue({
                     this.getTemplateNumExamples(this.results[smi]);
                     this.selected = node;
                     this.reorderResults();
+                    this.network.fit()
                     hideLoader();
                 })
                 .catch(error => {
@@ -1667,8 +1684,6 @@ var app = new Vue({
                 shape: "image",
                 borderWidth: 3,
                 type: 'chemical',
-                value: 15,
-                mass: 2,
                 color: {
                     border: '#000088'
                 }
