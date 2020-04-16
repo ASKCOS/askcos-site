@@ -228,8 +228,9 @@ Parameters:
 - `filter_threshold` (float, optional): fast filter threshold
 - `template_prioritizer` (str, optional): template prioritization model to use
 - `template_set` (str, optional): template set to use
-- `hashed_historian` (bool, optional): whether historian entries are hashed
 - `return_first` (bool, optional): whether to return upon finding the first pathway
+- `store_results` (bool, optional): whether to permanently save this result
+- `description` (str, optional): description to associate with stored result
 - `blacklisted_reactions` (list, optional): list of reactions to not consider
 - `blacklisted_chemicals` (list, optional): list of molecules to not consider
 

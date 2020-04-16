@@ -31,7 +31,6 @@ class TreeBuilderSerializer(serializers.Serializer):
     filter_threshold = serializers.FloatField(default=0.75)
     template_prioritizer = serializers.CharField(default='reaxys')
     template_set = serializers.CharField(default='reaxys')
-    hashed_historian = serializers.BooleanField(required=False)
     return_first = serializers.BooleanField(default=True)
 
     store_results = serializers.BooleanField(default=False)
@@ -139,8 +138,9 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_prioritizer` (str, optional): template prioritization model to use
     - `template_set` (str, optional): template set to use
-    - `hashed_historian` (bool, optional): whether historian entries are hashed
     - `return_first` (bool, optional): whether to return upon finding the first pathway
+    - `store_results` (bool, optional): whether to permanently save this result
+    - `description` (str, optional): description to associate with stored result
     - `blacklisted_reactions` (list, optional): list of reactions to not consider
     - `blacklisted_chemicals` (list, optional): list of molecules to not consider
 
@@ -207,7 +207,6 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             filter_threshold=data['filter_threshold'],
             template_prioritizer=data['template_prioritizer'],
             template_set=data['template_set'],
-            hashed=data.get('hashed_historian', data['template_set'] == 'reaxys'),
             return_first=data['return_first'],
             paths_only=True,
             run_async=data['store_results']
