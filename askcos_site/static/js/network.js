@@ -375,9 +375,9 @@ var app = new Vue({
         tb: {
             settings: {
                 quick: "normal",
-                maxDepth: 4,
+                maxDepth: 5,
                 maxBranching: 20,
-                expansionTime: 30,
+                expansionTime: 60,
                 maxPPG: 100,
                 chemicalPropertyLogic: 'none',
                 chemicalPropertyC: 0,
@@ -387,7 +387,45 @@ var app = new Vue({
                 chemicalPopularityLogic: 'none',
                 chemicalPopularityReactants: 0,
                 chemicalPopularityProducts: 0,
-                returnFirst: false
+                returnFirst: false,
+                modes: {
+                    quickest: {
+                        maxDepth: 4,
+                        expansionTime: 30,
+                        returnFirst: true,
+                        maxBranching: 20,
+                        numTemplates: 100,
+                        maxCumProb: 0.995,
+                        minPlausibility: 0.001
+                    },
+                    shallow: {
+                        maxDepth: 4,
+                        expansionTime: 30,
+                        returnFirst: false,
+                        maxBranching: 20,
+                        numTemplates: 100,
+                        maxCumProb: 0.995,
+                        minPlausibility: 0.75
+                    },
+                    normal: {
+                        maxDepth: 5,
+                        expansionTime: 60,
+                        returnFirst: false,
+                        maxBranching: 20,
+                        numTemplates: 1000,
+                        maxCumProb: 0.999,
+                        minPlausibility: 0.1
+                    },
+                    deep: {
+                        maxDepth: 6,
+                        expansionTime: 120,
+                        returnFirst: false,
+                        maxBranching: 25,
+                        numTemplates: 1000,
+                        maxCumProb: 0.9909,
+                        minPlausibility: 0.01
+                    }
+                }
             },
             redirectToGraph: false
         },
@@ -426,7 +464,7 @@ var app = new Vue({
         precursorScoring: "RelevanceHeuristic",
         numTemplates: 1000,
         maxCumProb: 0.999,
-        minPlausibility: 0.01,
+        minPlausibility: 0.1,
         sortingCategory: "score",
         networkHierarchical: false
     },
@@ -467,54 +505,35 @@ var app = new Vue({
             this.window.height = window.innerHeight;
         },
         tbSettings(mode) {
-            if (mode == "quickest") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 4
-                this.tb.settings.expansionTime = 30
-                this.tb.settings.returnFirst = true
-                this.tb.settings.maxBranching = 20
-                this.numTemplates = 100
-                this.maxCumProb = 0.995
-                this.minPlausibility = 0.001
-            }
-            else if (mode == "shallow") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 4
-                this.tb.settings.expansionTime = 30
-                this.tb.settings.returnFirst = false
-                this.tb.settings.maxBranching = 20
-                this.numTemplates = 100
-                this.maxCumProb = 0.995
-                this.minPlausibility = 0.75
-            }
-            else if (mode == "normal") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 5
-                this.tb.settings.expansionTime = 60
-                this.tb.settings.returnFirst = false
-                this.tb.settings.maxBranching = 20
-                this.numTemplates = 1000
-                this.maxCumProb = 0.999
-                this.minPlausibility = 0.1
-            }
-            else if (mode == "deep") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 6
-                this.tb.settings.expansionTime = 120
-                this.tb.settings.returnFirst = false
-                this.tb.settings.maxBranching = 25
-                this.numTemplates = 1000
-                this.maxCumProb = 0.9999
-                this.minPlausibility = 0.01
-            }
-            else {
+            if ((mode != "quickest") && (mode != "shallow") && (mode != "normal") && (mode != "deep")) {
                 return
             }
+            this.tb.settings.quick = mode
+            this.tb.settings.maxDepth = this.tb.settings.modes[mode].maxDepth
+            this.tb.settings.expansionTime = this.tb.settings.modes[mode].expansionTime
+            this.tb.settings.returnFirst = this.tb.settings.modes[mode].returnFirst
+            this.tb.settings.maxBranching = this.tb.settings.modes[mode].maxBranching
+            this.numTemplates = this.tb.settings.modes[mode].numTemplates
+            this.maxCumProb = this.tb.settings.modes[mode].maxCumProb
+            this.minPlausibility = this.tb.settings.modes[mode].minPlausibility
+        },
+        isTbQuickSettingsMode(mode) {
+            if (this.tb.settings.maxDepth != this.tb.settings.modes[mode].maxDepth) return false
+            if (this.tb.settings.expansionTime != this.tb.settings.modes[mode].expansionTime) return false
+            if (this.tb.settings.returnFirst != this.tb.settings.modes[mode].returnFirst) return false
+            if (this.tb.settings.maxBranching != this.tb.settings.modes[mode].maxBranching) return false
+            if (this.numTemplates != this.tb.settings.modes[mode].numTemplates) return false
+            if (this.maxCumProb != this.tb.settings.modes[mode].maxCumProb )return false
+            if (this.minPlausibility != this.tb.settings.modes[mode].minPlausibility) return false
+            return true
         },
         sendTreeBuilderJob() {
             if (!isAuth) {
                 alert('Error: must be logged in to start tree builder')
                 return
+            }
+            if (this.tb.settings.name === '') {
+                this.tb.settings.name = this.target
             }
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
@@ -532,6 +551,7 @@ var app = new Vue({
         mctsTreeBuilderAPICall: function() {
             var url = '/api/v2/tree-builder/'
             var body = {
+                description: this.tb.settings.name,
                 smiles: this.target,
                 template_set: this.templateSet,
                 template_prioritizer: this.templateSet,
