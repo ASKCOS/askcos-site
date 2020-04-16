@@ -120,11 +120,11 @@
                 </span>
             </div>
             <input id="submit" type="submit" value="One-Step" class="btn btn-default" />
-            <div v-if="isAuth" class="btn-group">
-                <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-default">
+            <div class="btn-group">
+                <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-default" :disabled="!isAuth" :title="isAuth ? 'Build tree' : 'Must be logged in!'">
                     <i class="fas fa-sign-out-alt"></i> Build tree
                 </button>
-                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i>
+                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" :disabled="!isAuth"><i class="fas fa-cog"></i>
                     
                     <span class="caret"></span>
                     <span class="sr-only">Toggle Dropdown</span>
