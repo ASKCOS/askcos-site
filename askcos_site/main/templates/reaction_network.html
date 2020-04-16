@@ -77,34 +77,6 @@
   </transition>
 </script>
 
-<!-- <div class="mx-auto">
-    <div>Template set:</div>
-    <label class="btn btn-default">
-        <input type="radio" value="reaxys" v-model="templateSet" checked>
-            Reaxys
-        </input>
-    </label>
-    <label class="btn btn-default">
-        <input type="radio" value="uspto_50k" v-model="templateSet" checked>
-            USPTO_50k
-        </input>
-    </label>
-</div> -->
-
-<!-- <div class="mx-auto">
-    <div>Template relevance model:</div>
-    <label class="btn btn-default">
-        <input type="radio" value="reaxys" v-model="templatePrioritization" checked>
-            Reaxys
-        </input>
-    </label>
-    <label class="btn btn-default">
-        <input type="radio" value="uspto_50k" v-model="templatePrioritization" checked>
-            USPTO_50k
-        </input>
-    </label>
-</div> -->
-
 <div class="mx-auto">
     <form class="form-inline" autocomplete="off" v-on:submit.prevent="changeTarget">
         <div class="form-group">
@@ -185,7 +157,9 @@
     <span style="margin:0 5px">|</span>
     <button class="btn btn-default" @click="clear" title="Clear reactions"><i class="fas fa-times"></i></button>
     <button id="settings-btn" class="btn btn-default" @click="openModal('settings')" title="Settings"><i class="fas fa-cog"></i></button>
-    <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-default">G</button>
+    <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-default">
+        %% networkOptions.layout.hierarchical.enabled ? 'H' : 'G' %%
+    </button>
     <button id="download-btn" class="btn btn-default" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
     <button id="load-btn" class="btn btn-default" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
     <button class="btn btn-default" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
@@ -221,7 +195,7 @@
         <div class="form-inline mb-10">
             <div class="form-group">
                 Template set/relevance model:
-                <select v-model="templateSet" class="form-control">
+                <select v-model="tb.settings.templateSet" class="form-control">
                     <template v-for="set in templateSets">
                         <option :value="set">%% set %%</option>
                     </template>
@@ -231,7 +205,7 @@
         <div class="form-inline mb-10">
             <div class="form-group">
                 Precursor scoring:
-                <select v-model="precursorScoring" class="form-control">
+                <select v-model="tb.settings.precursorScoring" class="form-control">
                     <option value="Heuristic">Heuristic</option>
                     <option value="RelevanceHeuristic">Relevance+Heuristic</option>
                     <option value="SCScore">SCScore</option>
@@ -241,19 +215,19 @@
         <div class="form-inline mb-10">
             <div class="form-group">
                 Num. templates:
-                <input style="width: 100px" type="number" v-model.number="numTemplates" class="form-control text-center">
+                <input style="width: 100px" type="number" v-model.number="tb.settings.numTemplates" class="form-control text-center">
             </div>
         </div>
         <div class="form-inline mb-10">
             <div class="form-group">
                 Max. cum. prob.:
-                <input style="width: 100px" type="number" v-model.number="maxCumProb" class="form-control text-center">
+                <input style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" class="form-control text-center">
             </div>
         </div>
         <div class="form-inline mb-10">
             <div class="form-group">
                 Min. plausibility:
-                <input style="width: 100px" type="number" v-model.number="minPlausibility" class="form-control text-center">
+                <input style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control text-center">
             </div>
         </div>
         <hr>
