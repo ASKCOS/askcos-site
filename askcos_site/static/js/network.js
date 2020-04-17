@@ -904,18 +904,15 @@ var app = new Vue({
                 alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
             })
         },
-        updateNetworkOptions(reInit) {
+        updateNetworkOptions() {
             if (typeof(this.network) != 'undefined') {
                 this.network.setOptions(JSON.parse(JSON.stringify(this.networkOptions)))
-                if (reInit) {
-                    this.initializeNetwork(this.data)
-                }
             }
             
         },
         toggleHierarchical: function() {
             this.networkOptions.layout.hierarchical.enabled = !this.networkOptions.layout.hierarchical.enabled
-            this.updateNetworkOptions(false)
+            this.updateNetworkOptions()
         },
         expandNode: function() {
             if (this.isModalOpen() || typeof(this.network) == "undefined") {
