@@ -29,6 +29,31 @@ function subSet(s, otherSet) {
     }
 };
 
+function storageAvailable(type) {
+    var storage;
+    try {
+        storage = window[type];
+        var x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    }
+    catch(e) {
+        return e instanceof DOMException && (
+            // everything except Firefox
+            e.code === 22 ||
+            // Firefox
+            e.code === 1014 ||
+            // test name field too, because code might not be present
+            // everything except Firefox
+            e.name === 'QuotaExceededError' ||
+            // Firefox
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+            // acknowledge QuotaExceededError only if there's something already stored
+            (storage && storage.length !== 0);
+    }
+}
+
 function getCookie(cname) {
     var name = cname + "=";
     var cookie_str = document.cookie;
@@ -125,9 +150,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         numExamples: num2str(reaction['num_examples']),
         templateIds: reaction['templates'],
         reactionSmiles: reaction.smiles+'>>'+sourceNode.smiles,
-        type: 'reaction',
-        value: 1,
-        mass: 1
+        type: 'reaction'
     })
     if (edges.max('id')) {
         var eId = edges.max('id').id+1
@@ -139,18 +162,18 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         id: eId,
         from: sourceNode.id,
         to: rId,
-                scaling: {
-                    min: 1,
-                    max: 5,
-                    customScalingFunction: function(min, max, total, value) {
-                        if (value > 0.25) {
-                            return 1.0
-                        }
-                        else{
-                            return 16*value*value
-                        }
-                    }
-                },
+        scaling: {
+            min: 1,
+            max: 5,
+            customScalingFunction: function(min, max, total, value) {
+                if (value > 0.25) {
+                    return 1.0
+                }
+                else{
+                    return 16*value*value
+                }
+            }
+        },
         color: {
             color: '#000000',
             inherit: false
@@ -187,8 +210,6 @@ function addReaction(reaction, sourceNode, nodes, edges) {
                 shape: "image",
                 borderWidth: 2,
                 type: 'chemical',
-                mass: 1,
-                value: 10,
                 ppg: ppg,
                 source: source,
                 color: {
@@ -271,54 +292,6 @@ function cleanUpEdges(nodes, edges) {
     })
 }
 
-var network;
-
-function initializeNetwork(data, hierarchical) {
-    var container = document.getElementById('network');
-    var options = {
-        nodes: {
-            color: {
-                border: '#000000',
-                background: '#FFFFFF'
-            },
-            shapeProperties: {
-                useBorderWithImage:true
-            }
-        },
-        edges: {
-            length: 1
-        },
-        interaction: {
-            multiselect: true
-        },
-    };
-    if (hierarchical) {
-        options.layout = {
-          hierarchical: {
-            levelSeparation: 150,
-            nodeSpacing: 175,
-          }
-        }
-        options.physics = {
-            stabilization: false,
-            barnesHut: {
-              gravitationalConstant: -80000,
-            //   springConstant: 0.001,
-            //   springLength: 200
-            }
-        }
-    }
-    network = new vis.Network(container, data, options);
-    network.on("beforeDrawing",  function(ctx) {
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        ctx.restore();
-    })
-    return network
-}
-
 /* DnD */
 function disable_dragstart_handler(e) {
     e.preventDefault();
@@ -344,6 +317,10 @@ Vue.component('modal', {
     template: '#modal-template'
 })
 
+Vue.component('settings-modal', {
+    template: '#modal-template-settings'
+})
+
 var app = new Vue({
     el: '#app',
     data: {
@@ -353,7 +330,6 @@ var app = new Vue({
             height: 0,
         },
         target: '',
-        network: {},
         data: {
             nodes: {},
             edges: {}
@@ -375,9 +351,9 @@ var app = new Vue({
         tb: {
             settings: {
                 quick: "normal",
-                maxDepth: 4,
+                maxDepth: 5,
                 maxBranching: 20,
-                expansionTime: 30,
+                expansionTime: 60,
                 maxPPG: 100,
                 chemicalPropertyLogic: 'none',
                 chemicalPropertyC: 0,
@@ -387,7 +363,51 @@ var app = new Vue({
                 chemicalPopularityLogic: 'none',
                 chemicalPopularityReactants: 0,
                 chemicalPopularityProducts: 0,
-                returnFirst: false
+                returnFirst: false,
+                templatePrioritization: "reaxys",
+                templateSet: "reaxys",
+                precursorScoring: "RelevanceHeuristic",
+                numTemplates: 1000,
+                maxCumProb: 0.999,
+                minPlausibility: 0.1,
+            },
+            modes: {
+                quickest: {
+                    maxDepth: 4,
+                    expansionTime: 30,
+                    returnFirst: true,
+                    maxBranching: 20,
+                    numTemplates: 100,
+                    maxCumProb: 0.995,
+                    minPlausibility: 0.001
+                },
+                shallow: {
+                    maxDepth: 4,
+                    expansionTime: 30,
+                    returnFirst: false,
+                    maxBranching: 20,
+                    numTemplates: 100,
+                    maxCumProb: 0.995,
+                    minPlausibility: 0.75
+                },
+                normal: {
+                    maxDepth: 5,
+                    expansionTime: 60,
+                    returnFirst: false,
+                    maxBranching: 20,
+                    numTemplates: 1000,
+                    maxCumProb: 0.999,
+                    minPlausibility: 0.1
+                },
+                deep: {
+                    maxDepth: 6,
+                    expansionTime: 120,
+                    returnFirst: false,
+                    maxBranching: 25,
+                    numTemplates: 1000,
+                    maxCumProb: 0.9909,
+                    minPlausibility: 0.01
+                }
             },
             redirectToGraph: false
         },
@@ -421,14 +441,81 @@ var app = new Vue({
         selected: null,
         isHighlightAtom: true,
         reactionLimit: 5,
-        templatePrioritization: "reaxys",
-        templateSet: "reaxys",
-        precursorScoring: "RelevanceHeuristic",
-        numTemplates: 1000,
-        maxCumProb: 0.999,
-        minPlausibility: 0.01,
         sortingCategory: "score",
-        networkHierarchical: false
+        networkOptions: {
+            edges: {
+                length: 1
+            },
+            nodes: {
+                mass: 1,
+                size: 25,
+                font: {
+                    size: 14,
+                },
+                color: {
+                    border: '#000000',
+                    background: '#FFFFFF'
+                },
+                shapeProperties: {
+                    useBorderWithImage: true
+                }
+            },
+            layout: {
+                hierarchical: {
+                    enabled:false,
+                    levelSeparation: 150,
+                    nodeSpacing: 100,
+                    treeSpacing: 200,
+                    blockShifting: true,
+                    edgeMinimization: true,
+                    parentCentralization: true,
+                    direction: 'UD',
+                    sortMethod: 'directed',
+                }
+            },
+            interaction:{
+                dragNodes:true,
+                dragView: true,
+                hideEdgesOnDrag: false,
+                hideNodesOnDrag: false,
+                hover: false,
+                hoverConnectedEdges: true,
+                keyboard: {
+                enabled: false,
+                speed: {x: 10, y: 10, zoom: 0.02},
+                bindToWindow: true
+                },
+                multiselect: false,
+                navigationButtons: false,
+                selectable: true,
+                selectConnectedEdges: true,
+                tooltipDelay: 300,
+                zoomView: true
+            },
+            physics:{
+                enabled: true,
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 95,
+                    springConstant: 0.04,
+                    damping: 0.09,
+                    avoidOverlap: 0
+                },
+                maxVelocity: 50,
+                minVelocity: 0.1,
+                solver: 'barnesHut',
+                stabilization: {
+                    enabled: true,
+                    iterations: 1000,
+                    updateInterval: 100,
+                    onlyDynamicEdges: false,
+                    fit: true
+                },
+                timestep: 0.5,
+                adaptiveTimestep: true
+            }
+        }
     },
     beforeMount: function() {
         this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
@@ -438,6 +525,9 @@ var app = new Vue({
         this.handleResize();
     },
     mounted: function() {
+        this.loadNetworkOptions()
+        this.loadTarget()
+        this.loadTbSettings()
         var urlParams = new URLSearchParams(window.location.search);
         let urlTarget = urlParams.get('target')
         if (urlTarget) {
@@ -462,59 +552,88 @@ var app = new Vue({
         window.removeEventListener('resize', this.handleResize);
     },
     methods: {
+        initializeNetwork(data) {
+            var container = document.getElementById('network');
+            this.network = new vis.Network(container, data, this.networkOptions);
+            this.network.on("beforeDrawing",  function(ctx) {
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+                ctx.restore();
+            })
+        },
+        centerGraph() {
+            if (!!this.network) {
+                this.network.fit()
+            }
+        },
+        saveNetworkOptions() {
+            if (!storageAvailable('localStorage')) return
+            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
+        },
+        saveTarget() {
+            if (!storageAvailable('localStorage')) return
+            localStorage.setItem('target', this.target)
+        },
+        saveTbSettings() {
+            if (!storageAvailable('localStorage')) return
+            localStorage.setItem('tbSettings', encodeURIComponent(JSON.stringify(this.tb.settings)))
+        },
+        loadNetworkOptions() {
+            if (!storageAvailable('localStorage')) return
+            settings = localStorage.getItem('visjsOptions')
+            if (!settings) return
+            obj = JSON.parse(decodeURIComponent(settings))
+            this.$set(this, 'networkOptions', obj)
+        },
+        loadTarget() {
+            if (!storageAvailable('localStorage')) return
+            target = localStorage.getItem('target')
+            if (!target) return
+            this.target = target
+        },
+        loadTbSettings() {
+            if (!storageAvailable('localStorage')) return
+            settings = localStorage.getItem('tbSettings')
+            if (!settings) return
+            obj = JSON.parse(decodeURIComponent(settings))
+            this.$set(this.tb, 'settings', obj)
+        },
         handleResize: function() {
             this.window.width = window.innerWidth;
             this.window.height = window.innerHeight;
         },
         tbSettings(mode) {
-            if (mode == "quickest") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 4
-                this.tb.settings.expansionTime = 30
-                this.tb.settings.returnFirst = true
-                this.tb.settings.maxBranching = 20
-                this.numTemplates = 100
-                this.maxCumProb = 0.995
-                this.minPlausibility = 0.001
-            }
-            else if (mode == "shallow") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 4
-                this.tb.settings.expansionTime = 30
-                this.tb.settings.returnFirst = false
-                this.tb.settings.maxBranching = 20
-                this.numTemplates = 100
-                this.maxCumProb = 0.995
-                this.minPlausibility = 0.75
-            }
-            else if (mode == "normal") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 5
-                this.tb.settings.expansionTime = 60
-                this.tb.settings.returnFirst = false
-                this.tb.settings.maxBranching = 20
-                this.numTemplates = 1000
-                this.maxCumProb = 0.999
-                this.minPlausibility = 0.1
-            }
-            else if (mode == "deep") {
-                this.tb.settings.quick = mode
-                this.tb.settings.maxDepth = 6
-                this.tb.settings.expansionTime = 120
-                this.tb.settings.returnFirst = false
-                this.tb.settings.maxBranching = 25
-                this.numTemplates = 1000
-                this.maxCumProb = 0.9999
-                this.minPlausibility = 0.01
-            }
-            else {
+            if ((mode != "quickest") && (mode != "shallow") && (mode != "normal") && (mode != "deep")) {
                 return
             }
+            this.tb.settings.quick = mode
+            this.tb.settings.maxDepth = this.tb.modes[mode].maxDepth
+            this.tb.settings.expansionTime = this.tb.modes[mode].expansionTime
+            this.tb.settings.returnFirst = this.tb.modes[mode].returnFirst
+            this.tb.settings.maxBranching = this.tb.modes[mode].maxBranching
+            this.tb.settings.numTemplates = this.tb.modes[mode].numTemplates
+            this.tb.settings.maxCumProb = this.tb.modes[mode].maxCumProb
+            this.tb.settings.minPlausibility = this.tb.modes[mode].minPlausibility
+        },
+        isTbQuickSettingsMode(mode) {
+            if (this.tb.settings.maxDepth != this.tb.modes[mode].maxDepth) return false
+            if (this.tb.settings.expansionTime != this.tb.modes[mode].expansionTime) return false
+            if (this.tb.settings.returnFirst != this.tb.modes[mode].returnFirst) return false
+            if (this.tb.settings.maxBranching != this.tb.modes[mode].maxBranching) return false
+            if (this.tb.settings.numTemplates != this.tb.modes[mode].numTemplates) return false
+            if (this.tb.settings.maxCumProb != this.tb.modes[mode].maxCumProb )return false
+            if (this.tb.settings.minPlausibility != this.tb.modes[mode].minPlausibility) return false
+            return true
         },
         sendTreeBuilderJob() {
             if (!isAuth) {
                 alert('Error: must be logged in to start tree builder')
                 return
+            }
+            if (this.tb.settings.name === '') {
+                this.tb.settings.name = this.target
             }
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
@@ -531,17 +650,22 @@ var app = new Vue({
         },
         mctsTreeBuilderAPICall: function() {
             var url = '/api/v2/tree-builder/'
+            this.saveNetworkOptions()
+            this.saveTbSettings()
+            this.saveTarget()
+            var description = this.tb.settings.name ? this.tb.settings.name : this.target
             var body = {
+                description: description,
                 smiles: this.target,
-                template_set: this.templateSet,
-                template_prioritizer: this.templateSet,
+                template_set: this.tb.settings.templateSet,
+                template_prioritizer: this.tb.settings.templateSet,
                 max_depth: this.tb.settings.maxDepth,
                 max_branching: this.tb.settings.maxBranching,
                 expansion_time: this.tb.settings.expansionTime,
                 max_ppg: this.tb.settings.maxPPG,
-                num_templates: this.numTemplates,
-                max_cum_prob: this.maxCumProb,
-                filter_threshold: this.minPlausibility,
+                num_templates: this.tb.settings.numTemplates,
+                max_cum_prob: this.tb.settings.maxCumProb,
+                filter_threshold: this.tb.settings.minPlausibility,
                 return_first: this.tb.settings.returnFirst,
                 store_results: true,
                 chemical_property_logic: this.tb.settings.chemicalPropertyLogic,
@@ -644,12 +768,12 @@ var app = new Vue({
             var url = '/api/retro/?';
             var params = {
                 target: smiles,
-                template_set: this.templateSet,
-                template_prioritizer: this.templateSet,
-                precursor_prioritization: this.precursorScoring,
-                num_templates: this.numTemplates,
-                max_cum_prob: this.maxCumProb,
-                filter_threshold: this.minPlausibility,
+                template_set: this.tb.settings.templateSet,
+                template_prioritizer: this.tb.settings.templateSet,
+                precursor_prioritization: this.tb.settings.precursorScoring,
+                num_templates: this.tb.settings.numTemplates,
+                max_cum_prob: this.tb.settings.maxCumProb,
+                filter_threshold: this.tb.settings.minPlausibility,
                 cluster_method: this.clusterOptions.cluster_method,
                 cluster_feature: this.clusterOptions.feature,
                 cluster_fp_type: this.clusterOptions.fingerprint,
@@ -707,6 +831,8 @@ var app = new Vue({
         },
         changeTarget: function() {
             showLoader();
+            this.saveTbSettings()
+            this.saveNetworkOptions()
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
                 if (isvalidsmiles) {
@@ -717,6 +843,7 @@ var app = new Vue({
             })
             .then(x => {
                 this.target = x;
+                this.saveTarget()
                 if (this.target != undefined) {
                     var url = this.requestUrl(this.target);
                     fetch(url)
@@ -735,9 +862,9 @@ var app = new Vue({
                                 this.createTargetNode(this.target)
                             ])
                             this.data.edges = new vis.DataSet([]);
-                            initializeNetwork(this.data);
-                            network.on('selectNode', this.showInfo);
-                            network.on('deselectNode', this.clearSelection);
+                            this.initializeNetwork(this.data);
+                            this.network.on('selectNode', this.showInfo);
+                            this.network.on('deselectNode', this.clearSelection);
                             this.$set(this.results, this.target, json['precursors']);
                             this.initClusterShowCard(this.target); // must be called immediately after adding results
                             addReactions(this.results[this.target], this.data.nodes.get(0), this.data.nodes, this.data.edges, this.reactionLimit);
@@ -753,7 +880,7 @@ var app = new Vue({
                                         var ppg = "not buyable"
                                     }
                                     this.data.nodes.update({id: 0, ppg: ppg});
-                                    network.selectNodes([0]);
+                                    this.network.selectNodes([0]);
                                     this.selected = this.data.nodes.get(0);
                             })
                         }
@@ -777,27 +904,22 @@ var app = new Vue({
                 alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
             })
         },
+        updateNetworkOptions() {
+            if (typeof(this.network) != 'undefined') {
+                this.network.setOptions(JSON.parse(JSON.stringify(this.networkOptions)))
+            }
+            
+        },
         toggleHierarchical: function() {
-          if (typeof(network) == 'undefined') {
-            return
-          }
-          if (this.networkHierarchical) {
-            network.setOptions({'layout': {'hierarchical': false}})
-            document.querySelector('#hierarchical-button').innerHTML = 'G'
-            this.networkHierarchical = false;
-          }
-          else {
-            network.setOptions({'layout': {'hierarchical': {sortMethod: 'directed'}}})
-            document.querySelector('#hierarchical-button').innerHTML = 'H'
-            this.networkHierarchical = true;
-          }
+            this.networkOptions.layout.hierarchical.enabled = !this.networkOptions.layout.hierarchical.enabled
+            this.updateNetworkOptions()
         },
         expandNode: function() {
-            if (this.isModalOpen() || typeof(network) == "undefined") {
+            if (this.isModalOpen() || typeof(this.network) == "undefined") {
                 return
             }
             showLoader();
-            var selected = network.getSelectedNodes();
+            var selected = this.network.getSelectedNodes();
             if (selected.length != 1) {
               hideLoader();
               if (selected.length == 0) {
@@ -847,6 +969,7 @@ var app = new Vue({
                     this.getTemplateNumExamples(this.results[smi]);
                     this.selected = node;
                     this.reorderResults();
+                    this.network.fit()
                     hideLoader();
                 })
                 .catch(error => {
@@ -873,7 +996,7 @@ var app = new Vue({
             }
         },
         deleteChoice: function() {
-            var selected = network.getSelectedNodes();
+            var selected = this.network.getSelectedNodes();
             for (n in selected) {
                 var nodeId = selected[n];
                 if (this.data.nodes.get(nodeId).type=='chemical') {
@@ -891,10 +1014,10 @@ var app = new Vue({
             }
         },
         deleteNode: function() {
-            if (this.isModalOpen() || typeof(network) == "undefined") {
+            if (this.isModalOpen() || typeof(this.network) == "undefined") {
                 return
             }
-            var selected = network.getSelectedNodes();
+            var selected = this.network.getSelectedNodes();
             for (n in selected) {
                 var nodeId = selected[n];
                 if (this.data.nodes.get(nodeId).type=='chemical') {
@@ -916,7 +1039,7 @@ var app = new Vue({
             cleanUpEdges(this.data.nodes, this.data.edges);
         },
         deleteChildren: function() {
-            var selected = network.getSelectedNodes();
+            var selected = this.network.getSelectedNodes();
             for (n in selected) {
                 var nodeId = selected[n];
                 if (this.data.nodes.get(nodeId).type=='reaction') {
@@ -932,7 +1055,7 @@ var app = new Vue({
             cleanUpEdges(this.data.nodes, this.data.edges);
             var oldSelected = this.selected;
             this.selected = null;
-            network.unselectAll();
+            this.network.unselectAll();
 //             this.selected = oldSelected;
         },
         toggleResolver: function() {
@@ -993,9 +1116,9 @@ var app = new Vue({
                         app.allowCluster = false;
                     }
                 }
-                network = initializeNetwork(app.data)
-                network.on('selectNode', app.showInfo);
-                network.on('deselectNode', app.clearSelection);
+                this.initializeNetwork(app.data)
+                this.network.on('selectNode', app.showInfo);
+                this.network.on('deselectNode', app.clearSelection);
             }})(file);
             reader.readAsText(file)
         },
@@ -1021,10 +1144,10 @@ var app = new Vue({
             setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
         },
         collapseNode: function() {
-            var selected = network.getSelectedNodes();
+            var selected = this.network.getSelectedNodes();
             var type = typeof selected[0];
             if (type == "string") {
-                network.openCluster(selected[0])
+                this.network.openCluster(selected[0])
             }
             else {
                 var forCluster = allChildrenOf(selected[0], app.data.nodes, app.data.edges)
@@ -1035,7 +1158,7 @@ var app = new Vue({
                         }
                     }
                 }
-                network.clustering.cluster(options);
+                this.network.clustering.cluster(options);
             }
         },
         addFromResults: function(selected, reaction) {
@@ -1574,8 +1697,6 @@ var app = new Vue({
                 shape: "image",
                 borderWidth: 3,
                 type: 'chemical',
-                value: 15,
-                mass: 2,
                 color: {
                     border: '#000088'
                 }
@@ -1623,10 +1744,10 @@ var app = new Vue({
             for (tree of trees) {
                 this.walkTree(tree, 0)
               }
-            initializeNetwork(this.data, true);
-            network.on('selectNode', this.showInfo);
-            network.on('deselectNode', this.clearSelection);
-            this.toggleHierarchical()
+            this.networkOptions.layout.hierarchical.enabled = true
+            this.initializeNetwork(this.data);
+            this.network.on('selectNode', this.showInfo);
+            this.network.on('deselectNode', this.clearSelection);
         },
         walkTree: function(obj, parent) {
             var node = undefined
@@ -1805,7 +1926,7 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children nodes of your target molecule (one is highlighted, for example) represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later).",
             onShown: function () {
-                network.selectNodes([1]);
+                this.network.selectNodes([1]);
                 app.selected = app.data.nodes.get(1);
             },
             placement: 'right',
@@ -1818,7 +1939,7 @@ var tour = new Tour({
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
                     if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        network.selectNodes([n.id])
+                        this.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
                 })
@@ -1866,7 +1987,7 @@ var tour = new Tour({
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
                     if (n.reactionSmiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
-                        network.selectNodes([n.id])
+                        this.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
                 })
@@ -1880,7 +2001,7 @@ var tour = new Tour({
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
                     if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        network.selectNodes([n.id])
+                        this.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
                 })
