@@ -29,17 +29,6 @@ function subSet(s, otherSet) {
     }
 };
 
-function setCookie(cname, cvalue, exdays) {
-  var d = new Date();
-  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-  var expires = "expires="+d.toUTCString();
-  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-}
-
-function deleteCookie(cname) {
-  document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-}
-
 function getCookie(cname) {
     var name = cname + "=";
     var cookie_str = document.cookie;
@@ -511,9 +500,9 @@ var app = new Vue({
         this.handleResize();
     },
     mounted: function() {
-        this.loadNetworkOptionsCookie()
-        this.loadTargetCookie()
-        this.loadTbSettingsCookie()
+        this.loadNetworkOptions()
+        this.loadTarget()
+        this.loadTbSettings()
         var urlParams = new URLSearchParams(window.location.search);
         let urlTarget = urlParams.get('target')
         if (urlTarget) {
@@ -554,34 +543,30 @@ var app = new Vue({
                 this.network.fit()
             }
         },
-        loadJSONCookie(key, obj) {
-            cookie = getCookie(key)
-            obj = JSON.parse(decodeURIComponent(cookie))
+        saveNetworkOptions() {
+            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
         },
-        saveNetworkOptionsCookie() {
-            setCookie('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
+        saveTarget() {
+            localStorage.setItem('target', this.target)
         },
-        saveTargetCookie() {
-            setCookie('target', encodeURIComponent(this.target))
+        saveTbSettings() {
+            localStorage.setItem('tbSettings', encodeURIComponent(JSON.stringify(this.tb.settings)))
         },
-        saveTbSettingsCookie() {
-            setCookie('tbSettings', encodeURIComponent(JSON.stringify(this.tb.settings)))
-        },
-        loadNetworkOptionsCookie() {
-            cookie = getCookie('visjsOptions')
-            if (!cookie) return
-            obj = JSON.parse(decodeURIComponent(cookie))
+        loadNetworkOptions() {
+            settings = localStorage.getItem('visjsOptions')
+            if (!settings) return
+            obj = JSON.parse(decodeURIComponent(settings))
             this.$set(this, 'networkOptions', obj)
         },
-        loadTargetCookie() {
-            cookie = getCookie('target')
-            if (!cookie) return
-            this.target = cookie
+        loadTarget() {
+            target = localStorage.getItem('target')
+            if (!target) return
+            this.target = target
         },
-        loadTbSettingsCookie() {
-            cookie = getCookie('tbSettings')
-            if (!cookie) return
-            obj = JSON.parse(decodeURIComponent(cookie))
+        loadTbSettings() {
+            settings = localStorage.getItem('tbSettings')
+            if (!settings) return
+            obj = JSON.parse(decodeURIComponent(settings))
             this.$set(this.tb, 'settings', obj)
         },
         handleResize: function() {
@@ -634,9 +619,9 @@ var app = new Vue({
         },
         mctsTreeBuilderAPICall: function() {
             var url = '/api/v2/tree-builder/'
-            this.saveNetworkOptionsCookie()
-            this.saveTbSettingsCookie()
-            this.saveTargetCookie()
+            this.saveNetworkOptions()
+            this.saveTbSettings()
+            this.saveTarget()
             var description = this.tb.settings.name ? this.tb.settings.name : this.target
             var body = {
                 description: description,
@@ -815,8 +800,8 @@ var app = new Vue({
         },
         changeTarget: function() {
             showLoader();
-            this.saveTbSettingsCookie()
-            this.saveNetworkOptionsCookie()
+            this.saveTbSettings()
+            this.saveNetworkOptions()
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
                 if (isvalidsmiles) {
@@ -827,7 +812,7 @@ var app = new Vue({
             })
             .then(x => {
                 this.target = x;
-                this.saveTargetCookie()
+                this.saveTarget()
                 if (this.target != undefined) {
                     var url = this.requestUrl(this.target);
                     fetch(url)
