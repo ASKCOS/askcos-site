@@ -899,7 +899,7 @@ var app = new Vue({
         },
         toggleHierarchical: function() {
             this.networkOptions.layout.hierarchical.enabled = !this.networkOptions.layout.hierarchical.enabled
-            this.updateNetworkOptions()
+            this.updateNetworkOptions(false)
         },
         expandNode: function() {
             if (this.isModalOpen() || typeof(this.network) == "undefined") {
