@@ -29,6 +29,31 @@ function subSet(s, otherSet) {
     }
 };
 
+function storageAvailable(type) {
+    var storage;
+    try {
+        storage = window[type];
+        var x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    }
+    catch(e) {
+        return e instanceof DOMException && (
+            // everything except Firefox
+            e.code === 22 ||
+            // Firefox
+            e.code === 1014 ||
+            // test name field too, because code might not be present
+            // everything except Firefox
+            e.name === 'QuotaExceededError' ||
+            // Firefox
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+            // acknowledge QuotaExceededError only if there's something already stored
+            (storage && storage.length !== 0);
+    }
+}
+
 function getCookie(cname) {
     var name = cname + "=";
     var cookie_str = document.cookie;
@@ -544,26 +569,32 @@ var app = new Vue({
             }
         },
         saveNetworkOptions() {
+            if (!storageAvailable('localStorage')) return
             localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
         },
         saveTarget() {
+            if (!storageAvailable('localStorage')) return
             localStorage.setItem('target', this.target)
         },
         saveTbSettings() {
+            if (!storageAvailable('localStorage')) return
             localStorage.setItem('tbSettings', encodeURIComponent(JSON.stringify(this.tb.settings)))
         },
         loadNetworkOptions() {
+            if (!storageAvailable('localStorage')) return
             settings = localStorage.getItem('visjsOptions')
             if (!settings) return
             obj = JSON.parse(decodeURIComponent(settings))
             this.$set(this, 'networkOptions', obj)
         },
         loadTarget() {
+            if (!storageAvailable('localStorage')) return
             target = localStorage.getItem('target')
             if (!target) return
             this.target = target
         },
         loadTbSettings() {
+            if (!storageAvailable('localStorage')) return
             settings = localStorage.getItem('tbSettings')
             if (!settings) return
             obj = JSON.parse(decodeURIComponent(settings))
