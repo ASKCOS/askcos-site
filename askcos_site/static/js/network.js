@@ -1744,7 +1744,7 @@ var app = new Vue({
             for (tree of trees) {
                 this.walkTree(tree, 0)
               }
-            this.networkSettings.hierarchical = true
+            this.networkOptions.layout.hierarchical.enabled = true
             this.initializeNetwork(this.data);
             this.network.on('selectNode', this.showInfo);
             this.network.on('deselectNode', this.clearSelection);
