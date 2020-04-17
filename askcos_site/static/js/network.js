@@ -1748,7 +1748,6 @@ var app = new Vue({
             this.initializeNetwork(this.data);
             this.network.on('selectNode', this.showInfo);
             this.network.on('deselectNode', this.clearSelection);
-            this.toggleHierarchical()
         },
         walkTree: function(obj, parent) {
             var node = undefined
