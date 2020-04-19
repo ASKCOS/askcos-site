@@ -1574,8 +1574,11 @@ var app = new Vue({
             return res;
         },
         startTour: function() {
-            if (this.target) {
-                this.clear();
+            if (this.network) {
+                if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?'))
+                {
+                    this.clear();
+                }
             }
             tour.init();
             tour.restart();
