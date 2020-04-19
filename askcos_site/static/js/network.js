@@ -1963,7 +1963,7 @@ var tour = new Tour({
         {
             element: "#target",
             title: "Start with a target compound",
-            content: "You can start the retrosynthetic planning with a target compound and typing it's SMILES formatted string here. If the name resolver is enabled (see server icon to the right; click icon to toggle), you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
+            content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (see server icon to the left; click icon to toggle between on, Green, and off, Red), you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
             placement: "bottom",
             onNext: function() {
                 app.target = 'OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F'
@@ -1972,7 +1972,7 @@ var tour = new Tour({
         {
             element: "#target",
             title: "Fluconazole",
-            content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, try using a software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click next to continue!",
+            content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click next to continue!",
             placement: "bottom",
             onNext: function() {
                 if (app.data.nodes.length == null | app.data.nodes.length == 0) {
@@ -1983,14 +1983,14 @@ var tour = new Tour({
         {
             element: "#network",
             title: "One-step retrosynthesis results",
-            content: "When the results are ready, they will be shown in the main window. The target molecule you entereted will be shown in the middle inside a <span class='blue-text'>blue</span> box (it is currently selected). You can click and drag on empty space in the window to translate the entire network. You can try to rearrange nodes by clicking and dragging on them. Take a second to enjoy the inverted gravity model, courtesy of <a href='http://visjs.org' target='_blank'>vis.js</a>. Scrolling inside the window will zoom in and out.",
+            content: "When the results are ready, they will be shown in the main window on the left. The target molecule you entereted will be shown in the center inside a <span class='blue-text'>blue</span> box (it is currently selected). You can click and drag on empty space in the window to navigate through the entire network when zoomed in. Scrolling inside the window will zoom in and out. You can rearrange nodes by clicking and dragging on them. Take a second to enjoy the inverted gravity model, courtesy of <a href='http://visjs.org' target='_blank'>vis.js</a>.",
             placement: 'right',
             backdropContainer: '#network'
         },
         {
             element: "#network",
             title: "Predicted reactions",
-            content: "The children nodes of your target molecule (one is highlighted, for example) represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later).",
+            content: "The children nodes of your target molecule (number one is highlighted, for example) represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later).",
             onShown: function () {
                 app.network.selectNodes([1]);
                 app.selected = app.data.nodes.get(1);
@@ -2000,7 +2000,7 @@ var tour = new Tour({
         {
             element: "#network",
             title: "Reactants",
-            content: "The children node(s) of <b>reactions</b> represent <b>chemicals</b>, and are the predicted reactants for this reaction. Chemicals in a <span class='red-text'>red</span> box weren't found in our buyables database. <b>Chemicals</b> in a <span class='green-text'>green</span> box are buyable.",
+            content: "The children node(s) of <b>reactions</b> represent <b>chemicals</b>, and are the predicted reactants for this reaction. Chemicals in a <span class='red-text'>red</span> box weren't found in our buyables database. <b>Chemicals</b> in a <span class='green-text'>green</span> box were found in the database and are buyable.",
             placement: 'right',
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
@@ -2015,12 +2015,12 @@ var tour = new Tour({
             element: "#network",
             placement: 'right',
             title: "Reactants",
-            content: "For this example, we'll see if we can predict a reaction to make this reaction's non-buyable reactant (it's been selected for you) from buyable starting materials."
+            content: "In this example, we'll see if we can predict a reaction to make the non-buyable reactant in prediction number 1, (it's been selected for you) from buyable starting materials."
         },
         {
             element: '#expand-btn',
             title: "Expanding chemical nodes",
-            content: "The non-buyable chemical for which we'd like to make a new prediction has been highlighted for you. Next you'd click the <b>Expand Node</b> button. Click next to see what happens when you click this button.",
+            content: "To make a new prediction for the non-buyable chemical, which been highlighted, you'd click the <b>Expand Node</b> button. Click next to see what happens when you click this button.",
             placement: "bottom",
             reflex: true,
             onNext: function() {
@@ -2030,25 +2030,25 @@ var tour = new Tour({
         {
             element: '#network',
             title: "Expanding chemical nodes",
-            content: "A new prediction was made for this non-buyable chemical, and when everything is ready the results will be added to the network visualization. It might look hectic at first, but the appropriate node positions should resolve quickly (thanks again to the <a href='http://visjs.org' target='_blank'>vis.js</a> inverted gravity!). If not, click and drag a node to give it a jiggle.",
+            content: "A new prediction was made for this non-buyable chemical, and when everything is ready, the results will be added to the network visualization. It might look hectic at first, but the appropriate node positions should resolve quickly (thanks again to the <a href='http://visjs.org' target='_blank'>vis.js</a> inverted gravity!). If not, click and drag a node to give it a jiggle.",
             placement: "right"
         },
         {
             element: '#details',
             title: "Result details",
-            content: "You may have noticed there's been a lot going on on the right side of the screen in addition to the changes in the graph visualization. On this side, details of the currently selected node are shown. In this case, a <b>chemical</b> node is selected. At the top you can see its SMILES string, its cost in $/g and a 2d rendering of its structure.",
+            content: "You may have noticed there's been a lot going on on the right side of the screen in addition to the changes in the network visualization. On this side, details of the currently selected node are shown. In this case, a <b>chemical</b> node is selected. At the top you can see its SMILES string, its cost in $/g and a 2d rendering of its structure.",
             placement: "left"
         },
         {
             element: '#details',
             title: "Precursors",
-            content: "Additionally, if you've already made a retrosynthetic prediction for the currently selected <b>chemical</b>, you'll see list of the precursor results. Each entry shows the reactants for the reaction to make the currently selected chemical with some additional information such as a relative score and the number of examples there were for the templates that support the suggested reaction. You can reorder these results by each metric using the drop-down menu above. If you haven't performed a retrosynthetic prediction for the selected chemical, the same <b>Expand Node</b> button you used before will be shown.",
+            content: "Additionally, if you've already made a retrosynthetic prediction for the currently selected <b>chemical</b>, you'll see list of the precursor results. Each entry shows the reactants for the reaction to make the currently selected chemical. Additional information such as a relative score and the number of examples there were for the templates that support the suggested reaction are also shown. You can reorder these results by each metric using the drop-down menu above. If you haven't performed a retrosynthetic prediction for the selected chemical, the same <b>Expand Node</b> button you used before will be shown.",
             placement: "left"
         },
         {
             element: '#details',
             title: "Adding and removing reactions",
-            content: "You may also notice there are many more precursor results shown on the right side here than were added into the graph visualization (it's a scrolling list) - this is to keep things tidy in the visualization. By default, only the top 5 results (scored by retro'score') are added to the visualization (this can be changed in the settings menu). The plus (+) and minus (-) buttons can be used to add and remove each reaction to the visualization. Go ahead and give it a try if you'd like.",
+            content: "You may also notice there are many more precursor results shown on the right side here than were added into the graph visualization (it's a scrolling list) - this is to keep things tidy in the visualization. By default, only the top 5 results (scored by retro'score') are added to the visualization (this can be changed in the settings menu). The plus (+) and minus (-) buttons, when shown below the reaction, can be used to add or remove that reaction to the visualization. Go ahead and give it a try if you'd like.",
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
@@ -2062,7 +2062,7 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Viewing reaction details",
-            content: "If you have a reaction node selected, the right side of your screen will show you details for that reaction. At the top you can see the reaction SMILES, a 2d rendering, and similar reaction scores that you have seen before. You will also see a list of links to templates that support the reaction. Clicking one will open a new tab with more details about each template. There is also a link to 'Evaluate reaction in new tab', which will let you predict reaction conditions and evaluate the reaction in the forward direction.",
+            content: "If you have a reaction node selected, number 1 in this example, the right side of your screen will show you details for that reaction. At the top you can see the reaction SMILES, a 2d rendering, and similar reaction scores that you have seen before. You will also see a list of links to templates that support the reaction. Clicking one will open a new tab with more details about each template. There is also a link to 'Evaluate reaction in new tab', which will let you predict reaction conditions and evaluate the reaction in the forward direction.",
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
@@ -2080,9 +2080,27 @@ var tour = new Tour({
             placement: "right"
         },
         {
+            title: "What do these buttons do?",
             element: "#expand-btn",
-            title: "Other buttons",
-            content: "In addition to expanding nodes, you can easily delete selected nodes, or children of a selected node using the corresponding red buttons above the graph visualization. The 'Toggle cluster' button will group the currently selected node and its children into one node cluster (this may be useful to keep things organized). Clicking this button with a cluster selected will expand it to show all of the nodes again.",
+            content: "Lets quickly discuss what these buttons do.",
+            placement: "bottom"
+        },
+        {
+            title: "Expand button",
+            element: "#expand-btn",
+            content: "As you have seen before, the Expand button will perform a prediction on the selected node and display the results in the network visualisation.",
+            placement: "bottom"
+        },
+        {
+            element: "#delete-btn",
+            title: "Delete button",
+            content: "In addition to expanding nodes, you can easily delete selected nodes, or children of a selected node using this button.",
+            placement: "bottom"
+        },
+        {
+            element: "#collapse-btn",
+            title: "Collapse children button",
+            content: "The 'Collapse children' button will group the currently selected node and its children into one cluster (this may be useful to keep things organized). Clicking this button with a cluster selected will expand it to show all of the nodes again.",
             placement: "bottom"
         },
         {
@@ -2091,14 +2109,24 @@ var tour = new Tour({
             content: "By default, only the top 5 predicted reactions for each target are shown. If you want more or less, open this settings window."
         },
         {
+            element: "#hierarchical-button",
+            title: "Heiraarchical/Graph button",
+            content: "Clicking on this button changes how the results are displayed below. The default mode is graphical, G, where the target is displayed in the center and the child nodes fan out in all directions. Clicking on this button will change the display to heirarchical mode where the target appears at the top of the tree and the child node(s) project downwards. Click on the button to try it out."
+        },
+        {
             element: "#download-btn",
             title: "Saving results",
-            content: "You can save the network structure (JSON of nodes and edges) and download it to your computer."
+            content: "You can save the network structure (JSON of nodes and edges) and download it to your computer. You may also share these JSON files with your colleagues so that they can get excited about the molecules you are working on."
         },
         {
             element: "#load-btn",
             title: "Restoring results",
             content: "You can restore a previously saved network here."
+        },
+        {
+            element: "#tb-submit",
+            title: "Tree builder button",
+            content: "You can start a tree builder job, using the target SMILES string, by clicking on this button. This is an asynchronous job, so you can continue examining the predictions in the main window below. Once the job has completed, a browser popup will appear informing you that the job has finished. Clicking on this popup will bring you to the tree builder visualization page."
         },
         {
             title: "End of tour",
