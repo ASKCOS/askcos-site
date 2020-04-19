@@ -1574,8 +1574,11 @@ var app = new Vue({
             return res;
         },
         startTour: function() {
-            if (this.target) {
-                this.clear();
+            if (this.network) {
+                if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?'))
+                {
+                    this.clear();
+                }
             }
             tour.init();
             tour.restart();
@@ -1926,7 +1929,7 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children nodes of your target molecule (one is highlighted, for example) represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later).",
             onShown: function () {
-                this.network.selectNodes([1]);
+                app.network.selectNodes([1]);
                 app.selected = app.data.nodes.get(1);
             },
             placement: 'right',
@@ -1939,7 +1942,7 @@ var tour = new Tour({
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
                     if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        this.network.selectNodes([n.id])
+                        app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
                 })
@@ -1987,7 +1990,7 @@ var tour = new Tour({
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
                     if (n.reactionSmiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
-                        this.network.selectNodes([n.id])
+                        app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
                 })
@@ -2001,7 +2004,7 @@ var tour = new Tour({
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
                     if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        this.network.selectNodes([n.id])
+                        app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
                 })
