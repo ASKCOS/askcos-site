@@ -1963,7 +1963,7 @@ var tour = new Tour({
         {
             element: "#target",
             title: "Start with a target compound",
-            content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (server icon to the leftis green) you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). If you wish to turn the name resolving feature off, click the server icon and it will turn red. For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
+            content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (server icon to the left is green) you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). If you wish to turn the name resolving feature off, click the server icon and it will turn red. For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
             placement: "bottom",
             onNext: function() {
                 app.target = 'OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F'
@@ -2102,8 +2102,8 @@ var tour = new Tour({
         {
             title: "What do these buttons do?",
             element: "#expand-btn",
-            content: "Lets quickly discuss what these buttons do.",
-            placement: "bottom"
+            content: "Lets quickly discuss what the buttons in this row do.",
+            placement: "left"
         },
         {
             title: "Expand button",
