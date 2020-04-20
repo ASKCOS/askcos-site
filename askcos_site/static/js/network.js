@@ -1963,7 +1963,7 @@ var tour = new Tour({
         {
             element: "#target",
             title: "Start with a target compound",
-            content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (see server icon to the left; click icon to toggle between on, Green, and off, Red), you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
+            content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (server icon to the leftis green) you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). If you wish to turn the name resolving feature off, click the server icon and it will turn red. For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
             placement: "bottom",
             onNext: function() {
                 app.target = 'OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F'
@@ -1972,7 +1972,7 @@ var tour = new Tour({
         {
             element: "#target",
             title: "Fluconazole",
-            content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click next to continue!",
+            content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, click on the eidt icon to open the drawing tool or try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click 'Next to continue!",
             placement: "bottom",
             onNext: function() {
                 if (app.data.nodes.length == null | app.data.nodes.length == 0) {
@@ -1983,14 +1983,14 @@ var tour = new Tour({
         {
             element: "#network",
             title: "One-step retrosynthesis results",
-            content: "When the results are ready, they will be shown in the main window on the left. The target molecule you entereted will be shown in the center inside a <span class='blue-text'>blue</span> box (it is currently selected). You can click and drag on empty space in the window to navigate through the entire network when zoomed in. Scrolling inside the window will zoom in and out. You can rearrange nodes by clicking and dragging on them. Take a second to enjoy the inverted gravity model, courtesy of <a href='http://visjs.org' target='_blank'>vis.js</a>.",
+            content: "When the results are ready, they will be shown in the main window on the left. The target molecule you entereted will be shown in the center inside a <span class='blue-text'>blue</span> box (it is currently selected). You can click and drag on empty space in the window to navigate through the entire network when zoomed in. Scrolling inside the window will zoom in and out. You can rearrange nodes by clicking and dragging on them. Take a second to enjoy the inverted gravity model, courtesy of <a href='http://visjs.org' target='_blank'>vis.js</a>. Click 'Next' to continue.",
             placement: 'right',
             backdropContainer: '#network'
         },
         {
             element: "#network",
             title: "Predicted reactions",
-            content: "The children nodes of your target molecule (number one is highlighted, for example) represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later).",
+            content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the higest ranked prediction is highlighted.",
             onShown: function () {
                 app.network.selectNodes([1]);
                 app.selected = app.data.nodes.get(1);
@@ -2000,7 +2000,7 @@ var tour = new Tour({
         {
             element: "#network",
             title: "Reactants",
-            content: "The children node(s) of <b>reactions</b> represent <b>chemicals</b>, and are the predicted reactants for this reaction. Chemicals in a <span class='red-text'>red</span> box weren't found in our buyables database. <b>Chemicals</b> in a <span class='green-text'>green</span> box were found in the database and are buyable.",
+            content: "The children node(s) of <b>reactions</b> represent <b>chemicals</b>, and are the predicted reactants for this reaction. Chemicals in a <span class='red-text'>red</span> box were not found in the buyables database. <b>Chemicals</b> in a <span class='green-text'>green</span> box were found in the database and are buyable.",
             placement: 'right',
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
@@ -2015,12 +2015,12 @@ var tour = new Tour({
             element: "#network",
             placement: 'right',
             title: "Reactants",
-            content: "In this example, we'll see if we can predict a reaction to make the non-buyable reactant in prediction number 1, (it's been selected for you) from buyable starting materials."
+            content: "In this example, we'll see if we can predict a reaction to make the non-buyable reactant in the prediction ranked number 1, (it's been selected for you) from buyable starting materials."
         },
         {
             element: '#expand-btn',
             title: "Expanding chemical nodes",
-            content: "To make a new prediction for the non-buyable chemical, which been highlighted, you'd click the <b>Expand Node</b> button. Click next to see what happens when you click this button.",
+            content: "To make a new prediction for the non-buyable chemical, which been highlighted in blue below, you would normally click the <b>Expand Node</b> button. As you are in the tutorial, please click 'Next' to see what would happen when you click this button.",
             placement: "bottom",
             reflex: true,
             onNext: function() {
@@ -2048,7 +2048,7 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Adding and removing reactions",
-            content: "You may also notice there are many more precursor results shown on the right side here than were added into the graph visualization (it's a scrolling list) - this is to keep things tidy in the visualization. By default, only the top 5 results (scored by retro'score') are added to the visualization (this can be changed in the settings menu). The plus (+) and minus (-) buttons, when shown below the reaction, can be used to add or remove that reaction to the visualization. Go ahead and give it a try if you'd like.",
+            content: "You may also notice there are many more precursor results shown on the right side here than were added into the network visualization (it's a scrolling list) - this is to keep things tidy in the visualization. By default, only the top 5 results (scored by retro 'score') are added to the visualization (this can be changed in the settings menu). The plus (+) and minus (-) buttons, when shown below the reaction, can be used to add or remove that reaction to or from the visualization. Go ahead and give it a try if you'd like. Click 'Next' to continue.",
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
@@ -2062,7 +2062,7 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Viewing reaction details",
-            content: "If you have a reaction node selected, number 1 in this example, the right side of your screen will show you details for that reaction. At the top you can see the reaction SMILES, a 2d rendering, and similar reaction scores that you have seen before. You will also see a list of links to templates that support the reaction. Clicking one will open a new tab with more details about each template. There is also a link to 'Evaluate reaction in new tab', which will let you predict reaction conditions and evaluate the reaction in the forward direction.",
+            content: "If you have a reaction node selected, Rank number 1 in this example, the right side of your screen will show you details for that reaction. At the top you can see the reaction SMILES, a 2d rendering, and similar reaction scores that you have seen before. You will also see a list of links to templates that support the reaction. Clicking one will open a new tab with more details about each template. There is also a link to 'Evaluate reaction in new tab', which will let you predict reaction conditions and evaluate the reaction in the forward direction.",
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
@@ -2073,6 +2073,26 @@ var tour = new Tour({
                 })
             }
         },
+        /*  Start of cluster section */
+        {
+            element: '#details',
+            title: "Result clustering, Group similar",
+            content: "You may quickly notice as you scroll down through the results, some are not shown. In the Fluconazole example, Ranks 1 to 3 are shown, then we jump to 6, ranks 4 and 5 are missing. This is because the 'Group similar' checkbox is checked. Click on 'Next' to uncheck 'Group similar' to reveal the missing results.", 
+            placement: "left" ,
+            onNext: function() {
+                app.allowCluster = false ; 
+            } 
+        },
+        {
+            element: '#details',
+            title: "Result clustering sorting options",
+            content: "Now that you have confirmed that all the results are there, please also notice the drop-down box that appears. This drop-box allows you to re-order the results depending on the Score, the number of examples used in that prediction, the template score, plausibility, root mean square of the molecular weight and finally the number of rings. Please select a different scoring order and see how it changes the results. Click 'Next' to re-enable clustering and to continue.",
+            placement: "left",
+            onNext: function() {
+                app.allowCluster = true ; 
+            }
+        },
+	/* End of cluster section */
         {
             element: "#network",
             title: "Understanding the network",
