@@ -2077,7 +2077,7 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Result clustering, Group similar",
-            content: "You may quickly notice as you scroll down through the results, some are not shown. In the Fluconazole example, Ranks 1 to 3 are shown, then we jump to 6, ranks 4 and 5 are missing. This is because the 'Group similar' checkbox is checked. Click on 'Next' to uncheck 'Group similar' to reveal the missing results.", 
+            content: "You may quickly notice as you scroll down through the results, some are not shown. It may be that Ranks 1 to 3 are shown, then it jumps to 6, with ranks 4 and 5 missing etc. This is because the 'Group similar' checkbox is checked. Click on 'Next' to uncheck 'Group similar' to reveal the missing results.", 
             placement: "left" ,
             onNext: function() {
                 app.allowCluster = false ; 
@@ -2086,12 +2086,21 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Result clustering sorting options",
-            content: "Now that you have confirmed that all the results are there, please also notice the drop-down box that appears. This drop-box allows you to re-order the results depending on the Score, the number of examples used in that prediction, the template score, plausibility, root mean square of the molecular weight and finally the number of rings. Please select a different scoring order and see how it changes the results. Click 'Next' to re-enable clustering and to continue.",
+            content: "Now that you have confirmed that all the results are there, please also notice the drop-down box that appears. This drop-down box allows you to re-order the results depending on the Score, the number of examples used in that prediction, the template score, plausibility, root mean square of the molecular weight and finally the number of rings. Please select a different scoring order and see how it changes the results. Click 'Next' to re-enable clustering and to continue.",
             placement: "left",
             onNext: function() {
                 app.allowCluster = true ; 
             }
         },
+       /* {
+            element: '#details',
+            title: "Viewing clusters",
+            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another botton with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
+            placement: "left",
+            onNext: function() {
+		app.openClusterPopoutModal(selected, res);
+            }
+        }, */
 	/* End of cluster section */
         {
             element: "#network",
