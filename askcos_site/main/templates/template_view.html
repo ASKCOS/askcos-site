@@ -23,6 +23,13 @@
 	<div class="row">
 		<div class="col-12 text-center"><img v-if="!!templateInfo" :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
     </div>
+    <div class="row">
+        <div class="col-12">
+            <p v-if="templateInfo.necessary_reagent"><i>Note: This reaction would require a reagent to contribute %% templateInfo.necessary_reagent %%</i></p>
+            <p v-if="templateInfo.intra_only"><i>Note: This template should be used for intramolecular reactions <b>only</b></i></p>
+            <p v-if="templateInfo.dimer_only"><i>Note: This template should be used for symmetric (dimerization) reactions <b>only</b></i></p>
+        </div>
+    </div>
 	<div class="row">
 		<div class="col-12">
             <div class="text-center">
