@@ -1116,9 +1116,9 @@ var app = new Vue({
                         app.allowCluster = false;
                     }
                 }
-                this.initializeNetwork(app.data)
-                this.network.on('selectNode', app.showInfo);
-                this.network.on('deselectNode', app.clearSelection);
+                app.initializeNetwork(app.data)
+                app.network.on('selectNode', app.showInfo);
+                app.network.on('deselectNode', app.clearSelection);
             }})(file);
             reader.readAsText(file)
         },
