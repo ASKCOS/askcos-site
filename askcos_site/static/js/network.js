@@ -2077,7 +2077,7 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Result clustering, Group similar",
-            content: "You may quickly notice as you scroll down through the results, some are not shown. It may be that Ranks 1 to 3 are shown, then it jumps to 6, with ranks 4 and 5 missing etc. This is because the 'Group similar' checkbox is checked. Click on 'Next' to uncheck 'Group similar' to reveal the missing results.", 
+            content: "You may quickly notice as you scroll down through the results, some are not shown. For example, the second result in the list for the currently selected chemical is ranked #8. This is because the 'Group similar' checkbox is checked. With the option enabled, results percieved to be the same by an unsupervised machine learning clustering algorithm are collapsed into the same group. In this way, only 1 representative example for the top 5 groups are added to the visualization by default, making it easier to browse the meaningfully different transformations. Click on 'Next' to uncheck 'Group similar' to reveal the hidden results.", 
             placement: "left" ,
             onNext: function() {
                 app.allowCluster = false ; 
@@ -2092,15 +2092,15 @@ var tour = new Tour({
                 app.allowCluster = true ; 
             }
         },
-       /* {
+       {
             element: '#details',
             title: "Viewing clusters",
-            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another botton with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
+            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another botton with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters. When done viewing the clusters, click anywhere outside the cluster UI to close the popup window.",
             placement: "left",
             onNext: function() {
-		app.openClusterPopoutModal(selected, res);
+		        app.openClusterPopoutModal(app.selected, app.results[app.selected.smiles][0]);
             }
-        }, */
+        },
 	/* End of cluster section */
         {
             element: "#network",
@@ -2133,29 +2133,52 @@ var tour = new Tour({
             placement: "bottom"
         },
         {
+            element: "#clear-reactions-btn",
+            title: "Clear reactions button",
+            content: "This button will reset your target and clear all the reactions from the visualization.",
+            placement: "right"
+        },
+        {
             element: "#settings-btn",
-            title: "Getting more/less results",
-            content: "By default, only the top 5 predicted reactions for each target are shown. If you want more or less, open this settings window."
+            title: "Settings",
+            content: "There are various advanced settings for one-step/tree builder prediction parameters, as well as graph visualization options. Use this button to open the settings UI, where you can read more about each by hovering your mouse over the the tooltip icon (i).",
+            placement: "right"
         },
         {
             element: "#hierarchical-button",
             title: "Heiraarchical/Graph button",
-            content: "Clicking on this button changes how the results are displayed below. The default mode is graphical, G, where the target is displayed in the center and the child nodes fan out in all directions. Clicking on this button will change the display to heirarchical mode where the target appears at the top of the tree and the child node(s) project downwards. Click on the button to try it out."
+            content: "Clicking on this button changes how the results are displayed below. The default mode is graphical, G, where the target is displayed in the center and the child nodes fan out in all directions. Clicking on this button will change the display to heirarchical mode where the target appears at the top of the tree and the child node(s) project downwards. Click on the button to try it out.",
+            placement: "right"
+        },
+        {
+            element: "#center-graph-button",
+            title: "Center graph button",
+            content: "This button will fit the network visualization inside the canvas. This is useful if you have zoomed in on a specific region but would like to reset the view.",
+            placement: "right"
         },
         {
             element: "#download-btn",
             title: "Saving results",
-            content: "You can save the network structure (JSON of nodes and edges) and download it to your computer. You may also share these JSON files with your colleagues so that they can get excited about the molecules you are working on."
+            content: "You can save the network structure (JSON of nodes and edges) and download it to your computer. You may also share these JSON files with your colleagues so that they can get excited about the molecules you are working on.",
+            placement: "right"
         },
         {
             element: "#load-btn",
             title: "Restoring results",
-            content: "You can restore a previously saved network here."
+            content: "You can restore a previously saved network here.",
+            placement: "right"
         },
         {
             element: "#tb-submit",
             title: "Tree builder button",
-            content: "You can start a tree builder job, using the target SMILES string, by clicking on this button. This is an asynchronous job, so you can continue examining the predictions in the main window below. Once the job has completed, a browser popup will appear informing you that the job has finished. Clicking on this popup will bring you to the tree builder visualization page."
+            content: "You can start a tree builder job, using the target SMILES string, by clicking on this button. This is an asynchronous job, so you can continue examining the predictions in the main window below. Once the job has completed, a browser popup will appear informing you that the job has finished. Clicking on that popup will bring you to the tree builder visualization page.",
+            placement: "left"
+        },
+        {
+            element: "#tb-submit-settings",
+            title: "Tree builder button",
+            content: 'You can give your tree builder job a name using this dropdown menu, as well as choose between a few different preset "quick" settings. The tree builder job that gets submitted will show up in your saved results accessible from the "My Results" link all the way at the top of the page, and a name can help identify this job later. If not provided, it will default to the SMILES string of your target. If you want more control over the tree builder parameters, you can go int the advanced settings and look for the "MCTS Tree Builder Settings" section.',
+            placement: "right"
         },
         {
             title: "End of tour",
