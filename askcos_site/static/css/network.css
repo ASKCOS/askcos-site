@@ -23,6 +23,10 @@
     color: #008800
 }
 
+.popover[class*="tour-"] {
+    z-index: 9999 !important;
+}
+
 .popover[class*="tour-"].orphan {
 left: 50% !important;
 top: 50% !important;

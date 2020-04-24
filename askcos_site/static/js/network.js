@@ -2095,10 +2095,18 @@ var tour = new Tour({
        {
             element: '#details',
             title: "Viewing clusters",
-            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another botton with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters. When done viewing the clusters, click anywhere outside the cluster UI to close the popup window.",
+            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another botton with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
             placement: "left",
             onNext: function() {
 		        app.openClusterPopoutModal(app.selected, app.results[app.selected.smiles][0]);
+            }
+        },
+        {
+            title: "Cluster UI",
+            content: "Here you can see all of the different reactions that were grouped together in the same cluster. The green (+) or red (-) buttons can be used to choose a different variant of the reaction type and add it or remove it from the graph visualization. Click 'Next' to close the cluster UI popup and continue with the tutorial.",
+            orphan: true,
+            onNext: function() {
+                app.closeClusterPopoutModal()
             }
         },
 	/* End of cluster section */
