@@ -821,9 +821,10 @@ var app = new Vue({
                     }
                 })
         },
-        requestUrl: function(smiles) {
-            var url = '/api/retro/?';
-            var params = {
+        requestRetro: function(smiles, callback) {
+            showLoader()
+            const url = '/api/v2/retro/';
+            const body = {
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer: this.tb.settings.templateSet,
@@ -837,11 +838,46 @@ var app = new Vue({
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
                 allow_selec: this.tb.settings.allowSelec,
-            }
-            var queryString = Object.keys(params).map((key) => {
-                return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
-            }).join('&');
-            return url+queryString;
+            };
+            fetch(url,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting precursors for this target: '+error)
+                })
+        },
+        pollCeleryResult: function(taskId, callback) {
+            fetch(`/api/v2/celery/task/${taskId}/`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.complete) {
+                    callback(json.output);
+                    hideLoader();
+                }
+                else if (json.failed) {
+                    hideLoader();
+                    throw Error('Celery task failed.');
+                }
+                else {
+                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 1000)
+                }
+            })
         },
         resolveChemName: function(name) {
             if (this.allowResolve) {
@@ -904,50 +940,35 @@ var app = new Vue({
                 this.target = x;
                 this.saveTarget()
                 if (this.target != undefined) {
-                    var url = this.requestUrl(this.target);
-                    fetch(url)
-                    .then(resp => {
-                        if (!resp.ok) {
-                            throw resp.status;
-                        }
-                        return resp;
-                    })
-                    .then(resp => resp.json())
-                    .then(json => {
-                        if ('error' in json) {
-                            throw json['error']
-                        } else {
-                            this.data.nodes = new vis.DataSet([
-                                this.createTargetNode(this.target)
-                            ])
-                            this.data.edges = new vis.DataSet([]);
-                            this.initializeNetwork(this.data);
-                            this.network.on('selectNode', this.showInfo);
-                            this.network.on('deselectNode', this.clearSelection);
-                            this.$set(this.results, this.target, json['precursors']);
-                            this.initClusterShowCard(this.target); // must be called immediately after adding results
-                            addReactions(this.results[this.target], this.data.nodes.get(0), this.data.nodes, this.data.edges, this.reactionLimit);
-                            this.getTemplateNumExamples(this.results[this.target]);
-                            hideLoader();
-                            fetch('/api/buyables/search/?q='+encodeURIComponent(this.target)+'&canonicalize=True')
-                                .then(resp => resp.json())
-                                .then(json => {
-                                    if (json.buyables.length > 0) {
-                                        var ppg = json.buyables[0].ppg
-                                    }
-                                    else {
-                                        var ppg = "not buyable"
-                                    }
-                                    this.data.nodes.update({id: 0, ppg: ppg});
-                                    this.network.selectNodes([0]);
-                                    this.selected = this.data.nodes.get(0);
-                            })
-                        }
-                    })
-                    .catch(error => {
-                        hideLoader();
-                        alert('There was an error fetching precursors for this target with the supplied settings: '+error)
-                    })
+                    const smi = this.target;
+                    const app = this;
+                    function callback(precursors) {
+                        app.data.nodes = new vis.DataSet([
+                            app.createTargetNode(smi)
+                        ]);
+                        app.data.edges = new vis.DataSet([]);
+                        app.initializeNetwork(app.data);
+                        app.network.on('selectNode', app.showInfo);
+                        app.network.on('deselectNode', app.clearSelection);
+                        app.$set(app.results, smi, precursors);
+                        app.initClusterShowCard(smi); // must be called immediately after adding results
+                        addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
+                        app.getTemplateNumExamples(app.results[smi]);
+                        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
+                            .then(resp => resp.json())
+                            .then(json => {
+                                if (json.buyables.length > 0) {
+                                    var ppg = json.buyables[0].ppg
+                                }
+                                else {
+                                    var ppg = "not buyable"
+                                }
+                                app.data.nodes.update({id: 0, ppg: ppg});
+                                app.network.selectNodes([0]);
+                                app.selected = app.data.nodes.get(0);
+                        })
+                    }
+                    this.requestRetro(smi, callback);
                 } else {
                     hideLoader();
                 }
@@ -1007,34 +1028,21 @@ var app = new Vue({
                 hideLoader();
                 return
             }
-            var smi = node.smiles;
-            var url = this.requestUrl(smi);
-            fetch(url)
-                .then(resp => {
-                    if (!resp.ok) {
-                        throw Error(resp.statusText);
-                    }
-                    return resp;
-                })
-                .then(resp => resp.json())
-                .then(json => {
-                    var reactions = json['precursors'];
-                    this.$set(this.results, smi, reactions);
-                    if (reactions.length==0) {
-                        alert('No precursors found!')
-                    }
-                    this.initClusterShowCard(smi); // must be called immediately after adding results
-                    addReactions(this.results[smi], this.data.nodes.get(nodeId), this.data.nodes, this.data.edges, this.reactionLimit);
-                    this.getTemplateNumExamples(this.results[smi]);
-                    this.selected = node;
-                    this.reorderResults();
-                    this.network.fit()
-                    hideLoader();
-                })
-                .catch(error => {
-                    hideLoader();
-                    alert('There was an error fetching precursors for this target with the supplied settings')
-                })
+            const smi = node.smiles;
+            const app = this;
+            function callback(precursors) {
+                app.$set(app.results, smi, precursors);
+                if (precursors.length === 0) {
+                    alert('No precursors found!')
+                }
+                app.initClusterShowCard(smi); // must be called immediately after adding results
+                addReactions(app.results[smi], app.data.nodes.get(nodeId), app.data.nodes, app.data.edges, app.reactionLimit);
+                app.getTemplateNumExamples(app.results[smi]);
+                app.selected = node;
+                app.reorderResults();
+                app.network.fit()
+            }
+            this.requestRetro(smi, callback);
         },
         getTemplateNumExamples: function(reactions) {
             for (reaction of reactions) {
