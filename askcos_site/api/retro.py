@@ -34,6 +34,8 @@ def singlestep(request):
     cluster_fp_length = int(request.GET.get('cluster_fp_length', 512))
     cluster_fp_radius = int(request.GET.get('cluster_fp_radius', 1))
 
+    selec_check = request.GET.get('allow_selec', 'True') in ['True', 'true']
+
     if max_cum_prob > 0.999 and max_num_templates > 1000:
         res = get_top_precursors_p.delay(
             target,
@@ -47,7 +49,8 @@ def singlestep(request):
             cluster_feature=cluster_feature,
             cluster_fp_type=cluster_fp_type,
             cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius
+            cluster_fp_radius=cluster_fp_radius,
+            selec_check=selec_check,
         )
     else:
         res = get_top_precursors_c.delay(
@@ -62,7 +65,8 @@ def singlestep(request):
             cluster_feature=cluster_feature,
             cluster_fp_type=cluster_fp_type,
             cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius
+            cluster_fp_radius=cluster_fp_radius,
+            selec_check=selec_check,
         )
 
     if run_async:

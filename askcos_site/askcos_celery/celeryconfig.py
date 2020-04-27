@@ -39,5 +39,5 @@ CELERY_TASK_ROUTES = {
     'askcos_site.askcos_celery.impurity.impurity_worker.*':{'queue':'impurity_worker'},
     'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker.*':{'queue':'atom_mapping_worker'},
     'askcos_site.askcos_celery.impurity.impurity_predictor_worker.*': {'queue': 'atom_mapping_worker'},
-
+    'askcos_site.askcos_celery.generalselectivity.selec_worker.get_selec': {'queue': 'selec_worker'},
 }

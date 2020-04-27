@@ -22,6 +22,8 @@ class RetroSerializer(serializers.Serializer):
     cluster_fp_length = serializers.IntegerField(default=512)
     cluster_fp_radius = serializers.IntegerField(default=1)
 
+    selec_check = serializers.BooleanField(default=True)
+
     def validate_template_set(self, value):
         """Verify that the requested template set is valid."""
         if value not in ['reaxys', 'uspto_50k']:
@@ -87,6 +89,8 @@ class RetroAPIView(CeleryTaskAPIView):
         cluster_fp_length = data['cluster_fp_length']
         cluster_fp_radius = data['cluster_fp_radius']
 
+        selec_check = data['selec_check']
+
         if max_cum_prob > 0.999 and max_num_templates > 1000:
             result = get_top_precursors_p.delay(
                 target,
@@ -101,6 +105,7 @@ class RetroAPIView(CeleryTaskAPIView):
                 cluster_fp_type=cluster_fp_type,
                 cluster_fp_length=cluster_fp_length,
                 cluster_fp_radius=cluster_fp_radius,
+                selec_check=selec_check,
                 postprocess=True,
             )
         else:
@@ -117,6 +122,7 @@ class RetroAPIView(CeleryTaskAPIView):
                 cluster_fp_type=cluster_fp_type,
                 cluster_fp_length=cluster_fp_length,
                 cluster_fp_radius=cluster_fp_radius,
+                selec_check=selec_check,
                 postprocess=True,
             )
 

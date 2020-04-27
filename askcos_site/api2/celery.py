@@ -4,18 +4,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from askcos_site.celery import app
-
-READABLE_NAMES = {
-    'cr_network_worker': 'Context Recommender Worker',
-    'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
-    'tb_c_worker_preload': 'One-Step/Tree Builder Retrosynthesis Worker (Pre-loaded)',
-    'tb_coordinator_mcts': 'Tree Builder Coordinator',
-    'sites_worker': 'Site Selectivity Worker',
-    'impurity_worker': 'Impurity worker',
-    'atom_mapping_worker': 'Atom mapping worker',
-    'tffp_worker': 'Template-free Forward Predictor'
-}
+from askcos_site.celery import app, READABLE_NAMES
 
 
 class CeleryTaskViewSet(GenericViewSet):
@@ -155,7 +144,7 @@ class CeleryStatusAPIView(GenericAPIView):
         status_list = []
         for key in status:
             status_list.append({
-                'name': READABLE_NAMES.get(key),
+                'name': READABLE_NAMES.get(key, key),
                 'queue': key,
                 'busy': status[key]['busy'],
                 'available': status[key]['available']

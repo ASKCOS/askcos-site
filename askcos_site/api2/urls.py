@@ -30,6 +30,7 @@ urlpatterns += [
     path('retro/', api2.retro.singlestep, name='retro_api'),
     path('scscore/', api2.scscore.scscore, name='scscore_api'),
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
+    path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),
     path('tree-builder/', api2.tree_builder.tree_builder, name='tree_builder_api'),
 
     path('token-auth/', obtain_jwt_token, name='token_auth_api'),

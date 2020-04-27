@@ -267,6 +267,12 @@
                 <input style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control text-center">
             </div>
         </div>
+        <div class="form-inline mb-10">
+            <div>
+                <input type="checkbox" ref="allowSelec" v-model="tb.settings.allowSelec" {{ tb.settings.allowSelec }}/>
+                Apply regio-selectivity checking?
+            </div>
+        </div>
         <hr>
         <h2>MCTS Tree Builder Settings:</h2>
         <div class="form-inline mb-10">
@@ -974,6 +980,31 @@
                                             </div>
                                         </div>
                                     </div>
+
+<template v-if="'outcomes' in selected">
+    <div class="text-center" style="margin-top: 10px">
+        <h3>Regio-selective Products</h3>
+        <button id="predict-selectivity" v-on:click="predictSelectivity" class="btn btn-success">Predict selectivity</button>
+    </div>
+    <div slot="body" class="text-center">
+        <div class="scroll-list">
+            <div class="grid-wrapper">
+                <template v-for="(res, index) in selected.outcomes">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <img v-bind:src="getMolDrawEndPoint(res)" style="max-width: 100%"/>
+                            </div>
+                            <div class="col-xs-12" v-if="selected.selectivity[index]">
+                               Score %% num2str(selected.selectivity[index], 3) %%
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>
                                 </template>
                             </template>
                             <template v-else>

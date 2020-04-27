@@ -6,6 +6,19 @@ from django.conf import settings
 # Set the Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'askcos_site.settings')
 
+# Define readable names for celery workers for status reporting
+READABLE_NAMES = {
+    'cr_network_worker': 'Context Recommender Worker',
+    'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
+    'tb_c_worker_preload': 'One-Step/Tree Builder Retrosynthesis Worker (Pre-loaded)',
+    'tb_coordinator_mcts': 'Tree Builder Coordinator',
+    'sites_worker': 'Site Selectivity Worker',
+    'impurity_worker': 'Impurity Worker',
+    'atom_mapping_worker': 'Atom Mapping Worker',
+    'tffp_worker': 'Template-free Forward Predictor',
+    'selec_worker': 'General Selectivity Worker',
+}
+
 # Note: cannot use guest for authenticating with broker unless on localhost
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
@@ -23,6 +36,7 @@ app = Celery('askcos_site', broker='amqp://{}:{}'.format(RABBIT_HOST, RABBIT_POR
         'askcos_site.askcos_celery.impurity.impurity_worker',
         'askcos_site.askcos_celery.impurity.impurity_predictor_worker',
         'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker',
+        'askcos_site.askcos_celery.generalselectivity.selec_worker',
     ]
 )
 
