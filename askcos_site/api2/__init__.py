@@ -17,3 +17,4 @@ from . import scscore
 from . import selectivity
 from . import template
 from . import tree_builder
+from . import general_selectivity
