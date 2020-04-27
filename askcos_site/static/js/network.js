@@ -1972,7 +1972,7 @@ var tour = new Tour({
         {
             element: "#target",
             title: "Fluconazole",
-            content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, click on the eidt icon to open the drawing tool or try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click 'Next to continue!",
+            content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, click on the edit icon to open the drawing tool or try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click 'Next to continue!",
             placement: "bottom",
             onNext: function() {
                 if (app.data.nodes.length == null | app.data.nodes.length == 0) {
@@ -1983,14 +1983,14 @@ var tour = new Tour({
         {
             element: "#network",
             title: "One-step retrosynthesis results",
-            content: "When the results are ready, they will be shown in the main window on the left. The target molecule you entereted will be shown in the center inside a <span class='blue-text'>blue</span> box (it is currently selected). You can click and drag on empty space in the window to navigate through the entire network when zoomed in. Scrolling inside the window will zoom in and out. You can rearrange nodes by clicking and dragging on them. Take a second to enjoy the inverted gravity model, courtesy of <a href='http://visjs.org' target='_blank'>vis.js</a>. Click 'Next' to continue.",
+            content: "When the results are ready, they will be shown in the main window on the left. The target molecule you entered will be shown in the center inside a <span class='blue-text'>blue</span> box (it is currently selected). You can click and drag on empty space in the window to navigate through the entire network when zoomed in. Scrolling inside the window will zoom in and out. You can rearrange nodes by clicking and dragging on them. Take a second to enjoy the inverted gravity model, courtesy of <a href='http://visjs.org' target='_blank'>vis.js</a>. Click 'Next' to continue.",
             placement: 'right',
             backdropContainer: '#network'
         },
         {
             element: "#network",
             title: "Predicted reactions",
-            content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the higest ranked prediction is highlighted.",
+            content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the highest ranked prediction is highlighted.",
             onShown: function () {
                 app.network.selectNodes([1]);
                 app.selected = app.data.nodes.get(1);
@@ -2015,7 +2015,7 @@ var tour = new Tour({
             element: "#network",
             placement: 'right',
             title: "Reactants",
-            content: "In this example, we'll see if we can predict a reaction to make the non-buyable reactant in the prediction ranked number 1, (it's been selected for you) from buyable starting materials."
+            content: "In this example, we'll see if we can predict a reaction to make the non-buyable reactant in the rank 1 reaction prediction from buyable starting materials (it's been selected for you)."
         },
         {
             element: '#expand-btn',
@@ -2036,13 +2036,13 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Result details",
-            content: "You may have noticed there's been a lot going on on the right side of the screen in addition to the changes in the network visualization. On this side, details of the currently selected node are shown. In this case, a <b>chemical</b> node is selected. At the top you can see its SMILES string, its cost in $/g and a 2d rendering of its structure.",
+            content: "You may have noticed there's been a lot going on on the right side of the screen in addition to the changes in the network visualization. On this side, details of the currently selected node are shown. In this case, a <b>chemical</b> node is selected. At the top you can see its SMILES string, its cost in $/g (if buyable) and a 2d rendering of its structure.",
             placement: "left"
         },
         {
             element: '#details',
             title: "Precursors",
-            content: "Additionally, if you've already made a retrosynthetic prediction for the currently selected <b>chemical</b>, you'll see list of the precursor results. Each entry shows the reactants for the reaction to make the currently selected chemical. Additional information such as a relative score and the number of examples there were for the templates that support the suggested reaction are also shown. You can reorder these results by each metric using the drop-down menu above. If you haven't performed a retrosynthetic prediction for the selected chemical, the same <b>Expand Node</b> button you used before will be shown.",
+            content: "Additionally, if you've already made a retrosynthetic prediction for the currently selected <b>chemical</b>, you'll see list of the precursor results. Each entry shows the reactants for the reaction to make the currently selected chemical. Additional information such as a relative score and the number of examples there were for the templates that support the suggested reaction are also shown. If you haven't performed a retrosynthetic prediction for the selected chemical, the same <b>Expand Node</b> button you used before will be shown.",
             placement: "left"
         },
         {
@@ -2077,7 +2077,7 @@ var tour = new Tour({
         {
             element: '#details',
             title: "Result clustering, Group similar",
-            content: "You may quickly notice as you scroll down through the results, some are not shown. For example, the second result in the list for the currently selected chemical is ranked #8. This is because the 'Group similar' checkbox is checked. With the option enabled, results percieved to be the same by an unsupervised machine learning clustering algorithm are collapsed into the same group. In this way, only 1 representative example for the top 5 groups are added to the visualization by default, making it easier to browse the meaningfully different transformations. Click on 'Next' to uncheck 'Group similar' to reveal the hidden results.", 
+            content: "You may quickly notice as you scroll down through the results, some are not shown. For example, the second result in the list for the currently selected chemical is ranked #8. This is because the 'Group similar' checkbox is checked. With the option enabled, results perceived to be the same by an unsupervised machine learning clustering algorithm are collapsed into the same group. In this way, only 1 representative example for the top 5 groups are added to the visualization by default, making it easier to browse the meaningfully different transformations. Click on 'Next' to uncheck 'Group similar' to reveal the hidden results.",
             placement: "left" ,
             onNext: function() {
                 app.allowCluster = false ; 
@@ -2095,7 +2095,7 @@ var tour = new Tour({
        {
             element: '#details',
             title: "Viewing clusters",
-            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another botton with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
+            content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another button with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
             placement: "left",
             onNext: function() {
 		        app.openClusterPopoutModal(app.selected, app.results[app.selected.smiles][0]);
@@ -2154,8 +2154,8 @@ var tour = new Tour({
         },
         {
             element: "#hierarchical-button",
-            title: "Heiraarchical/Graph button",
-            content: "Clicking on this button changes how the results are displayed below. The default mode is graphical, G, where the target is displayed in the center and the child nodes fan out in all directions. Clicking on this button will change the display to heirarchical mode where the target appears at the top of the tree and the child node(s) project downwards. Click on the button to try it out.",
+            title: "Hierarchical/Graph button",
+            content: "Clicking on this button changes how the results are displayed below. The default mode is graphical, G, where the target is displayed in the center and the child nodes fan out in all directions. Clicking on this button will change the display to hierarchical mode where the target appears at the top of the tree and the child node(s) project downwards. Click on the button to try it out.",
             placement: "right"
         },
         {
@@ -2185,7 +2185,7 @@ var tour = new Tour({
         {
             element: "#tb-submit-settings",
             title: "Tree builder button",
-            content: 'You can give your tree builder job a name using this dropdown menu, as well as choose between a few different preset "quick" settings. The tree builder job that gets submitted will show up in your saved results accessible from the "My Results" link all the way at the top of the page, and a name can help identify this job later. If not provided, it will default to the SMILES string of your target. If you want more control over the tree builder parameters, you can go int the advanced settings and look for the "MCTS Tree Builder Settings" section.',
+            content: 'You can give your tree builder job a name using this dropdown menu, as well as choose between a few different preset "quick" settings. The tree builder job that gets submitted will show up in your saved results accessible from the "My Results" link all the way at the top of the page, and a name can help identify this job later. If not provided, it will default to the SMILES string of your target. If you want more control over the tree builder parameters, you can go into the advanced settings and look for the "MCTS Tree Builder Settings" section.',
             placement: "right"
         },
         {

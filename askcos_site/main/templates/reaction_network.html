@@ -267,7 +267,7 @@
         </div>
         <div class="form-inline mb-10">
             <i class="fas fa-question-circle" title="This is the cumulative template score after which templates will stop being applied to your target. 
-For example, if the first two templates prioritized by the machine learning model on the server, only those two template application results will be returned. 
+For example, if the sum of the scores of the top two templates exceeds this value, only those two template application results will be returned.
 Be careful not to set this to 1.0 and ask for a lot of templates to be applied - this will be very slow." style="cursor: pointer">
             </i>
             <div class="form-group">
@@ -277,7 +277,7 @@ Be careful not to set this to 1.0 and ask for a lot of templates to be applied -
         </div>
         <div class="form-inline mb-10">
             <i 
-                title="This is the minimum plausibility that a predictor transformation must recieve from the Fast Filter model in order to be kept and returned as a result.
+                title="This is the minimum plausibility that a predictor transformation must receive from the Fast Filter model in order to be kept and returned as a result.
 The plausibility score can help filter out bad suggestions, but in some cases can be over conservative and filter out false negatives."
                 class="fas fa-question-circle" style="cursor: pointer">
             </i>
@@ -325,7 +325,7 @@ and these will appear as leaf nodes in the resulting pathway graphs."
         </div>
         <div class="form-inline mb-10">
             <i 
-                title="This is the maximum depth for any given reaction pathway return by the search algorithm."
+                title="This is the maximum depth (or number of steps) for any given reaction pathway return by the search algorithm."
                 class="fas fa-question-circle" style="cursor: pointer">
             </i>
             <div class="form-group">
@@ -335,7 +335,7 @@ and these will appear as leaf nodes in the resulting pathway graphs."
         </div>
         <div class="form-inline mb-10">
             <i 
-                title="This is the maximum branching for any given chemical in the reation tree/graph. Once this maximum branching factor is reached, no more template applications will be attempted for that chemical during the search."
+                title="This is the maximum branching for any given chemical in the reaction tree/graph. Once this maximum branching factor is reached, no more template applications will be attempted for that chemical during the search."
                 class="fas fa-question-circle" style="cursor: pointer">
             </i>
             <div class="form-group">
@@ -456,7 +456,7 @@ and these will appear as leaf nodes in the resulting pathway graphs."
             <div class="checkbox">
                 <label>
                     <input type="checkbox" ref="allowCluster" v-model="allowCluster" {{ allowCluster }}/>
-                    Show similar presursors in one cluster?
+                    Show similar precursors in one cluster?
                 </label>
             </div>
         </div>
@@ -487,7 +487,7 @@ and these will appear as leaf nodes in the resulting pathway graphs."
         <div class="form-inline mb-10">
             <div>
                 <i 
-                    title="This clustering parameter determines which fingerprint features are used as input to the clustering algorithm. 'original' uses the features disappearing from the target, 'outcomes' uses the features appearing in the precursors, and 'all' usees both."
+                    title="This clustering parameter determines which fingerprint features are used as input to the clustering algorithm."
                     class="fas fa-question-circle" style="cursor: pointer">
                 </i>
                 Feature:
@@ -1130,7 +1130,7 @@ var isAuth = '{{ user.is_authenticated }}' == 'True'
 {% block javascript %}
 <script>
 $('#savepage').off('click').on('click', function(e) {
-    alert('This page cannot be saved like the others! Instead, please download the grpah network using the download button above the target input field. This will download the graph structure in JSON format to your computer. It can later be re-uploaded to this user interface or post-processed externally.');
+    alert('This page cannot be saved like the others! Instead, please download the graph network using the download button above the target input field. This will download the graph structure in JSON format to your computer. It can later be re-uploaded to this user interface or post-processed externally.');
 })
 </script>
 {% endblock %}
