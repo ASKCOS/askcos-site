@@ -140,7 +140,7 @@ function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
 
 function addReaction(reaction, sourceNode, nodes, edges) {
     var rId = nodes.max('id').id+1;
-    nodes.add({
+    var node = {
         id: rId,
         label: '#'+reaction['rank'],
         rank: reaction['rank'],
@@ -151,13 +151,23 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         templateIds: reaction['templates'],
         reactionSmiles: reaction.smiles+'>>'+sourceNode.smiles,
         type: 'reaction'
-    })
+    }
+
+    if ('outcomes' in reaction) {
+        node['outcomes'] = reaction['outcomes'].split('.')
+        node['selectivity'] = new Array(node.outcomes.length)
+        node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
+        node['color'] = '#ff0000'
+    }
+
+    nodes.add(node)
     if (edges.max('id')) {
         var eId = edges.max('id').id+1
     }
     else {
         var eId = 0
     }
+
     edges.add({
         id: eId,
         from: sourceNode.id,
@@ -370,6 +380,7 @@ var app = new Vue({
                 numTemplates: 1000,
                 maxCumProb: 0.999,
                 minPlausibility: 0.1,
+                allowSelec: true,
             },
             modes: {
                 quickest: {
@@ -778,7 +789,8 @@ var app = new Vue({
                 cluster_feature: this.clusterOptions.feature,
                 cluster_fp_type: this.clusterOptions.fingerprint,
                 cluster_fp_length: this.clusterOptions.fpBits,
-                cluster_fp_radius: this.clusterOptions.fpRadius
+                cluster_fp_radius: this.clusterOptions.fpRadius,
+                allow_selec: this.tb.settings.allowSelec,
             }
             var queryString = Object.keys(params).map((key) => {
                 return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
@@ -1690,6 +1702,57 @@ var app = new Vue({
                     error_msg = error.name+':'+error.message;
                 }
                 alert('There was an error fetching cluster results for this target with the supplied settings: '+error_msg)
+            })
+        },
+        predictSelectivity: function(){
+            showLoader();
+            var selected = this.network.getSelectedNodes();
+            var rid = selected[0]
+            var node = this.data.nodes.get(rid)
+            var smi = node.mappedReactionSmiles;
+            var url = '/api/v2/general-selectivity/';
+            var body = {
+                rxnsmiles: smi,
+            }
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollSelectivityResult(rid, json.task_id), 1000)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting selectivity for this reaction: '+error)
+                })
+        },
+        pollSelectivityResult: function(rid, taskId) {
+            fetch(`/api/v2/celery/task/${taskId}/`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.complete) {
+                    this.data.nodes.update({id:rid, selectivity: json.output})
+                    this.selected = this.data.nodes.get(rid)
+                    hideLoader();
+                }
+                else if (json.failed) {
+                    hideLoader();
+                    throw Error('Celery task failed.');
+                }
+                else {
+                    setTimeout(() => {this.pollSelectivityResult(rid, taskId)}, 1000)
+                }
             })
         },
         createTargetNode: function(target) {
