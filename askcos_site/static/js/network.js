@@ -1785,30 +1785,16 @@ var app = new Vue({
                 })
                 .then(resp => resp.json())
                 .then(json => {
-                    setTimeout(() => this.pollSelectivityResult(rid, json.task_id), 1000)
+                    function callback(result) {
+                        app.data.nodes.update({id:rid, selectivity: result});
+                        app.selected = app.data.nodes.get(rid)
+                    }
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
                 })
                 .catch(error => {
                     hideLoader();
                     alert('There was an error predicting selectivity for this reaction: '+error)
                 })
-        },
-        pollSelectivityResult: function(rid, taskId) {
-            fetch(`/api/v2/celery/task/${taskId}/`)
-            .then(resp => resp.json())
-            .then(json => {
-                if (json.complete) {
-                    this.data.nodes.update({id:rid, selectivity: json.output})
-                    this.selected = this.data.nodes.get(rid)
-                    hideLoader();
-                }
-                else if (json.failed) {
-                    hideLoader();
-                    throw Error('Celery task failed.');
-                }
-                else {
-                    setTimeout(() => {this.pollSelectivityResult(rid, taskId)}, 1000)
-                }
-            })
         },
         createTargetNode: function(target) {
             return {
