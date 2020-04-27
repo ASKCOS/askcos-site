@@ -26,6 +26,7 @@ urlpatterns = [
 
     re_path(r'^cluster/$', api.cluster.cluster, name='cluster_api'),
     re_path(r'^selectivity/$', api.selectivity.selectivity, name='selectivity'),
+    re_path(r'^general-selectivity/$', api.general_selectivity.selectivity, name='general_selectivity_api'),
 
     re_path(r'^rdkit/smiles-to-molfile/$', api.rdkit.smiles_to_molfile, name='smiles_to_molfile_api'),
     re_path(r'^rdkit/molfile-to-smiles/$', api.rdkit.molfile_to_smiles, name='molfile_to_smiles_api'),
