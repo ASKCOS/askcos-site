@@ -331,6 +331,105 @@ Vue.component('settings-modal', {
     template: '#modal-template-settings'
 })
 
+const tbSettingsDefault = {
+    quick: "normal",
+    maxDepth: 5,
+    maxBranching: 20,
+    expansionTime: 60,
+    maxPPG: 100,
+    chemicalPropertyLogic: 'none',
+    chemicalPropertyC: 0,
+    chemicalPropertyN: 0,
+    chemicalPropertyO: 0,
+    chemicalPropertyH: 0,
+    chemicalPopularityLogic: 'none',
+    chemicalPopularityReactants: 0,
+    chemicalPopularityProducts: 0,
+    returnFirst: false,
+    templatePrioritization: "reaxys",
+    templateSet: "reaxys",
+    precursorScoring: "RelevanceHeuristic",
+    numTemplates: 1000,
+    maxCumProb: 0.999,
+    minPlausibility: 0.1,
+    allowSelec: true,
+};
+
+const visjsOptionsDefault = {
+    edges: {
+        length: 1
+    },
+    nodes: {
+        mass: 1,
+        size: 25,
+        font: {
+            size: 14,
+        },
+        color: {
+            border: '#000000',
+            background: '#FFFFFF'
+        },
+        shapeProperties: {
+            useBorderWithImage: true
+        }
+    },
+    layout: {
+        hierarchical: {
+            enabled:false,
+            levelSeparation: 150,
+            nodeSpacing: 100,
+            treeSpacing: 200,
+            blockShifting: true,
+            edgeMinimization: true,
+            parentCentralization: true,
+            direction: 'UD',
+            sortMethod: 'directed',
+        }
+    },
+    interaction:{
+        dragNodes:true,
+        dragView: true,
+        hideEdgesOnDrag: false,
+        hideNodesOnDrag: false,
+        hover: false,
+        hoverConnectedEdges: true,
+        keyboard: {
+        enabled: false,
+        speed: {x: 10, y: 10, zoom: 0.02},
+        bindToWindow: true
+        },
+        multiselect: false,
+        navigationButtons: false,
+        selectable: true,
+        selectConnectedEdges: true,
+        tooltipDelay: 300,
+        zoomView: true
+    },
+    physics:{
+        enabled: true,
+        barnesHut: {
+            gravitationalConstant: -2000,
+            centralGravity: 0.3,
+            springLength: 95,
+            springConstant: 0.04,
+            damping: 0.09,
+            avoidOverlap: 0
+        },
+        maxVelocity: 50,
+        minVelocity: 0.1,
+        solver: 'barnesHut',
+        stabilization: {
+            enabled: true,
+            iterations: 1000,
+            updateInterval: 100,
+            onlyDynamicEdges: false,
+            fit: true
+        },
+        timestep: 0.5,
+        adaptiveTimestep: true
+    }
+};
+
 var app = new Vue({
     el: '#app',
     data: {
@@ -359,29 +458,7 @@ var app = new Vue({
         downloadName: "network.json",
         modalData: {},
         tb: {
-            settings: {
-                quick: "normal",
-                maxDepth: 5,
-                maxBranching: 20,
-                expansionTime: 60,
-                maxPPG: 100,
-                chemicalPropertyLogic: 'none',
-                chemicalPropertyC: 0,
-                chemicalPropertyN: 0,
-                chemicalPropertyO: 0,
-                chemicalPropertyH: 0,
-                chemicalPopularityLogic: 'none',
-                chemicalPopularityReactants: 0,
-                chemicalPopularityProducts: 0,
-                returnFirst: false,
-                templatePrioritization: "reaxys",
-                templateSet: "reaxys",
-                precursorScoring: "RelevanceHeuristic",
-                numTemplates: 1000,
-                maxCumProb: 0.999,
-                minPlausibility: 0.1,
-                allowSelec: true,
-            },
+            settings: JSON.parse(JSON.stringify(tbSettingsDefault)),
             modes: {
                 quickest: {
                     maxDepth: 4,
@@ -453,80 +530,7 @@ var app = new Vue({
         isHighlightAtom: true,
         reactionLimit: 5,
         sortingCategory: "score",
-        networkOptions: {
-            edges: {
-                length: 1
-            },
-            nodes: {
-                mass: 1,
-                size: 25,
-                font: {
-                    size: 14,
-                },
-                color: {
-                    border: '#000000',
-                    background: '#FFFFFF'
-                },
-                shapeProperties: {
-                    useBorderWithImage: true
-                }
-            },
-            layout: {
-                hierarchical: {
-                    enabled:false,
-                    levelSeparation: 150,
-                    nodeSpacing: 100,
-                    treeSpacing: 200,
-                    blockShifting: true,
-                    edgeMinimization: true,
-                    parentCentralization: true,
-                    direction: 'UD',
-                    sortMethod: 'directed',
-                }
-            },
-            interaction:{
-                dragNodes:true,
-                dragView: true,
-                hideEdgesOnDrag: false,
-                hideNodesOnDrag: false,
-                hover: false,
-                hoverConnectedEdges: true,
-                keyboard: {
-                enabled: false,
-                speed: {x: 10, y: 10, zoom: 0.02},
-                bindToWindow: true
-                },
-                multiselect: false,
-                navigationButtons: false,
-                selectable: true,
-                selectConnectedEdges: true,
-                tooltipDelay: 300,
-                zoomView: true
-            },
-            physics:{
-                enabled: true,
-                barnesHut: {
-                    gravitationalConstant: -2000,
-                    centralGravity: 0.3,
-                    springLength: 95,
-                    springConstant: 0.04,
-                    damping: 0.09,
-                    avoidOverlap: 0
-                },
-                maxVelocity: 50,
-                minVelocity: 0.1,
-                solver: 'barnesHut',
-                stabilization: {
-                    enabled: true,
-                    iterations: 1000,
-                    updateInterval: 100,
-                    onlyDynamicEdges: false,
-                    fit: true
-                },
-                timestep: 0.5,
-                adaptiveTimestep: true
-            }
-        }
+        networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
         this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
@@ -637,6 +641,12 @@ var app = new Vue({
             if (this.tb.settings.maxCumProb != this.tb.modes[mode].maxCumProb )return false
             if (this.tb.settings.minPlausibility != this.tb.modes[mode].minPlausibility) return false
             return true
+        },
+        resetSettings() {
+            this.$set(this.tb, 'settings', JSON.parse(JSON.stringify(tbSettingsDefault)));
+            this.$set(this, 'networkOptions', JSON.parse(JSON.stringify(visjsOptionsDefault)));
+            this.saveTbSettings();
+            this.saveNetworkOptions();
         },
         sendTreeBuilderJob() {
             if (!isAuth) {
