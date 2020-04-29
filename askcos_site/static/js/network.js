@@ -430,6 +430,22 @@ const visjsOptionsDefault = {
     }
 };
 
+const ippSettingsDefault = {
+    allowCluster: true,
+    allowResolve: false,
+    isHighlightAtom: true,
+    reactionLimit: 5,
+    sortingCategory: "score",
+    clusterOptions: {
+        allowRemovePrecursor: true,
+        feature: 'original',
+        fingerprint:'morgan',
+        fpRadius: 1, fpBits: 512,
+        cluster_method: 'kmeans',
+        isAlternatingColor: false,
+    },
+};
+
 var app = new Vue({
     el: '#app',
     data: {
@@ -447,8 +463,8 @@ var app = new Vue({
         templateSets: [],
         templateNumExamples: {},
         nodeStructure: {},
-        allowCluster: true,
-        allowResolve: false,
+        allowCluster: ippSettingsDefault.allowCluster,
+        allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
         showLoadModal: false,
         showDownloadModal: false,
@@ -518,18 +534,11 @@ var app = new Vue({
             },
         },
         addNewPrecursorModal: {},
-        clusterOptions: {
-            allowRemovePrecursor: true,
-            feature: 'original',
-            fingerprint:'morgan',
-            fpRadius: 1, fpBits: 512,
-            cluster_method: 'kmeans',
-            isAlternatingColor: false,
-        },
+        clusterOptions: JSON.parse(JSON.stringify(ippSettingsDefault.clusterOptions)),
         selected: null,
-        isHighlightAtom: true,
-        reactionLimit: 5,
-        sortingCategory: "score",
+        isHighlightAtom: ippSettingsDefault.isHighlightAtom,
+        reactionLimit: ippSettingsDefault.reactionLimit,
+        sortingCategory: ippSettingsDefault.sortingCategory,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
@@ -543,6 +552,7 @@ var app = new Vue({
         this.loadNetworkOptions()
         this.loadTarget()
         this.loadTbSettings()
+        this.loadIppSettings()
         var urlParams = new URLSearchParams(window.location.search);
         let urlTarget = urlParams.get('target')
         if (urlTarget) {
@@ -595,6 +605,18 @@ var app = new Vue({
             if (!storageAvailable('localStorage')) return
             localStorage.setItem('tbSettings', encodeURIComponent(JSON.stringify(this.tb.settings)))
         },
+        saveIppSettings() {
+            if (!storageAvailable('localStorage')) return
+            const obj = {
+                allowCluster: this.allowCluster,
+                allowResolve: this.allowResolve,
+                isHighlightAtom: this.isHighlightAtom,
+                reactionLimit: this.reactionLimit,
+                sortingCategory: this.sortingCategory,
+                clusterOptions: this.clusterOptions,
+            }
+            localStorage.setItem('ippSettings', encodeURIComponent(JSON.stringify(obj)))
+        },
         loadNetworkOptions() {
             if (!storageAvailable('localStorage')) return
             settings = localStorage.getItem('visjsOptions')
@@ -614,6 +636,15 @@ var app = new Vue({
             if (!settings) return
             obj = JSON.parse(decodeURIComponent(settings))
             this.$set(this.tb, 'settings', obj)
+        },
+        loadIppSettings() {
+            if (!storageAvailable('localStorage')) return
+            settings = localStorage.getItem('ippSettings')
+            if (!settings) return
+            const obj = JSON.parse(decodeURIComponent(settings))
+            for (let key in obj) {
+                this.$set(this, key, obj[key])
+            }
         },
         handleResize: function() {
             this.window.width = window.innerWidth;
@@ -645,8 +676,12 @@ var app = new Vue({
         resetSettings() {
             this.$set(this.tb, 'settings', JSON.parse(JSON.stringify(tbSettingsDefault)));
             this.$set(this, 'networkOptions', JSON.parse(JSON.stringify(visjsOptionsDefault)));
+            for (let key in JSON.parse(JSON.stringify(ippSettingsDefault))) {
+                this.$set(this, key, ippSettingsDefault[key])
+            }
             this.saveTbSettings();
             this.saveNetworkOptions();
+            this.saveIppSettings();
         },
         sendTreeBuilderJob() {
             if (!isAuth) {
@@ -673,6 +708,7 @@ var app = new Vue({
             var url = '/api/v2/tree-builder/'
             this.saveNetworkOptions()
             this.saveTbSettings()
+            this.saveIppSettings()
             this.saveTarget()
             var description = this.tb.settings.name ? this.tb.settings.name : this.target
             var body = {
@@ -855,6 +891,7 @@ var app = new Vue({
             showLoader();
             this.saveTbSettings()
             this.saveNetworkOptions()
+            this.saveIppSettings()
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
                 if (isvalidsmiles) {
