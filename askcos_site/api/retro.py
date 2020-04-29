@@ -4,6 +4,7 @@ from celery.exceptions import TimeoutError
 from makeit import global_config as gc
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
 from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
+from askcos_site.globals import PRELOAD_AVAIL
 
 TIMEOUT = 120
 
@@ -36,7 +37,7 @@ def singlestep(request):
 
     selec_check = request.GET.get('allow_selec', 'True') in ['True', 'true']
 
-    if max_cum_prob > 0.999 and max_num_templates > 1000:
+    if PRELOAD_AVAIL and max_cum_prob > 0.999 and max_num_templates > 1000:
         res = get_top_precursors_p.delay(
             target,
             template_set=template_set,

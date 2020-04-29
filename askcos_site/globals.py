@@ -12,7 +12,13 @@ import makeit.global_config as gc
 from makeit.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
 from makeit.retrosynthetic.transformer import RetroTransformer
 from makeit.utilities.buyable.pricer import Pricer
+from askcos_site.celery import app
 
+
+################################################################################
+# Preload worker availability
+workers = [worker.split('@')[0] for worker in app.control.inspect().stats()]
+PRELOAD_AVAIL = 'tb_c_worker_preload' in workers
 
 ################################################################################
 # Database client

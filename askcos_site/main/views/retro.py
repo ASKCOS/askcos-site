@@ -13,7 +13,7 @@ import numpy as np
 import json
 import os
 
-from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
+from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer, PRELOAD_AVAIL
 
 from ..utils import ajax_error_wrapper, resolve_smiles
 from .users import can_control_robot
@@ -129,7 +129,7 @@ def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
 
         startTime = time.time()
         if chiral:
-            if max_cum_prob > 0.999 and template_count > 1000:
+            if PRELOAD_AVAIL and max_cum_prob > 0.999 and template_count > 1000:
                 res = get_top_precursors_p.delay(
                     smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
                     fast_filter_threshold=filter_threshold
