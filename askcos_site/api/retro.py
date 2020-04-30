@@ -2,9 +2,7 @@ from rdkit import Chem
 from django.http import JsonResponse
 from celery.exceptions import TimeoutError
 from makeit import global_config as gc
-from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
-from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
-from askcos_site.globals import PRELOAD_AVAIL
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 
 TIMEOUT = 120
 
@@ -37,38 +35,21 @@ def singlestep(request):
 
     selec_check = request.GET.get('allow_selec', 'True') in ['True', 'true']
 
-    if PRELOAD_AVAIL and max_cum_prob > 0.999 and max_num_templates > 1000:
-        res = get_top_precursors_p.delay(
-            target,
-            template_set=template_set,
-            template_prioritizer=template_prioritizer,
-            fast_filter_threshold=fast_filter_threshold,
-            max_cum_prob=max_cum_prob,
-            max_num_templates=max_num_templates,
-            cluster=cluster,
-            cluster_method=cluster_method,
-            cluster_feature=cluster_feature,
-            cluster_fp_type=cluster_fp_type,
-            cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius,
-            selec_check=selec_check,
-        )
-    else:
-        res = get_top_precursors_c.delay(
-            target,
-            template_set=template_set,
-            template_prioritizer=template_prioritizer,
-            fast_filter_threshold=fast_filter_threshold,
-            max_cum_prob=max_cum_prob,
-            max_num_templates=max_num_templates,
-            cluster=cluster,
-            cluster_method=cluster_method,
-            cluster_feature=cluster_feature,
-            cluster_fp_type=cluster_fp_type,
-            cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius,
-            selec_check=selec_check,
-        )
+    res = get_top_precursors.delay(
+        target,
+        template_set=template_set,
+        template_prioritizer=template_prioritizer,
+        fast_filter_threshold=fast_filter_threshold,
+        max_cum_prob=max_cum_prob,
+        max_num_templates=max_num_templates,
+        cluster=cluster,
+        cluster_method=cluster_method,
+        cluster_feature=cluster_feature,
+        cluster_fp_type=cluster_fp_type,
+        cluster_fp_length=cluster_fp_length,
+        cluster_fp_radius=cluster_fp_radius,
+        selec_check=selec_check,
+    )
 
     if run_async:
         resp['id'] = res.id

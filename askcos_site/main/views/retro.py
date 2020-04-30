@@ -13,15 +13,14 @@ import numpy as np
 import json
 import os
 
-from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer, PRELOAD_AVAIL
+from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
 
 from ..utils import ajax_error_wrapper, resolve_smiles
 from .users import can_control_robot
 from ..forms import SmilesInputForm
 from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 
-from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
-from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 
 from celery.result import AsyncResult
@@ -128,29 +127,15 @@ def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
         print(filter_threshold)
 
         startTime = time.time()
-        if chiral:
-            if PRELOAD_AVAIL and max_cum_prob > 0.999 and template_count > 1000:
-                res = get_top_precursors_p.delay(
-                    smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
-                    fast_filter_threshold=filter_threshold
-                )
-            else:
-                res = get_top_precursors_c.delay(
-                    smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
-                    fast_filter_threshold=filter_threshold
-                )
+        res = get_top_precursors.delay(
+            smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
+            fast_filter_threshold=filter_threshold
+        )
             
-            (smiles, precursors) = res.get(300)
-            # allow up to 5 minutes...can be pretty slow
-            context['precursors'] = precursors
-            context['footnote'] = RETRO_CHIRAL_FOOTNOTE
-        else:
-
-            # Use apply_async so we can force high priority
-            res = get_top_precursors.delay(smiles, template_prioritization, precursor_prioritization,
-                mincount=0, max_branching=max_n, template_count=template_count, max_cum_prob=max_cum_prob, apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold)
-            context['precursors'] = res.get(120)
-            context['footnote'] = ''
+        (smiles, precursors) = res.get(300)
+        # allow up to 5 minutes...can be pretty slow
+        context['precursors'] = precursors
+        context['footnote'] = RETRO_CHIRAL_FOOTNOTE
         context['time'] = '%0.3f' % (time.time() - startTime)
 
         # Change 'tform' field to be reaction SMARTS, not ObjectID from Mongo
