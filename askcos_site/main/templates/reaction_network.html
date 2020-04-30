@@ -268,11 +268,11 @@
         <div class="form-inline mb-10">
             <i class="fas fa-question-circle" title="This is the cumulative template score after which templates will stop being applied to your target. 
 For example, if the sum of the scores of the top two templates exceeds this value, only those two template application results will be returned.
-Be careful not to set this to 1.0 and ask for a lot of templates to be applied - this will be very slow." style="cursor: pointer">
+For computational efficiency, this value is limited to a maximum value of 0.99999. Please directly use the asynchronous API if you need to apply all templates." style="cursor: pointer">
             </i>
             <div class="form-group">
                 Max. cum. prob.:
-                <input style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" class="form-control text-center">
+                <input style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control text-center">
             </div>
         </div>
         <div class="form-inline mb-10">
