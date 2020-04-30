@@ -569,6 +569,14 @@ and these will appear as leaf nodes in the resulting pathway graphs."
             <input type="range" min="1" max="500" step="1" v-model.number="networkOptions.layout.hierarchical.levelSeparation" class="slider" @input="updateNetworkOptions()">
         </div>
     </div>
+    <div slot="footer">
+        <button style="margin: 0 5px;" class="btn btn-danger modal-default-button" @click="resetSettings()">
+          Reset
+        </button>
+        <button style="margin: 0 5px;" class="btn btn-default modal-default-button" @click="showSettingsModal = false">
+          Close
+        </button>
+    </div>
 </settings-modal>
 
 <modal v-if="showLoadModal">
