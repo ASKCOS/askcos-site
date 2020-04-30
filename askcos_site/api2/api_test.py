@@ -796,6 +796,40 @@ M  END
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
 
+    def test_selectivity_gen(self):
+        """Test /general-selectivity endpoint"""
+        data = {
+            'rxnsmiles': '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12>O>[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2',
+        }
+        response = self.post('/general-selectivity/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertIsInstance(result['output'], list)
+        self.assertEqual(len(result['output']), 2)
+        self.assertAlmostEqual(result['output'][0], 0.99444, places=4)
+        self.assertAlmostEqual(result['output'][1], 0.00555, places=4)
+
+        # Test insufficient data
+        response = self.post('/general-selectivity/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.post('/general-selectivity/', data={'rxnsmiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reaction smiles.']})
+
     def test_template(self):
         """Test /template endpoint"""
         # Get request for specific template endpoint
