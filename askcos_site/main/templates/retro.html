@@ -39,6 +39,7 @@ function liberalSettings() {
     $("#filter_threshold").val(0.01);
     showFields("Relevance");
 }
+
 </script>
 {% endblock %}
 
@@ -182,6 +183,12 @@ function liberalSettings() {
         </tbody>
     </table>
 {% endif %}
+
+<script>
+$("#max_cum_prob").change(() => {
+    $("#max_cum_prob").val(Math.min(0.99999, Number($("#max_cum_prob").val())))
+})
+</script>
 
 {% if footnote %}
 <br>

@@ -10,7 +10,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'askcos_site.settings')
 READABLE_NAMES = {
     'cr_network_worker': 'Context Recommender Worker',
     'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
-    'tb_c_worker_preload': 'One-Step/Tree Builder Retrosynthesis Worker (Pre-loaded)',
     'tb_coordinator_mcts': 'Tree Builder Coordinator',
     'sites_worker': 'Site Selectivity Worker',
     'impurity_worker': 'Impurity Worker',
@@ -28,7 +27,6 @@ app = Celery('askcos_site', broker='amqp://{}:{}'.format(RABBIT_HOST, RABBIT_POR
     backend='redis://{}:{}'.format(REDIS_HOST, REDIS_PORT),
     include=[
         'askcos_site.askcos_celery.treebuilder.tb_c_worker',
-        'askcos_site.askcos_celery.treebuilder.tb_c_worker_preload',
         'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts',
         'askcos_site.askcos_celery.contextrecommender.cr_network_worker',
         'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker',

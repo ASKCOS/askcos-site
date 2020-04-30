@@ -1,8 +1,7 @@
 from rdkit import Chem
 from rest_framework import serializers
 
-from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
-from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from .celery import CeleryTaskAPIView
 
 
@@ -91,40 +90,22 @@ class RetroAPIView(CeleryTaskAPIView):
 
         selec_check = data['selec_check']
 
-        if max_cum_prob > 0.999 and max_num_templates > 1000:
-            result = get_top_precursors_p.delay(
-                target,
-                template_set=template_set,
-                template_prioritizer=template_prioritizer,
-                fast_filter_threshold=fast_filter_threshold,
-                max_cum_prob=max_cum_prob,
-                max_num_templates=max_num_templates,
-                cluster=cluster,
-                cluster_method=cluster_method,
-                cluster_feature=cluster_feature,
-                cluster_fp_type=cluster_fp_type,
-                cluster_fp_length=cluster_fp_length,
-                cluster_fp_radius=cluster_fp_radius,
-                selec_check=selec_check,
-                postprocess=True,
-            )
-        else:
-            result = get_top_precursors_c.delay(
-                target,
-                template_set=template_set,
-                template_prioritizer=template_prioritizer,
-                fast_filter_threshold=fast_filter_threshold,
-                max_cum_prob=max_cum_prob,
-                max_num_templates=max_num_templates,
-                cluster=cluster,
-                cluster_method=cluster_method,
-                cluster_feature=cluster_feature,
-                cluster_fp_type=cluster_fp_type,
-                cluster_fp_length=cluster_fp_length,
-                cluster_fp_radius=cluster_fp_radius,
-                selec_check=selec_check,
-                postprocess=True,
-            )
+        result = get_top_precursors.delay(
+            target,
+            template_set=template_set,
+            template_prioritizer=template_prioritizer,
+            fast_filter_threshold=fast_filter_threshold,
+            max_cum_prob=max_cum_prob,
+            max_num_templates=max_num_templates,
+            cluster=cluster,
+            cluster_method=cluster_method,
+            cluster_feature=cluster_feature,
+            cluster_fp_type=cluster_fp_type,
+            cluster_fp_length=cluster_fp_length,
+            cluster_fp_radius=cluster_fp_radius,
+            selec_check=selec_check,
+            postprocess=True,
+        )
 
         return result
 

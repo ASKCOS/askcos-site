@@ -12,7 +12,7 @@ import makeit.global_config as gc
 from makeit.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
 from makeit.retrosynthetic.transformer import RetroTransformer
 from makeit.utilities.buyable.pricer import Pricer
-
+from askcos_site.celery import app
 
 ################################################################################
 # Database client
