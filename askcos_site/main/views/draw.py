@@ -1,20 +1,12 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from PIL import Image, ImageOps
-from ..utils import ajax_error_wrapper, resolve_smiles
-from ..forms import DrawingInputForm
-from rdkit.Chem import rdChemReactions
-import cairosvg
-from rdkit.Chem.Draw.rdMolDraw2D import MolDraw2DSVG
 import re
-import io
-import numpy as np
+
+from django.http import JsonResponse
+from django.shortcuts import render, HttpResponse
+from django.urls import reverse
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+from ..utils import ajax_error_wrapper, resolve_smiles
+
 
 @ajax_error_wrapper
 def ajax_smiles_to_image(request):

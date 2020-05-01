@@ -1,30 +1,22 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-import django.contrib.auth.views
-from pymongo.message import bson
-from bson.objectid import ObjectId
-from collections import defaultdict
-from datetime import datetime
-import time
-import numpy as np
 import json
 import os
+import time
+from collections import defaultdict
+from datetime import datetime
 
-from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
-
-from ..utils import ajax_error_wrapper, resolve_smiles
-from .users import can_control_robot
-from ..forms import SmilesInputForm
-from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
+from .users import can_control_robot
+from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
+from ..utils import ajax_error_wrapper, resolve_smiles
 
-from celery.result import AsyncResult
-from askcos_site.celery import app
 
 #@login_required
 def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
