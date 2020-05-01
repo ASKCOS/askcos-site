@@ -1,3 +1,12 @@
+function copyToClipboard(text) {
+    const dummy = document.createElement("textarea");
+    document.body.appendChild(dummy);
+    dummy.value = text;
+    dummy.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummy);
+}
+
 function getCookie(cname) {
     var name = cname + "=";
     var cookie_str = document.cookie;
@@ -17,15 +26,16 @@ var app = new Vue({
     el: "#app",
     data: {
         smiles: '',
+        drawMap: false,
+        highlight: false,
     },
     methods: {
         updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
-            this.canonicalize(smiles, drawBoxId)
+            this.canonicalize(jsmeApplet.smiles(), drawBoxId)
         },
-        canonicalize(smiles, input) {
-            return fetch(
-                '/api/rdkit/canonicalize/',
+        canonicalize(smiles, field) {
+            fetch(
+                '/api/v2/rdkit/smiles/canonicalize/',
                 {
                     method: 'POST',
                     headers: {
@@ -37,9 +47,18 @@ var app = new Vue({
                     })
                 }
             )
+            .then(resp => {
+                if (!resp.ok) {
+                    throw Error(resp.statusText)
+                }
+                return resp
+            })
             .then(resp => resp.json())
             .then(json => {
-                this[input] = json.smiles
+                this[field] = json.smiles
+            })
+            .catch(error => {
+                console.log('Could not canonicalize: '+error)
             })
         },
     },
