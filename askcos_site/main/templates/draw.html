@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Drawing{% endblock %}
+{% block page_title %}Drawing{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/forward.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+
+    <div class="row text-center">
+        <div class="col-12">
+            <div class="input-group input-group-lg">
+                <input class='form-control' type="text" v-model="smiles" id="smiles" style="text-align:center;"/>
+                <span id="smiles-edit-icon" class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')">
+                    <i class="fas fa-edit"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="!!smiles"  class="row text-center">
+        <div class="col-12">
+            <img class="hide-broken" :src="`/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`" :alt="smiles"/>
+        </div>
+    </div>
+
+    <!-- Popup drawing tool -->
+    <div class="modal fade" id="drawingbox">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body" style="height:430px;">
+                    <div id="jsme_container" style="margin:auto"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" @click="updateSmilesFromJSME">Done drawing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="{% static 'js/draw.js' %}"></script>
+
+{% endblock %}

@@ -75,6 +75,7 @@ urlpatterns = [
 
     # Drawing
     re_path(r'^draw/$', views.draw, name='draw'),
+    re_path(r'^draw2/$', views.draw2, name='draw2'),
     re_path(r'^draw/smiles/(?P<smiles>.+)$', views.draw_smiles, name='draw_smiles'),
     re_path(r'^draw/template/(?P<template>.+)$', views.draw_template, name='draw_template'),
     re_path(r'^draw/reaction/(?P<smiles>.+)$', views.draw_reaction, name='draw_reaction'),

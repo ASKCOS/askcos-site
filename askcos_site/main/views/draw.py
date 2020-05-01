@@ -184,6 +184,10 @@ def draw(request):
     return render(request, 'image.html', context)
 
 
+def draw2(request):
+    return render(request, 'draw.html')
+
+
 def draw_fig(request, fig):
     '''
     Returns a png response for figure object
