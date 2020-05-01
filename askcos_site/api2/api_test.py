@@ -599,25 +599,25 @@ class TestAPI(unittest.TestCase):
      RDKit          2D
 
  19 20  0  0  0  0  0  0  0  0999 V2000
-    1.5000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7500   -1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.7500   -1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.5000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.5000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7500    3.8971    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.5000    5.1962    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7500    6.4952    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.5000    7.7942    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7500    9.0933    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    3.0000    7.7942    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    3.0000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    3.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    5.2500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    6.0000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    5.2500    3.8971    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    3.7500    3.8971    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4064   -1.2224    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2720   -1.7232    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1384   -1.2238    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1392   -0.2238    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2736    0.2770    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4072   -0.2224    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5416    0.2784    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5424    1.2784    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3232    1.7790    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3224    2.7790    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1880    3.2796    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1872    4.2796    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0544    2.7804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3248   -0.2210    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3256   -1.2210    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1920   -1.7204    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0576   -1.2196    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0568   -0.2196    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1904    0.2798    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  2  0
   2  3  1  0
   3  4  2  0
@@ -795,6 +795,40 @@ M  END
         response = self.post('/selectivity/', data={'smiles': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'smiles': ['Cannot parse smiles with rdkit.']})
+
+    def test_selectivity_gen(self):
+        """Test /general-selectivity endpoint"""
+        data = {
+            'rxnsmiles': '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12>O>[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2',
+        }
+        response = self.post('/general-selectivity/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertIsInstance(result['output'], list)
+        self.assertEqual(len(result['output']), 2)
+        self.assertAlmostEqual(result['output'][0], 0.99444, places=4)
+        self.assertAlmostEqual(result['output'][1], 0.00555, places=4)
+
+        # Test insufficient data
+        response = self.post('/general-selectivity/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.post('/general-selectivity/', data={'rxnsmiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reaction smiles.']})
 
     def test_template(self):
         """Test /template endpoint"""
