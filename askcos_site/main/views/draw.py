@@ -142,49 +142,7 @@ def draw_smiles_highlight(request, smiles, reacting_atoms, bonds='False'):
     return response
 
 
-#@login_required
 def draw(request):
-    '''
-    Landing page for al draw_*_page functions
-    '''
-    context = {}
-    if request.method == 'POST':
-        context['form'] = DrawingInputForm(request.POST)
-        if not context['form'].is_valid():
-            context['err'] = 'Could not parse!'
-        else:
-            # Identify target
-            text = context['form'].cleaned_data['text']
-            try:
-                if 'mol' in request.POST:
-                    #text = resolve_smiles(text)
-                    context['image_url'] = reverse(
-                        'draw_smiles', kwargs={'smiles': text})
-                    context['label_title'] = 'Molecule SMILES'
-                    context['label'] = text
-                elif 'rxn' in request.POST:
-                    #text = '>>'.join([resolve_smiles(frag) for frag in text.split('>>')])
-                    context['image_url'] = reverse(
-                        'draw_reaction', kwargs={'smiles': text})
-                    context['label_title'] = 'Reaction SMILES'
-                    context['label'] = text
-                elif 'tform' in request.POST:
-                    context['image_url'] = reverse(
-                        'draw_template', kwargs={'template': text})
-                    context['label_title'] = 'Template SMARTS'
-                    context['label'] = text
-                else:
-                    context['err'] = 'Did not understand request'
-
-            except Exception as e:
-                context['err'] = e
-
-    else:
-        context['form'] = DrawingInputForm()
-    return render(request, 'image.html', context)
-
-
-def draw2(request):
     return render(request, 'draw.html')
 
 
