@@ -9,6 +9,7 @@
     - [Impurity prediction](#impurity-prediction)
     - [Retrosynthetic prediction](#retrosynthetic-prediction)
     - [Site selectivity prediction](#site-selectivity-prediction)
+    - [General selectivity prediction](#general-selectivity-prediction)
     - [Retrosynthetic tree builder tool](#retrosynthetic-tree-builder-tool)
 - [SMILES API](#smiles-api)
     - [Canonicalize](#canonicalize)
@@ -35,6 +36,7 @@
     - [Refresh token](#refresh-token)
 - [Other API](#other-api)
     - [Celery status](#celery-status)
+    - [Drawing](#drawing)
     - [Reaction clustering](#reaction-clustering)
     - [Reaction lookup](#reaction-lookup)
     - [SCScorer](#scscorer)
@@ -130,6 +132,7 @@ Parameters:
 - `reagents` (str, optional): SMILES string of reagents
 - `solvent` (str, optional): SMILES string of solvent
 - `num_results` (int, optional): max number of results to return
+- `atommap` (bool, optional): Flag to keep atom mapping from the prediction (default=False)
 
 Returns:
 
@@ -180,6 +183,7 @@ Parameters:
 - `cluster_fp_type` (str, optional): fingerprint type for clustering
 - `cluster_fp_length` (int, optional): fingerprint length for clustering
 - `cluster_fp_radius` (int, optional): fingerprint radius for clustering
+- `selec_check` (bool, optional): whether or not to check for potential selectivity issues
 
 Returns:
 
@@ -195,6 +199,22 @@ Method: POST
 Parameters:
 
 - `smiles` (str): SMILES string of target
+
+Returns:
+
+- `task_id`: celery task ID
+
+
+### General selectivity prediction
+API endpoint for general selectivity prediction task.
+
+URL: `/api/v2/gen-selectivity`
+
+Method: POST
+
+Parameters:
+
+- `reaction_smiles` (str): reaction smiles with map atom number
 
 Returns:
 
