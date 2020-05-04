@@ -8,6 +8,22 @@
   font-weight: bold;
 }
 
+.m5 {
+    margin: 5px;
+}
+
+.grey-border {
+    border: #333 3px solid;
+}
+
+.green-border {
+    border: #008800 3px solid;
+}
+
+.red-border {
+    border: #880000 3px solid;
+}
+
 .blue-text {
     font-weight: bold;
     color: #000088;
