@@ -62,6 +62,7 @@ class RetroAPIView(CeleryTaskAPIView):
     - `cluster_fp_type` (str, optional): fingerprint type for clustering
     - `cluster_fp_length` (int, optional): fingerprint length for clustering
     - `cluster_fp_radius` (int, optional): fingerprint radius for clustering
+    - `selec_check` (bool, optional): whether or not to check for potential selectivity issues
 
     Returns:
 
