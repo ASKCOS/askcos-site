@@ -157,7 +157,10 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         node['outcomes'] = reaction['outcomes'].split('.')
         node['selectivity'] = new Array(node.outcomes.length)
         node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
-        node['color'] = '#ff0000'
+        node['borderWidth'] = 3
+        node['color'] = { border: '#ff0000' }
+        node['title'] = "Selectivity warning! Select this node to see more details"
+
     }
 
     nodes.add(node)

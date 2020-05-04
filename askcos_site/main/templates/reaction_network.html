@@ -1102,10 +1102,16 @@ and these will appear as leaf nodes in the resulting pathway graphs."
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-xs-12">
-                                <img v-bind:src="getMolDrawEndPoint(res)" style="max-width: 100%"/>
+                                <img v-bind:src="getMolDrawEndPoint(res)" class="m5" :class="res === selected.reactionSmiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
                             </div>
                             <div class="col-xs-12" v-if="selected.selectivity[index]">
-                               Score %% num2str(selected.selectivity[index], 3) %%
+                                Score %% num2str(selected.selectivity[index], 3) %%
+                                <span v-if="selected.selectivity[index] === Math.max(...selected.selectivity)">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <span v-else>
+                                    <i class="fas fa-times"></i>
+                                </span>
                             </div>
                         </div>
                     </div>
