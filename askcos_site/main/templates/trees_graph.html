@@ -39,7 +39,7 @@
               Target: %% settings.smiles %%
             </div>
             <div class="text-center">
-              <img v-if="settings.smiles" :src="'/draw/smiles/'+encodeURIComponent(settings.smiles)">
+              <img v-if="settings.smiles" :src="'/api/v2/draw/?smiles='+encodeURIComponent(settings.smiles)">
             </div>
       </div>
       <table class="table">
@@ -124,19 +124,22 @@
             <div class="text-center">
               <div><b>Smiles: </b>%% selected.smiles %%</div>
               <div><b>Price ($/g): </b>%% selected.ppg %%</div>
+              <div v-if="selected.source">
+                <b>Source: </b>%% selected.source %%</div>
+              </div>
               <div style="margin-bottom: 10px">
                   <img v-bind:src="selected.image" style="max-width: 100%"/>
               </div>
               <div><b>As reactant: </b>%% selected.as_reactant %%</div>
               <div><b>As product: </b>%% selected.as_product %%</div>
-              <div><a :href="'/retro_interactive_mcts/target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with new tree builder job</a></div>
+              <div><a :href="'/retro/network/?target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with the Interactive Path Planner</a></div>
             </div>
           </template>
           <template v-if="selected.type=='reaction'">
               <div class="text-center">
                   <div><b>Smiles: </b>%% selected.smiles %%</div>
                   <div style="margin-bottom: 10px">
-                      <img :src="'/draw/reaction/'+encodeURIComponent(selected.smiles)" style="max-width: 100%" />
+                      <img :src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.smiles)" style="max-width: 100%" />
                   </div>
               </div>
               <div class="text-left">
@@ -159,7 +162,7 @@
                         </li>
                     </ul>
                 </div>
-                  <div><a :href="'/context/smiles='+encodeURIComponent(selected.smiles)" target="_blank">Evaluate reaction</a></div>
+                  <div><a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.smiles)" target="_blank">Evaluate reaction</a></div>
                 </div>
           </template>
       </template>

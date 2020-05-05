@@ -152,7 +152,8 @@ def get_top_precursors(
         fast_filter=None, max_num_templates=1000,
         max_cum_prob=1, fast_filter_threshold=0.75,
         cluster=True, cluster_method='kmeans', cluster_feature='original',
-        cluster_fp_type='morgan', cluster_fp_length=512, cluster_fp_radius=1
+        cluster_fp_type='morgan', cluster_fp_length=512, cluster_fp_radius=1,
+        postprocess=False, selec_check=False,
     ):
     """Get the precursors for a chemical defined by its SMILES.
 
@@ -183,6 +184,7 @@ def get_top_precursors(
         cluster_fp_type (str, optional): Type of fingerprint to use. Curretnly only 'morgan' is supported. (default: {'morgan'})
         cluster_fp_length (int, optional): Fixed-length folding to use for fingerprint generation. (default: {512})
         cluster_fp_radius (int, optional): Radius to use for fingerprint generation. (default: {1})
+        selec_check (bool, optional): apply selectivity checking for precursors to find other outcomes. (default: False)
 
     Returns:
         2-tuple of (str, list of dict): SMILES string of input and top
@@ -202,10 +204,15 @@ def get_top_precursors(
         smiles, template_set=template_set,
         max_num_templates=max_num_templates, max_cum_prob=max_cum_prob, 
         fast_filter_threshold=fast_filter_threshold, template_prioritizer=template_prioritizer,
-        precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter
+        precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter, selec_check=selec_check,
     )
     
-    return (smiles, result)
+    if postprocess:
+        for r in result:
+            r['templates'] = r.pop('tforms')
+        return result
+    else:
+        return smiles, result
 
 @shared_task
 def template_relevance(smiles, max_num_templates, max_cum_prob, relevance_model='reaxys'):

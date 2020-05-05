@@ -63,6 +63,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'rest_framework',
+    'rest_framework_jwt',
 )
 
 MIDDLEWARE = (
@@ -107,6 +109,13 @@ DATABASES = {'default': {
     'PORT': '3306',
 }}
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ]
+}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -115,20 +124,15 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_ROOT = os.path.join(PROJECT_PATH, 'static/')
-STATIC_URL = os.getenv('STATIC_URL', '/static/')
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-)
+STATIC_ROOT = os.path.join(os.path.dirname(PROJECT_PATH), 'static')  # path that collectstatic places static files
+STATIC_URL = os.getenv('STATIC_URL', '/static/')  # url from which static files are served
 STATICFILES_DIRS = (
-    os.path.join(STATIC_ROOT, 'css'),
-    os.path.join(STATIC_ROOT, 'js')
-)
+    os.path.join(PROJECT_PATH, 'static'),
+)  # directories containing static files to be moved copied to STATIC_ROOT during deployment
 
 # Media files
-MEDIA_ROOT = os.path.join(PROJECT_PATH, 'media/')
-MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(os.path.dirname(PROJECT_PATH), 'media')  # location for placing user uploaded files
+MEDIA_URL = '/media/'  # url from which user uploaded files are served
 
 ################################################################################
 # Define databases to replicate Make-It settings

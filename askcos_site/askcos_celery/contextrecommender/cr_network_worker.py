@@ -46,9 +46,29 @@ def get_n_conditions(*args, **kwargs):
     rxn = [reacants, products], Where each is a list of SMILES.
     n = Number of contexts to return.
     """
+    postprocess = kwargs.pop('postprocess', False)
 
     print('Context recommender worker got a request: {}, {}'.format(args, kwargs))
     res = recommender.get_n_conditions(*args, **kwargs)
+
+    if postprocess:
+        if kwargs.get('return_scores'):
+            contexts, scores = res
+        else:
+            contexts, scores = res, None
+
+        res = []
+        for context in contexts:
+            res.append({
+                'temperature': context[0],
+                'solvent': context[1],
+                'reagent': context[2],
+                'catalyst': context[3]
+            })
+
+        if scores is not None:
+            for c, s in zip(res, scores):
+                c['score'] = s
 
     print('Task completed, returning results.')
     return res

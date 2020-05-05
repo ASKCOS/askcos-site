@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from rdkit import Chem
 from celery.exceptions import TimeoutError
 from makeit.utilities.contexts import clean_context
-from askcos_site.askcos_celery.treeevaluator.scoring_coordinator import evaluate
+from askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker import get_outcomes
 
 TIMEOUT = 30
 
@@ -13,7 +13,6 @@ def template_free(request):
     solvent = request.GET.get('solvent', '')
     reagents = request.GET.get('reagents', '')
     num_results = int(request.GET.get('num_results', 100))
-    contexts=[clean_context((None, solvent, reagents, '', -1, -1))]
 
     if not reactants:
         resp['error'] = 'Required parameter "reactants" missing'
@@ -24,20 +23,25 @@ def template_free(request):
         resp['error'] = 'Cannot parse reactants smiles with rdkit'
         return JsonResponse(resp, status=400)
 
-    smol = Chem.MolFromSmiles(contexts[0][1])
-    if not smol:
-        resp['error'] = 'Cannot parse solvent smiles with rdkit'
-        return JsonResponse(resp, status=400)
+    if solvent:
+        smol = Chem.MolFromSmiles(solvent)
+        if not smol:
+            resp['error'] = 'Cannot parse solvent smiles with rdkit'
+            return JsonResponse(resp, status=400)
 
-    remol = Chem.MolFromSmiles(contexts[0][2])
-    if not remol:
-        resp['error'] = 'Cannot parse reagents smiles with rdkit'
-        return JsonResponse(resp, status=400)
+    if reagents:
+        remol = Chem.MolFromSmiles(reagents)
+        if not remol:
+            resp['error'] = 'Cannot parse reagents smiles with rdkit'
+            return JsonResponse(resp, status=400)
 
-    res = evaluate.delay(
-        reactants, '', contexts=contexts, forward_scorer='Template_Free', 
-        top_n=num_results, return_all_outcomes=True
-    )
+    combined_smiles = Chem.MolToSmiles(rmol, isomericSmiles=True)
+    if reagents:
+        combined_smiles += '.{}'.format(Chem.MolToSmiles(remol, isomericSmiles=True))
+    if solvent:
+        combined_smiles += '.{}'.format(Chem.MolToSmiles(smol, isomericSmiles=True))
+
+    res = get_outcomes.delay(combined_smiles, top_n=num_results)
     
     try:
         outcomes = res.get(TIMEOUT)
@@ -49,10 +53,6 @@ def template_free(request):
         resp['error'] = str(e)
         res.revoke()
         return JsonResponse(resp, status=400)
-    
-    outcomes = outcomes[0]['outcomes']
-    for out in outcomes:
-        o = out.pop('outcome')
-        out['smiles'] = o['smiles']
+
     resp['outcomes'] = outcomes
     return JsonResponse(resp)

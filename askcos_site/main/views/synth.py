@@ -16,59 +16,13 @@ import os
 from ...askcos_celery.contextrecommender.cr_network_worker import get_n_conditions
 from askcos_site.askcos_celery.treeevaluator.scoring_coordinator import evaluate
 
-from ..globals import PREDICTOR_FOOTNOTE, solvent_choices
 from ..utils import ajax_error_wrapper, fix_rgt_cat_slvt, \
     trim_trailing_period
 from makeit.utilities.contexts import clean_context
 
-#@login_required
-def synth_interactive(request, reactants='', reagents='', solvent='default',
-        temperature='20', mincount='25', product=None, forward_scorer='Template_Free'):
-    '''Builds an interactive forward synthesis page'''
-
+def synth_interactive(request):
     context = {}
-    context['footnote'] = PREDICTOR_FOOTNOTE
-    context['solvent_choices'] = sorted(solvent_choices, key = lambda x: x['name'])
-    context['reactants'] = reactants
-
-    if product is None:
-        context['reagents'] = reagents
-        context['solventselected'] = solvent
-        # auto-select new solvent if possible
-        matched = False
-        if '.' in solvent:
-            solvent = solvent.split('.')[0]
-        for solvent_choice in solvent_choices:
-            if solvent == solvent_choice['smiles'] or solvent == solvent_choice['name']:
-                matched = True
-                context['solventselected'] = solvent_choice['name']
-        if not matched and solvent:
-            context['warn'] = 'Could not pre-populate solvent field: no Abraham params found for {}'.format(solvent)
-
-        context['temperature'] = temperature
-    else:
-        # Get suggested conditions
-        smiles = '%s>>%s' % (reactants, product)
-        res = get_n_conditions.delay(smiles, n=1)
-        contexts = res.get(60)
-        if contexts is None or len(contexts) == 0:
-            raise ValueError('Context recommender was unable to get valid context(?)')
-        print(contexts)
-        (T1, slvt1, rgt1, cat1, t1, y1) = contexts[0]
-        slvt1 = trim_trailing_period(slvt1)
-        rgt1 = trim_trailing_period(rgt1)
-        cat1 = trim_trailing_period(cat1)
-        (rgt1, cat1, slvt1) = fix_rgt_cat_slvt(rgt1, cat1, slvt1)
-        for slvt in solvent_choices:
-            if slvt['smiles'] == slvt1:
-                context['solventselected'] = slvt['name']
-                break
-        context['reagents'] = rgt1
-        context['temperature'] = T1
-
-    context['forward_scorer'] = 'Template_Free'
-    context['mincount'] = mincount if mincount != '' else settings.SYNTH_TRANSFORMS['mincount']
-    return render(request, 'synth_interactive.html', context)
+    return render(request, 'forward_interactive.html', context)
 
 #@login_required
 def synth_interactive_smiles(request, smiles):

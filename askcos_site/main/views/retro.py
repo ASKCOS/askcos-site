@@ -13,17 +13,14 @@ import numpy as np
 import json
 import os
 
-from ..globals import RetroTransformer, RETRO_CHIRAL_FOOTNOTE, Pricer
+from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
 
 from ..utils import ajax_error_wrapper, resolve_smiles
 from .users import can_control_robot
 from ..forms import SmilesInputForm
 from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 
-from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
-from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
-from askcos_site.askcos_celery.treebuilder.tb_worker import get_top_precursors
-from askcos_site.askcos_celery.treebuilder.tb_coordinator import get_buyable_paths
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 
 from celery.result import AsyncResult
@@ -130,42 +127,28 @@ def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
         print(filter_threshold)
 
         startTime = time.time()
-        if chiral:
-            if max_cum_prob > 0.999 and template_count > 1000:
-                res = get_top_precursors_p.delay(
-                    smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
-                    fast_filter_threshold=filter_threshold
-                )
-            else:
-                res = get_top_precursors_c.delay(
-                    smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
-                    fast_filter_threshold=filter_threshold
-                )
+        res = get_top_precursors.delay(
+            smiles, max_num_templates=template_count, max_cum_prob=max_cum_prob, 
+            fast_filter_threshold=filter_threshold
+        )
             
-            (smiles, precursors) = res.get(300)
-            # allow up to 5 minutes...can be pretty slow
-            context['precursors'] = precursors
-            context['footnote'] = RETRO_CHIRAL_FOOTNOTE
-        else:
-
-            # Use apply_async so we can force high priority
-            res = get_top_precursors.delay(smiles, template_prioritization, precursor_prioritization,
-                mincount=0, max_branching=max_n, template_count=template_count, max_cum_prob=max_cum_prob, apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold)
-            context['precursors'] = res.get(120)
-            context['footnote'] = ''
+        (smiles, precursors) = res.get(300)
+        # allow up to 5 minutes...can be pretty slow
+        context['precursors'] = precursors
+        context['footnote'] = RETRO_CHIRAL_FOOTNOTE
         context['time'] = '%0.3f' % (time.time() - startTime)
 
         # Change 'tform' field to be reaction SMARTS, not ObjectID from Mongo
         # Also add up total number of examples
         for (i, precursor) in enumerate(context['precursors']):
             context['precursors'][i]['tforms'] = \
-                [dict(RetroTransformer.lookup_id(_id), **{'id': str(_id)}) for _id in precursor['tforms']]
+                [dict(retro_transformer.lookup_id(_id), **{'id': str(_id)}) for _id in precursor['tforms']]
             context['precursors'][i]['mols'] = []
             # Overwrite num examples
             context['precursors'][i]['num_examples'] = sum(
                 tform['count'] for tform in precursor['tforms'])
             for smiles in precursor['smiles_split']:
-                ppg = Pricer.lookup_smiles(smiles)
+                ppg = pricer.lookup_smiles(smiles)
                 context['precursors'][i]['mols'].append({
                     'smiles': smiles,
                     'ppg': '${}/g'.format(ppg) if ppg else 'cannot buy',
@@ -259,6 +242,8 @@ def retro_interactive_mcts(request, target=None):
     context['precursor_prioritization'] = 'RelevanceHeuristic'
     context['forward_scorer'] = 'Template_Free'
     context['filter_threshold_default'] = 0.75
+    context['template_prioritizer'] = 'reaxys'
+    context['template_set'] = 'reaxys'
 
     if target is not None:
         context['target_mol'] = target
@@ -269,100 +254,6 @@ def retro_interactive_mcts(request, target=None):
         context['logged_in'] = False
 
     return render(request, 'retro_interactive_mcts.html', context)
-
-
-@ajax_error_wrapper
-def ajax_start_retro_celery(request):
-    '''Start builder'''
-    data = {'err': False}
-
-    smiles = request.GET.get('smiles', None)
-    max_depth = int(request.GET.get('max_depth', 4))
-    max_branching = int(request.GET.get('max_branching', 25))
-    retro_mincount = int(request.GET.get('retro_mincount', 0))
-    expansion_time = int(request.GET.get('expansion_time', 60))
-    max_ppg = int(request.GET.get('max_ppg', 10))
-    chiral = json.loads(request.GET.get('chiral', 'true'))
-    precursor_prioritization = request.GET.get(
-        'precursor_prioritization', 'RelevanceHeuristic')
-    template_prioritization = request.GET.get(
-        'template_prioritization', 'Relevance')
-    template_count = int(request.GET.get('template_count', '100'))
-    max_cum_prob = float(request.GET.get('max_cum_prob', '0.995'))
-    chemical_property_logic = str(request.GET.get('chemical_property_logic', 'none'))
-    max_chemprop_c = int(request.GET.get('max_chemprop_c', '0'))
-    max_chemprop_n = int(request.GET.get('max_chemprop_n', '0'))
-    max_chemprop_o = int(request.GET.get('max_chemprop_o', '0'))
-    max_chemprop_h = int(request.GET.get('max_chemprop_h', '0'))
-    chemical_popularity_logic = str(request.GET.get('chemical_popularity_logic', 'none'))
-    min_chempop_reactants = int(request.GET.get('min_chempop_reactants', 5))
-    min_chempop_products = int(request.GET.get('min_chempop_products', 5))
-
-    filter_threshold = float(request.GET.get('filter_threshold', 0.75))
-    apply_fast_filter = filter_threshold > 0
-
-    blacklisted_reactions = list(set(
-        [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
-    forbidden_molecules = list(set(
-        [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
-
-    if template_prioritization == 'Popularity':
-            template_count = 1e9
-
-    default_val = 1e9 if chemical_property_logic == 'and' else 0
-    max_natom_dict = defaultdict(lambda: default_val, {
-        'logic': chemical_property_logic,
-        'C': max_chemprop_c,
-        'N': max_chemprop_n,
-        'O': max_chemprop_o,
-        'H': max_chemprop_h,
-    })
-    min_chemical_history_dict = {
-        'logic': chemical_popularity_logic,
-        'as_reactant': min_chempop_reactants,
-        'as_product': min_chempop_products,
-    }
-    print('Tree building {} for user {} ({} forbidden reactions)'.format(
-        smiles, request.user, len(blacklisted_reactions)))
-    print('Using chemical property logic: {}'.format(max_natom_dict))
-    print('Using chemical popularity logic: {}'.format(min_chemical_history_dict))
-
-    res = get_buyable_paths.delay(smiles, template_prioritization, precursor_prioritization,
-                                  mincount=retro_mincount, max_branching=max_branching, max_depth=max_depth,
-                                  max_ppg=max_ppg, max_time=expansion_time, max_trees=500, reporting_freq=5,
-                                  chiral=chiral, known_bad_reactions=blacklisted_reactions,
-                                  forbidden_molecules=forbidden_molecules,
-                                  max_cum_template_prob=max_cum_prob, template_count=template_count,
-                                  max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
-                                  apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold)
-    (tree_status, trees) = res.get(expansion_time * 3)
-
-    # print(trees)
-
-    (num_chemicals, num_reactions, at_depth) = tree_status
-    data['html_stats'] = 'After expanding (with {} banned reactions, {} banned chemicals), {} total chemicals and {} total reactions'.format(
-        len(blacklisted_reactions), len(forbidden_molecules), num_chemicals, num_reactions)
-    for (depth, count) in sorted(at_depth.items(), key=lambda x: x[0]):
-        label = 'Could not format label...?'
-        if int(float(depth)) == float(depth):
-            label = 'chemicals'
-        else:
-            label = 'reactions'
-        data[
-            'html_stats'] += '<br>   at depth {}, {} {}'.format(depth, count, label)
-
-    if trees:
-        data['html_trees'] = render_to_string('trees_only.html',
-                                              {'trees': trees, 'can_control_robot': can_control_robot(request)})
-    else:
-        data['html_trees'] = render_to_string('trees_none.html', {})
-
-    # Save to session in case user wants to export
-    request.session['last_retro_interactive'] = trees
-    print('Saved {} trees to {} session'.format(
-        len(trees), request.user.get_username()))
-
-    return JsonResponse(data)
 
 
 @ajax_error_wrapper
@@ -390,6 +281,8 @@ def ajax_start_retro_mcts_celery(request):
     min_chempop_products = int(request.GET.get('min_chempop_products', 5))
     filter_threshold = float(request.GET.get('filter_threshold', 0.75))
     apply_fast_filter = filter_threshold > 0
+    template_prioritizer = request.GET.get('template_prioritizer', 'reaxys')
+    template_set = request.GET.get('template_set', 'reaxys')
     return_first = json.loads(request.GET.get('return_first', 'false'))
 
     if request.user.is_authenticated:
@@ -420,6 +313,8 @@ def ajax_start_retro_mcts_celery(request):
     print('Using chemical popularity logic: {}'.format(min_chemical_history_dict))
     print('Returning as soon as any pathway found? {}'.format(return_first))
 
+    historian_hashed = template_set == 'reaxys'
+
     res = get_buyable_paths_mcts.delay(smiles, max_branching=max_branching, max_depth=max_depth,
                                   max_ppg=max_ppg, expansion_time=expansion_time, max_trees=500,
                                   known_bad_reactions=blacklisted_reactions,
@@ -427,7 +322,8 @@ def ajax_start_retro_mcts_celery(request):
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
                                   apply_fast_filter=apply_fast_filter, filter_threshold=filter_threshold,
-                                  return_first=return_first,
+                                  template_prioritizer=template_prioritizer, template_set=template_set,
+                                  return_first=return_first, hashed=historian_hashed,
                                   run_async=run_async)
 
     if run_async:

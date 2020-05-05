@@ -8,6 +8,22 @@
   font-weight: bold;
 }
 
+.m5 {
+    margin: 5px;
+}
+
+.grey-border {
+    border: #333 3px solid;
+}
+
+.green-border {
+    border: #008800 3px solid;
+}
+
+.red-border {
+    border: #880000 3px solid;
+}
+
 .blue-text {
     font-weight: bold;
     color: #000088;
@@ -21,6 +37,10 @@
 .green-text {
     font-weight: bold;
     color: #008800
+}
+
+.popover[class*="tour-"] {
+    z-index: 9999 !important;
 }
 
 .popover[class*="tour-"].orphan {
@@ -62,46 +82,6 @@ transform: translate(-50%, -50%) !important;
 
 .card:hover {
   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-}
-
-.customtooltip {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-
-.customtooltip:hover {
-  color: #1157a7;
-}
-
-.customtooltip .customtooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-  position: absolute;
-  z-index: 1;
-  bottom: 150%;
-  left: 50%;
-  margin-left: -60px;
-}
-
-.customtooltip .customtooltiptext::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: black transparent transparent transparent;
-}
-
-.customtooltip:hover .customtooltiptext {
-  visibility: visible;
 }
 
 .ul-card {
@@ -186,72 +166,6 @@ transform: translate(-50%, -50%) !important;
     margin-left: 25px;
 }
 
-.modal-mask {
-  position: fixed;
-  z-index: 9998;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, .5);
-  display: table;
-  transition: opacity .3s ease;
-}
-
-.modal-wrapper {
-  display: table-cell;
-  vertical-align: top;
-}
-
-.modal-container {
-  width: 75%;
-  margin: 20px auto;
-  padding: 20px 30px;
-  background-color: #fff;
-  border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
-  transition: all .3s ease;
-  font-family: Helvetica, Arial, sans-serif;
-  max-height: 95vh;
-  overflow-y: scroll;
-}
-
-.modal-header h3 {
-  margin-top: 0;
-  color: #333333;
-}
-
-.modal-body {
-  margin: 20px 0;
-}
-
-.modal-default-button {
-  float: right;
-}
-
-/*
- * The following styles are auto-applied to elements with
- * transition="modal" when their visibility is toggled
- * by Vue.js.
- *
- * You can easily play with the modal transition by editing
- * these styles.
- */
-
-.modal-enter {
-  opacity: 0;
-}
-
-.modal-leave-active {
-  opacity: 0;
-}
-
-.modal-enter .modal-container,
-.modal-leave-active .modal-container {
-  -webkit-transform: scale(1.1);
-  transform: scale(1.1);
-}
-
 /* Drag and drop */
 /* text non-selectable */
 [draggable] {
@@ -290,4 +204,42 @@ transform: translate(-50%, -50%) !important;
   left: 50%;
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
+}
+
+.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 150px !important; /* Full-width */
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+  margin: 5px;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px;
+  border-radius: 50%;
+  background: rgb(100, 100, 100); /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px;
+  border-radius: 50%;
+  background: rgb(100, 100, 100);
+  cursor: pointer; /* Cursor on hover */
 }

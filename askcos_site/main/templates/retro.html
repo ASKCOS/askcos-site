@@ -39,6 +39,7 @@ function liberalSettings() {
     $("#filter_threshold").val(0.01);
     showFields("Relevance");
 }
+
 </script>
 {% endblock %}
 
@@ -154,7 +155,7 @@ function liberalSettings() {
                     {% endif %}
                 </font>
                 {% if not forloop.last %} + {% endif %}{% endfor %}
-                <a href="{% url 'context_rxnsmiles_target2' precursor.smiles target.smiles %}">&rarr; ?</a>
+                <a href="/synth_interactive?mode=context&reactants={{ precursor.smiles }}&product={{ target.smiles }}">&rarr; ?</a>
                 <br>
                 <a><img src="" data-async-load="{% url 'draw_highlight' smiles=precursor.mapped_smiles reacting_atoms=precursor.reacting_atoms bonds='false' %}" alt="{{ precursor.smiles }}" onclick="toggle_visibility('expand{{ precursor.rank }}');"></a>
                 
@@ -163,7 +164,7 @@ function liberalSettings() {
                     <font class="smiles"><b>Based on retrosynthetic transform template(s):</b></font><br>
                     {% for tform in precursor.tforms %}
                         <font class="smiles">
-                            <a href="{% url 'template_target' tform.id %}">Template {{ tform.id }} ({{ tform.count }} examples)</a>
+                            <a href="/template/?id={{ tform.id }}">Template {{ tform.id }} ({{ tform.count }} examples)</a>
                         </font>{% if not forloop.last %}<br>{% endif %}
                     {% endfor %}
                     {% endif %}
@@ -182,6 +183,12 @@ function liberalSettings() {
         </tbody>
     </table>
 {% endif %}
+
+<script>
+$("#max_cum_prob").change(() => {
+    $("#max_cum_prob").val(Math.min(0.99999, Number($("#max_cum_prob").val())))
+})
+</script>
 
 {% if footnote %}
 <br>

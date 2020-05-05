@@ -2,8 +2,7 @@ from rdkit import Chem
 from django.http import JsonResponse
 from celery.exceptions import TimeoutError
 from makeit import global_config as gc
-from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors as get_top_precursors_c
-from askcos_site.askcos_celery.treebuilder.tb_c_worker_preload import get_top_precursors as get_top_precursors_p
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 
 TIMEOUT = 120
 
@@ -17,14 +16,6 @@ def singlestep(request):
     fast_filter_threshold = float(request.GET.get('filter_threshold', 0.75))
     template_set = request.GET.get('template_set', 'reaxys')
     template_prioritizer = request.GET.get('template_prioritizer', 'reaxys')
-
-    if template_set not in ['reaxys', 'uspto_50k']:
-        resp['error'] = 'Template set {} not available'.format(template_set)
-        return JsonResponse(resp, status=400)
-
-    if template_prioritizer not in ['reaxys', 'uspto_50k']:
-        resp['error'] = 'Template prioritizer {} not available'.format(template_prioritizer)
-        return JsonResponse(resp, status=400)
 
     if not target:
         resp['error'] = 'Required parameter "target" missing'
@@ -42,36 +33,23 @@ def singlestep(request):
     cluster_fp_length = int(request.GET.get('cluster_fp_length', 512))
     cluster_fp_radius = int(request.GET.get('cluster_fp_radius', 1))
 
-    if max_cum_prob > 0.999 and max_num_templates > 1000:
-        res = get_top_precursors_p.delay(
-            target,
-            template_set=template_set,
-            template_prioritizer=template_prioritizer,
-            fast_filter_threshold=fast_filter_threshold,
-            max_cum_prob=max_cum_prob,
-            max_num_templates=max_num_templates,
-            cluster=cluster,
-            cluster_method=cluster_method,
-            cluster_feature=cluster_feature,
-            cluster_fp_type=cluster_fp_type,
-            cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius
-        )
-    else:
-        res = get_top_precursors_c.delay(
-            target,
-            template_set=template_set,
-            template_prioritizer=template_prioritizer,
-            fast_filter_threshold=fast_filter_threshold,
-            max_cum_prob=max_cum_prob,
-            max_num_templates=max_num_templates,
-            cluster=cluster,
-            cluster_method=cluster_method,
-            cluster_feature=cluster_feature,
-            cluster_fp_type=cluster_fp_type,
-            cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius
-        )
+    selec_check = request.GET.get('allow_selec', 'True') in ['True', 'true']
+
+    res = get_top_precursors.delay(
+        target,
+        template_set=template_set,
+        template_prioritizer=template_prioritizer,
+        fast_filter_threshold=fast_filter_threshold,
+        max_cum_prob=max_cum_prob,
+        max_num_templates=max_num_templates,
+        cluster=cluster,
+        cluster_method=cluster_method,
+        cluster_feature=cluster_feature,
+        cluster_fp_type=cluster_fp_type,
+        cluster_fp_length=cluster_fp_length,
+        cluster_fp_radius=cluster_fp_radius,
+        selec_check=selec_check,
+    )
 
     if run_async:
         resp['id'] = res.id

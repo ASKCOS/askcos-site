@@ -6,6 +6,18 @@ from django.conf import settings
 # Set the Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'askcos_site.settings')
 
+# Define readable names for celery workers for status reporting
+READABLE_NAMES = {
+    'cr_network_worker': 'Context Recommender Worker',
+    'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
+    'tb_coordinator_mcts': 'Tree Builder Coordinator',
+    'sites_worker': 'Site Selectivity Worker',
+    'impurity_worker': 'Impurity Worker',
+    'atom_mapping_worker': 'Atom Mapping Worker',
+    'tffp_worker': 'Template-free Forward Predictor',
+    'selec_worker': 'General Selectivity Worker',
+}
+
 # Note: cannot use guest for authenticating with broker unless on localhost
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
@@ -14,21 +26,15 @@ RABBIT_PORT = os.environ.get('RABBITMQ_NODE_PORT', '5672')
 app = Celery('askcos_site', broker='amqp://{}:{}'.format(RABBIT_HOST, RABBIT_PORT),
     backend='redis://{}:{}'.format(REDIS_HOST, REDIS_PORT),
     include=[
-        'askcos_site.askcos_celery.treebuilder.tb_worker',
         'askcos_site.askcos_celery.treebuilder.tb_c_worker',
-        'askcos_site.askcos_celery.treebuilder.tb_c_worker_preload',
-        'askcos_site.askcos_celery.treebuilder.tb_coordinator',
         'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts',
-        'askcos_site.askcos_celery.contextrecommender.cr_coordinator',
-        'askcos_site.askcos_celery.contextrecommender.cr_nn_worker',
         'askcos_site.askcos_celery.contextrecommender.cr_network_worker',
-        'askcos_site.askcos_celery.treeevaluator.forward_trans_worker',
-        'askcos_site.askcos_celery.treeevaluator.scoring_coordinator',
-        'askcos_site.askcos_celery.treeevaluator.tree_evaluation_coordinator',
+        'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker',
         'askcos_site.askcos_celery.siteselectivity.sites_worker',
         'askcos_site.askcos_celery.impurity.impurity_worker',
         'askcos_site.askcos_celery.impurity.impurity_predictor_worker',
         'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker',
+        'askcos_site.askcos_celery.generalselectivity.selec_worker',
     ]
 )
 

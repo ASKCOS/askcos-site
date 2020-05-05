@@ -219,6 +219,8 @@ $("#start_retro").click(function () {
                 return_first: $("#return_first").is(":checked"),
                 async: $('#async').is(":checked"),
                 description: $('#description').val(),
+                template_prioritizer: $('#template_prioritizer').val(),
+                template_set: $('#template_set').val()
             },
             dataType: 'json',
             success: function (data) {
@@ -254,26 +256,10 @@ $('#results').on('click', '.rxn', function(){
     necessaryreagent = $(this).attr("necessaryreagent");
     console.log(smiles);
     console.log(targetid);
-    $.ajax({
-        url: '/ajax/evaluate_rxnsmiles/',
-        data: {
-            smiles: smiles,
-            synth_mincount: $("#synth_mincount").val(),
-            necessary_reagent: necessaryreagent,
-            forward_scorer: $("#id_forward_scorer").val(),
-
-        },
-        dataType: 'json',
-        success: function (data) {
-            console.log(data)
-            if (data.err) {
-                alert(data.message);
-            } else {
-                $(".rxnbox" + targetid).css('background-color', data.html_color);
-                $(".eval" + targetid).html(data.html);
-            }
-        }
-    });
+    var split = smiles.split('>>')
+    var reactants = split[0]
+    var product = split[split.length-1]
+    window.open(`/synth_interactive/?mode=context&reactants=${reactants}&product=${product}`, "_blank")
 });
 $('#results').on('click', '.hiderxn', function () {
     console.log('trying to hide a rxn');
@@ -294,64 +280,50 @@ $('#results').on('click', '.blacklistrxn', function () {
       alert('You must be logged in to blacklist a reaction!')
       return
     {% endif %}
-    console.log('trying to blacklist a reaction');
     var smiles = $(this).attr("smiles");
-    console.log(smiles);
     var desc = prompt("Please enter a reason (for your records only)", "no reason");
-    if (desc) {
-        var now = Date.now();
-        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
-        $.ajax({
-            type: 'POST',
-            url: '/ajax/user_blacklist_reaction/',
-            data: {
-                smiles: smiles,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                desc: desc,
-                datetime: datetime,
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.err) {
-                    alert(data.err);
-                } else {
-                    alert('Blacklisted reaction "' + smiles + '" at ' + datetime);
-                }
-            }
-        });
+    const body = {
+        smiles: smiles,
+        description: desc,
     };
+    fetch('/api/v2/blacklist/reactions/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(body)
+    })
+        .then(resp => resp.json())
+        .then(json => {
+            const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+            alert(`Blacklisted reaction ${smiles} at ${datetime}`)
+        });
 });
 $('#results').on('click', '.blacklistchem', function () {
     {% if not logged_in %}
       alert('You must be logged in to blacklist a chemical!')
       return
     {% endif %}
-    console.log('trying to blacklist a chemical');
     var smiles = $(this).attr("smiles");
-    console.log(smiles);
     var desc = prompt("Please enter a reason (for your records only)", "no reason");
-    if (desc) {
-        var now = Date.now();
-        var datetime = now.toString('MMMM dd, yyyy, hh:mm:ss tt');
-        $.ajax({
-            type: 'POST',
-            url: '/ajax/user_blacklist_chemical/',
-            data: {
-                smiles: smiles,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                desc: desc,
-                datetime: datetime,
-            },
-            dataType: 'json',
-            success: function (data) {
-                if (data.err) {
-                    alert(data.err);
-                } else {
-                    alert('Blacklisted chemical "' + smiles + '" at ' + datetime);
-                }
-            }
-        });
+    const body = {
+        smiles: smiles,
+        description: desc,
     };
+    fetch('/api/v2/blacklist/chemicals/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(body)
+    })
+        .then(resp => resp.json())
+        .then(json => {
+            const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
+            alert(`Blacklisted chemical ${smiles} at ${datetime}`)
+        });
 });
 
 $('#expand-width').click(function() {
@@ -405,6 +377,28 @@ $(document).ready(function() {
     <button type="button" style="width:100%" onclick="strugglingSettings();">Just give me <i>something</i> to look at</button>
 </td></tr>
 
+
+<tr><th>Template relevance model: </th>
+
+<td>
+    Template prioritization model: 
+    <a href="#" data-toggle="tooltip" title="Which template relevance machine learning model would you like to use?"><span class="glyphicon glyphicon-info-sign"></span></a>
+</td>
+<td>
+    <select id="template_prioritizer" name="template_prioritizer">
+        <option value="reaxys">Reaxys</option>
+    </select>
+</td>
+
+<td>
+    Template set: 
+    <a href="#" data-toggle="tooltip" title="Which template set would you like to use? There must be a template prioritization model trained for the template set you select."><span class="glyphicon glyphicon-info-sign"></span></a>
+</td>
+<td>
+    <select id="template_set" name="template_set">
+        <option value="reaxys">Reaxys</option>
+    </select>
+</td>
 
 <tr><th>Expansion settings: </th>
 

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Blacklisted Items{% endblock %}
+{% block page_title %}Your blacklisted items{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
+
+<script type="text/x-template" id="modal-template">
+    <transition name="modal">
+        <div class="modal-mask">
+        <div class="modal-wrapper">
+            <div class="modal-container">
+
+            <div class="modal-header">
+                <slot name="header">
+                default header
+                </slot>
+            </div>
+
+            <div class="modal-body">
+                <slot name="body">
+                default body
+                </slot>
+            </div>
+
+            <div class="modal-footer">
+                <slot name="footer">
+                default footer
+                <button class="modal-default-button" @click="$emit('close')">
+                    OK
+                </button>
+                </slot>
+            </div>
+            </div>
+        </div>
+        </div>
+    </transition>
+</script>
+{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+    <modal v-if="showAddModal" @close="showAddModal = false">
+        <h3 slot="header">Add new blacklist entry</h3>
+
+        <form slot="body" @submit.prevent="addEntry" id="newEntryForm">
+            <div class="form-group">
+                <label for="newType">Entry Type: </label>
+                <select id="newType" v-model="newType">
+                    <option value="chemicals">Chemical</option>
+                    <option value="reactions">Reaction</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="newSmiles">SMILES</label>
+                <input type="text" class="form-control" id="newSmiles" placeholder="SMILES" v-model="newSmiles" required>
+            </div>
+            <div class="form-group">
+                <label for="newDesc">Description</label>
+                <input type="text" class="form-control" id="newDesc" placeholder="Description" v-model="newDesc">
+            </div>
+            <div class="form-group">
+                <label for="newActive">Active:</label>
+                <input type="checkbox" id="newActive" v-model="newActive">
+            </div>
+        </form>
+
+        <div slot="footer">
+            <button class="btn btn-success" type="submit" form="newEntryForm">Add Entry</button>
+            <button class="btn btn-danger" @click="showAddModal = false">Cancel</button>
+        </div>
+    </modal>
+
+    <div class="row">
+        <div class="col-12">
+            <p>
+                This page lists chemicals and reactions that you have identified as problematic in some way;
+                any entries listed as <u>active</u> will be excluded from future expansions by the Tree Builder.
+                You can delete or deactivate any of these banned items at any time.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 text-center">
+            <button class="btn btn-success" @click="showAddModal = true">Add New Entry</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs">
+                <li class="nav-item" :class="{ active: isActive('chemicals') }">
+                    <a class="nav-link" @click.prevent="setActive('chemicals')" href="#chemicals">Chemicals</a>
+                </li>
+                <li class="nav-item" :class="{ active: isActive('reactions') }">
+                    <a class="nav-link" @click.prevent="setActive('reactions')" href="#reactions">Reactions</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div id="chemicals" class="tab-pane fade" :class="{ 'in active': isActive('chemicals') }">
+                    <div class="col-12 text-right" style="margin: 10px 0">
+                        <div>
+                            <label class="radio-inline">
+                                <input type="radio" value="all" v-model="filterActive">All
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="active" v-model="filterActive">Active
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="inactive" v-model="filterActive">Inactive
+                            </label>
+                        </div>
+                    </div>
+
+                    <table class="table table-hover" style="table-layout: fixed">
+                        <thead>
+                            <tr>
+                                <th class="col-md-1">Active</th>
+                                <th class="col-md-2">Created</th>
+                                <th class="col-md-6">Chemical</th>
+                                <th class="col-md-2">Description</th>
+                                <th class="col-md-1">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template v-for="doc in filteredChemicals">
+                                <tr>
+                                    <td>
+                                        <i v-if="doc.active" @click="deactivateChemical(doc.id)" class="far fa-check-circle" style="cursor: pointer;"></i>
+                                        <i v-else @click="activateChemical(doc.id)" class="far fa-times-circle" style="cursor: pointer;"></i>
+                                    </td>
+                                    <td>%% doc.created %%</td>
+                                    <td class="text-center">
+                                        <img
+                                           :src="'/api/v2/draw/?smiles='+encodeURIComponent(doc.smiles)" :title="doc.smiles"
+                                           style="max-width: 100%"
+                                        >
+                                    </td>
+                                    <td>%% doc.description %%</td>
+                                    <td>
+                                        <i @click="deleteChemical(doc.id)" class="fas fa-trash-alt" style="cursor: pointer;"></i>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="reactions" class="tab-pane fade" :class="{ 'in active': isActive('reactions') }">
+                    <div class="col-12 text-right" style="margin: 10px 0">
+                        <div>
+                            <label class="radio-inline">
+                                <input type="radio" value="all" v-model="filterActive">All
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="active" v-model="filterActive">Active
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" value="inactive" v-model="filterActive">Inactive
+                            </label>
+                        </div>
+                    </div>
+
+                    <table class="table table-hover" style="table-layout: fixed">
+                        <thead>
+                            <tr>
+                                <th class="col-md-1">Active</th>
+                                <th class="col-md-2">Created</th>
+                                <th class="col-md-6">Reaction</th>
+                                <th class="col-md-2">Description</th>
+                                <th class="col-md-1">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template v-for="doc in filteredReactions">
+                                <tr>
+                                    <td>
+                                        <i v-if="doc.active" @click="deactivateReaction(doc.id)" class="far fa-check-circle" style="cursor: pointer;"></i>
+                                        <i v-else @click="activateReaction(doc.id)" class="far fa-times-circle" style="cursor: pointer;"></i>
+                                    </td>
+                                    <td>%% doc.created %%</td>
+                                    <td class="text-center">
+                                        <img
+                                           :src="'/api/v2/draw/?smiles='+encodeURIComponent(doc.smiles)" :title="doc.smiles"
+                                           style="max-width: 100%"
+                                        >
+                                    </td>
+                                    <td>%% doc.description %%</td>
+                                    <td>
+                                        <i @click="deleteReaction(doc.id)" class="fas fa-trash-alt" style="cursor: pointer;"></i>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/blacklist.js' %}"></script>
+
+{% endblock %}

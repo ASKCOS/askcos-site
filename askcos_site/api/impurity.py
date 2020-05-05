@@ -3,7 +3,7 @@ from rdkit import Chem
 from celery.exceptions import TimeoutError
 from makeit.utilities.contexts import clean_context
 # TODO: need to work on it
-from askcos_site.askcos_celery.impurity.impurity_worker import get_outcomes
+from askcos_site.askcos_celery.impurity.impurity_worker import get_impurities
 
 TIMEOUT = 30
 
@@ -15,7 +15,13 @@ def impurity_predict(request):
     reactants = request.GET.get('reactants')
     solvents = request.GET.get('solvents', '')
     reagents = request.GET.get('reagents', '')
-    products = request.GET.get('prodcuts', '')
+    products = request.GET.get('products', '')
+    top_k = int(request.GET.get('top_k', 3))
+    threshold = float(request.GET.get('threshold', 0.75))
+    predictor = request.GET.get('predictor', 'WLN forward predictor')
+    inspector = request.GET.get('inspector', 'Reaxys inspector')
+    mapper = request.GET.get('mapper', 'WLN atom mapper')
+    check_mapping = request.GET.get('check_mapping', 'True') in ['True', 'true']
 
     # TODO: add model selections
 
@@ -44,24 +50,14 @@ def impurity_predict(request):
         return JsonResponse(resp, status=400)
 
     # TODO: need work
-    res = get_outcomes.delay(
-        reactants, reagents=reagents, products=products, solvents=solvents)
+    res = get_impurities.delay(
+        reactants, reagents=reagents, products=products, solvents=solvents,
+        top_k=top_k, threshold=threshold,
+        predictor_selection=predictor,
+        inspector_selection=inspector,
+        mapper_selection=mapper,
+        check_mapping=check_mapping
+    )
 
-    try:
-        outcomes = res.get(TIMEOUT)
-    except TimeoutError:
-        resp['error'] = 'API request timed out (limit {}s)'.format(TIMEOUT)
-        res.revoke()
-        return JsonResponse(resp, status=408)
-    except Exception as e:
-        resp['error'] = str(e)
-        res.revoke()
-        return JsonResponse(resp, status=400)
-
-    # TODO: need work
-    outcomes = outcomes[0]['outcomes']
-    for out in outcomes:
-        o = out.pop('outcome')
-        out['smiles'] = o['smiles']
-    resp['outcomes'] = outcomes
+    resp['task_id'] = res.task_id
     return JsonResponse(resp)
