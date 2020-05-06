@@ -1,31 +1,4 @@
-img.hide-broken {
-  font-family: 'Helvetica';
-  font-weight: 300;
-  line-height: 2;  
-  position: relative;
-}
-
-img.hide-broken:before { 
-  content: " ";
-  display: block;
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  background-color: #fff;
-}
-
-img.hide-broken:after { 
-  content: " Invalid SMILES! ";
-  display: block;
-  font-size: 16px;
-  font-style: normal;
-  font-family: FontAwesome;
-  color: rgb(100, 100, 100);
-  position: absolute;
-  left: -90px;
-  width: 200px;
-  text-align: center;
-}
+@import 'drawing.css';
 
 .clearfix:after {
     clear: both;

@@ -1,20 +1,12 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from PIL import Image, ImageOps
-from ..utils import ajax_error_wrapper, resolve_smiles
-from ..forms import DrawingInputForm
-from rdkit.Chem import rdChemReactions
-import cairosvg
-from rdkit.Chem.Draw.rdMolDraw2D import MolDraw2DSVG
 import re
-import io
-import numpy as np
+
+from django.http import JsonResponse
+from django.shortcuts import render, HttpResponse
+from django.urls import reverse
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+from ..utils import ajax_error_wrapper, resolve_smiles
+
 
 @ajax_error_wrapper
 def ajax_smiles_to_image(request):
@@ -142,46 +134,8 @@ def draw_smiles_highlight(request, smiles, reacting_atoms, bonds='False'):
     return response
 
 
-#@login_required
 def draw(request):
-    '''
-    Landing page for al draw_*_page functions
-    '''
-    context = {}
-    if request.method == 'POST':
-        context['form'] = DrawingInputForm(request.POST)
-        if not context['form'].is_valid():
-            context['err'] = 'Could not parse!'
-        else:
-            # Identify target
-            text = context['form'].cleaned_data['text']
-            try:
-                if 'mol' in request.POST:
-                    #text = resolve_smiles(text)
-                    context['image_url'] = reverse(
-                        'draw_smiles', kwargs={'smiles': text})
-                    context['label_title'] = 'Molecule SMILES'
-                    context['label'] = text
-                elif 'rxn' in request.POST:
-                    #text = '>>'.join([resolve_smiles(frag) for frag in text.split('>>')])
-                    context['image_url'] = reverse(
-                        'draw_reaction', kwargs={'smiles': text})
-                    context['label_title'] = 'Reaction SMILES'
-                    context['label'] = text
-                elif 'tform' in request.POST:
-                    context['image_url'] = reverse(
-                        'draw_template', kwargs={'template': text})
-                    context['label_title'] = 'Template SMARTS'
-                    context['label'] = text
-                else:
-                    context['err'] = 'Did not understand request'
-
-            except Exception as e:
-                context['err'] = e
-
-    else:
-        context['form'] = DrawingInputForm()
-    return render(request, 'image.html', context)
+    return render(request, 'draw.html')
 
 
 def draw_fig(request, fig):

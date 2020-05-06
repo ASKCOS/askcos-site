@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Drawing{% endblock %}
+{% block page_title %}Drawing{% endblock %}
+
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/drawing.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/tooltip.css' %}" type="text/css">
+{% endblock %}
+
+{% block page_body %}
+
+<div id="app" class="container-fluid">
+
+    <div class="row">
+        <div class="col-12">
+            <p>
+                Utility for drawing images from molecule SMILES, reaction SMILES, and template SMARTS.
+            </p>
+        </div>
+    </div>
+
+    <div class="row text-center">
+        <div class="col-12">
+            <div class="input-group">
+                <span class="input-group-addon" id="basic-addon1">SMILES</span>
+                <input class='form-control' type="text" v-model="smiles" id="smiles" style="text-align:center;"/>
+                <div class='input-group-btn'>
+                    <button type="button" class="btn btn-default" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')"><i class="fas fa-edit"></i></button>
+                    <button type="button" class="btn btn-default" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
+                    <button type="button" class="btn btn-default dropdown-toggle" title="Options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i> <span class="caret"></span></button>
+                    <ul class="dropdown-menu dropdown-menu-right">
+                      <li style="padding: 3px 15px"><label class="btn-block"><button type="button" class="btn btn-default btn-block" @click="canonicalize(smiles, 'smiles')">Canonicalize</label></li>
+                      <li style="padding: 3px 15px"><label><input type="checkbox" v-model="drawMap"> Draw map</label></li>
+                      <li style="padding: 3px 15px"><label><input type="checkbox" v-model="highlight"> Highlight map</label></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="!!smiles" class="row text-center" style="margin: 20px 0">
+        <div class="col-12">
+            <div class="customtooltip" @click="copyToClipboard(smiles)" >
+                <span class="customtooltiptext">Copy SMILES</span>
+                <img class="hide-broken" :src="`/api/v2/draw/?smiles=${encodeURIComponent(smiles)}&draw_map=${drawMap}&highlight=${highlight}`" :alt="smiles"/>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup drawing tool -->
+    <div class="modal fade" id="drawingbox">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body" style="height:430px;">
+                    <div id="jsme_container" style="margin:auto"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" @click="updateSmilesFromJSME">Done drawing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="{% static 'js/draw.js' %}"></script>
+
+{% endblock %}

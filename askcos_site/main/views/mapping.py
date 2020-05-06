@@ -1,17 +1,11 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
-import django.contrib.auth.views
-
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-from ..utils import ajax_error_wrapper, resolve_smiles
-from ..forms import DrawingInputForm
 import time
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.urls import reverse
+
 from askcos_site.askcos_celery.atom_mapper.atom_mapping_worker import get_atom_mapping
-import re
+from ..utils import ajax_error_wrapper
 
 
 # @login_required
