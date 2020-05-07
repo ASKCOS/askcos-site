@@ -190,30 +190,6 @@ def retro_network(request):
     context['allowResolve'] = 'checked' if allow_resolve else ''
     return render(request, 'reaction_network.html', context)
 
-@login_required
-def retro_interactive(request, target=None):
-    '''Builds an interactive retrosynthesis page'''
-
-    context = {}
-    context['warn'] = 'If requests seem to take a long time, check the <a href="/status/">Server Status</a> page to see which resources are currently being used!'
-
-    context['max_depth_default'] = 4
-    context['max_branching_default'] = 20
-    context['retro_mincount_default'] = 0
-    context['synth_mincount_default'] = 0
-    context['expansion_time_default'] = 60
-    context['max_ppg_default'] = 100
-    context['template_count_default'] = 100
-    context['template_prioritization'] = 'Relevance'
-    context['max_cum_prob_default'] = 0.995
-    context['precursor_prioritization'] = 'RelevanceHeuristic'
-    context['forward_scorer'] = 'Template_Free'
-    context['filter_threshold_default'] = 0.75
-
-    if target is not None:
-        context['target_mol'] = target
-
-    return render(request, 'retro_interactive.html', context)
 
 @login_required
 def retro_interactive_mcts(request, target=None):

@@ -38,8 +38,6 @@ urlpatterns = [
     re_path(r'^retro/target=(?P<smiles>.+)$', views.retro_target, name='retro_target'),
 
     # Interactive retrosynthesis
-    re_path(r'^retro_interactive/$', views.retro_interactive, name='retro_interactive'),
-    re_path(r'^retro_interactive/target=(?P<target>.+)$', views.retro_interactive, name='retro_interactive_target'),
     re_path(r'^retro_interactive_mcts/$', views.retro_interactive_mcts, name='retro_interactive_mcts'),
     re_path(r'^retro_interactive_mcts/target=(?P<target>.+)$', views.retro_interactive_mcts, name='retro_interactive_mcts_target'),
     re_path(r'^ajax/smiles_to_image/$', views.ajax_smiles_to_image, name='ajax_smiles_to_image'),
