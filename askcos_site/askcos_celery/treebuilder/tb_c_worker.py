@@ -8,22 +8,15 @@ class, is used for prioritization. Each worker pre-loads a
 transformer and grabs templates from the database.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf import settings
+import numpy as np
+import rdkit.Chem as Chem
 from celery import shared_task
 from celery.signals import celeryd_init
-from pymongo import MongoClient
-import makeit.global_config as gc
-from makeit.retrosynthetic.transformer import RetroTransformer
-from makeit.utilities.fingerprinting import create_rxn_Morgan2FP_separately
-from rdkit import RDLogger, Chem
+from rdkit import RDLogger
 from rdkit.Chem import AllChem
-import numpy as np
-from bson import ObjectId
 from scipy.special import softmax
-import rdkit.Chem as Chem
-from rdkit.Chem import AllChem
 
+from makeit.utilities.fingerprinting import create_rxn_Morgan2FP_separately
 from ..tfserving import TFServingAPIModel
 
 lg = RDLogger.logger()
@@ -132,6 +125,8 @@ def configure_worker(options={}, **kwargs):
         options (dict, optional): Used ensure correct queue. (default: {{}})
         **kwargs: Unused.
     """
+    from makeit.retrosynthetic.transformer import RetroTransformer
+
     if 'queues' not in options:
         return
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
