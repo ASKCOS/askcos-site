@@ -1,6 +1,5 @@
 from .buyables import *
 from .draw import *
-from .evaluate import *
 from .index import *
 from .info import *
 from .retro import *
