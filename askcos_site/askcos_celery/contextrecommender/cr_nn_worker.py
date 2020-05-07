@@ -9,7 +9,6 @@ from celery import shared_task
 from celery.signals import celeryd_init
 
 import makeit.global_config as gc
-from makeit.synthetic.context.nearestneighbor import NNContextRecommender
 
 CORRESPONDING_QUEUE = 'cr_nn_worker'
 
@@ -21,6 +20,8 @@ def configure_worker(options={}, **kwargs):
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A NEAREST NEIGHBOR CONTEXT RECOMMENDER WORKER ###')
+
+    from makeit.synthetic.context.nearestneighbor import NNContextRecommender
 
     global recommender
 

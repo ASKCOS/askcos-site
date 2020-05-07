@@ -49,13 +49,13 @@ def configure_coordinator(options={}, **kwargs):
             (default: {{}})
         **kwargs: Unused.
     """
-    from .tree_builder_celery import MCTSCelery
-
     if 'queues' not in options:
         return
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A TREE BUILDER MCTS COORDINATOR ###')
+
+    from .tree_builder_celery import MCTSCelery
 
     global treeBuilder
 

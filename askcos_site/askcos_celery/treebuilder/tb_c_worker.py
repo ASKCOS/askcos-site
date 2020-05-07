@@ -125,13 +125,13 @@ def configure_worker(options={}, **kwargs):
         options (dict, optional): Used ensure correct queue. (default: {{}})
         **kwargs: Unused.
     """
-    from makeit.retrosynthetic.transformer import RetroTransformer
-
     if 'queues' not in options:
         return
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A TREE BUILDER WORKER ###')
+
+    from makeit.retrosynthetic.transformer import RetroTransformer
 
     # Instantiate and load retro transformer
     global retroTransformer
