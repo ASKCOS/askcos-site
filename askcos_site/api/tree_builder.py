@@ -1,9 +1,11 @@
-import json
-from rdkit import Chem
 from collections import defaultdict
-from django.http import JsonResponse
+
 from celery.exceptions import TimeoutError
+from django.http import JsonResponse
+from rdkit import Chem
+
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+
 
 def tree_builder(request):
     resp = {}

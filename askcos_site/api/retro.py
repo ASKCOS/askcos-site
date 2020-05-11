@@ -1,10 +1,11 @@
-from rdkit import Chem
-from django.http import JsonResponse
 from celery.exceptions import TimeoutError
-from makeit import global_config as gc
+from django.http import JsonResponse
+from rdkit import Chem
+
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 
 TIMEOUT = 120
+
 
 def singlestep(request):
     resp = {}

@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from askcos_site.askcos_celery.atom_mapper.atom_mapping_worker import get_atom_mapping
-from ..utils import ajax_error_wrapper
+from askcos_site.main.utils import ajax_error_wrapper
 
 
 # @login_required

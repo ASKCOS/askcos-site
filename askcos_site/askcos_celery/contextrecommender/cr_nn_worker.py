@@ -5,11 +5,9 @@ load a pre-trained nearest neighbor model. For each request, this worker
 must query the database to get details about the instance.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf import settings
 from celery import shared_task
 from celery.signals import celeryd_init
-from makeit.synthetic.context.nearestneighbor import NNContextRecommender
+
 import makeit.global_config as gc
 
 CORRESPONDING_QUEUE = 'cr_nn_worker'
@@ -22,6 +20,8 @@ def configure_worker(options={}, **kwargs):
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A NEAREST NEIGHBOR CONTEXT RECOMMENDER WORKER ###')
+
+    from makeit.synthetic.context.nearestneighbor import NNContextRecommender
 
     global recommender
 
@@ -47,8 +47,6 @@ def get_n_conditions(*args, **kwargs):
     rxn = [reacants, products], Where each is a list of SMILES.
     n = Number of contexts to return.
     """
-
-    global NN_PREDICTOR
 
     print('Context recommender worker got a request: {} {}'.format(args, kwargs))
 

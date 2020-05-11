@@ -1,15 +1,10 @@
 import os
-from django.http import JsonResponse
-import rdkit.Chem as Chem
-import sys
-if sys.version_info[0] < 3:
-    from urllib2 import urlopen
-    from urllib2 import HTTPError
-else:
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
+from urllib.error import HTTPError
+from urllib.request import urlopen
 
-from askcos_site.celery import app
+import rdkit.Chem as Chem
+from django.http import JsonResponse
+
 
 def ajax_error_wrapper(ajax_func):
     def ajax_func_call(*args, **kwargs):

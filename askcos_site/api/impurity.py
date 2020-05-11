@@ -1,8 +1,6 @@
 from django.http import JsonResponse
 from rdkit import Chem
-from celery.exceptions import TimeoutError
-from makeit.utilities.contexts import clean_context
-# TODO: need to work on it
+
 from askcos_site.askcos_celery.impurity.impurity_worker import get_impurities
 
 TIMEOUT = 30

@@ -1,14 +1,12 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
 import json
 
-from askcos_site.main.views.users import can_modify_buyables
+from django.http import JsonResponse
+from django.shortcuts import render, HttpResponse
+
 from askcos_site.globals import pricer
-from ..utils import ajax_error_wrapper
+from askcos_site.main.views.users import can_modify_buyables
+from askcos_site.main.utils import ajax_error_wrapper
+
 
 def price_smiles_func(smiles):
     return pricer.lookup_smiles(smiles, alreadyCanonical=True)

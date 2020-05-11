@@ -13,9 +13,9 @@ from django.urls import reverse
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
-from .users import can_control_robot
-from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
-from ..utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
+from askcos_site.main.utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.views.users import can_control_robot
 
 
 #@login_required
@@ -190,30 +190,6 @@ def retro_network(request):
     context['allowResolve'] = 'checked' if allow_resolve else ''
     return render(request, 'reaction_network.html', context)
 
-@login_required
-def retro_interactive(request, target=None):
-    '''Builds an interactive retrosynthesis page'''
-
-    context = {}
-    context['warn'] = 'If requests seem to take a long time, check the <a href="/status/">Server Status</a> page to see which resources are currently being used!'
-
-    context['max_depth_default'] = 4
-    context['max_branching_default'] = 20
-    context['retro_mincount_default'] = 0
-    context['synth_mincount_default'] = 0
-    context['expansion_time_default'] = 60
-    context['max_ppg_default'] = 100
-    context['template_count_default'] = 100
-    context['template_prioritization'] = 'Relevance'
-    context['max_cum_prob_default'] = 0.995
-    context['precursor_prioritization'] = 'RelevanceHeuristic'
-    context['forward_scorer'] = 'Template_Free'
-    context['filter_threshold_default'] = 0.75
-
-    if target is not None:
-        context['target_mol'] = target
-
-    return render(request, 'retro_interactive.html', context)
 
 @login_required
 def retro_interactive_mcts(request, target=None):

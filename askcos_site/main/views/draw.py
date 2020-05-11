@@ -5,7 +5,7 @@ from django.shortcuts import render, HttpResponse
 from django.urls import reverse
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-from ..utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.utils import ajax_error_wrapper, resolve_smiles
 
 
 @ajax_error_wrapper

@@ -1,10 +1,11 @@
+from celery.exceptions import TimeoutError
 from django.http import JsonResponse
 from rdkit import Chem
-from celery.exceptions import TimeoutError
-from makeit.utilities.contexts import clean_context
+
 from askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker import get_outcomes
 
 TIMEOUT = 30
+
 
 def template_free(request):
     resp = {}

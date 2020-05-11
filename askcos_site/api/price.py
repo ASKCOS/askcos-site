@@ -2,6 +2,7 @@ from django.http import JsonResponse
 
 from askcos_site.globals import pricer
 
+
 def price(request):
     resp = {}
     resp['request'] = dict(**request.GET)

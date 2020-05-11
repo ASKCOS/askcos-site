@@ -1,11 +1,11 @@
-from django.http import JsonResponse
 from celery.exceptions import TimeoutError
-from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
+from django.http import JsonResponse
 from rdkit import Chem
 
-TIMEOUT = 30
+from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
 
 TIMEOUT = 30
+
 
 def neural_network(request):
     resp = {}
