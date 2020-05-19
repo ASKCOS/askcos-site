@@ -3,15 +3,7 @@ container.style.width=null;
 
 var loader = document.getElementsByClassName("loader")[0];
 loader.style.top = "300px";
-
-function showLoader() {
-    loader.style.display = "block";
-}
 showLoader();
-
-function hideLoader() {
-    loader.style.display = "none";
-}
 
 function hideNetwork(n) {
   var networkDiv = document.querySelectorAll('.tree-graph')[n];
@@ -222,21 +214,6 @@ function initializeNetwork(data, elementDiv) {
     return network
 }
 
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
 var csrftoken = getCookie('csrftoken');
 
 var app = new Vue({
