@@ -87,15 +87,15 @@ $(document).ready(function() {
 <table class="table table-borderless table-nonfluid">
 <tr><th>{% csrf_token %}</th></tr>
 
-<tr><th style="vertical-align: text-top; text-align:left">Reactants: </th><td><input id="reactants" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('reactants')" style="margin-left:10px"><span class="glyphicon glyphicon-pencil" style="margin-right:10px"></span>Draw</a></td></tr>
-<tr><th style="vertical-align: text-top; text-align:left">Product: </th><td><input id="product" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('product')" style="margin-left:10px"><span class="glyphicon glyphicon-pencil" style="margin-right:10px"></span>Draw</a></td></tr>
+<tr><th style="vertical-align: text-top; text-align:left">Reactants: </th><td><input id="reactants" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('reactants')" style="margin-left:10px"><span class="fas fa-pencil-alt" style="margin-right:10px"></span>Draw</a></td></tr>
+<tr><th style="vertical-align: text-top; text-align:left">Product: </th><td><input id="product" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('product')" style="margin-left:10px"><span class="fas fa-pencil-alt" style="margin-right:10px"></span>Draw</a></td></tr>
 
 <!-- Placeholder for rendering image after a SMILES string is entered -->
 <tr id="rxn_mol_wrapper" style="display:none"><td colspan="2" id="rxn_image"></td></tr>
 <tr id="rxn_smiles_wrapper" style="display:none"><td colspan="2" id="rxn_smiles"></td></tr>
 
 <tr>
-    <th style="vertical-align:text-top;">Context recommender: <a href="#" data-toggle="tooltip" title="Which version of the context recommender would you like to use? The nearest neighbor model is probably strictly worse than the neural network model at this point...both in terms of speed and accuracy"><span class="glyphicon glyphicon-info-sign"></span></a></th>
+    <th style="vertical-align:text-top;">Context recommender: <a href="#" data-toggle="tooltip" title="Which version of the context recommender would you like to use? The nearest neighbor model is probably strictly worse than the neural network model at this point...both in terms of speed and accuracy"><span class="fas fa-info-circle"></span></a></th>
     <td>
         <select id="id_context_recommender" name="context_recommender">
             <option value="Neural_Network" {% if form.context_recommender == 'Neural_Network' %}selected{% endif %}>Neural Network</option>

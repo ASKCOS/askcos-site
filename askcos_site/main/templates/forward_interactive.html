@@ -101,19 +101,19 @@ Synthesis Predictor
         </div>
         <div class="form-inline">
             <label style="margin: 5px">
-                Top-k from forward prediction: <span class="glyphicon glyphicon-info-sign" title="How many of the top forward prediction products should be included in impurity prediction?"></span>
+                Top-k from forward prediction: <span class="fas fa-info-circle" title="How many of the top forward prediction products should be included in impurity prediction?"></span>
                 <input type='number' class='form-control' v-model="impurityTopk"/>
             </label>
         </div>
         <div class="form-inline">
             <label style="margin: 5px">
-                Inspection threshold: <span class="glyphicon glyphicon-info-sign" title="Threshold for filtering out bad reactions"></span>
+                Inspection threshold: <span class="fas fa-info-circle" title="Threshold for filtering out bad reactions"></span>
                 <input type='number' step="any" class='form-control' v-model="inspectionThreshold"/>
             </label>
         </div>
         <div class="form-inline">
             <label style="margin: 5px">
-                Use atom mapping: <span class="glyphicon glyphicon-info-sign" title="Whether to use atom mapping to check reaction modes"></span>
+                Use atom mapping: <span class="fas fa-info-circle" title="Whether to use atom mapping to check reaction modes"></span>
                 <input type='checkbox' step="any" class='form-control' v-model="inspectionThreshold"/>
             </label>
         </div>
@@ -322,7 +322,7 @@ Synthesis Predictor
                 <table v-show="!!impurityResults.length" class="table table-hover" style="width: 75%; margin: 0 auto">
                     <thead>
                         <tr>
-                            <th style="text-align: right">No. <a href="#" data-toggle="tooltip" title="Ranking is based on similarity between predicted impurity and major product."><span class="glyphicon glyphicon-info-sign"></span></a></th>
+                            <th style="text-align: right">No. <a href="#" data-toggle="tooltip" title="Ranking is based on similarity between predicted impurity and major product."><span class="fas fa-info-circle"></span></a></th>
                             <th><center>Predicted impurities</center></th>
                             <th style="text-align: right">Possible mechanisms</th>
                             <th style="text-align: right">Inspector score</th>

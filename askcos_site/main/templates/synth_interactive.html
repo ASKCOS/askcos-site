@@ -140,12 +140,12 @@ $(document).ready(function() {
 
 <table class="table table-borderless table-nonfluid">
 
-<tr><th style="vertical-align: text-top;">Reactants: </th><td><input id="reactants" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('reactants')" style="margin-left:10px"><span class="glyphicon glyphicon-pencil" style="margin-right:10px"></span>Draw</a></td></tr>
+<tr><th style="vertical-align: text-top;">Reactants: </th><td><input id="reactants" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('reactants')" style="margin-left:10px"><span class="fas fa-pencil-alt" style="margin-right:10px"></span>Draw</a></td></tr>
 
 <!-- Placeholder for rendering image after a SMILES string is entered -->
 <tr id="reactant_mol_wrapper" style="display:none"><th style="vertical-align: text-top">Parsed reactants:</th><td id="reactants_image"></td></tr>
 
-<tr><th style="vertical-align:text-top;">Prediction approach: <a href="#" data-toggle="tooltip" title="How would you like to try to predict the outcome of this reaction? There is the classic template-based approach, which is somewhat context-dependent, but can be slow (5-45 seconds). There is also the template-free approach, which can allow for inventive chemistry and tends to be more accurate overall, but is not sensitive to context. It is very fast."><span class="glyphicon glyphicon-info-sign"></span></a></th>
+<tr><th style="vertical-align:text-top;">Prediction approach: <a href="#" data-toggle="tooltip" title="How would you like to try to predict the outcome of this reaction? There is the classic template-based approach, which is somewhat context-dependent, but can be slow (5-45 seconds). There is also the template-free approach, which can allow for inventive chemistry and tends to be more accurate overall, but is not sensitive to context. It is very fast."><span class="fas fa-info-circle"></span></a></th>
     <td>
         <select id="id_forward_scorer" name="forward_scorer" onchange="showFields(this.options[this.selectedIndex].value)">
             <option value="Template_Free" {% if forward_scorer == 'Template_Free' %}selected{% endif %}>Template-free</option>
@@ -156,7 +156,7 @@ $(document).ready(function() {
 
 <tr><th>{% csrf_token %}</th></tr>
 
-<tr id="reagents_control"><th style="vertical-align: text-top; text-align:left">Reagents: </th><td><input id="reagents" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('reagents')" style="margin-left:10px"><span class="glyphicon glyphicon-pencil" style="margin-right:10px"></span>Draw</a></td></tr>
+<tr id="reagents_control"><th style="vertical-align: text-top; text-align:left">Reagents: </th><td><input id="reagents" maxlength="500" size="40" type="text"/><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('reagents')" style="margin-left:10px"><span class="fas fa-pencil-alt" style="margin-right:10px"></span>Draw</a></td></tr>
 
 <!-- Placeholder for rendering image after a SMILES string is entered -->
 <tr id="reagent_mol_wrapper" style="display:none"><th style="vertical-align: text-top;"">Parsed reagents:</th><td id="reagents_image"></td></tr>
@@ -166,9 +166,9 @@ $(document).ready(function() {
 
 <tr id="temperature_control" style="display:none"><th>Temperature (Celsius): </th><td><input id="temperature" maxlength="6" size="6" type="text" value="{{ temperature }}"/></td></tr>
 
-<tr id="mincount_control" style="display:none"><th>Minimum template count: <a href="#" data-toggle="tooltip" title="What is the minimum template popularity you would like to use during the forward enumeration when evaluating suggested reactions? The default value of {{ mincount }} shows the value used during intiialization, so you cannot specify a value lower than this."><span class="glyphicon glyphicon-info-sign"></span></a></th><td><input id="mincount" maxlength="6" size="6" type="text" value="{{ mincount }}"/></td></tr>
+<tr id="mincount_control" style="display:none"><th>Minimum template count: <a href="#" data-toggle="tooltip" title="What is the minimum template popularity you would like to use during the forward enumeration when evaluating suggested reactions? The default value of {{ mincount }} shows the value used during intiialization, so you cannot specify a value lower than this."><span class="fas fa-info-circle"></span></a></th><td><input id="mincount" maxlength="6" size="6" type="text" value="{{ mincount }}"/></td></tr>
 
-<tr><th>Maximum num. products: <a href="#" data-toggle="tooltip" title="Up to how many candidate outcomes should be returned? The only downside to returning a large number is the time it takes to render the images; it does not increase the computational time."><span class="glyphicon glyphicon-info-sign"></span></a></th><td><input id="maxreturn" maxlength="6" size="6" type="text" value="100"/></td></tr>
+<tr><th>Maximum num. products: <a href="#" data-toggle="tooltip" title="Up to how many candidate outcomes should be returned? The only downside to returning a large number is the time it takes to render the images; it does not increase the computational time."><span class="fas fa-info-circle"></span></a></th><td><input id="maxreturn" maxlength="6" size="6" type="text" value="100"/></td></tr>
 
 <!-- Controls -->
 <tr id="controls_wrapper" style="display:none">
