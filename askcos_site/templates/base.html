@@ -239,19 +239,24 @@ $(document).ajaxStart(function() {
 $(document).ready(function () {
   $('[data-toggle="tooltip"]').tooltip();
 });
-$(".nav li").on("click", function() {
-    $(".nav li").removeClass("active");
-    $(this).addClass("active");
-});
-$(document).ready(function() {
-  $('.nav li').hover(function() {
-    $('.linkdesc', this).stop(true, true).slideDown('fast');
-    $(this).addClass('open');
-          }, function() {
-    $('.linkdesc', this).stop(true, true).slideUp('fast');
-    $(this).removeClass('open');
-  });
-});
+
+// Toggle navbar dropdowns on mouse hover
+function toggleDropdown(e) {
+  const _d = $(e.target).closest('.dropdown');
+  const _m = $('.dropdown-menu', _d);
+  setTimeout(function() {
+    const shouldOpen = e.type !== 'click' && _d.is(':hover');
+    _m.toggleClass('show', shouldOpen);
+    _d.toggleClass('show', shouldOpen);
+    $('[data-toggle="dropdown"]', _d).attr('aria-expanded', shouldOpen);
+  }, e.type === 'mouseleave' ? 100 : 0);
+}
+
+$('body')
+  .on('mouseenter mouseleave', '.dropdown', toggleDropdown)
+  .on('click', '.dropdown-menu a', toggleDropdown);
+// End of dropdown toggle on hover
+
 // This JSFiddle is part of a tutorial written by Zach Alam (zachalam.com)
 // You can view the complete tutorial and more background information
 // by visiting the following URL:
