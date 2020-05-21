@@ -8,10 +8,6 @@
   font-weight: bold;
 }
 
-.m5 {
-    margin: 5px;
-}
-
 .grey-border {
     border: #333 3px solid;
 }
@@ -152,18 +148,6 @@ transform: translate(-50%, -50%) !important;
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.mx-auto {
-    margin: 10px auto;
-}
-
-.mb-10 {
-    margin-bottom: 10px;
-}
-
-.ml-25 {
-    margin-left: 25px;
 }
 
 /* Drag and drop */

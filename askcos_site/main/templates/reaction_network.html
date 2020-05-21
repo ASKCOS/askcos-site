@@ -112,378 +112,269 @@
                 <h3>Settings</h3>
             </div>
             <div slot="body" class="text-left">
-                <h2>Global settings</h2>
-                <div class="form-inline mb-10">
-                    <i title="When enabled, any input that cannot be parsed by RDKit on the ASKCOS server will be sent to the PubChem Power User Gateway API to resolve a common name (i.e. - fluconazole) to a SMILES string." class="fas fa-question-circle" style="cursor: pointer"></i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ref="allowResolve" v-model="allowResolve" {{ allowResolve }}/>
-                            Allow queries to be sent to PubChem name resolver?
-                        </label>
-                    </div>
+                <h4>Global settings</h4>
+                <div class="form-inline mb-2">
+                    <i title="When enabled, any input that cannot be parsed by RDKit on the ASKCOS server will be sent to the PubChem Power User Gateway API to resolve a common name (i.e. - fluconazole) to a SMILES string."
+                       class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="checkResolve" type="checkbox" ref="allowResolve" v-model="allowResolve" {{ allowResolve }}/>
+                    <label class="form-check-label" for="checkResolve">Allow queries to be sent to PubChem name resolver?</label>
                 </div>
-                <div class="form-inline mb-10">
-                    <i title="When enabled, chemical structure images will highlight the atoms involved in a transformation." class="fas fa-question-circle" style="cursor: pointer"></i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ref="isHighlightAtom" v-model="isHighlightAtom" {{ isHighlightAtom }}/>
-                            Highlight changed atom?
-                        </label>
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="When enabled, chemical structure images will highlight the atoms involved in a transformation." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="checkHighlight" type="checkbox" ref="isHighlightAtom" v-model="isHighlightAtom" {{ isHighlightAtom }}/>
+                    <label class="form-check-label" for="checkHighlight">Highlight changed atom?</label>
                 </div>
-                <div class="form-inline mb-10">
-                    <i title="This number of results from each one-step prediction will automatically be added to the graph visualization. In some circumstances, it may be advantageous to add 0 results automatically, and manually choose which to add from the list on the right." class="fas fa-question-circle" style="cursor: pointer"></i>
-                    <div class="form-group">
-                        Automatically add top
-                        <input style="width: 50px" type="number" v-model.number="reactionLimit" class="form-control text-center">
-                        results to the graph visualization
-                    </div>
+                <div class="form-inline mb-1">
+                    <i title="This number of results from each one-step prediction will automatically be added to the graph visualization. In some circumstances, it may be advantageous to add 0 results automatically, and manually choose which to add from the list on the right."
+                       class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="reactionLimit">Number of results to automatically add to graph:</label>
+                    <input id="reactionLimit" style="width: 50px" type="number" v-model.number="reactionLimit" class="form-control form-control-sm text-center">
                 </div>
-                <div class="form-inline mb-10">
-                    <i title="When there are multiple trained models available to make a prediction, you can choose between them using this dropdown." class="fas fa-question-circle" style="cursor: pointer"></i>
-                    <div class="form-group">
-                        Template set/relevance model:
-                        <select v-model="tb.settings.templateSet" class="form-control">
-                            <template v-for="set in templateSets">
-                                <option :value="set">%% set %%</option>
-                            </template>
-                        </select>
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="When there are multiple trained models available to make a prediction, you can choose between them using this dropdown."
+                       class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="templateSet">Template set/relevance model:</label>
+                    <select id="templateSet" v-model="tb.settings.templateSet" class="form-control form-control-sm">
+                        <template v-for="set in templateSets">
+                            <option :value="set">%% set %%</option>
+                        </template>
+                    </select>
                 </div>
-                <div class="form-inline mb-10">
-                    <i title="This settings changes how the precursors are ranked by the server. Results can also be re-ordered dynamically as explained in the tutorial." class="fas fa-question-circle" style="cursor: pointer"></i>
-                    <div class="form-group">
-                        Precursor scoring:
-                        <select v-model="tb.settings.precursorScoring" class="form-control">
-                            <option value="Heuristic">Heuristic</option>
-                            <option value="RelevanceHeuristic">Relevance+Heuristic</option>
-                            <option value="SCScore">SCScore</option>
-                        </select>
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="This settings changes how the precursors are ranked by the server. Results can also be re-ordered dynamically as explained in the tutorial."
+                       class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="precursorScoring">Precursor scoring:</label>
+                    <select id="precursorScoring" v-model="tb.settings.precursorScoring" class="form-control form-control-sm">
+                        <option value="Heuristic">Heuristic</option>
+                        <option value="RelevanceHeuristic">Relevance+Heuristic</option>
+                        <option value="SCScore">SCScore</option>
+                    </select>
                 </div>
-                <div class="form-inline mb-10">
-                    <i title="This is the maximum number of reaction rules/templates to try to apply to your target. Depending on the value of maximum cumulative probability (below), a fewer number of templates may actually be applied." class="fas fa-question-circle" style="cursor: pointer"></i>
-                    <div class="form-group">
-                        Max. Num. templates:
-                        <input style="width: 100px" type="number" v-model.number="tb.settings.numTemplates" class="form-control text-center">
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="This is the maximum number of reaction rules/templates to try to apply to your target. Depending on the value of maximum cumulative probability (below), a fewer number of templates may actually be applied."
+                       class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="numTemplates">Max. Num. templates:</label>
+                    <input id="numTemplates" style="width: 100px" type="number" v-model.number="tb.settings.numTemplates" class="form-control form-control-sm text-center">
                 </div>
-                <div class="form-inline mb-10">
-                    <i class="fas fa-question-circle" title="This is the cumulative template score after which templates will stop being applied to your target.
-        For example, if the sum of the scores of the top two templates exceeds this value, only those two template application results will be returned.
-        For computational efficiency, this value is limited to a maximum value of 0.99999. Please directly use the asynchronous API if you need to apply all templates." style="cursor: pointer">
-                    </i>
-                    <div class="form-group">
-                        Max. cum. prob.:
-                        <input style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control text-center">
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="This is the cumulative template score after which templates will stop being applied to your target.
+                        For example, if the sum of the scores of the top two templates exceeds this value, only those two template application results will be returned.
+                        For computational efficiency, this value is limited to a maximum value of 0.99999. Please directly use the asynchronous API if you need to apply all templates."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="maxCumProb">Max. cum. prob.:</label>
+                    <input id="maxCumProb" style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control form-control-sm text-center">
                 </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This is the minimum plausibility that a predictor transformation must receive from the Fast Filter model in order to be kept and returned as a result.
-        The plausibility score can help filter out bad suggestions, but in some cases can be over conservative and filter out false negatives."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="form-group">
-                        Min. plausibility:
-                        <input style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control text-center">
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="This is the minimum plausibility that a predictor transformation must receive from the Fast Filter model in order to be kept and returned as a result.
+                        The plausibility score can help filter out bad suggestions, but in some cases can be over conservative and filter out false negatives."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="minPlausibility">Min. plausibility:</label>
+                    <input id="minPlausibility" style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
                 </div>
-                <div class="form-inline mb-10">
-                    <div>
-                        <input type="checkbox" ref="allowSelec" v-model="tb.settings.allowSelec" {{ tb.settings.allowSelec }}/>
-                        Apply regio-selectivity checking?
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="When enabled, will automatically identify reactions which have potential regio-selectivity considerations." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="checkSelec" type="checkbox" ref="allowSelec" v-model="tb.settings.allowSelec" {{ tb.settings.allowSelec }}/>
+                    <label class="form-check-label" for="checkSelec">Apply regio-selectivity checking?</label>
                 </div>
                 <hr>
-                <h2>MCTS Tree Builder Settings:</h2>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This is how long the server is allowed to search for template applications.
-        It is roughly how long it will take for results to be returned, however there is an additional pathway resolution step following expansion that may take some time as well."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
+                <h4>MCTS Tree Builder Settings:</h4>
+                <div class="form-inline mb-2">
+                    <i title="This is how long the server is allowed to search for template applications.
+                        It is roughly how long it will take for results to be returned, however there is an additional pathway resolution step following expansion that may take some time as well."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="expansionTime">Expansion time (seconds):</label>
+                    <input id="expansionTime" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" max="300" step="1" v-model.number="tb.settings.expansionTime">
+                </div>
+                <div class="form-inline mb-2">
+                    <i title="This is the maximum price for a chemical that will satisfy the stopping criteria for a MCTS search.
+                        In other words, the search algorithm will not try to find precursors for chemicals below this price,
+                        and these will appear as leaf nodes in the resulting pathway graphs."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="maxPPG">Max chemical price ($/g):</label>
+                    <input id="maxPPG" style="width: 100px" class="form-control form-control-sm text-center" type="number" v-model.number="tb.settings.maxPPG">
+                </div>
+                <div class="form-inline mb-2">
+                    <i title="This is the maximum depth (or number of steps) for any given reaction pathway return by the search algorithm." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="maxDepth">Max expansion depth:</label>
+                    <input id="maxDepth" style="width: 100px" type="number" min="1" max="9" step="1" v-model.number="tb.settings.maxDepth" class="form-control form-control-sm text-center">
+                </div>
+                <div class="form-inline mb-2">
+                    <i title="This is the maximum branching for any given chemical in the reaction tree/graph. Once this maximum branching factor is reached, no more template applications will be attempted for that chemical during the search."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="maxDepth">Max branching:</label>
+                    <input id="maxBranching" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" max="50" step="1" v-model.number="tb.settings.maxBranching">
+                </div>
+                <div class="form-inline mb-2">
+                    <i title="The chemical property logic parameters allow you to include additional stopping criteria for the search, by setting the maximum number of atoms by element. This can be used to set an arbitrary molecular size as a stopping criteria instead of relying on our buyables database."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="chemPropLogic">Chemical property logic:</label>
+                    <select id="chemPropLogic" v-model="tb.settings.chemicalPropertyLogic" class="form-control form-control-sm">
+                        <option value="none">None</option>
+                        <option value="or">Or</option>
+                        <option value="and">And</option>
+                    </select>
+                </div>
+                <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-2">
+                    <div class="mr-2">Max atoms:</div>
                     <div class="form-group">
-                        Expansion time (seconds):
-                        <input style="width: 100px" class="form-control text-center"
-                          type="number" min="1" max="300" step="1"
-                          v-model.number="tb.settings.expansionTime"
-                        >
+                        <label class="mx-2" for="chemPropC">C &le;</label>
+                        <input id="chemPropC" style="width: 3rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPropertyC">
+                    </div>
+                    <div class="form-group">
+                        <label class="mx-2" for="chemPropN">N &le;</label>
+                        <input id="chemPropN" style="width: 3rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPropertyN">
+                    </div>
+                    <div class="form-group">
+                        <label class="mx-2" for="chemPropO">O &le;</label>
+                        <input id="chemPropO" style="width: 3rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPropertyO">
+                    </div>
+                    <div class="form-group">
+                        <label class="mx-2" for="chemPropH">H &le;</label>
+                        <input id="chemPropH" style="width: 3rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPropertyH">
                     </div>
                 </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This is the maximum price for a chemical that will satisfy the stopping criteria for a MCTS search.
-        In other words, the search algorithm will not try to find precursors for chemicals below this price,
-        and these will appear as leaf nodes in the resulting pathway graphs."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
+                <div class="form-inline mb-2">
+                    <i title="The chemical popularity options allow you to set additional stopping criteria based on the number of times a chemical appeared in the training data for the template relevance machine learning model. "
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <label class="mr-2" for="chemPopLogic">Chemical popularity logic:</label>
+                    <select id="chemPopLogic" v-model="tb.settings.chemicalPopularityLogic" class="form-control form-control-sm">
+                        <option value="none">None</option>
+                        <option value="or">Or</option>
+                        <option value="and">And</option>
+                    </select>
+                </div>
+                <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-2">
+                    <div class="mr-2">Minimum occurrences:</div>
                     <div class="form-group">
-                        Max chemical price ($/g):
-                        <input style="width: 100px" class="form-control text-center"
-                          type="number"
-                          v-model.number="tb.settings.maxPPG"
-                        >
+                        <label class="mx-2" for="chemPopR">As reactant &ge;</label>
+                        <input id="chemPopR" style="width: 75px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityReactants">
+                    </div>
+                    <div class="form-group">
+                        <label class="mx-2" for="chemPopP">As product &ge;</label>
+                        <input id="chemPopP" style="width: 75px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityProducts">
                     </div>
                 </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This is the maximum depth (or number of steps) for any given reaction pathway return by the search algorithm."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="form-group">
-                        Max expansion depth:
-                        <input style="width: 100px" type="number" min="1" max="9" step="1" v-model.number="tb.settings.maxDepth" class="form-control text-center">
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="This setting will make the tree search algorithm terminate upon finding any pathway with terminal nodes that meet the stopping criteria (price, and or property/popularity logic)."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="returnFirst" type="checkbox" v-model="tb.settings.returnFirst" {{ tb.settings.returnFirst }}/>
+                    <label class="form-check-label" for="returnFirst">Return ASAP?</label>
                 </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This is the maximum branching for any given chemical in the reaction tree/graph. Once this maximum branching factor is reached, no more template applications will be attempted for that chemical during the search."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="form-group">
-                        Max branching:
-                        <input style="width: 100px" class="form-control text-center"
-                          type="number" min="1" max="50" step="1"
-                          v-model.number="tb.settings.maxBranching"
-                        >
-                    </div>
-                </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="The chemical property logic parameters allow you to include additional stopping criteria for the search, by setting the maximum number of atoms by element. This can be used to set an arbitrary molecular size as a stopping criteria instead of relying on our buyables database."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="form-group">
-                        Chemical property logic:
-                        <select v-model="tb.settings.chemicalPropertyLogic" class="form-control">
-                            <option value="none">None</option>
-                            <option value="or">Or</option>
-                            <option value="and">And</option>
-                        </select>
-                    </div>
-                </div>
-                <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-10">
-                    <div>Max atoms:</div>
-                    <div class="form-group">
-                        C:
-                        <input style="width: 75px" class="form-control text-center"
-                          type="number" min="1" step="1"
-                          v-model.number="tb.settings.chemicalPropertyC"
-                        >
-                    </div>
-                    <div class="form-group">
-                        N:
-                        <input style="width: 75px" class="form-control text-center"
-                          type="number" min="1" step="1"
-                          v-model.number="tb.settings.chemicalPropertyN"
-                        >
-                    </div>
-                    <div class="form-group">
-                        O:
-                        <input style="width: 75px" class="form-control text-center"
-                          type="number" min="1" step="1"
-                          v-model.number="tb.settings.chemicalPropertyO"
-                        >
-                    </div>
-                    <div class="form-group">
-                        H:
-                        <input style="width: 75px" class="form-control text-center"
-                          type="number" min="1" step="1"
-                          v-model.number="tb.settings.chemicalPropertyH"
-                        >
-                    </div>
-                </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="The chemical popularity options allow you to set additional stopping criteria based on the number of times a chemical appeared in the training data for the template relevance machine learning model. "
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="form-group">
-                        Chemical popularity logic:
-                        <select v-model="tb.settings.chemicalPopularityLogic" class="form-control">
-                            <option value="none">None</option>
-                            <option value="or">Or</option>
-                            <option value="and">And</option>
-                        </select>
-                    </div>
-                </div>
-                <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-10">
-                    <div>Minimum occurrences:</div>
-                    <div class="form-group">
-                        As reactant:
-                        <input style="width: 75px" class="form-control text-center"
-                          type="number" min="1" step="1"
-                          v-model.number="tb.settings.chemicalPopularityReactants"
-                        >
-                    </div>
-                    <div class="form-group">
-                        As product:
-                        <input style="width: 75px" class="form-control text-center"
-                          type="number" min="1" step="1"
-                          v-model.number="tb.settings.chemicalPopularityProducts"
-                        >
-                    </div>
-                </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This setting will make the tree search algorithm terminate upon finding any pathway with terminal nodes that meet the stopping criteria (price, and or property/popularity logic)."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" v-model="tb.settings.returnFirst" {{ tb.settings.returnFirst }}/>
-                            Return ASAP?
-                        </label>
-                    </div>
-                </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This setting allows you to redirect to the entire graph visualization of the tree builder results in this IPP interface instead of the pathway visualization page that lets you view individual pathways one at a time."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" v-model="tb.redirectToGraph" {{ tb.redirectToGraph }}/>
-                            Redirect to entire graph visualization?
-                        </label>
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="This setting allows you to redirect to the entire graph visualization of the tree builder results in this IPP interface instead of the pathway visualization page that lets you view individual pathways one at a time."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="redirectToGraph" type="checkbox" v-model="tb.redirectToGraph" {{ tb.redirectToGraph }}/>
+                    <label class="form-check-label" for="redirectToGraph">Redirect to entire graph visualization?</label>
                 </div>
                 <hr>
-                <h2>IPP Clustering Settings:</h2>
-                <div class="form-inline mb-10">
-                    <i
-                        title="This setting lets you turn on or off the precursor clustering."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ref="allowCluster" v-model="allowCluster" {{ allowCluster }}/>
-                            Show similar precursors in one cluster?
-                        </label>
-                    </div>
+                <h4>IPP Clustering Settings:</h4>
+                <div class="form-inline mb-2">
+                    <i title="This setting lets you turn on or off the precursor clustering."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="allowCluster" type="checkbox" ref="allowCluster" v-model="allowCluster" {{ allowCluster }}/>
+                    <label class="form-check-label" for="allowCluster">Show similar precursors in one cluster?</label>
                 </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="When enabled, this option will color alternating results in the results list slightly different shades, for easier viewing."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ref="clusterOptions.isAlternatingColor" v-model="clusterOptions.isAlternatingColor" {{ clusterOptions.isAlternatingColor }}/>
-                            Show alternating color for different reaction clusters?
-                        </label>
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="When enabled, this option will color alternating results in the results list slightly different shades, for easier viewing."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="isAltColor" type="checkbox" ref="clusterOptions.isAlternatingColor" v-model="clusterOptions.isAlternatingColor" {{ clusterOptions.isAlternatingColor }}/>
+                    <label class="form-check-label" for="isAltColor">Show alternating color for different reaction clusters?</label>
                 </div>
-                <div class="form-inline mb-10">
-                    <i
-                        title="When enabled, users can remove precursor results completely using the delete button in the clustering UI."
-                        class="fas fa-question-circle" style="cursor: pointer">
-                    </i>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ref="clusterOptions.allowRemovePrecursor" v-model="clusterOptions.allowRemovePrecursor" {{ clusterOptions.allowRemovePrecursor }}/>
-                            Allow to remove precursors?
-                        </label>
-                    </div>
+                <div class="form-inline mb-2">
+                    <i title="When enabled, users can remove precursor results completely using the delete button in the clustering UI."
+                        class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                    <input class="form-check-input" id="allowRemovePrecursor" type="checkbox" ref="clusterOptions.allowRemovePrecursor" v-model="clusterOptions.allowRemovePrecursor" {{ clusterOptions.allowRemovePrecursor }}/>
+                    <label class="form-check-label" for="allowRemovePrecursor">Allow to remove precursors?</label>
                 </div>
-                <div class="form-inline mb-10">
-                    <div>
-                        <i
-                            title="This clustering parameter determines which fingerprint features are used as input to the clustering algorithm."
-                            class="fas fa-question-circle" style="cursor: pointer">
-                        </i>
-                        Feature:
-                        <select v-model="clusterOptions.feature" class="form-control">
+                <div class="form-inline mb-2">
+                    <div class="form-group mr-2">
+                        <i title="This clustering parameter determines which fingerprint features are used as input to the clustering algorithm."
+                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                        <label class="mr-2" for="clusterFeature">Feature:</label>
+                        <select id="clusterFeature" v-model="clusterOptions.feature" class="form-control form-control-sm">
                             <option value="original">original</option>
                             <option value="outcomes">outcomes</option>
                             <option value="all">all</option>
                         </select>
-                        <i
-                            title="This setting let's you choose between 'kmeans' and 'hdbscan' clustering algorithms."
-                            class="fas fa-question-circle" style="cursor: pointer">
-                        </i>
-                        Method:
-                        <select v-model="clusterOptions.cluster_method" class="form-control">
+                    </div>
+                    <div class="form-group mr-2">
+                        <i title="This setting let's you choose between 'kmeans' and 'hdbscan' clustering algorithms."
+                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                        <label class="mr-2" for="clusterMethod">Method:</label>
+                        <select id="clusterMethod" v-model="clusterOptions.cluster_method" class="form-control form-control-sm">
                             <option value="kmeans">kmeans</option>
                             <option value="hdbscan">hdbscan</option>
                         </select>
-                        <br>
-
-                        <i
-                            title="Currently only morgan fingerprint methods are supported."
-                            class="fas fa-question-circle" style="cursor: pointer">
-                        </i>
-                        Fingerprint:
-                        <select v-model="clusterOptions.fingerprint" class="form-control">
+                    </div>
+                    <div class="form-group mr-2">
+                        <i title="Currently only morgan fingerprint methods are supported."
+                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                        <label class="mr-2" for="clusterFingerprint">Fingerprint:</label>
+                        <select id="clusterFingerprint" v-model="clusterOptions.fingerprint" class="form-control form-control-sm">
                             <option value="morgan">Morgan</option>
                         </select>
-                        <i
-                            title="This setting changes the fixed length folding used for constructing morgan fingerprints for clustering."
-                            class="fas fa-question-circle" style="cursor: pointer">
-                        </i>
-                        Length:
-                        <input style="width: 50px" type="number" v-model.number="clusterOptions.fpBits" class="form-control">
-                        <i
-                            title="This setting changes the radius used for constructing morgan fingerprints for clustering."
-                            class="fas fa-question-circle" style="cursor: pointer">
-                        </i>
-                        Radius:
-                        <input style="width: 50px" type="number" v-model.number="clusterOptions.fpRadius" class="form-control">
+                    </div>
+                    <div class="form-group mr-2">
+                        <i title="This setting changes the fixed length folding used for constructing morgan fingerprints for clustering."
+                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                        <label class="mr-2" for="clusterBits">Length:</label>
+                        <input id="clusterBits" style="width: 50px" type="number" v-model.number="clusterOptions.fpBits" class="form-control form-control-sm">
+                    </div>
+                    <div class="form-group mr-2">
+                        <i title="This setting changes the radius used for constructing morgan fingerprints for clustering."
+                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                        <label class="mr-2" for="clusterRadius">Radius:</label>
+                        <input id="clusterRadius" style="width: 50px" type="number" v-model.number="clusterOptions.fpRadius" class="form-control form-control-sm">
                     </div>
                 </div>
                 <hr>
-                <h2>Graph Visualization Settings:</h2>
-                <div class="form-inline mb-10">
-                    Edge spring constant: %% networkOptions.physics.barnesHut.springConstant %%
-                    <input type="range" min="0" max="0.3" step="0.005" v-model.number="networkOptions.physics.barnesHut.springConstant" class="slider" @input="updateNetworkOptions()">
+                <h4>Graph Visualization Settings:</h4>
+                <div class="form-inline mb-2">
+                    <label class="mr-2" for="graphSpringConst">Edge spring constant: %% networkOptions.physics.barnesHut.springConstant %%</label>
+                    <input id="graphSpringConst" type="range" min="0" max="0.3" step="0.005" v-model.number="networkOptions.physics.barnesHut.springConstant" class="slider" @input="updateNetworkOptions()">
                 </div>
-                <div class="form-inline mb-10">
-                    Chemical node size: %% networkOptions.nodes.size %%
-                    <input type="range" min="1" max="60" step="1" v-model.number="networkOptions.nodes.size" class="slider" @input="updateNetworkOptions()">
+                <div class="form-inline mb-2">
+                    <label class="mr-2" for="graphNodeSize">Chemical node size: %% networkOptions.nodes.size %%</label>
+                    <input id="graphNodeSize" type="range" min="1" max="60" step="1" v-model.number="networkOptions.nodes.size" class="slider" @input="updateNetworkOptions()">
                 </div>
-                <div class="form-inline mb-10">
-                    Reaction node size: %% networkOptions.nodes.font.size %%
-                    <input type="range" min="1" max="20" step="1" v-model.number="networkOptions.nodes.font.size" class="slider" @input="updateNetworkOptions()">
+                <div class="form-inline mb-2">
+                    <label class="mr-2" for="graphFontSize">Reaction node size: %% networkOptions.nodes.font.size %%</label>
+                    <input id="graphFontSize" type="range" min="1" max="20" step="1" v-model.number="networkOptions.nodes.font.size" class="slider" @input="updateNetworkOptions()">
                 </div>
-                <div class="form-inline mb-10">
-                    Node effective mass: %% networkOptions.nodes.mass %%
-                    <input type="range" min="0.1" max="5" step="0.1" v-model.number="networkOptions.nodes.mass" class="slider" @input="updateNetworkOptions()">
+                <div class="form-inline mb-2">
+                    <label class="mr-2" for="graphNodeMass">Node effective mass: %% networkOptions.nodes.mass %%</label>
+                    <input id="graphNodeMass" type="range" min="0.1" max="5" step="0.1" v-model.number="networkOptions.nodes.mass" class="slider" @input="updateNetworkOptions()">
                 </div>
-                <div class="form-inline mb-10">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" v-model="networkOptions.layout.hierarchical.enabled" {{ networkOptions.layout.hierarchical.enabled }} @change="updateNetworkOptions()"/>
-                            Hierarchical layout?
-                        </label>
-                    </div>
+                <div class="form-inline mb-2">
+                    <input class="form-check-input" id="checkHier" type="checkbox" v-model="networkOptions.layout.hierarchical.enabled" {{ networkOptions.layout.hierarchical.enabled }} @change="updateNetworkOptions()"/>
+                    <label class="form-check-label" for="checkHier">Hierarchical layout?</label>
                 </div>
-                <div class="form-inline mb-10" v-if="networkOptions.layout.hierarchical.enabled">
-                    Hierarchical direction:
-                    <select v-model="networkOptions.layout.hierarchical.direction" class="form-control" @change="updateNetworkOptions()">
+                <div class="form-inline mb-2" v-if="networkOptions.layout.hierarchical.enabled">
+                    <label class="mr-2" for="graphHierDir">Hierarchical direction:</label>
+                    <select id="graphHierDir" v-model="networkOptions.layout.hierarchical.direction" class="form-control form-control-sm" @change="updateNetworkOptions()">
                         <option value="UD">Top-down</option>
                         <option value="LR">Left-right</option>
                         <option value="DU">Bottom-up</option>
                         <option value="RL">Right-left</option>
                     </select>
                 </div>
-                <div class="form-inline mb-10" v-if="networkOptions.layout.hierarchical.enabled">
-                    Hierarchical level separation: %% networkOptions.layout.hierarchical.levelSeparation %%
-                    <input type="range" min="1" max="500" step="1" v-model.number="networkOptions.layout.hierarchical.levelSeparation" class="slider" @input="updateNetworkOptions()">
+                <div class="form-inline mb-2" v-if="networkOptions.layout.hierarchical.enabled">
+                    <label class="mr-2" for="graphLevelSep">Hierarchical level separation: %% networkOptions.layout.hierarchical.levelSeparation %%</label>
+                    <input id="graphLevelSep" type="range" min="1" max="500" step="1" v-model.number="networkOptions.layout.hierarchical.levelSeparation" class="slider" @input="updateNetworkOptions()">
                 </div>
             </div>
             <div slot="footer">
                 <button style="margin: 0 5px;" class="btn btn-danger modal-default-button" @click="resetSettings()">
                   Reset
                 </button>
-                <button style="margin: 0 5px;" class="btn btn-default modal-default-button" @click="showSettingsModal = false">
+                <button style="margin: 0 5px;" class="btn btn-outline-secondary modal-default-button" @click="showSettingsModal = false">
                   Close
                 </button>
             </div>
         </settings-modal>
 
         <modal v-if="showLoadModal">
-            <div class="mx-auto" slot="header">
+            <div class="mx-auto my-2" slot="header">
                 <h3>Load Network JSON</h3>
             </div>
             <div slot="body">
@@ -500,7 +391,7 @@
         </modal>
 
         <modal v-if="showDownloadModal">
-            <div class="mx-auto" slot="header">
+            <div class="mx-auto my-2" slot="header">
                 <h3>Download name</h3>
             </div>
             <div slot="body">
@@ -517,12 +408,12 @@
         </modal>
 
         <modal v-if="showClusterPopoutModal" @close="closeClusterPopoutModal();">
-            <div class="mx-auto" slot="header">
+            <div class="mx-auto my-2" slot="header">
                 <h3>
                 Viewing
-                <button class="btn btn-default" @click="clusterPopoutModalDecGroupID();"><i class="fas fa-less-than"></i></button>
+                <button class="btn btn-outline-secondary" @click="clusterPopoutModalDecGroupID();"><i class="fas fa-less-than"></i></button>
                 Cluster #%% num2str(clusterPopoutModalData['group_id']+1) %%
-                <button class="btn btn-default" @click="clusterPopoutModalIncGroupID();"><i class="fas fa-greater-than"></i></button>
+                <button class="btn btn-outline-secondary" @click="clusterPopoutModalIncGroupID();"><i class="fas fa-greater-than"></i></button>
                 </h3>
             </div>
             <div slot="body" class="text-left">
@@ -569,7 +460,7 @@
                                 </div>
                             </div>
                             <div class="row" style="position: absolute; bottom:0; right:30px;">
-                                <div class="mx-auto">
+                                <div class="mx-auto my-2">
                                     <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(clusterPopoutModalData['selected'], res)"><i class="fas fa-plus"></i></button>
                                     <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(clusterPopoutModalData['selected'], res)"><i class="fas fa-minus"></i></button>
                                 </div>
@@ -580,11 +471,11 @@
                     </div>
                 </div>
             </div>
-            <div class="mx-auto" slot="footer">
+            <div class="mx-auto my-2" slot="footer">
                 <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterPopoutModalData['selectedSmiles'], clusterPopoutModalData['group_id']);" title="Add precursor">
                     <i class="fas fa-plus"></i>
                 </button>
-                <button class="btn btn-default"  @click="showClusterPopoutModal = false; openClusterEditModal(clusterPopoutModalData['selected'], clusterPopoutModalData['group_id']); closeClusterPopoutModal();" title="Edit clusters">
+                <button class="btn btn-outline-secondary"  @click="showClusterPopoutModal = false; openClusterEditModal(clusterPopoutModalData['selected'], clusterPopoutModalData['group_id']); closeClusterPopoutModal();" title="Edit clusters">
                     <i class="fas fa-edit"></i>
                 </button>
                 <template v-if="window.width < 950"><br></template>
@@ -596,12 +487,12 @@
         </modal>
 
         <modal v-if="showClusterEditModal" @close="closeClusterEditModal();">
-            <div class="mx-auto" slot="header">
+            <div class="mx-auto my-2" slot="header">
                 <h3>
                 Editing
-                <button class="btn btn-default" @click="clusterEditModalDecGroupID();"><i class="fas fa-less-than"></i></button>
+                <button class="btn btn-outline-secondary" @click="clusterEditModalDecGroupID();"><i class="fas fa-less-than"></i></button>
                 Cluster #%% num2str(clusterEditModalData['group_id']+1) %%
-                <button class="btn btn-default" @click="clusterEditModalIncGroupID();"><i class="fas fa-greater-than"></i></button>
+                <button class="btn btn-outline-secondary" @click="clusterEditModalIncGroupID();"><i class="fas fa-greater-than"></i></button>
                 </h3>
             </div>
             <div slot="body" class="text-left popout-scroll">
@@ -705,14 +596,14 @@
                     </div>
                 </div>
             </div>
-            <div class="mx-auto" slot="footer">
+            <div class="mx-auto my-2" slot="footer">
                 <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterEditModalData['selectedSmiles'], clusterEditModalData['group_id']);">
                     <i class="fas fa-plus"></i>
                 </button>
                 <button class="btn btn-info" @click="requestClusterId(clusterEditModalData['selectedSmiles']);">
                     Re-cluster
                 </button>
-                <button class="btn btn-default" @click="openModal('settings');">
+                <button class="btn btn-outline-secondary" @click="openModal('settings');">
                     Cluster Settings
                 </button>
                 <template v-if="window.width < 1100"><br></template>
@@ -724,15 +615,15 @@
         </modal>
 
         <modal v-if="showAddNewPrecursorModal" @close="closeAddNewPrecursorModal()">
-            <div class="mx-auto" slot="header">
+            <div class="mx-auto my-2" slot="header">
                 <h3>Add precursor</h3>
             </div>
             <div slot="body" class="text-left">
-                <div class="mx-auto">
+                <div class="mx-auto my-2">
                     <form class="form-inline" autocomplete="off" v-on:submit.prevent="addNewPrecursorModalSubmit()">
                         <div class="form-group">
                             Precursor: <input id="precursor" type="text" class="form-control text-center" v-model="addNewPrecursorModal['newprecursorsmiles']">
-                            <input id="precursorsubmit" type="submit" value="Submit" class="btn btn-default" />
+                            <input id="precursorsubmit" type="submit" value="Submit" class="btn btn-outline-secondary" />
                             <span @click="toggleResolver" style="cursor: pointer;" class="nonselectable">
                                 External resolver: <i class="fas fa-server"></i>
                                 <span v-if="allowResolve" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon.">&#10003;</span>
@@ -741,7 +632,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="form-inline mb-10">
+                <div class="form-inline mb-2">
                     <div class="form-group">
                         Group:
                         <select v-model="addNewPrecursorModal['group_id']" class="form-control">
@@ -750,7 +641,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-inline mb-10">
+                <div class="form-inline mb-2">
                     <div class="form-group">
                         <input type="checkbox" id="nodupcheck" v-model="addNewPrecursorModal['nodupcheck']">
                         <label class="nonselectable" style="font-weight: normal;" for="nodupcheck"><p>No duplicate check</p></label>
@@ -763,102 +654,92 @@
             <div class="row">
                 <div class="col-md-7 text-center left-pane">
 
-                <div class="mx-auto">
+                <div class="d-flex justify-content-center my-2">
                     <form class="form-inline" autocomplete="off" v-on:submit.prevent="changeTarget">
-                        <div class="form-group">
-                            <label>Target: </label>
-                            <div class="input-group">
-                                <span class="btn input-group-addon" @click="toggleResolver">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Target</span>
+                                <button class="btn btn-outline-secondary" type="button" @click="toggleResolver">
                                     <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
                                     <i v-else style="color: darkred" class="fas fa-server" title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon."></i>
-                                </span>
-                                <input id="target" type="text" class="form-control text-center" v-model="target">
-                                <span class='btn input-group-addon' data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
-                                    <i class="fas fa-edit"></i>
-                                </span>
+                                </button>
                             </div>
-                            <input id="submit" type="submit" value="One-Step" class="btn btn-default" />
-                            <div class="btn-group">
-                                <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-default" :disabled="!isAuth" :title="isAuth ? 'Build tree' : 'Must be logged in!'">
-                                    <i class="fas fa-sign-out-alt"></i> Build tree
+                            <input id="target" type="text" class="form-control text-center" v-model="target">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                                <button id="tb-submit-settings" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" :disabled="!isAuth"><i class="fas fa-cog"></i>
-
-                                    <span class="caret"></span>
-                                    <span class="sr-only">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li style="padding: 5px;">
-                                        <input type="text" v-model="tb.settings.name" class="form-control" placeholder="Job name/description">
-                                    </li>
-                                    <li style="padding-top: 5px; padding-left: 5px"><b>Quick Settings</b></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li>
-                                        <a @click="tbSettings('quickest')" style="cursor: pointer">
-                                            <i v-if="isTbQuickSettingsMode('quickest')" class="fas fa-check"></i>
-                                            Quickest search (ASAP)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a @click="tbSettings('shallow')" style="cursor: pointer">
-                                            <i v-if="isTbQuickSettingsMode('shallow')" class="fas fa-check"></i>
-                                            Shallow search (30s)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a @click="tbSettings('normal')" style="cursor: pointer">
-                                            <i v-if="isTbQuickSettingsMode('normal')" class="fas fa-check"></i>
-                                            Normal search (60s)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a @click="tbSettings('deep')" style="cursor: pointer">
-                                            <i v-if="isTbQuickSettingsMode('deep')" class="fas fa-check"></i>
-                                            Deep search (120s)
-                                        </a>
-                                    </li>
-                                    <li role="separator" class="divider"></li>
-                                    <li>
-                                        <a @click="showSettingsModal = true" style="cursor: pointer">
-                                            Advanced...
-                                        </a>
-                                    </li>
-                                </ul>
                             </div>
                         </div>
-
+                        <input id="submit" type="submit" value="One-Step" class="btn btn-outline-primary mx-2" />
+                        <div class="btn-group">
+                            <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-outline-secondary" :disabled="!isAuth" :title="isAuth ? 'Build tree' : 'Must be logged in!'">
+                                <i class="fas fa-sign-out-alt"></i> Build tree
+                            </button>
+                            <button id="tb-submit-settings" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" :disabled="!isAuth"><i class="fas fa-cog"></i>
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="tb-submit-settings">
+                                <span class="px-2">
+                                    <input type="text" v-model="tb.settings.name" class="form-control" placeholder="Job name/description">
+                                </span>
+                                <div class="dropdown-divider"></div>
+                                <h5 class="dropdown-header"><b>Quick Settings</b></h5>
+                                <a class="dropdown-item" @click="tbSettings('quickest')" style="cursor: pointer">
+                                    <i v-if="isTbQuickSettingsMode('quickest')" class="fas fa-check"></i>
+                                    Quickest search (ASAP)
+                                </a>
+                                <a class="dropdown-item" @click="tbSettings('shallow')" style="cursor: pointer">
+                                    <i v-if="isTbQuickSettingsMode('shallow')" class="fas fa-check"></i>
+                                    Shallow search (30s)
+                                </a>
+                                <a class="dropdown-item" @click="tbSettings('normal')" style="cursor: pointer">
+                                    <i v-if="isTbQuickSettingsMode('normal')" class="fas fa-check"></i>
+                                    Normal search (60s)
+                                </a>
+                                <a class="dropdown-item" @click="tbSettings('deep')" style="cursor: pointer">
+                                    <i v-if="isTbQuickSettingsMode('deep')" class="fas fa-check"></i>
+                                    Deep search (120s)
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" @click="showSettingsModal = true" style="cursor: pointer">
+                                    Advanced...
+                                </a>
+                            </div>
+                        </div>
                     </form>
                 </div>
 
-                <div class="mx-auto">
-                    <button id="expand-btn" class="btn btn-success" v-on:click="expandNode" title="Expand node">
+                <div class="d-flex justify-content-center align-items-center my-2">
+                    <button id="expand-btn" class="btn btn-success mx-1" v-on:click="expandNode" title="Expand node">
                         <i class="fas fa-plus"></i>
                     </button>
-                    <button id="delete-btn" class="btn btn-danger" v-on:click="deleteChoice" title="Delete node(s)">
+                    <button id="delete-btn" class="btn btn-danger mx-1" v-on:click="deleteChoice" title="Delete node(s)">
                         <i class="fas fa-minus"></i>
                     </button>
-                    <button id="collapse-btn" class="btn btn-info" v-on:click="collapseNode" title="Collapse children node">
+                    <button id="collapse-btn" class="btn btn-info mx-1" v-on:click="collapseNode" title="Collapse children node">
                         <i class="fas fa-compress-arrows-alt"></i>
                     </button>
-                    <span style="margin:0 5px">|</span>
-                    <button id="clear-reactions-btn" class="btn btn-default" @click="clear" title="Clear reactions"><i class="fas fa-times"></i></button>
-                    <button id="settings-btn" class="btn btn-default" @click="openModal('settings')" title="Settings"><i class="fas fa-cog"></i></button>
-                    <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-default">
+                    <span class="mx-2">|</span>
+                    <button id="clear-reactions-btn" class="btn btn-outline-secondary mx-1" @click="clear" title="Clear reactions"><i class="fas fa-times"></i></button>
+                    <button id="settings-btn" class="btn btn-outline-secondary mx-1" @click="openModal('settings')" title="Settings"><i class="fas fa-cog"></i></button>
+                    <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-outline-secondary mx-1">
                         %% networkOptions.layout.hierarchical.enabled ? 'H' : 'G' %%
                     </button>
-                    <button @click="centerGraph" id="center-graph-button" class="btn btn-default" title="Fit graph visualization in canvas">
+                    <button @click="centerGraph" id="center-graph-button" class="btn btn-outline-secondary mx-1" title="Fit graph visualization in canvas">
                         <i class="fas fa-expand"></i>
                     </button>
-                    <button id="download-btn" class="btn btn-default" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
-                    <button id="load-btn" class="btn btn-default" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
-                    <button class="btn btn-default" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
+                    <button id="download-btn" class="btn btn-outline-secondary mx-1" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
+                    <button id="load-btn" class="btn btn-outline-secondary mx-1" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
+                    <button class="btn btn-outline-secondary mx-1" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
                 </div>
 
-                <div id="network" class="mx-auto mt-2"></div>
+                <div id="network" class="mx-auto my-2"></div>
 
                 </div>
                 <div id="details" class="col-md-5 text-center details">
-                    <h2>Currently selected:</h2>
+                    <h3>Currently selected:</h3>
 
                     <template v-if="selected">
                         <template v-if="selected.type=='chemical'">
@@ -881,25 +762,20 @@
                                     <div style="margin-bottom: 10px">
                                         <img v-bind:src="selected.image" style="max-width: 100%"/>
                                     </div>
-                                    <h2>
+                                    <h3>
                                         Precursors
                                         <button class="btn btn-success" style="padding: 0px 4px" @click="openAddNewPrecursorModal(clusterEditModalData['selectedSmiles'], undefined);">
                                             <i class="fas fa-plus"></i>
                                         </button>
-                                    </h2>
-                                    <div class="form-inline">
-                                        <div class="form-inline">
-                                            Group similar
-                                            <input
-                                              type="checkbox"
-                                              ref="allowCluster"
-                                              v-model="allowCluster"
-                                              @change="resetSortingCategory"
-                                              {{ allowCluster }}/>
+                                    </h3>
+                                    <div class="form-inline flex-column justify-content-center">
+                                        <div class="form-group mb-2">
+                                            <label class="mr-2" for="allowCluster">Group similar</label>
+                                            <input id="allowCluster" type="checkbox" ref="allowCluster" v-model="allowCluster" @change="resetSortingCategory" {{ allowCluster }}/>
                                         </div>
-                                        <div v-if="!allowCluster" class="form-inline">
-                                            Reorder by:
-                                            <select class="form-control" @change="reorderResults" v-model="sortingCategory">
+                                        <div v-if="!allowCluster" class="form-group mb-2">
+                                            <label class="mr-2" for="sortingCategory">Reorder by:</label>
+                                            <select class="form-control" id="sortingCategory" @change="reorderResults" v-model="sortingCategory">
                                                 <option value="score">Score</option>
                                                 <option value="num_examples"># Examples</option>
                                                 <option value="template_score">Template score</option>
@@ -918,7 +794,7 @@
                                             <h3>Click button below to expand this node and predict precursors for this target.</h3>
                                             <button id="expand-btn-side" class="btn btn-success" v-on:click="expandNode">Expand node</button>
                                         </div>
-                                        <div class="form-inline mb-10">
+                                        <div class="form-inline mb-2">
                                             <div class="form-group">
                                             Add top
                                             <input type="number" class="form-control text-center" style="width: 50px;" v-model.number="reactionLimit">
@@ -970,10 +846,10 @@
                                                                 </div>
                                                             </div>
                                                             <div class="row">
-                                                                <div class="col-xs-12 mx-auto">
+                                                                <div class="col-xs-12 mx-auto my-2">
                                                                     <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
                                                                     <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                                    <button class="btn btn-default" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
+                                                                    <button class="btn btn-outline-secondary" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1024,10 +900,10 @@
                                                         </div>
                                                     </div>
                                                     <div class="row">
-                                                        <div class="col-xs-12 mx-auto">
+                                                        <div class="col-xs-12 mx-auto my-2">
                                                             <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
                                                             <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                            <button class="btn btn-default" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
+                                                            <button class="btn btn-outline-secondary" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1082,7 +958,7 @@
                                                 <div class="container-fluid">
                                                     <div class="row">
                                                         <div class="col-xs-12">
-                                                            <img v-bind:src="getMolDrawEndPoint(res)" class="m5" :class="res === selected.reactionSmiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
+                                                            <img v-bind:src="getMolDrawEndPoint(res)" class="m-1" :class="res === selected.reactionSmiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
                                                         </div>
                                                         <div class="col-xs-12" v-if="selected.selectivity[index]">
                                                             Score %% num2str(selected.selectivity[index], 3) %%
