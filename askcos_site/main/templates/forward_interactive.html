@@ -351,27 +351,13 @@ Synthesis Predictor
     </div>
     <div id="pageLoader" class="loader"></div>
 
-    <!-- Popup drawing tool -->
-    <div class="modal fade" id="drawingbox">
-        <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body" style="height:430px;">
-            <div id="jsme_container" style="margin:auto"></div>
-            </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal" @click="updateSmilesFromJSME">Done drawing</button>
-            </div>
-            
-        </div>
-        </div>
-    </div>
-
     <a id="downloadForwardAnchorElem" style="display:none"></a>
     <a id="downloadImpurityAnchorElem" style="display:none"></a>
 
 </div>
 
+<!-- drawing box -->
+{% include "drawing_modal.html" %}
 
 <script src="{% static 'js/forward.js' %}"></script>
 
