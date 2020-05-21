@@ -1591,7 +1591,6 @@ var app = new Vue({
                     this.clear();
                 }
             }
-            tour.init();
             tour.restart();
         },
         initClusterShowCard: function(selected) {
@@ -1937,11 +1936,12 @@ var app = new Vue({
 });
 
 var tour = new Tour({
+    framework: 'bootstrap4',
     storage: false,
     steps: [
         {
             title: "A guided tour through retrosynthesis",
-            content: "Welcome to this guided tour through retrosynthesis planning using our interactive path planning tool. This will demonstrate the purpose of the tool and explain the user interface using a real example. Thanks to <a href='http://bootstraptour.com/' target='_blank'>bootstrap-tour</a> for the great guided tour JavaScript package making it very easy to provide this tour to you!",
+            content: "Welcome to this guided tour through retrosynthesis planning using our interactive path planning tool. This will demonstrate the purpose of the tool and explain the user interface using a real example. Thanks to <a href='https://github.com/IGreatlyDislikeJavascript/bootstrap-tourist' target='_blank'>bootstrap-tourist</a> for the great guided tour JavaScript package making it very easy to provide this tour to you!",
             orphan: true,
             backdropContainer: '#body'
         },
