@@ -6,39 +6,8 @@
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, .5);
-  display: table;
+  display: block;
   transition: opacity .3s ease;
-}
-
-.modal-wrapper {
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.modal-container {
-  width: 50%;
-  margin: 0 auto;
-  padding: 20px 30px;
-  background-color: #fff;
-  border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
-  transition: all .3s ease;
-  font-family: Helvetica, Arial, sans-serif;
-  max-height: 95vh;
-  overflow-y: scroll;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #333333;
-}
-
-.modal-body {
-  margin: 20px 0;
-}
-
-.modal-default-button {
-  float: right;
 }
 
 /*
@@ -58,8 +27,30 @@
   opacity: 0;
 }
 
-.modal-enter .modal-container,
-.modal-leave-active .modal-container {
-  -webkit-transform: scale(1.1);
-  transform: scale(1.1);
+.fade-d, .fade-l, .fade-u, .fade-r {
+  transition: all .3s ease;
+}
+
+.modal-enter .fade-d,
+.modal-leave-active .fade-d {
+  -webkit-transform: translate(0, -50px);
+  transform: translate(0, -50px);
+}
+
+.modal-enter .fade-l,
+.modal-leave-active .fade-l {
+  -webkit-transform: translate(50px, 0);
+  transform: translate(50px, 0);
+}
+
+.modal-enter .fade-u,
+.modal-leave-active .fade-u {
+  -webkit-transform: translate(0, 50px);
+  transform: translate(0, 50px);
+}
+
+.modal-enter .fade-r,
+.modal-leave-active .fade-r {
+  -webkit-transform: translate(-50px, 0);
+  transform: translate(-50px, 0);
 }

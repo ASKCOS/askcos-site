@@ -267,14 +267,6 @@ function clusteredit_dragleave_handler(event) {
     event.target.classList.remove('dragover');
 }
 
-Vue.component('modal', {
-    template: '#modal-template'
-})
-
-Vue.component('settings-modal', {
-    template: '#modal-template-settings'
-})
-
 const tbSettingsDefault = {
     quick: "normal",
     maxDepth: 5,
@@ -1527,6 +1519,7 @@ var app = new Vue({
                     this.addNewPrecursorModal['newprecursorsmiles'],
                     gid);
                 this.$forceUpdate();
+                this.closeAddNewPrecursorModal();
             }
         },
         getMolDrawEndPoint: function(precursor, isHighlight, isTransparent) {
