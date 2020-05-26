@@ -13,12 +13,15 @@
 
 {% block page_body %}
 
-<div id="app" class="container-fluid">
+<div id="app">
+    <div class="row mb-3">
+        <div class="col text-center">
+            <button class="btn btn-info" v-on:click="update">Refresh</button>
+        </div>
+    </div>
+
     <div class="row">
-        <div class="col-12">
-            <div class="text-center">
-                <button class="btn btn-info" v-on:click="update">Refresh</button>
-            </div>
+        <div class="col">
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -39,8 +42,9 @@
             </table>
         </div>
     </div>
-    <div class="loader"></div>
 </div>
+
+<div class="loader"></div>
 
 <script src="{% static 'js/status.js' %}"></script>
 
