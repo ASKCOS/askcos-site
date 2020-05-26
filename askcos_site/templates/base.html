@@ -89,7 +89,7 @@
 
                 <li class="nav-item"><a class="nav-link" href="/status/"><span class="fa fa-server mr-1"></span>Server Status</a></li>
 
-                <li class="nav-item"><a class="nav-link" id="support-anchor"><span class="fa fa-comment mr-1"></span>Support</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-toggle="modal" data-target="#supportModal"><span class="fa fa-comment mr-1"></span>Support</a></li>
             </ul>
 
             {% if user.is_authenticated %}
@@ -164,45 +164,56 @@
 
 </div>
 
-<div class="support-popup">
-  <div id="support-form" class="support-form">
-    <div class="form-group">
-      <label for="support-module">Select Module: </label>
-      <select id="support-module" class="form-control">
-        <option value="onestep">One-step Retrosynthesis</option>
-        <option value="pathplanner">Interactive Path Planning</option>
-        <option value="treebuilder">Tree Builder</option>
-        <option value="context">Context Recommendation</option>
-        <option value="synthpred">Synthesis Predictor</option>
-        <option value="general">General</option>
-      </select>
+<div class="modal fade" id="supportModal" role="dialog" aria-labelledby="supportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supportModalLabel">Send support email</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="support-form" class="form mb-3">
+                    <div class="form-group">
+                        <label for="support-module">Select Module: </label>
+                        <select id="support-module" class="form-control">
+                            <option value="onestep">One-step Retrosynthesis</option>
+                            <option value="pathplanner">Interactive Path Planning</option>
+                            <option value="treebuilder">Tree Builder</option>
+                            <option value="context">Context Recommendation</option>
+                            <option value="synthpred">Synthesis Predictor</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="support-category">Select issue/problem category: </label>
+                        <select id="support-category" class="form-control">
+                            <option value="bug">Report a bug</option>
+                            <option value="enhancement">Request an enhancement</option>
+                            <option value="documentation">Documentation</option>
+                            <option value="general">General Query</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="support-subject">Email subject line: </label>
+                        <input id="support-subject" type="text" class="form-control" placeholder="Subject line (max length: 150 characters)" maxlength="150" autocomplete="off">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" id="support-shared" type="checkbox">
+                        <label class="form-check-label" for="support-shared">I wish to share this information with other Consortium members.</label>
+                    </div>
+                </div>
+                <div class="text-justify">
+                  NOTE: Clicking "Submit" should launch your email client to send us an email. If this is blocked for some reason, please include the above information in an email you compose separately to {{ contact_email }}.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="submitSupport()">Submit</button>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-      <label for="support-category">Select issue/problem category: </label>
-      <select id="support-category" class="form-control">
-        <option value="bug">Report a bug</option>
-        <option value="enhancement">Request an enhancement</option>
-        <option value="documentation">Documentation</option>
-        <option value="general">General Query</option>
-      </select>
-    </div>
-    <div class="checkbox">
-      <label>
-        <input id="support-shared" type="checkbox"> I wish to share this information with other Consortium members.
-      </label>
-    </div>
-    <div class="form-group">
-      <label for="support-subject">Email subject line: </label>
-      <input id="support-subject" type="text" class="form-control" placeholder="Subject line (max length: 150 characters)" maxlength="150" autocomplete="off">
-    </div>
-    <div class="text-center">
-      <button id="support-submit" class="btn btn-success">Submit</button>
-      <button id="support-cancel" class="btn btn-danger">Cancel</button>
-    </div>
-    <div>
-      NOTE: Clicking "Submit" should launch your email client to send us an email. If this is blocked for some reason, please include the above information in an email you compose separately to {{ contact_email }}.
-    </div>
-  </div>
 </div>
 
 <script src="{% static 'js/support.js' %}"></script>
