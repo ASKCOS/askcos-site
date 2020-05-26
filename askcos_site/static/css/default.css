@@ -62,7 +62,7 @@ html {
 
 /* Smiles */
 
-font.smiles {
+span.smiles {
     font-family: 'Menlo', 'Courier New', monospace;
 }
 
