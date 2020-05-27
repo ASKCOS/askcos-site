@@ -6,7 +6,6 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/vis.min.css' %}" type="text/css">
 <script src="{% static 'js/vis.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/tree-graph.css' %}" type="text/css">
@@ -186,8 +185,8 @@
 
 </div>
 
-<div class="loader"></div>
+{% endblock %}
 
+{% block javascript %}
 <script src="{% static 'js/tree-graph.js' %}"></script>
-
 {% endblock %}

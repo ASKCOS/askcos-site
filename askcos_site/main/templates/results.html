@@ -6,7 +6,6 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
 {% endblock %}
 
 {% block page_title %}My Results{% endblock %}
@@ -61,8 +60,8 @@
     </div>
 </div>
 
-<div class="loader"></div>
+{% endblock %}
 
+{% block javascript %}
 <script src="{% static 'js/results.js' %}"></script>
-
 {% endblock %}

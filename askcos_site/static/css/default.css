@@ -244,3 +244,15 @@ input::-webkit-inner-spin-button {
 [data-toggle="collapse"]:not(.collapsed) .if-collapsed {
     display:none;
 }
+
+#pageLoader {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -5rem;
+    margin-left: -5rem;
+    width: 10rem;
+    height: 10rem;
+    border-width: 0.5rem;
+}

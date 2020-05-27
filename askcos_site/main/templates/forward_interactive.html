@@ -6,7 +6,6 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/bootstrap-tourist.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/forward.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
@@ -200,7 +199,7 @@ Synthesis Predictor
                         <td class="text-center">%% index+1 %%</td>
                         <td class="text-center">
                             <span v-if="evaluating && result.evaluation === undefined">
-                                <div class="loader-in-place"></div>
+                                <div class="spinner-border text-secondary" role="status"></div>
                             </span>
                             <span v-else-if="result.evaluation">
                                 ✔ (rank: %% result.evaluation %%)
@@ -310,8 +309,6 @@ Synthesis Predictor
         </table>
     </div>
 
-    <div id="pageLoader" class="loader"></div>
-
     <a id="downloadForwardAnchorElem" style="display:none"></a>
     <a id="downloadImpurityAnchorElem" style="display:none"></a>
 
@@ -320,6 +317,8 @@ Synthesis Predictor
 <!-- drawing box -->
 {% include "drawing_modal.html" %}
 
-<script src="{% static 'js/forward.js' %}"></script>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/forward.js' %}"></script>
 {% endblock %}

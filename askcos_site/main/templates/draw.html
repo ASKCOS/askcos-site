@@ -69,6 +69,8 @@
 <!-- drawing box -->
 {% include "drawing_modal.html" %}
 
-<script src="{% static 'js/draw.js' %}"></script>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/draw.js' %}"></script>
 {% endblock %}

@@ -31,12 +31,12 @@ function copyToClipboard(text) {
 }
 
 function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
+    var loader = document.getElementById("pageLoader");
     loader.style.display = "block";
 }
 
 function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
+    var loader = document.getElementById("pageLoader");
     loader.style.display = "none";
 }
 

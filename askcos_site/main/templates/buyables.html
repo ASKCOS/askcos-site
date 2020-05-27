@@ -6,7 +6,6 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
 
 {% endblock %}
@@ -175,10 +174,10 @@
             </template>
         </tbody>
     </table>
-
-    <div class="loader"></div>
 </div>
 
-<script src="{% static 'js/buyables.js' %}"></script>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/buyables.js' %}"></script>
 {% endblock %}
