@@ -41,8 +41,8 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="showLoadModal = false">Cancel</button>
-                            <button type="button" class="btn btn-primary" @click="showLoadModal = false; load()">Load</button>
+                            <button type="button" class="btn btn-danger" @click="showLoadModal = false">Cancel</button>
+                            <button type="button" class="btn btn-success" @click="showLoadModal = false; load()">Load</button>
                         </div>
                     </div>
                 </div>
@@ -67,8 +67,8 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="showDownloadModal = false">Cancel</button>
-                            <button type="button" class="btn btn-primary" @click="showDownloadModal = false; download()">Download</button>
+                            <button type="button" class="btn btn-danger" @click="showDownloadModal = false">Cancel</button>
+                            <button type="button" class="btn btn-success" @click="showDownloadModal = false; download()">Download</button>
                         </div>
                     </div>
                 </div>
@@ -90,9 +90,9 @@
                         </div>
                         <div class="modal-body">
                             <div class="text-center mb-3">
-                                <button class="btn btn-outline-secondary" @click="clusterPopoutModalDecGroupID();"><i class="fas fa-arrow-left"></i></button>
+                                <button class="btn btn-outline-dark" @click="clusterPopoutModalDecGroupID();"><i class="fas fa-arrow-left"></i></button>
                                 Cluster #%% num2str(clusterPopoutModalData['group_id']+1) %%
-                                <button class="btn btn-outline-secondary" @click="clusterPopoutModalIncGroupID();"><i class="fas fa-arrow-right"></i></button>
+                                <button class="btn btn-outline-dark" @click="clusterPopoutModalIncGroupID();"><i class="fas fa-arrow-right"></i></button>
                             </div>
                             <div class="scroll-list">
                                 <div class="grid-wrapper">
@@ -153,7 +153,7 @@
                                 <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterPopoutModalData['selectedSmiles'], clusterPopoutModalData['group_id']);" title="Add precursor">
                                     <i class="fas fa-plus"></i>
                                 </button>
-                                <button class="btn btn-outline-secondary" @click="showClusterPopoutModal = false; openClusterEditModal(clusterPopoutModalData['selected'], clusterPopoutModalData['group_id']); closeClusterPopoutModal();" title="Edit clusters">
+                                <button class="btn btn-outline-dark" @click="showClusterPopoutModal = false; openClusterEditModal(clusterPopoutModalData['selected'], clusterPopoutModalData['group_id']); closeClusterPopoutModal();" title="Edit clusters">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
@@ -167,7 +167,7 @@
                                 <input class="form-check-input" id="cpShowPlaus" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showPlausibility"/>
                                 <label class="form-check-label mr-2" for="cpShowPlaus">Plausibility</label>
                             </div>
-                            <button type="button" class="btn btn-secondary" @click="closeClusterPopoutModal()">Close</button>
+                            <button type="button" class="btn btn-outline-dark" @click="closeClusterPopoutModal()">Close</button>
                         </div>
                     </div>
                 </div>
@@ -189,9 +189,9 @@
                         </div>
                         <div class="modal-body">
                             <div class="text-center mb-3">
-                                <button class="btn btn-outline-secondary" @click="clusterEditModalDecGroupID();"><i class="fas fa-arrow-left"></i></button>
+                                <button class="btn btn-outline-dark" @click="clusterEditModalDecGroupID();"><i class="fas fa-arrow-left"></i></button>
                                 Cluster #%% num2str(clusterEditModalData['group_id']+1) %%
-                                <button class="btn btn-outline-secondary" @click="clusterEditModalIncGroupID();"><i class="fas fa-arrow-right"></i></button>
+                                <button class="btn btn-outline-dark" @click="clusterEditModalIncGroupID();"><i class="fas fa-arrow-right"></i></button>
                             </div>
                             <div class="scroll-list-x mb-3">
                                 <div class="grid-wrapper-onerow">
@@ -265,7 +265,7 @@
                                     <div class="card" style="pointer-events: all" @drop="clusteredit_drop_handler_newcluster($event);" ondragover="clusteredit_dragover_handler(event);" ondragenter="clusteredit_dragenter_handler(event);" ondragleave="clusteredit_dragleave_handler(event);">
                                         <div class="container-fluid nopointer text-center">
                                             <h4 class="nonselectable nopointer">New Reaction Cluster</h4>
-                                            <i class="fas fa-plus-circle fa-8x text-secondary nopointer"></i>
+                                            <i class="fas fa-plus-circle fa-8x text-dark nopointer"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -276,7 +276,7 @@
                                 <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterEditModalData['selectedSmiles'], clusterEditModalData['group_id']);" title="Add precursor">
                                     <i class="fas fa-plus"></i>
                                 </button>
-                                <button class="btn btn-outline-secondary" @click="openModal('settings');" title="Open settings">
+                                <button class="btn btn-outline-dark" @click="openModal('settings');" title="Open settings">
                                     <i class="fas fa-cog"></i>
                                 </button>
                             </div>
@@ -292,7 +292,7 @@
                             </div>
                             <div>
                                 <button type="button" class="btn btn-info" @click="requestClusterId(clusterEditModalData['selectedSmiles']);">Re-cluster</button>
-                                <button type="button" class="btn btn-secondary" @click="closeClusterEditModal()">Close</button>
+                                <button type="button" class="btn btn-dark" @click="closeClusterEditModal()">Close</button>
                             </div>
                         </div>
                     </div>
@@ -317,7 +317,7 @@
                                 <div class="input-group">
                                     <input id="precursor" type="text" class="form-control text-center" v-model="addNewPrecursorModal['newprecursorsmiles']">
                                     <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" @click="toggleResolver">
+                                        <button class="btn btn-outline-dark" type="button" @click="toggleResolver">
                                             <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
                                             <i v-else style="color: darkred" class="fas fa-server" title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon."></i>
                                         </button>
@@ -337,7 +337,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeAddNewPrecursorModal()">Cancel</button>
+                            <button type="button" class="btn btn-danger" @click="closeAddNewPrecursorModal()">Cancel</button>
                             <button type="button" class="btn btn-success" @click="addNewPrecursorModalSubmit()">Add Precursor</button>
                         </div>
                     </div>
@@ -626,24 +626,24 @@
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Target</span>
-                                <button class="btn btn-outline-secondary" type="button" @click="toggleResolver">
+                                <button class="input-group-text" type="button" @click="toggleResolver">
                                     <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
                                     <i v-else style="color: darkred" class="fas fa-server" title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon."></i>
                                 </button>
                             </div>
                             <input id="target" type="text" class="form-control text-center" v-model="target">
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
+                                <button class="input-group-text" type="button" data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
                         </div>
-                        <input id="submit" type="submit" value="One-Step" class="btn btn-outline-primary mx-2" />
+                        <input id="submit" type="submit" value="One-Step" class="btn btn-success mx-2" />
                         <div class="btn-group">
-                            <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-outline-secondary" :disabled="!isAuth" :title="isAuth ? 'Build tree' : 'Must be logged in!'">
+                            <button @click="sendTreeBuilderJob" id="tb-submit" type="button" class="btn btn-outline-dark" :disabled="!isAuth" :title="isAuth ? 'Build tree' : 'Must be logged in!'">
                                 <i class="fas fa-sign-out-alt"></i> Build tree
                             </button>
-                            <button id="tb-submit-settings" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" :disabled="!isAuth"><i class="fas fa-cog"></i>
+                            <button id="tb-submit-settings" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" :disabled="!isAuth"><i class="fas fa-cog"></i>
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
@@ -689,17 +689,17 @@
                         <i class="fas fa-compress-arrows-alt"></i>
                     </button>
                     <span class="mx-2">|</span>
-                    <button id="clear-reactions-btn" class="btn btn-outline-secondary mx-1" @click="clear" title="Clear reactions"><i class="fas fa-times"></i></button>
-                    <button id="settings-btn" class="btn btn-outline-secondary mx-1" @click="openModal('settings')" title="Settings"><i class="fas fa-cog"></i></button>
-                    <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-outline-secondary mx-1">
+                    <button id="clear-reactions-btn" class="btn btn-outline-dark mx-1" @click="clear" title="Clear reactions"><i class="fas fa-times"></i></button>
+                    <button id="settings-btn" class="btn btn-outline-dark mx-1" @click="openModal('settings')" title="Settings"><i class="fas fa-cog"></i></button>
+                    <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-outline-dark mx-1">
                         %% networkOptions.layout.hierarchical.enabled ? 'H' : 'G' %%
                     </button>
-                    <button @click="centerGraph" id="center-graph-button" class="btn btn-outline-secondary mx-1" title="Fit graph visualization in canvas">
+                    <button @click="centerGraph" id="center-graph-button" class="btn btn-outline-dark mx-1" title="Fit graph visualization in canvas">
                         <i class="fas fa-expand"></i>
                     </button>
-                    <button id="download-btn" class="btn btn-outline-secondary mx-1" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
-                    <button id="load-btn" class="btn btn-outline-secondary mx-1" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
-                    <button class="btn btn-outline-secondary mx-1" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
+                    <button id="download-btn" class="btn btn-outline-dark mx-1" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
+                    <button id="load-btn" class="btn btn-outline-dark mx-1" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
+                    <button class="btn btn-outline-dark mx-1" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
                 </div>
 
                 <div id="network" class="mx-auto my-2"></div>
@@ -816,7 +816,7 @@
                                                                         <div class="col text-center my-2">
                                                                             <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
                                                                             <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                                            <button class="btn btn-outline-secondary" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
+                                                                            <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -870,7 +870,7 @@
                                                         <div class="col text-center my-2">
                                                             <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
                                                             <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                            <button class="btn btn-outline-secondary" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
+                                                            <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
