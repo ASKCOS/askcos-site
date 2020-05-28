@@ -76,7 +76,7 @@ Synthesis Predictor
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" @click="showSettings = false">Close</button>
+                        <button type="button" class="btn btn-outline-secondary" @click="showSettings = false">Close</button>
                     </div>
                 </div>
             </div>
@@ -114,7 +114,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reactants" id="reactants"/>
                     <div class='input-group-append'>
-                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')">
+                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -125,7 +125,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="product" :disabled="mode=='forward'" id="product"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -143,7 +143,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'" id="reagents"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -158,7 +158,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'" id="solvent"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>

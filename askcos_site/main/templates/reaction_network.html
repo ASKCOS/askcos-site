@@ -41,7 +41,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" @click="showLoadModal = false">Cancel</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="showLoadModal = false">Cancel</button>
                             <button type="button" class="btn btn-success" @click="showLoadModal = false; load()">Load</button>
                         </div>
                     </div>
@@ -67,7 +67,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" @click="showDownloadModal = false">Cancel</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="showDownloadModal = false">Cancel</button>
                             <button type="button" class="btn btn-success" @click="showDownloadModal = false; download()">Download</button>
                         </div>
                     </div>
@@ -167,7 +167,7 @@
                                 <input class="form-check-input" id="cpShowPlaus" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showPlausibility"/>
                                 <label class="form-check-label mr-2" for="cpShowPlaus">Plausibility</label>
                             </div>
-                            <button type="button" class="btn btn-outline-dark" @click="closeClusterPopoutModal()">Close</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="closeClusterPopoutModal()">Close</button>
                         </div>
                     </div>
                 </div>
@@ -292,7 +292,7 @@
                             </div>
                             <div>
                                 <button type="button" class="btn btn-info" @click="requestClusterId(clusterEditModalData['selectedSmiles']);">Re-cluster</button>
-                                <button type="button" class="btn btn-dark" @click="closeClusterEditModal()">Close</button>
+                                <button type="button" class="btn btn-outline-secondary" @click="closeClusterEditModal()">Close</button>
                             </div>
                         </div>
                     </div>
@@ -337,7 +337,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" @click="closeAddNewPrecursorModal()">Cancel</button>
+                            <button type="button" class="btn-outline-secondary" @click="closeAddNewPrecursorModal()">Cancel</button>
                             <button type="button" class="btn btn-success" @click="addNewPrecursorModalSubmit()">Add Precursor</button>
                         </div>
                     </div>
@@ -609,7 +609,7 @@
                             </div>
                         </div> <!-- end modal body -->
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="showSettingsModal = false">Close</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="showSettingsModal = false">Close</button>
                             <button type="button" class="btn btn-danger" @click="resetSettings()">Reset</button>
                         </div>
                     </div>
