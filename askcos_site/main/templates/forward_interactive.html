@@ -76,7 +76,7 @@ Synthesis Predictor
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="showSettings = false">Close</button>
+                        <button type="button" class="btn btn-danger" @click="showSettings = false">Close</button>
                     </div>
                 </div>
             </div>
@@ -99,8 +99,8 @@ Synthesis Predictor
                         <span> Impurity prediction </span>
                     </div>
                     <div style="display:inline-block;margin: 10px 20px; float: right;">
-                        <button id="settings-btn" class="btn btn-outline-secondary" @click="showSettings = !showSettings" title="Settings" style="margin-left: 5px"><i class="fas fa-cog"></i></button>
-                        <button class="btn btn-outline-secondary" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
+                        <button id="settings-btn" class="btn btn-outline-dark" @click="showSettings = !showSettings" title="Settings" style="margin-left: 5px"><i class="fas fa-cog"></i></button>
+                        <button class="btn btn-outline-dark" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
                     </div>
                 </div>
             </div>
@@ -114,7 +114,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reactants" id="reactants"/>
                     <div class='input-group-append'>
-                        <button id="reactants-edit-icon" class='btn btn-outline-secondary' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')">
+                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -125,7 +125,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="product" :disabled="mode=='forward'" id="product"/>
                     <div class='input-group-append'>
-                        <button class='btn btn-outline-secondary' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -143,7 +143,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'" id="reagents"/>
                     <div class='input-group-append'>
-                        <button class='btn btn-outline-secondary' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -158,7 +158,7 @@ Synthesis Predictor
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'" id="solvent"/>
                     <div class='input-group-append'>
-                        <button class='btn btn-outline-secondary' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -224,7 +224,7 @@ Synthesis Predictor
                             %% Math.round(result.temperature) %% &deg;C
                         </td>
                         <td class="text-center">
-                            <button class="btn btn-secondary" @click="goToForward(index)" :id="'predict-conditions-'+index" title="Predict products"><i class="fas fa-arrow-right"></i></button>
+                            <button class="btn btn-dark" @click="goToForward(index)" :id="'predict-conditions-'+index" title="Predict products"><i class="fas fa-arrow-right"></i></button>
                         </td>
                     </tr>
                 </template>
@@ -234,7 +234,7 @@ Synthesis Predictor
 
     <div id="forward-results" v-show="mode=='forward' && !!forwardResults.length">
         <div class="text-right my-3">
-            <button class="btn btn-outline-secondary" @click="downloadForwardResults">
+            <button class="btn btn-outline-dark" @click="downloadForwardResults">
                 <i class="fas fa-download"></i>
                 Export Results
             </button>
@@ -261,7 +261,7 @@ Synthesis Predictor
                         <td class="text-center">%% (Math.round((res.score + Number.EPSILON) * 1000) / 1000).toFixed(3) %%</td>
                         <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
                         <td class="text-center">
-                            <button :id="'predict-impurities-' + index" class="btn btn-secondary" @click="goToImpurity(res.smiles)" title="Predict impurities"><i class="fas fa-arrow-right"></i></button>
+                            <button :id="'predict-impurities-' + index" class="btn btn-dark" @click="goToImpurity(res.smiles)" title="Predict impurities"><i class="fas fa-arrow-right"></i></button>
                         </td>
                     </tr>
                 </template>
@@ -277,7 +277,7 @@ Synthesis Predictor
             <div class="progress-bar" role="progressbar" :style="{ width: 100*impurityProgress.percent+'%'}" :aria-valuenow="100*impurityProgress.percent" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <div v-show="!!impurityResults.length" class="text-right my-3">
-            <button class="btn btn-outline-secondary" @click="downloadImpurityResults">
+            <button class="btn btn-outline-dark" @click="downloadImpurityResults">
                 <i class="fas fa-download"></i>
                 Export Results
             </button>
