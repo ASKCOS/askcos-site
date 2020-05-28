@@ -31,7 +31,10 @@
     </div>
     <div class="row">
         <div id="settingsBtn" class="col-md-12 text-center">
-            <button class="btn btn-secondary" href="#" @click="showSettings = !showSettings">Settings</button>
+            <button class="btn btn-dark" href="#" @click="showSettings = !showSettings">
+                Settings
+                <i class="fas" :class="showSettings ? 'fa-caret-up' : 'fa-caret-down'"></i>
+            </button>
         </div>
     </div>
     <div id="settings" class="card w-75 mx-auto my-3" v-if="showSettings">
@@ -87,23 +90,23 @@
         <div class="col-md-12 text-center">
             <div>Sort trees by:</div>
             <div class="btn-group btn-group-toggle">
-                <label class="btn btn-outline-secondary" v-bind:class="{ active: treeSortOption === 'numReactions' }">
+                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'numReactions' }">
                     <input type="radio" v-on:change="sortTrees('numReactions', true)" v-model="treeSortOption"
                            value="numReactions" autocomplete="off"> Fewest Reactions
                 </label>
-                <label class="btn btn-outline-secondary" v-bind:class="{ active: treeSortOption === 'firstStepScore' }">
+                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'firstStepScore' }">
                     <input type="radio" v-on:change="sortTrees('firstStepScore')" v-model="treeSortOption"
                            value="firstStepScore" autocomplete="off"> Best first step
                 </label>
-                <label class="btn btn-outline-secondary" v-bind:class="{ active: treeSortOption === 'avgScore' }">
+                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'avgScore' }">
                     <input type="radio" v-on:change="sortTrees('avgScore')" v-model="treeSortOption"
                            value="avgScore" autocomplete="off"> Average score
                 </label>
-                <label class="btn btn-outline-secondary" v-bind:class="{ active: treeSortOption === 'avgPlausibility' }">
+                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'avgPlausibility' }">
                     <input type="radio" v-on:change="sortTrees('avgPlausibility')" v-model="treeSortOption"
                            value="avgPlausibility" autocomplete="off"> Average plausibility
                 </label>
-                <label class="btn btn-outline-secondary" v-bind:class="{ active: treeSortOption === 'minPlausibility' }">
+                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'minPlausibility' }">
                     <input type="radio" v-on:change="sortTrees('minPlausibility')" v-model="treeSortOption"
                            value="minPlausibility" autocomplete="off"> Best worst step
                 </label>
@@ -115,10 +118,10 @@
             <h3>Synthetic pathway</h3>
             <div>Tree %% currentTreeId+1 %% of %% trees.length %%</div>
             <div class="my-2">
-                <button class='btn btn-outline-secondary mx-2' @click='firstTree'>&lt;&lt; First</button>
-                <button class='btn btn-outline-secondary mx-2' @click='prevTree'>&lt; Previous</button>
-                <button class='btn btn-outline-secondary mx-2' @click='nextTree'>Next &gt;</button>
-                <button class='btn btn-outline-secondary mx-2' @click='lastTree'>Last &gt;&gt;</button>
+                <button class='btn btn-outline-dark mx-2' @click='firstTree'>&lt;&lt; First</button>
+                <button class='btn btn-outline-dark mx-2' @click='prevTree'>&lt; Previous</button>
+                <button class='btn btn-outline-dark mx-2' @click='nextTree'>Next &gt;</button>
+                <button class='btn btn-outline-dark mx-2' @click='lastTree'>Last &gt;&gt;</button>
             </div>
         </div>
         <div class="col-md-6 text-center">
