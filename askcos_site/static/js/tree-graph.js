@@ -1,8 +1,6 @@
 var container = document.getElementsByClassName('container')[0];
 container.style.width=null;
 
-var loader = document.getElementsByClassName("loader")[0];
-loader.style.top = "300px";
 showLoader();
 
 function hideNetwork(n) {
