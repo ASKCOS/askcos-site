@@ -76,7 +76,7 @@ $("#start_synth").click(function () {
 
 <tr id="rxn_mol_wrapper" style="display:none"><th style="vertical-align: text-top">Parsed reaction:</th><td id="rxn_image"></td></tr>
 
-<tr><th style="vertical-align:text-top;">Atom mapping model: <a href="#" data-toggle="tooltip" title="Atom mapping based on heuristics or WLN forward predictor."><span class="glyphicon glyphicon-info-sign"></span></a></th>
+<tr><th style="vertical-align:text-top;">Atom mapping model: <a href="#" data-toggle="tooltip" title="Atom mapping based on heuristics or WLN forward predictor."><span class="fas fa-info-circle"></span></a></th>
     <td>
         <select id="id_atom_mapper" name="atom_mapper" onchange="showFields(this.options[this.selectedIndex].value)">
             <option value="WLN atom mapper" {% if atom_mapper == 'WLN atom mapper' %}selected{% endif %}>WLN atom mapper</option>

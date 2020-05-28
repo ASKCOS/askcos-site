@@ -6,9 +6,7 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/buyables.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
 
 {% endblock %}
 {% block page_title %}
@@ -16,203 +14,170 @@
 {% endblock %}
 {% block page_body %}
 
-<div id="app" class="container-fluid">
+<div id="app">
 
-<script type="text/x-template" id="modal-template">
+    <!-- add entry modal -->
     <transition name="modal">
-        <div class="modal-mask">
-        <div class="modal-wrapper">
-            <div class="modal-container">
-    
-            <div class="modal-header">
-                <slot name="header">
-                default header
-                </slot>
+        <div class="modal-mask" v-if="showAddModal" @click.self="showAddModal = false">
+            <div class="modal-dialog modal-dialog-centered fade-d">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add new buyable compound</h5>
+                        <button type="button" class="close" aria-label="Close" @click="showAddModal = false">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form" id="addForm">
+                            <div class="form-group">
+                                <label for="addBuyableSmiles">SMILES:</label>
+                                <input id="addBuyableSmiles" class="form-control" type="text" v-model="addBuyableSmiles">
+                            </div>
+                            <div class="form-group">
+                                <label for="addBuyablePrice">Price per gram:</label>
+                                <input id="addBuyablePrice" class="form-control" type="text" v-model="addBuyablePrice">
+                            </div>
+                            <div class="form-group">
+                                <label for="addBuyableSource">Source:</label>
+                                <input id="addBuyableSource" class="form-control" type="text" v-model="addBuyableSource">
+                            </div>
+                            <div class="form-group">
+                                <label for="allowOverwrite">Allow overwrite:</label>
+                                <input id="allowOverwrite" type='checkbox' v-model="allowOverwrite">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @click="showAddModal = false">Cancel</button>
+                        <button type="submit" class="btn btn-success" @click="showAddModal = false; addBuyable()">Add Entry</button>
+                    </div>
+                </div>
             </div>
-    
-            <div class="modal-body">
-                <slot name="body">
-                default body
-                </slot>
-            </div>
-    
-            <div class="modal-footer">
-                <slot name="footer">
-                default footer
-                <button class="modal-default-button" @click="$emit('close')">
-                    OK
-                </button>
-                </slot>
-            </div>
-            </div>
-        </div>
         </div>
     </transition>
-</script>
 
-    <modal v-if="showAddModal" @close="showAddModal = false">
-        <h3 slot="header">Add a new buyable compound</h3>
-        <form slot="body" v-on:submit.prevent="addBuyable">
-            <div class="form-inline">
-                <label>
-                    SMILES: 
-                    <input class="form-control" type="text" v-model="addBuyableSmiles">
-                </label>
+    <!-- upload modal -->
+    <transition name="modal">
+        <div class="modal-mask" v-if="showUploadModal" @click.self="showUploadModal = false">
+            <div class="modal-dialog modal-dialog-centered fade-d">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Upload buyable compound file</h5>
+                        <button type="button" class="close" aria-label="Close" @click="showUploadModal = false">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form" id="uploadForm">
+                            <div class="form-group">
+                                <label for="file">File:</label>
+                                <input class="form-control-file" type="file" ref="file" id="file" v-on:change="handleFileUpload()" />
+                            </div>
+                            <div class="form-group">
+                                <label for="uploadFileFormat">Format:</label>
+                                <select id="uploadFileFormat" v-model="uploadFileFormat" class="form-control">
+                                    <option value="json">JSON</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="allowOverwrite">Allow overwrite:</label>
+                                <input id="allowOverwrite" type='checkbox' v-model="allowOverwrite">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @click="showUploadModal = false">Cancel</button>
+                        <button type="submit" class="btn btn-success" @click="showUploadModal = false; handleUploadSubmit()">Upload</button>
+                    </div>
+                </div>
             </div>
-            <div class="form-inline">
-                <label>
-                    Price per gram: 
-                    <input class="form-control" type="text" v-model="addBuyablePrice">
-                </label>
-            </div>
-            <div class="form-inline">
-                <label>
-                    Source: 
-                    <input class="form-control" type="text" v-model="addBuyableSource">
-                </label>
-            </div>
-            <div class="form-inline">
-                <label style="margin: 0 5px">
-                    Allow overwrite: 
-                    <input class="form-control" type='checkbox' v-model="allowOverwrite">
-                </label>
-            </div>
-        </form>
-        <div slot="footer">
-            <button class="btn btn-success" @click="showAddModal = false;addBuyable()">Add</button>
-            <button class="btn btn-danger" @click="showAddModal = false">Cancel</button>
         </div>
-    </modal>
-
-    <modal v-if="showUploadModal" @close="showUploadModal = false">
-        <h3 slot="header">Upload a buyable compound file</h3>
-        <form slot="body" v-on:submit.prevent="addBuyable">
-            <div class="form-inline">
-                <label>
-                    File: 
-                    <input class="form-control" type="file" ref="file" id="file" v-on:change="handleFileUpload()" />
-                </label>
-            </div>
-            <div class="form-inline">
-                <label>
-                    Format: 
-                    <select v-model="uploadFileFormat" class="form-control">
-                        <option value="json">JSON</option>
-                        <option value="csv">CSV</option>
-                    </select>
-                </label>
-            </div>
-            <div class="form-inline">
-                <label style="margin: 0 5px">
-                    Allow overwrite: 
-                    <input class="form-control" type='checkbox' v-model="allowOverwrite">
-                </label>
-            </div>
-        </form>
-        <div slot="footer">
-            <button class="btn btn-success" @click="showUploadModal = false;handleUploadSubmit()">Upload</button>
-            <button class="btn btn-danger" @click="showUploadModal = false">Cancel</button>
-        </div>
-    </modal>
+    </transition>
 
     <div class="row">
-        <div class="col-12">
-            <i>
-                The chemicals and prices stored in our database are taken from Reaxys and are originally from eMolecules, LabNetwork, or Sigma Aldrich. All compounds with an average price per gram listed at $100 or lower were included. Please note that prices in the database are unfortunately rounded to the nearest integer. That is, the cheapest compounds are still listed as $1/g.
-            </i>
+        <div class="col">
+            <em>
+                The chemicals and prices stored in our database are taken from Reaxys and are originally from
+                eMolecules, LabNetwork, or Sigma Aldrich. All compounds with an average price per gram listed at $100 or
+                lower were included. Please note that prices in the database are unfortunately rounded to the nearest
+                integer. That is, the cheapest compounds are still listed as $1/g.
+            </em>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12 text-center">
-            <form v-on:submit.prevent="search" autocomplete="off">
-                <div class="form-inline">
-                    <label>Search: </label>
+    <div class="row my-3">
+        <div class="col">
+            <form class="form-inline justify-content-center" v-on:submit.prevent="search" autocomplete="off">
+                <div class="form-group mx-2">
+                    <label class="mr-1" for="searchSmiles">SMILES:</label>
+                    <input class='form-control' type="text" id="searchSmiles" v-model="searchSmilesQuery"/>
                 </div>
-                <div class="form-inline">
-                    <label style="margin: 5px">
-                        SMILES: 
-                        <input class='form-control' type="text" id="searchSmiles" v-model="searchSmilesQuery"/> 
-                    </label>
+                <div class="form-group mx-2">
+                    <label class="mr-1" for="searchSource">Source:</label>
+                    <input class='form-control' type="text" id="searchSource" v-model="searchSourceQuery"/>
                 </div>
-                <div class="form-inline">
-                    <label style="margin: 5px">
-                        Source: 
-                        <input class='form-control' type="text" id="searchSource" v-model="searchSourceQuery"/> 
-                        </label>
+                <div class="form-group mx-2">
+                    <label class="mr-1" for="searchLimit">Limit results:</label>
+                    <input id="searchLimit" class="form-control text-center" type='number' v-model="searchLimit" min="1" max="1000" step="1" value="100">
                 </div>
-                <div class="form-inline">
-                    <button type="submit" class='form-control' style="margin: 0 5px">Submit</button>
+                <div class="form-check-inline mx-2">
+                    <input class="form-check-input" id="canonSmiles" type='checkbox' v-model="canonSmiles">
+                    <label class="form-check-label" for="canonSmiles">Canonicalize SMILES</label>
                 </div>
-                <div class="form-inline">
-                    <label style="margin: 0 5px">
-                        Canonicalize SMILES: 
-                        <input class="form-control" type='checkbox' v-model="canonSmiles">
-                    </label>
+                <div class="form-check-inline mx-2">
+                    <input class="form-check-input" id="searchRegex" type='checkbox' v-model="searchRegex">
+                    <label class="form-check-label" for="searchRegex">Use regular expression</label>
                 </div>
-                <div class="form-inline">
-                    <label style="margin: 0 5px">
-                        Use regular expression: 
-                        <input class="form-control" type='checkbox' v-model="searchRegex">
-                    </label>
-                    <label style="margin: 0 5px">
-                        Limit results: 
-                        <input class="form-control" type='number' v-model="searchLimit" min="1" max="1000" step="1" value="100">
-                    </label>
-                </div>
+                <button type="submit" class='btn btn-primary'>Search</button>
             </form>
         </div>
     </div>
     {% if can_modify_buyables %}
-    <div class="row">
-        <div class="col-12">
-            <button class="btn btn-success">
-                <i @click="showAddModal = true" class="fas fa-plus"></i>
+    <div class="row my-3">
+        <div class="col">
+            <button @click="showAddModal = true" class="btn btn-success">
+                <i class="fas fa-plus"></i>
             </button>
-            <button class="btn btn-info">
-                <i @click="showUploadModal = true" class="fas fa-file-upload"></i>
+            <button @click="showUploadModal = true" class="btn btn-info">
+                <i class="fas fa-file-upload"></i>
             </button>
         </div>
     </div>
     {% endif %}
-    <div class="row">
-        <div class="col-12">
-            <table class="table table-hover" style="table-layout: fixed">
-                <thead>
-                    <tr>
-                        <th>Smiles</th>
-                        <th class="text-center">Price ($/g)</th>
-                        <th class="text-center">Source</th>
-                        {% if can_modify_buyables %}
-                        <th></th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    <template v-for="doc in buyables">
-                        <tr>
-                            <td class="text-center">
-                                <img
-                                  :src="'/api/v2/draw/?smiles='+encodeURIComponent(doc.smiles)" :title="doc.smiles"
-                                  style="max-width: 100%"
-                                >
-                            </td>
-                            <td class="text-center">%% doc['ppg'] %%</td>
-                            <td class="text-center">%% doc['source'] %% </td>
-                            {% if can_modify_buyables %}
-                            <td class="text-center">
-                                <i @click="deleteBuyable(doc._id)" class="fas fa-trash-alt" style="cursor: pointer;"></i>
-                            </td>
-                            {% endif %}
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="loader"></div>
+
+    <table class="table table-hover my-3" style="table-layout: fixed">
+        <thead>
+            <tr>
+                <th style="width: 55%;" class="text-center">SMILES</th>
+                <th style="width: 20%;" class="text-center">Price ($/g)</th>
+                <th style="width: 20%;" class="text-center">Source</th>
+                {% if can_modify_buyables %}
+                <th style="width: 5%;"></th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            <template v-for="doc in buyables">
+                <tr>
+                    <td class="text-center">
+                        <img :src="'/api/v2/draw/?smiles='+encodeURIComponent(doc.smiles)" :title="doc.smiles" style="max-width: 100%">
+                    </td>
+                    <td class="text-center">%% doc['ppg'] %%</td>
+                    <td class="text-center">%% doc['source'] %% </td>
+                    {% if can_modify_buyables %}
+                    <td class="text-center">
+                        <i @click="deleteBuyable(doc._id)" class="fas fa-trash-alt" style="cursor: pointer;"></i>
+                    </td>
+                    {% endif %}
+                </tr>
+            </template>
+        </tbody>
+    </table>
 </div>
 
-<script src="{% static 'js/buyables.js' %}"></script>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/buyables.js' %}"></script>
 {% endblock %}

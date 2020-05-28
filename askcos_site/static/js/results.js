@@ -1,13 +1,3 @@
-function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "block";
-}
-
-function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "none";
-}
-
 var app = new Vue({
     el: '#app',
     data: {results: []},

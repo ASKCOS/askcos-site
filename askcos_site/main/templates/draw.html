@@ -7,18 +7,17 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/drawing.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/tooltip.css' %}" type="text/css">
 {% endblock %}
 
 {% block page_body %}
 
-<div id="app" class="container-fluid">
+<div id="app">
 
     <div class="row">
         <div class="col-12">
-            <p>
+            <p class="lead">
                 Utility for drawing images from molecule SMILES, reaction SMILES, and template SMARTS.
             </p>
         </div>
@@ -27,23 +26,36 @@
     <div class="row text-center">
         <div class="col-12">
             <div class="input-group">
-                <span class="input-group-addon" id="basic-addon1">SMILES</span>
-                <input class='form-control' type="text" v-model="smiles" id="smiles" style="text-align:center;"/>
-                <div class='input-group-btn'>
-                    <button type="button" class="btn btn-default" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')"><i class="fas fa-edit"></i></button>
-                    <button type="button" class="btn btn-default" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
-                    <button type="button" class="btn btn-default dropdown-toggle" title="Options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i> <span class="caret"></span></button>
-                    <ul class="dropdown-menu dropdown-menu-right">
-                      <li style="padding: 3px 15px"><label class="btn-block"><button type="button" class="btn btn-default btn-block" @click="canonicalize(smiles, 'smiles')">Canonicalize</label></li>
-                      <li style="padding: 3px 15px"><label><input type="checkbox" v-model="drawMap"> Draw map</label></li>
-                      <li style="padding: 3px 15px"><label><input type="checkbox" v-model="highlight"> Highlight map</label></li>
-                    </ul>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">SMILES</span>
+                </div>
+                <input class='form-control text-center' type="text" v-model="smiles" id="smiles"/>
+                <div class='input-group-append'>
+                    <button type="button" class="input-group-text" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')"><i class="fas fa-edit"></i></button>
+                    <button type="button" class="input-group-text" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="draw-settings">
+                        <div class="m-2">
+                            <button type="button" class="btn btn-outline-dark btn-block" @click="canonicalize(smiles, 'smiles')">Canonicalize</button>
+                        </div>
+                        <div class="form-check m-2">
+                            <input class="form-check-input" id="drawMap" type="checkbox" v-model="drawMap">
+                            <label class="form-check-label" for="drawMap">Draw map</label>
+                        </div>
+                        <div class="form-check m-2">
+                            <input class="form-check-input" id="highlight" type="checkbox" v-model="highlight">
+                            <label class="form-check-label" for="highlight">Highlight map</label>
+                        </div>
+                    </div>
+                    <button id="draw-settings" class="input-group-text dropdown-toggle" title="Options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i>
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div v-if="!!smiles" class="row text-center" style="margin: 20px 0">
+    <div v-if="!!smiles" class="row text-center my-5">
         <div class="col-12">
             <div class="customtooltip" @click="copyToClipboard(smiles)" >
                 <span class="customtooltiptext">Copy SMILES</span>
@@ -52,23 +64,13 @@
         </div>
     </div>
 
-    <!-- Popup drawing tool -->
-    <div class="modal fade" id="drawingbox">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body" style="height:430px;">
-                    <div id="jsme_container" style="margin:auto"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" @click="updateSmilesFromJSME">Done drawing</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 
-<script src="{% static 'js/draw.js' %}"></script>
+<!-- drawing box -->
+{% include "drawing_modal.html" %}
 
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/draw.js' %}"></script>
 {% endblock %}

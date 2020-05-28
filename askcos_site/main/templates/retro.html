@@ -53,7 +53,7 @@ function liberalSettings() {
     <tr>
         <th>Target compound:</th>
         <td>
-            <input id="id_smiles" maxlength="400" name="smiles" type="text" value="{{ form.smiles }}"><a class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('id_smiles')" style="margin-left:10px"><span class="glyphicon glyphicon-pencil" style="margin-right:10px"></span>Draw</a>
+            <input id="id_smiles" maxlength="400" name="smiles" type="text" value="{{ form.smiles }}"><a href="#" role="button" class="btn btn-primary" data-toggle="modal" data-target="#drawingbox" onclick="drawBox('id_smiles')" style="margin-left:10px"><span class="fas fa-pencil-alt" style="margin-right:10px"></span>Draw</a>
         </td>
     </tr>
     <!-- Shortcut buttons -->
@@ -121,7 +121,7 @@ function liberalSettings() {
 {% endif %}
 
 {% if target %}
-    <h5>Target molecule: <font class="smiles">{{ target.smiles }}</font></h5>
+    <h5>Target molecule: <span class="smiles">{{ target.smiles }}</span></h5>
     <img src="{{ target.img }}" alt="{{ target.smiles }}">
     <br>
     <br>
@@ -133,7 +133,7 @@ function liberalSettings() {
         <thead>
             <tr>
                 <th>Rank</th>
-                <th><font class="smiles"><center>Precursor(s)</center></font></th>
+                <th><span class="smiles"><center>Precursor(s)</center></span></th>
                 <th>Score</th>
                 <th># Examples</th>
                 {% if form.template_prioritization == 'Relevance' %}<th>Max template relevance</th>{% endif %}
@@ -147,13 +147,13 @@ function liberalSettings() {
             <td>{{ precursor.rank }}</td>
             <td>
                 {% for mol in precursor.mols %}
-                <font class="smiles">
+                <span class="smiles">
                     {% if lit_only %}
                     <a href="{% url 'retro_lit_target' mol.smiles %}">{{ mol.smiles }}</a><i> ({{ mol.ppg }})</i>
                     {% else %}
                     <a href="{% url 'retro_target' mol.smiles %}">{{ mol.smiles }}</a><i> ({{ mol.ppg }})</i>
                     {% endif %}
-                </font>
+                </span>
                 {% if not forloop.last %} + {% endif %}{% endfor %}
                 <a href="/synth_interactive?mode=context&reactants={{ precursor.smiles }}&product={{ target.smiles }}">&rarr; ?</a>
                 <br>
@@ -161,15 +161,15 @@ function liberalSettings() {
                 
                 <div id='expand{{ precursor.rank }}' style='display:none'>  
                     {% if precursor.tforms %}
-                    <font class="smiles"><b>Based on retrosynthetic transform template(s):</b></font><br>
+                    <span class="smiles"><b>Based on retrosynthetic transform template(s):</b></span><br>
                     {% for tform in precursor.tforms %}
-                        <font class="smiles">
+                        <span class="smiles">
                             <a href="/template/?id={{ tform.id }}">Template {{ tform.id }} ({{ tform.count }} examples)</a>
-                        </font>{% if not forloop.last %}<br>{% endif %}
+                        </span>{% if not forloop.last %}<br>{% endif %}
                     {% endfor %}
                     {% endif %}
                     {% if precursor.rxid %}
-                    <font class="smiles"><b>Based on Reaxys reaction ID: <a href="{% url 'rxid_target' precursor.rxid %}">{{ precursor.rxid }}</a></b></font>
+                    <span class="smiles"><b>Based on Reaxys reaction ID: <a href="{% url 'rxid_target' precursor.rxid %}">{{ precursor.rxid }}</a></b></span>
                     {% endif %}
                 </div>
 

@@ -7,76 +7,54 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
-
-<script type="text/x-template" id="modal-template">
-    <transition name="modal">
-        <div class="modal-mask">
-        <div class="modal-wrapper">
-            <div class="modal-container">
-
-            <div class="modal-header">
-                <slot name="header">
-                default header
-                </slot>
-            </div>
-
-            <div class="modal-body">
-                <slot name="body">
-                default body
-                </slot>
-            </div>
-
-            <div class="modal-footer">
-                <slot name="footer">
-                default footer
-                <button class="modal-default-button" @click="$emit('close')">
-                    OK
-                </button>
-                </slot>
-            </div>
-            </div>
-        </div>
-        </div>
-    </transition>
-</script>
 {% endblock %}
 
 {% block page_body %}
 
-<div id="app" class="container-fluid">
-    <modal v-if="showAddModal" @close="showAddModal = false">
-        <h3 slot="header">Add new blacklist entry</h3>
-
-        <form slot="body" @submit.prevent="addEntry" id="newEntryForm">
-            <div class="form-group">
-                <label for="newType">Entry Type: </label>
-                <select id="newType" v-model="newType">
-                    <option value="chemicals">Chemical</option>
-                    <option value="reactions">Reaction</option>
-                </select>
+<div id="app">
+    <!-- add entry modal -->
+    <transition name="modal">
+        <div class="modal-mask" v-if="showAddModal" @click.self="showAddModal = false">
+            <div class="modal-dialog modal-dialog-centered fade-d">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add new blacklist entry</h5>
+                        <button type="button" class="close" aria-label="Close" @click="showAddModal = false">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="form" @submit.prevent="addEntry" id="newEntryForm">
+                            <div class="form-group">
+                                <label class="mr-2" for="newType">Entry Type</label>
+                                <select class="form-control" id="newType" v-model="newType">
+                                    <option value="chemicals">Chemical</option>
+                                    <option value="reactions">Reaction</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newSmiles">SMILES</label>
+                                <input type="text" class="form-control" id="newSmiles" placeholder="SMILES" v-model="newSmiles" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newDesc">Description</label>
+                                <input type="text" class="form-control" id="newDesc" placeholder="Description" v-model="newDesc">
+                            </div>
+                            <div class="form-group">
+                                <label for="newActive">Active:</label>
+                                <input type="checkbox" id="newActive" v-model="newActive">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @click="showAddModal = false">Cancel</button>
+                        <button type="submit" class="btn btn-success" form="newEntryForm">Add Entry</button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="newSmiles">SMILES</label>
-                <input type="text" class="form-control" id="newSmiles" placeholder="SMILES" v-model="newSmiles" required>
-            </div>
-            <div class="form-group">
-                <label for="newDesc">Description</label>
-                <input type="text" class="form-control" id="newDesc" placeholder="Description" v-model="newDesc">
-            </div>
-            <div class="form-group">
-                <label for="newActive">Active:</label>
-                <input type="checkbox" id="newActive" v-model="newActive">
-            </div>
-        </form>
-
-        <div slot="footer">
-            <button class="btn btn-success" type="submit" form="newEntryForm">Add Entry</button>
-            <button class="btn btn-danger" @click="showAddModal = false">Cancel</button>
         </div>
-    </modal>
+    </transition>
 
     <div class="row">
         <div class="col-12">
@@ -97,37 +75,38 @@
     <div class="row">
         <div class="col-12">
             <ul class="nav nav-tabs">
-                <li class="nav-item" :class="{ active: isActive('chemicals') }">
-                    <a class="nav-link" @click.prevent="setActive('chemicals')" href="#chemicals">Chemicals</a>
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ active: isActive('chemicals') }" @click.prevent="setActive('chemicals')" href="#chemicals">Chemicals</a>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('reactions') }">
-                    <a class="nav-link" @click.prevent="setActive('reactions')" href="#reactions">Reactions</a>
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ active: isActive('reactions') }" @click.prevent="setActive('reactions')" href="#reactions">Reactions</a>
                 </li>
             </ul>
             <div class="tab-content" id="myTabContent">
-                <div id="chemicals" class="tab-pane fade" :class="{ 'in active': isActive('chemicals') }">
-                    <div class="col-12 text-right" style="margin: 10px 0">
-                        <div>
-                            <label class="radio-inline">
-                                <input type="radio" value="all" v-model="filterActive">All
-                            </label>
-                            <label class="radio-inline">
-                                <input type="radio" value="active" v-model="filterActive">Active
-                            </label>
-                            <label class="radio-inline">
-                                <input type="radio" value="inactive" v-model="filterActive">Inactive
-                            </label>
+                <div id="chemicals" class="tab-pane fade" :class="{ 'active show': isActive('chemicals') }">
+                    <div class="col-12 text-right my-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="radioAll" value="all" v-model="filterActive">
+                            <label class="form-check-label" for="radioAll">All</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="radioActive" value="active" v-model="filterActive">
+                            <label class="form-check-label" for="radioActive">Active</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="radioInactive" value="inactive" v-model="filterActive">
+                            <label class="form-check-label" for="radioInactive">Inactive</label>
                         </div>
                     </div>
 
                     <table class="table table-hover" style="table-layout: fixed">
                         <thead>
                             <tr>
-                                <th class="col-md-1">Active</th>
-                                <th class="col-md-2">Created</th>
-                                <th class="col-md-6">Chemical</th>
-                                <th class="col-md-2">Description</th>
-                                <th class="col-md-1">Delete</th>
+                                <th style="width: 8%;">Active</th>
+                                <th style="width: 17%;">Created</th>
+                                <th style="width: 50%;">Chemical</th>
+                                <th style="width: 17%;">Description</th>
+                                <th style="width: 8%;">Delete</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -153,29 +132,30 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="reactions" class="tab-pane fade" :class="{ 'in active': isActive('reactions') }">
-                    <div class="col-12 text-right" style="margin: 10px 0">
-                        <div>
-                            <label class="radio-inline">
-                                <input type="radio" value="all" v-model="filterActive">All
-                            </label>
-                            <label class="radio-inline">
-                                <input type="radio" value="active" v-model="filterActive">Active
-                            </label>
-                            <label class="radio-inline">
-                                <input type="radio" value="inactive" v-model="filterActive">Inactive
-                            </label>
+                <div id="reactions" class="tab-pane fade" :class="{ 'active show': isActive('reactions') }">
+                    <div class="col-12 text-right my-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="radioAll2" value="all" v-model="filterActive">
+                            <label class="form-check-label" for="radioAll2">All</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="radioActive2" value="active" v-model="filterActive">
+                            <label class="form-check-label" for="radioActive2">Active</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="radioInactive2" value="inactive" v-model="filterActive">
+                            <label class="form-check-label" for="radioInactive2">Inactive</label>
                         </div>
                     </div>
 
                     <table class="table table-hover" style="table-layout: fixed">
                         <thead>
                             <tr>
-                                <th class="col-md-1">Active</th>
-                                <th class="col-md-2">Created</th>
-                                <th class="col-md-6">Reaction</th>
-                                <th class="col-md-2">Description</th>
-                                <th class="col-md-1">Delete</th>
+                                <th style="width: 8%;">Active</th>
+                                <th style="width: 17%;">Created</th>
+                                <th style="width: 50%;">Reaction</th>
+                                <th style="width: 17%;">Description</th>
+                                <th style="width: 8%;">Delete</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -206,6 +186,8 @@
     </div>
 </div>
 
-<script src="{% static 'js/blacklist.js' %}"></script>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/blacklist.js' %}"></script>
 {% endblock %}

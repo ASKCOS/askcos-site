@@ -29,65 +29,6 @@ function subSet(s, otherSet) {
     }
 };
 
-function storageAvailable(type) {
-    var storage;
-    try {
-        storage = window[type];
-        var x = '__storage_test__';
-        storage.setItem(x, x);
-        storage.removeItem(x);
-        return true;
-    }
-    catch(e) {
-        return e instanceof DOMException && (
-            // everything except Firefox
-            e.code === 22 ||
-            // Firefox
-            e.code === 1014 ||
-            // test name field too, because code might not be present
-            // everything except Firefox
-            e.name === 'QuotaExceededError' ||
-            // Firefox
-            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-            // acknowledge QuotaExceededError only if there's something already stored
-            (storage && storage.length !== 0);
-    }
-}
-
-function getCookie(cname) {
-    var name = cname + "=";
-    var cookie_str = document.cookie;
-    if (cookie_str && cookie_str != '') {
-        var cookie_splitted = cookie_str.split(';');
-        for(var i = 0; i <cookie_splitted.length; i++) {
-            var c = cookie_splitted[i].trim();
-            if (c.indexOf(name) == 0) {
-                return decodeURIComponent(c.substring(name.length, c.length));
-            }
-        }
-    }
-  return undefined;
-}
-
-function copyToClipboard(text) {
-    var dummy = document.createElement("textarea");
-    document.body.appendChild(dummy);
-    dummy.value = text;
-    dummy.select();
-    document.execCommand("copy");
-    document.body.removeChild(dummy);
-}
-
-function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "block";
-}
-
-function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "none";
-}
-
 function ctaToNode(cta, id) {
     if (cta.is_reaction) {
         return {
@@ -325,14 +266,6 @@ function clusteredit_dragenter_handler(event) {
 function clusteredit_dragleave_handler(event) {
     event.target.classList.remove('dragover');
 }
-
-Vue.component('modal', {
-    template: '#modal-template'
-})
-
-Vue.component('settings-modal', {
-    template: '#modal-template-settings'
-})
 
 const tbSettingsDefault = {
     quick: "normal",
@@ -1586,6 +1519,7 @@ var app = new Vue({
                     this.addNewPrecursorModal['newprecursorsmiles'],
                     gid);
                 this.$forceUpdate();
+                this.closeAddNewPrecursorModal();
             }
         },
         getMolDrawEndPoint: function(precursor, isHighlight, isTransparent) {
@@ -1650,7 +1584,6 @@ var app = new Vue({
                     this.clear();
                 }
             }
-            tour.init();
             tour.restart();
         },
         initClusterShowCard: function(selected) {
@@ -1996,11 +1929,12 @@ var app = new Vue({
 });
 
 var tour = new Tour({
+    framework: 'bootstrap4',
     storage: false,
     steps: [
         {
             title: "A guided tour through retrosynthesis",
-            content: "Welcome to this guided tour through retrosynthesis planning using our interactive path planning tool. This will demonstrate the purpose of the tool and explain the user interface using a real example. Thanks to <a href='http://bootstraptour.com/' target='_blank'>bootstrap-tour</a> for the great guided tour JavaScript package making it very easy to provide this tour to you!",
+            content: "Welcome to this guided tour through retrosynthesis planning using our interactive path planning tool. This will demonstrate the purpose of the tool and explain the user interface using a real example. Thanks to <a href='https://github.com/IGreatlyDislikeJavascript/bootstrap-tourist' target='_blank'>bootstrap-tourist</a> for the great guided tour JavaScript package making it very easy to provide this tour to you!",
             orphan: true,
             backdropContainer: '#body'
         },

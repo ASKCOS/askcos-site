@@ -6,8 +6,6 @@
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/loader.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/tooltip.css' %}" type="text/css">
 {% endblock %}
 
@@ -15,13 +13,17 @@
 
 {% block page_body %}
 
-<div id="app" class="container-fluid">
+<div id="app">
     <a id="downloadAnchorElem" style="display:none"></a>
-	<div class="row">
-        <div class="col-12">Template: <span style="font-family: Courier New">%% templateInfo.reaction_smarts %% </span></div>
+    <div class="row">
+        <div class="col-12">
+            Template: <span class="smiles">%% templateInfo.reaction_smarts %%</span>
+        </div>
     </div>
-	<div class="row">
-		<div class="col-12 text-center"><img v-if="!!templateInfo" :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"></img></div>
+    <div class="row">
+        <div class="col-12 text-center">
+            <img v-if="!!templateInfo" :src="'/draw/template/'+encodeURIComponent(templateInfo.reaction_smarts)"/>
+        </div>
     </div>
     <div class="row">
         <div class="col-12">
@@ -30,72 +32,62 @@
             <p v-if="templateInfo.dimer_only"><i>Note: This template should be used for symmetric (dimerization) reactions <b>only</b></i></p>
         </div>
     </div>
-	<div class="row">
-		<div class="col-12">
-            <div class="text-center">
-                %% templateInfo.count %% total references
-                <button class="btn btn-default customtooltip" @click="copyRxnIds" style="margin-left: 5px">
-                    <i class="far fa-copy"></i> Copy all reaction IDs
-                     <span 
-                        id="copy-tooltip"
-                        class="customtooltiptext"
-                    >
-                        Click to copy!
-                    </span>
-                </button>
-                <button v-if="this.templateInfo.template_set=='reaxys'" class="btn btn-default" @click="downloadReactionQuery" style="margin-left: 5px">
-                    <i class="fas fa-file-download"></i> Export Reaxys query for precedents
-                </button>
-            </div>
-            <h2>First 100 reaction precedents:</h2>
-			<table class="table table-hover">
-				<thead>
-					<tr>
-						<th class="text-center">RXN ID</th>
-						<th class="text-center">Reaction</th>
-						<th class="text-center">Spectators</th>
-					</tr>
-				</thead>
-				<tbody>
-					<template v-for="reaction in templateReactions">
-						<tr data-id='%% reaction._id %%'>
-							<td class="text-center">%% reaction.reaction_id %%</td>
-							<td class="text-center">
-                                <img :src="'/draw/reaction/'+encodeURIComponent(reaction.reaction_smiles)"></img>
-                            </td>
-							<td class="text-center">%% reaction.spectators %%</td>
-						</tr>
-					</template>
-				</tbody>
-			</table>
-            <h2 v-if="templateReactions.length==0" class="text-center">
-                Reaction data not available!
-            </h2>
-		</div>
-	</div>
 
-	<div class="row">
-		<div class="col-12">
-            <b>Reaction reference IDs: </b>
-            <div 
-                id="rxn-ids"
-                class="customtooltip"
-                @click="copyRxnIds"
-            >
-                <i class="far fa-copy"></i>
-                %% reactionReferences %%
-                <span 
-                    id="copy-tooltip"
-                    class="customtooltiptext"
-                >
-                    Click to copy!
-                </span>
-            </div>
-		</div>
+    <div class="row my-3">
+        <div class="col-12 text-center">
+            %% templateInfo.count %% total references
+            <button class="btn btn-outline-secondary mx-2 customtooltip" @click="copyRxnIds">
+                <i class="far fa-copy"></i> Copy all reaction IDs
+                <span id="copy-tooltip" class="customtooltiptext">Click to copy!</span>
+            </button>
+            <button v-if="this.templateInfo.template_set=='reaxys'" class="btn btn-outline-secondary" @click="downloadReactionQuery">
+                <i class="fas fa-file-download"></i> Export Reaxys query for precedents
+            </button>
+        </div>
     </div>
-	<div class="loader"></div>
+
+    <div class="row my-3">
+        <div class="col-12">
+            <h4>First 100 reaction precedents:</h4>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th class="text-center">RXN ID</th>
+                    <th class="text-center">Reaction</th>
+                    <th class="text-center">Spectators</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template v-for="reaction in templateReactions">
+                    <tr data-id='%% reaction._id %%'>
+                        <td class="text-center">%% reaction.reaction_id %%</td>
+                        <td class="text-center">
+                            <img :src="'/draw/reaction/'+encodeURIComponent(reaction.reaction_smiles)"></img>
+                        </td>
+                        <td class="text-center">%% reaction.spectators %%</td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
+            <h4 v-if="templateReactions.length==0" class="text-center">
+                Reaction data not available!
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <b>Reaction reference IDs: </b>
+            <div id="rxn-ids" class="customtooltip" @click="copyRxnIds">
+                <i class="far fa-copy"></i> %% reactionReferences %%
+                <span id="copy-tooltip" class="customtooltiptext">Click to copy!</span>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script src="{% static 'js/template.js' %}"></script>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/template.js' %}"></script>
 {% endblock %}
