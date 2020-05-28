@@ -136,11 +136,11 @@
     {% if can_modify_buyables %}
     <div class="row my-3">
         <div class="col">
-            <button class="btn btn-success">
-                <i @click="showAddModal = true" class="fas fa-plus"></i>
+            <button @click="showAddModal = true" class="btn btn-success">
+                <i class="fas fa-plus"></i>
             </button>
-            <button class="btn btn-info">
-                <i @click="showUploadModal = true" class="fas fa-file-upload"></i>
+            <button @click="showUploadModal = true" class="btn btn-info">
+                <i class="fas fa-file-upload"></i>
             </button>
         </div>
     </div>
