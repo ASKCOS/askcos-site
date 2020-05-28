@@ -31,15 +31,11 @@
                 </div>
                 <input class='form-control text-center' type="text" v-model="smiles" id="smiles"/>
                 <div class='input-group-append'>
-                    <button type="button" class="btn btn-outline-secondary" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')"><i class="fas fa-edit"></i></button>
-                    <button type="button" class="btn btn-outline-secondary" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
-                    <button id="draw-settings" class="btn btn-outline-secondary dropdown-toggle" title="Options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i>
-                        <span class="caret"></span>
-                        <span class="sr-only">Toggle Dropdown</span>
-                    </button>
+                    <button type="button" class="input-group-text" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')"><i class="fas fa-edit"></i></button>
+                    <button type="button" class="input-group-text" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="draw-settings">
                         <div class="m-2">
-                            <button type="button" class="btn btn-outline-secondary btn-block" @click="canonicalize(smiles, 'smiles')">Canonicalize</button>
+                            <button type="button" class="btn btn-outline-dark btn-block" @click="canonicalize(smiles, 'smiles')">Canonicalize</button>
                         </div>
                         <div class="form-check m-2">
                             <input class="form-check-input" id="drawMap" type="checkbox" v-model="drawMap">
@@ -50,6 +46,10 @@
                             <label class="form-check-label" for="highlight">Highlight map</label>
                         </div>
                     </div>
+                    <button id="draw-settings" class="input-group-text dropdown-toggle" title="Options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i>
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
                 </div>
             </div>
         </div>
