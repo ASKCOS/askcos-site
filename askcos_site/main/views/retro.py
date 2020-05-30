@@ -186,6 +186,10 @@ def retro_target(request, smiles):
 
 def retro_network(request):
     context = {}
+    
+    enable_resolve = os.environ.get('ENABLE_SMILES_RESOLVER') == 'True'
+    context['enableResolve'] = 'checked' if enable_resolve else ''
+
     allow_resolve = os.environ.get('ALLOW_SMILES_RESOLVER') == 'True'
     context['allowResolve'] = 'checked' if allow_resolve else ''
     return render(request, 'reaction_network.html', context)
