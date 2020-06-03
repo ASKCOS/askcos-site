@@ -45,6 +45,7 @@ def fancyjoin(lst, nonemessage='(none)'):
 
 def resolve_smiles(smiles):
     mol = Chem.MolFromSmiles(smiles)
+    # TODO what to do with this?
     allow_resolve = os.environ.get('ALLOW_SMILES_RESOLVER') in ['True', 'true', 'TRUE', 1, '1', 'yes', 'Yes']
     if not allow_resolve and not mol:
         return None
@@ -63,6 +64,7 @@ def resolve_smiles(smiles):
     return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 def get_name_from_smiles(smiles):
+    # TODO what to do wiht this?
     allow_resolve = os.environ.get('ALLOW_SMILES_RESOLVER') == 'True'
     if not allow_resolve:
         return smiles
