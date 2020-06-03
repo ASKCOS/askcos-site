@@ -478,18 +478,8 @@ var app = new Vue({
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
-        this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked; // TODO dynamically switch
-        // // TODO does this loop even work?
-        // if (!this.enableResolve) {
-        //     // An extra layer of caution, originally to resolve a Firefox bug
-        //     // caused by this: https://stackoverflow.com/questions/5985839/bug-with-firefox-disabled-attribute-of-input-not-resetting-when-refreshing
-        //     this.allowResolve = false;
-        // }
-        // else {
-            this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
-        // }
-        // // TODO tried hard-setting here, check if this variable is still set as such
-        // this.allowResolve = true;
+        this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
+        this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
     },
     created: function() {
         window.addEventListener('resize', this.handleResize);

@@ -316,8 +316,8 @@
                                 <label class="mr-2" for="precursor">Precursor: </label>
                                 <div class="input-group">
                                     <input id="precursor" type="text" class="form-control text-center" v-model="addNewPrecursorModal['newprecursorsmiles']">
-                                    <div class="input-group-append">
-                                        <button v-if="enableResolve" class="btn btn-outline-dark" type="button" @click="toggleResolver">
+                                    <div v-if="enableResolve" class="input-group-append">
+                                        <button class="btn btn-outline-dark" type="button" @click="toggleResolver">
                                             <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
                                             <i v-else style="color: darkred" class="fas fa-server" title="Connection to NIH name resolver is OFF, structures will NOT be sent to an external service. Target query must be a SMILES string. This can be turned on in the settings menu, or by clicking this icon."></i>
                                         </button>
@@ -359,8 +359,7 @@
                         <div class="modal-body">
                             <h4>Global settings</h4>
                             <div class="form-inline mb-2">
-                                <!-- TODO disable the checkbox -->
-                                <i title="Enables the option to allow queries to be sent to PubChem name resolver. This can only be set in app configuration settings."
+                                <i title="Enables the option to allow queries to be sent to PubChem name resolver. This can only be set in site configuration settings."
                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <input class="form-check-input" id="enableResolve" type="checkbox" ref="enableResolve" v-model="enableResolve" {{ enableResolve }} disabled/>
                                 <label class="form-check-label" for="enableResolve">Enable option to allow queries to be sent to PubChem name resolver?</label>
