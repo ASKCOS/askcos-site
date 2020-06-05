@@ -478,6 +478,7 @@ var app = new Vue({
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
+        this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
         this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
     },
     created: function() {
@@ -816,7 +817,7 @@ var app = new Vue({
             })
         },
         resolveChemName: function(name) {
-            if (this.allowResolve) {
+            if (this.enableResolve && this.allowResolve) {
                 var url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
                 console.log(url)
                 var text = fetch(url)
