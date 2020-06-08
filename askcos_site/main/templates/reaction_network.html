@@ -695,7 +695,7 @@
                         <i class="fas fa-compress-arrows-alt"></i>
                     </button>
                     <span class="mx-2">|</span>
-                    <button id="clear-reactions-btn" class="btn btn-outline-dark mx-1" @click="clear" title="Clear reactions"><i class="fas fa-times"></i></button>
+                    <button id="clear-reactions-btn" class="btn btn-outline-dark mx-1" @click="clear()" title="Clear reactions"><i class="fas fa-times"></i></button>
                     <button id="settings-btn" class="btn btn-outline-dark mx-1" @click="openModal('settings')" title="Settings"><i class="fas fa-cog"></i></button>
                     <button @click="toggleHierarchical" id="hierarchical-button" class="btn btn-outline-dark mx-1">
                         %% networkOptions.layout.hierarchical.enabled ? 'H' : 'G' %%
@@ -918,7 +918,9 @@
                                     </div>
                                 </div>
                             </div>
-
+                            <div class="alert alert-warning" v-if="selected['selec_error']">
+                                Could not check regio-selectivity for this reaction, possibly due to stereochemistry in the product.
+                            </div>
                             <template v-if="'outcomes' in selected">
                                 <hr class="my-2">
                                 <div class="text-center mb-2">

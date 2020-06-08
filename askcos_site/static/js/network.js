@@ -98,10 +98,13 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         node['outcomes'] = reaction['outcomes'].split('.')
         node['selectivity'] = new Array(node.outcomes.length)
         node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
-        node['borderWidth'] = 3
-        node['color'] = { border: '#ff0000' }
+        node['borderWidth'] = 2
+        node['color'] = { border: '#ff4444' }
         node['title'] = "Selectivity warning! Select this node to see more details"
-
+    } else if ('selec_error' in reaction) {
+        node['selec_error'] = reaction['selec_error']
+        node['borderWidth'] = 2
+        node['color'] = { border: '#ffbb00' }
     }
 
     nodes.add(node)
@@ -774,7 +777,7 @@ var app = new Vue({
                 cluster_fp_type: this.clusterOptions.fingerprint,
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
-                allow_selec: this.tb.settings.allowSelec,
+                selec_check: this.tb.settings.allowSelec,
             };
             fetch(url,{
                 method: 'POST',
@@ -1126,12 +1129,15 @@ var app = new Vue({
             }})(file);
             reader.readAsText(file)
         },
-        clear: function() {
-            this.target = '';
-            this.data.nodes.remove(this.data.nodes.getIds());
-            this.data.edges.remove(this.data.edges.getIds());
-            this.selected = null;
-            document.querySelector('#hierarchical-button').innerHTML = 'G';
+        clear: function(skipConfirm = false) {
+            if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
+                this.target = '';
+                this.selected = null;
+                if (this.network) {
+                    this.data.nodes.remove(this.data.nodes.getIds());
+                    this.data.edges.remove(this.data.edges.getIds());
+                }
+            }
         },
         clearSelection: function() {
             this.selected = null;
@@ -1579,13 +1585,10 @@ var app = new Vue({
             return res;
         },
         startTour: function() {
-            if (this.network) {
-                if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?'))
-                {
-                    this.clear();
-                }
+            if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?')) {
+                this.clear(true);
+                tour.restart();
             }
-            tour.restart();
         },
         initClusterShowCard: function(selected) {
             // always sort first

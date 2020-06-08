@@ -23,18 +23,6 @@ class RetroSerializer(serializers.Serializer):
 
     selec_check = serializers.BooleanField(default=True)
 
-    def validate_template_set(self, value):
-        """Verify that the requested template set is valid."""
-        if value not in ['reaxys', 'uspto_50k']:
-            raise serializers.ValidationError('Template set {} not available.'.format(value))
-        return value
-
-    def validate_template_prioritizer(self, value):
-        """Verify that the requested template prioritizer is valid."""
-        if value not in ['reaxys', 'uspto_50k']:
-            raise serializers.ValidationError('Template prioritizer {} not available.'.format(value))
-        return value
-
     def validate_target(self, value):
         """Verify that the requested target is valid."""
         if not Chem.MolFromSmiles(value):

@@ -194,12 +194,21 @@ def get_top_precursors(
     fast_filter_hostname = 'fast-filter'
     fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter').predict
 
+    cluster_settings = {
+        'cluster_method': cluster_method,
+        'feature': cluster_feature,
+        'fp_type': cluster_fp_type,
+        'fp_length': cluster_fp_length,
+        'fp_radius': cluster_fp_radius,
+    }
+
     global retroTransformer
     result = retroTransformer.get_outcomes(
         smiles, template_set=template_set,
         max_num_templates=max_num_templates, max_cum_prob=max_cum_prob, 
         fast_filter_threshold=fast_filter_threshold, template_prioritizer=template_prioritizer,
-        precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter, selec_check=selec_check,
+        precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter,
+        cluster_precursors=cluster, cluster_settings=cluster_settings, selec_check=selec_check,
     )
     
     if postprocess:
