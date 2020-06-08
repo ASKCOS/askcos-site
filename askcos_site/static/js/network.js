@@ -1129,12 +1129,15 @@ var app = new Vue({
             }})(file);
             reader.readAsText(file)
         },
-        clear: function() {
-            this.target = '';
-            this.data.nodes.remove(this.data.nodes.getIds());
-            this.data.edges.remove(this.data.edges.getIds());
-            this.selected = null;
-            document.querySelector('#hierarchical-button').innerHTML = 'G';
+        clear: function(skipConfirm = false) {
+            if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
+                this.target = '';
+                this.selected = null;
+                if (this.network) {
+                    this.data.nodes.remove(this.data.nodes.getIds());
+                    this.data.edges.remove(this.data.edges.getIds());
+                }
+            }
         },
         clearSelection: function() {
             this.selected = null;
@@ -1582,13 +1585,10 @@ var app = new Vue({
             return res;
         },
         startTour: function() {
-            if (this.network) {
-                if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?'))
-                {
-                    this.clear();
-                }
+            if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?')) {
+                this.clear(true);
+                tour.restart();
             }
-            tour.restart();
         },
         initClusterShowCard: function(selected) {
             // always sort first
