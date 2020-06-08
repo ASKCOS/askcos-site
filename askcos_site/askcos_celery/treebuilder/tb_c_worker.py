@@ -208,7 +208,7 @@ def get_top_precursors(
         max_num_templates=max_num_templates, max_cum_prob=max_cum_prob, 
         fast_filter_threshold=fast_filter_threshold, template_prioritizer=template_prioritizer,
         precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter,
-        cluster_settings=cluster_settings, selec_check=selec_check,
+        cluster_precursors=cluster, cluster_settings=cluster_settings, selec_check=selec_check,
     )
     
     if postprocess:
