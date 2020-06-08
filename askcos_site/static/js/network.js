@@ -774,7 +774,7 @@ var app = new Vue({
                 cluster_fp_type: this.clusterOptions.fingerprint,
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
-                allow_selec: this.tb.settings.allowSelec,
+                selec_check: this.tb.settings.allowSelec,
             };
             fetch(url,{
                 method: 'POST',
