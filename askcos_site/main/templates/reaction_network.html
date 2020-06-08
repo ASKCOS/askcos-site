@@ -918,7 +918,9 @@
                                     </div>
                                 </div>
                             </div>
-
+                            <div class="alert alert-warning" v-if="selected['selec_error']">
+                                Could not check regio-selectivity for this reaction, possibly due to stereochemistry in the product.
+                            </div>
                             <template v-if="'outcomes' in selected">
                                 <hr class="my-2">
                                 <div class="text-center mb-2">
