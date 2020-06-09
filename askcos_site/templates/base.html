@@ -220,7 +220,22 @@
     </div>
 </div>
 
-<script src="{% static 'js/support.js' %}"></script>
+<script>
+function submitSupport() {
+  var mailtoString = "mailto:{{ support_emails }}"
+  mailtoString += "?subject="+document.querySelector('#support-module').value
+  mailtoString += "|"+document.querySelector('#support-category').value
+  if (document.querySelector('#support-shared').checked) {
+    mailtoString += "|shared"
+  }
+  else {
+    mailtoString += "|"
+  }
+  mailtoString += "| "+document.querySelector('#support-subject').value
+  mailtoString += "&body=Please add your comments here. Please don't modify the beginning of the subject line; we use this for internal purposes"
+  window.open(mailtoString, '_blank')
+}
+</script>
 
 <script type="text/javascript">
 $.ajaxSetup({
