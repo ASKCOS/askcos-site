@@ -1,0 +1,26 @@
+<!-- Popup drawing tool -->
+{% load staticfiles %}
+
+<div class="modal fade" id="drawingbox">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="width: auto;">
+            <div class="modal-body">
+                <div role="application"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                {% if vue %}
+                <button type="button" class="btn btn-success" data-dismiss="modal" @click="updateSmilesFromJSME">Done drawing</button>
+                {% else %}
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="setSmilesText();">Done drawing</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <link href="{% static 'css/ketcher.css' %}" rel="stylesheet" type="text/css" />
+        <script>
+            var ketcher_svg_url = "{% static 'images/ketcher.svg' %}"
+        </script>
+        <script src="{% static 'js/ketcher.js' %}"></script>
+    </div>
+</div>
