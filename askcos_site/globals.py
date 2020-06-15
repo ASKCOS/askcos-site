@@ -49,6 +49,6 @@ print('Loaded global pricer.')
 
 ################################################################################
 # SCScorer
-scscorer = SCScorePrecursorPrioritizer()
+scscorer = SCScorePrecursorPrioritizer(pricer=pricer)
 scscorer.load_model(model_tag='1024bool')
 print('Loaded global SCScorer.')
