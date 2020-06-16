@@ -34,6 +34,7 @@ worker_prefetch_multiplier = 1
 imports = [
     'askcos_site.askcos_celery.treebuilder.tb_c_worker',
     'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts',
+    'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts_v2',
     'askcos_site.askcos_celery.contextrecommender.cr_network_worker',
     'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker',
     'askcos_site.askcos_celery.siteselectivity.sites_worker',
@@ -48,6 +49,7 @@ imports = [
 task_routes = {
     'askcos_site.askcos_celery.treebuilder.tb_c_worker.*': {'queue': 'tb_c_worker'},
     'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts.*': {'queue': 'tb_coordinator_mcts'},
+    'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts_v2.*': {'queue': 'tb_coordinator_mcts_v2'},
     'askcos_site.askcos_celery.contextrecommender.cr_network_worker.*': {'queue': 'cr_network_worker'},
     'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker.*': {'queue': 'tffp_worker'},
     'askcos_site.askcos_celery.siteselectivity.sites_worker.*': {'queue': 'sites_worker'},

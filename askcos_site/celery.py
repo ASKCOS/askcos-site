@@ -9,6 +9,7 @@ READABLE_NAMES = {
     'cr_network_worker': 'Context Recommender Worker',
     'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
     'tb_coordinator_mcts': 'Tree Builder Coordinator',
+    'tb_coordinator_mcts_v2': 'Tree Builder v2 Coordinator',
     'sites_worker': 'Site Selectivity Worker',
     'impurity_worker': 'Impurity Worker',
     'atom_mapping_worker': 'Atom Mapping Worker',
