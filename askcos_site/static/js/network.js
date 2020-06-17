@@ -1943,10 +1943,14 @@ var app = new Vue({
             this.target = smiles
             this.canonicalize(smiles, drawBoxId)
         },
+        updateSmilesFromKetcher() {
+            var smiles = ketcher.getSmiles();
+            this.target = smiles
+            this.canonicalize(smiles, drawBoxId)
+        },
         resetTemplateSetVersion(event) {
             this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
         }
-
     },
     computed: {
         // {'target_smiles0':[[{result0}, {result1}, ...], [...]], ...}
