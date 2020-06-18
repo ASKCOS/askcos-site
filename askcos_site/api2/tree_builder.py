@@ -32,6 +32,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer_version = serializers.IntegerField(default=0)
     return_first = serializers.BooleanField(default=True)
+    max_trees = serializers.IntegerField(default=500)
 
     store_results = serializers.BooleanField(default=False)
     description = serializers.CharField(default='')
@@ -139,6 +140,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `template_set` (str, optional): template set to use
     - `template_prioritizer_version` (int, optional): version number of template relevance model to use
     - `return_first` (bool, optional): whether to return upon finding the first pathway
+    - `max_trees` (int, optional): maximum number of pathways to return
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
     - `banned_reactions` (list, optional): list of reactions to not consider
@@ -195,7 +197,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             max_depth=data['max_depth'],
             max_branching=data['max_branching'],
             expansion_time=data['expansion_time'],
-            max_trees=500,
+            max_trees=data['max_trees'],
             max_ppg=data['max_ppg'],
             known_bad_reactions=banned_reactions,
             forbidden_molecules=banned_chemicals,
