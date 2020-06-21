@@ -28,6 +28,7 @@ urlpatterns += [
     path('impurity/', api2.impurity.impurity_predict, name='impurity_api'),
     path('reactions/', api2.reactions.reactions, name='reactions_api'),
     path('retro/', api2.retro.singlestep, name='retro_api'),
+    path('retro/models/', api2.retro.models, name='retro_models_api'),
     path('scscore/', api2.scscore.scscore, name='scscore_api'),
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
     path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),
