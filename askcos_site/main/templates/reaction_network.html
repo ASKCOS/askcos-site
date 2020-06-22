@@ -384,10 +384,19 @@
                             <div class="form-inline mb-2">
                                 <i title="When there are multiple trained models available to make a prediction, you can choose between them using this dropdown."
                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <label class="mr-2" for="templateSet">Template set/relevance model:</label>
+                                <label class="mr-2" for="templateSet">Template set:</label>
                                 <select id="templateSet" v-model="tb.settings.templateSet" class="form-control form-control-sm">
-                                    <template v-for="set in templateSets">
-                                        <option :value="set">%% set %%</option>
+                                    <template v-for="(value, name) in templateSets">
+                                        <option :value="name">%% name %%</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div v-show="templateSets[tb.settings.templateSet].length > 1" class="form-inline mb-2">
+                                <i title="When multiple versions of a template relevance model are available for a given template set, you can choose between them here." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="templateSetVersion">Relevance model version:</label>
+                                <select id="templateSetVersion" v-model="tb.settings.templateSetVersion" class="form-control form-control-sm">
+                                    <template v-for="version in templateSets[tb.settings.templateSet]">
+                                        <option :value="version">%% version %%</option>
                                     </template>
                                 </select>
                             </div>

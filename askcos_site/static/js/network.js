@@ -300,8 +300,8 @@ const tbSettingsDefault = {
     chemicalPopularityReactants: 0,
     chemicalPopularityProducts: 0,
     returnFirst: false,
-    templatePrioritization: "reaxys",
     templateSet: "reaxys",
+    templateSetVersion: "1",
     precursorScoring: "RelevanceHeuristic",
     numTemplates: 1000,
     maxCumProb: 0.999,
@@ -439,7 +439,7 @@ var app = new Vue({
             edges: {}
         },
         results: {},
-        templateSets: [],
+        templateSets: {},
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
@@ -547,10 +547,19 @@ var app = new Vue({
         if (loadTreeBuilder) {
             this.loadFromTreeBuilder(loadTreeBuilder, numTrees)
         }
-        fetch('/api/template-sets/')
+        fetch('/api/v2/template/sets/')
             .then(resp => resp.json())
             .then(json => {
-                this.templateSets = json.template_sets
+                for (templateSet of json.template_sets) {
+                    this.templateSets[templateSet] = { versions: [] }
+                    fetch('/api/v2/retro/models/?template_set='+templateSet)
+                        .then(resp => resp.json())
+                        .then(json => {
+                            if (json.versions) {
+                                this.templateSets[json.request.template_set] = json.versions.map(x => Number(x))    
+                            }
+                        })
+                }
             })
     },
     destroyed: function() {
@@ -815,7 +824,7 @@ var app = new Vue({
             const body = {
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
-                template_prioritizer: this.tb.settings.templateSet,
+                template_prioritizer_version: this.tb.settings.templateSetVersion,
                 precursor_prioritization: this.tb.settings.precursorScoring,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
