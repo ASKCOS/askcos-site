@@ -301,7 +301,7 @@ const tbSettingsDefault = {
     chemicalPopularityProducts: 0,
     returnFirst: false,
     templateSet: "reaxys",
-    templateSetVersion: "1",
+    templateSetVersion: 1,
     precursorScoring: "RelevanceHeuristic",
     numTemplates: 1000,
     maxCumProb: 0.999,
@@ -1943,6 +1943,9 @@ var app = new Vue({
             this.target = smiles
             this.canonicalize(smiles, drawBoxId)
         },
+        resetTemplateSetVersion(event) {
+            this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
+        }
 
     },
     computed: {
