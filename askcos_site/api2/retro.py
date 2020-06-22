@@ -76,7 +76,7 @@ class RetroAPIView(CeleryTaskAPIView):
         max_cum_prob = data['max_cum_prob']
         fast_filter_threshold = data['filter_threshold']
         template_set = data['template_set']
-        template_prioritizer = data['template_prioritizer']
+        template_prioritizer_version = data['template_prioritizer_version']
 
         cluster = data['cluster']
         cluster_method = data['cluster_method']
