@@ -5,6 +5,7 @@ from rest_framework.exceptions import NotAuthenticated
 
 from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_v1
+from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts_v2 import get_buyable_paths as get_buyable_paths_v2
 from .celery import CeleryTaskAPIView
 
 
@@ -17,6 +18,9 @@ class TreeBuilderSerializer(serializers.Serializer):
     expansion_time = serializers.IntegerField(default=60)
     template_count = serializers.IntegerField(default=100)
     max_cum_prob = serializers.FloatField(default=0.995)
+    max_chemicals = serializers.IntegerField(required=False, allow_null=True)
+    max_reactions = serializers.IntegerField(required=False, allow_null=True)
+    max_iterations = serializers.IntegerField(required=False, allow_null=True)
 
     buyable_logic = serializers.CharField(default='none')
     max_ppg_logic = serializers.CharField(default='none')
@@ -156,6 +160,9 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `expansion_time` (int, optional): time limit for tree expansion
     - `template_count` (int, optional): number of templates to consider
     - `max_cum_prob` (float, optional): maximum cumulative probability of templates
+    - `max_chemicals` (int, optional): maximum number of chemicals explored (v2 only)
+    - `max_reactions` (int, optional): maximum number of reactions explored (v2 only)
+    - `max_iterations` (int, optional): maximum iterations to run MCTS (v2 only)
     - `buyable_logic` (str, optional): logic type for buyable termination (none/and/or)
     - `max_ppg_logic` (str, optional): logic type for price based termination (none/and/or)
     - `max_ppg` (int, optional): maximum price for price based termination
@@ -260,6 +267,9 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             'max_branching': data['max_branching'],
             'expansion_time': data['expansion_time'],
             'template_count': data['template_count'],
+            'max_chemicals': data.get('max_chemicals'),
+            'max_reactions': data.get('max_reactions'),
+            'max_iterations': data.get('max_iterations'),
             'max_cum_template_prob': data['max_cum_prob'],
             'max_ppg': max_ppg,
             'max_scscore': max_scscore,
@@ -280,6 +290,8 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
         if data['version'] == 1:
             result = get_buyable_paths_v1.apply_async(args, kwargs, priority=data['priority'])
+        elif data['version'] == 2:
+            result = get_buyable_paths_v2.apply_async(args, kwargs, priority=data['priority'])
 
         if data['store_results']:
             now = timezone.now()
