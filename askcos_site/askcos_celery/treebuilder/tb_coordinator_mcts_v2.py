@@ -86,6 +86,9 @@ def get_buyable_paths(smiles, **kwargs):
     run_async = kwargs.pop('run_async', False)
     paths_only = kwargs.pop('paths_only', False)
 
+    settings = {'smiles': smiles}
+    settings.update(kwargs)
+
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(smiles))
     _id = get_buyable_paths.request.id
 
@@ -129,8 +132,6 @@ def get_buyable_paths(smiles, **kwargs):
         raise
     if run_async:
         update_result_state(_id, 'completed')
-        settings = {'smiles': smiles}
-        settings.update(kwargs)
         save_results(result_doc, settings, _id)
     print('Task completed, returning results.')
 
