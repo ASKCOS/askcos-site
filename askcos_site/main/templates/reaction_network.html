@@ -480,12 +480,40 @@ The plausibility score can help filter out bad suggestions, but in some cases ca
                             </div>
                             <hr>
                             <h4>MCTS Tree Builder Settings:</h4>
+                            <h5>MCTS algorithm options</h5>
+                            <div class="form-inline mb-2">
+                                <i title="Which tree builder algorithm to use."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="tbVersion">Tree builder version:</label>
+                                <select id="tbVersion" v-model="tb.settings.version" class="form-control form-control-sm">
+                                    <option value="1">v1</option>
+                                    <option value="2">v2</option>
+                                </select>
+                            </div>
                             <div class="form-inline mb-2">
                                 <i title="This is how long the server is allowed to search for template applications.
 It is roughly how long it will take for results to be returned, however there is an additional pathway resolution step following expansion that may take some time as well."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="expansionTime">Expansion time (seconds):</label>
                                 <input id="expansionTime" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" max="300" step="1" v-model.number="tb.settings.expansionTime">
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="This is how many iterations the MCTS algorithm is allowed to perform before returning results."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxIterations">Maximum iterations (v2 only):</label>
+                                <input id="maxIterations" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxIterations">
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="This is how many chemicals the MCTS algorithm is allowed to explore before returning results."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxChemicals">Maximum chemicals (v2 only):</label>
+                                <input id="maxChemicals" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxChemicals">
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="This is how many reactions the MCTS algorithm is allowed to explore before returning results."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxReactions">Maximum reactions (v2 only):</label>
+                                <input id="maxReactions" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxReactions">
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="This is the maximum depth (or number of steps) for any given reaction pathway return by the search algorithm." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
