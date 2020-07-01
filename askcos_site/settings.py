@@ -14,8 +14,8 @@ PROJECT_PATH = os.path.dirname(__file__)
 
 # Get settings from separate celeryconfig.py
 from askcos_site.askcos_celery.celeryconfig import *
-# Get settings from makeit
-import makeit.global_config as gc
+# Get settings from askcos
+import askcos.global_config as gc
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'notsosecret'

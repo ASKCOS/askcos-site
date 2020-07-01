@@ -5,11 +5,11 @@ from rest_framework import serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from makeit.utilities.io.draw import MolsSmilesToImage, MakeBackgroundTransparent
-from makeit.utilities.io.draw import TransformStringToImage
-from makeit.utilities.io.draw import ReactionStringToImage
-from makeit.utilities.io.draw import MappedReactionToHightlightImage
-from makeit.utilities.io.draw import MolsSmilesToImageHighlight
+from askcos.utilities.io.draw import MolsSmilesToImage, MakeBackgroundTransparent
+from askcos.utilities.io.draw import TransformStringToImage
+from askcos.utilities.io.draw import ReactionStringToImage
+from askcos.utilities.io.draw import MappedReactionToHightlightImage
+from askcos.utilities.io.draw import MolsSmilesToImageHighlight
 
 
 class DrawerSerializer(serializers.Serializer):

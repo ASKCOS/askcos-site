@@ -3,7 +3,7 @@ Tree builder subclass using celery for multiprocessing.
 """
 
 import askcos_site.askcos_celery.treebuilder.tb_c_worker as tb_c_worker
-from makeit.retrosynthetic.mcts.tree_builder import MCTS, WAITING
+from askcos.retrosynthetic.mcts.tree_builder import MCTS, WAITING
 
 
 class MCTSCelery(MCTS):

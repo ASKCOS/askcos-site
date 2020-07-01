@@ -26,7 +26,7 @@ def configure_worker(options={}, **kwargs):
     lg = RDLogger.logger()
     lg.setLevel(RDLogger.CRITICAL)
 
-    from makeit.synthetic.context.neuralnetwork import NeuralNetContextRecommender
+    from askcos.synthetic.context.neuralnetwork import NeuralNetContextRecommender
     try:
         recommender = NeuralNetContextRecommender()
         recommender.load()

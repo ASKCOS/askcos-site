@@ -26,7 +26,7 @@ def configure_worker(options={}, **kwargs):
     global tffp
 
     # Import as needed
-    from makeit.synthetic.evaluation.rexgen_direct.predict import TFFP
+    from askcos.synthetic.evaluation.rexgen_direct.predict import TFFP
     print('Imported TFFP')
     try:
         tffp = TFFP()

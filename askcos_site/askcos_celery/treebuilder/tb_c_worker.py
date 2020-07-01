@@ -16,7 +16,7 @@ from rdkit import RDLogger
 from rdkit.Chem import AllChem
 from scipy.special import softmax
 
-from makeit.utilities.fingerprinting import create_rxn_Morgan2FP_separately
+from askcos.utilities.fingerprinting import create_rxn_Morgan2FP_separately
 from ..tfserving import TFServingAPIModel
 
 lg = RDLogger.logger()
@@ -131,7 +131,7 @@ def configure_worker(options={}, **kwargs):
         return
     print('### STARTING UP A TREE BUILDER WORKER ###')
 
-    from makeit.retrosynthetic.transformer import RetroTransformer
+    from askcos.retrosynthetic.transformer import RetroTransformer
 
     # Instantiate and load retro transformer
     global retroTransformer

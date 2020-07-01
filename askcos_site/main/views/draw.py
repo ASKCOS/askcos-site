@@ -62,7 +62,7 @@ def draw_smiles(request, smiles):
     '''
     Returns a png response for a target smiles
     '''
-    from makeit.utilities.io.draw import MolsSmilesToImage, MakeBackgroundTransparent
+    from askcos.utilities.io.draw import MolsSmilesToImage, MakeBackgroundTransparent
     isTransparent = request.GET.get('transparent', 'False')
     response = HttpResponse(content_type='image/png')
     if isTransparent.lower() in ['true', 't', 'yes', 'y', '1']:
@@ -77,7 +77,7 @@ def draw_template(request, template):
     '''
     Returns a png response for a reaction SMARTS template
     '''
-    from makeit.utilities.io.draw import TransformStringToImage
+    from askcos.utilities.io.draw import TransformStringToImage
     response = HttpResponse(content_type='image/jpeg')
     TransformStringToImage(str(template)).save(response, 'png', quality=70)
     return response
@@ -88,7 +88,7 @@ def draw_reaction(request, smiles):
     '''
     Returns a png response for a SMILES reaction string
     '''
-    from makeit.utilities.io.draw import ReactionStringToImage
+    from askcos.utilities.io.draw import ReactionStringToImage
     response = HttpResponse(content_type='image/jpeg')
     ReactionStringToImage(str(smiles)).save(response, 'png', quality=70)
     return response
@@ -97,7 +97,7 @@ def draw_mapped_reaction(request, smiles):
     '''
     Returns a png response for a SMILES reaction string
     '''
-    from makeit.utilities.io.draw import ReactionStringToImage
+    from askcos.utilities.io.draw import ReactionStringToImage
     response = HttpResponse(content_type='image/jpeg')
     print('in views', smiles)
     ReactionStringToImage(str(smiles), strip=False).save(response, 'png', quality=70)
@@ -107,7 +107,7 @@ def draw_highlighted_reaction(request, smiles):
     '''
         Returns a png response for a SMILES reaction string
     '''
-    from makeit.utilities.io.draw import MappedReactionToHightlightImage
+    from askcos.utilities.io.draw import MappedReactionToHightlightImage
     response = HttpResponse(content_type='image/jpeg')
     print('in views', smiles)
     MappedReactionToHightlightImage(str(smiles), highlightByReactant=True).save(response, 'png', quality=70)
@@ -117,7 +117,7 @@ def draw_smiles_highlight(request, smiles, reacting_atoms, bonds='False'):
     '''
     Returns a svg xml with atoms highlighted
     '''
-    from makeit.utilities.io.draw import MolsSmilesToImageHighlight
+    from askcos.utilities.io.draw import MolsSmilesToImageHighlight
     from ast import literal_eval
     reacting_atoms = literal_eval(reacting_atoms)
     #TODO has to be a better way to evaluate string to true or false

@@ -15,7 +15,7 @@ def configure_coordinator(options={}, **kwargs):
         return
     print('### STARTING UP A TREE EVALUATION COORDINATOR ###')
 
-    from makeit.synthetic.evaluation.tree_evaluator import TreeEvaluator
+    from askcos.synthetic.evaluation.tree_evaluator import TreeEvaluator
 
     global evaluator
 

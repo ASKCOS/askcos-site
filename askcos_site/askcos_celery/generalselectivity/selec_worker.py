@@ -23,7 +23,7 @@ def configure_worker(options={}, **kwargs):
     print('### STARTING UP A GENERAL SELECTIVITY PREDICTOR WORKER ###')
     global selec_pred
     # Import as needed
-    from makeit.synthetic.selectivity.general_selectivity import GeneralSelectivityPredictor
+    from askcos.synthetic.selectivity.general_selectivity import GeneralSelectivityPredictor
     try:
         selec_pred = GeneralSelectivityPredictor()
     except Exception as e:
