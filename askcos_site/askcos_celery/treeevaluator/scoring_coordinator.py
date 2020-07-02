@@ -16,7 +16,7 @@ def configure_coordinator(options={}, **kwargs):
         return
     print('### STARTING UP A SCORING COORDINATOR ###')
 
-    from makeit.synthetic.evaluation.evaluator import Evaluator
+    from askcos.synthetic.evaluation.evaluator import Evaluator
 
     global evaluator
 

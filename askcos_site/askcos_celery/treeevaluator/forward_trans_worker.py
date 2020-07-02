@@ -26,7 +26,7 @@ def configure_worker(options={}, **kwargs):
         return
     print('### STARTING UP A FORWARD ENUMERATION WORKER ###')
 
-    from makeit.synthetic.enumeration.transformer import ForwardTransformer
+    from askcos.synthetic.enumeration.transformer import ForwardTransformer
 
     global templates
     global forwardTransformer

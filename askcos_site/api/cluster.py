@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 
-from makeit.utilities.cluster import group_results
+from askcos.utilities.cluster import group_results
 
 
 def cluster(request):

@@ -22,7 +22,7 @@ def configure_worker(options={}, **kwargs):
     print('### STARTING UP A SITE PREDICTOR WORKER ###')
     global sites_pred
     # Import as needed
-    from makeit.synthetic.selectivity.site_selectivity import Site_Predictor
+    from askcos.synthetic.selectivity.site_selectivity import Site_Predictor
     try:
         sites_pred = Site_Predictor()
     except Exception as e:

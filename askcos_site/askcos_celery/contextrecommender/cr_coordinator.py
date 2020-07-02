@@ -2,7 +2,7 @@ from celery import shared_task
 from celery.result import allow_join_result
 from celery.signals import celeryd_init
 
-import makeit.global_config as gc
+import askcos.global_config as gc
 from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
 from askcos_site.askcos_celery.contextrecommender.cr_nn_worker import get_n_conditions as neighbor_get_n_conditions
 

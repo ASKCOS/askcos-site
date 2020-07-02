@@ -8,7 +8,7 @@ must query the database to get details about the instance.
 from celery import shared_task
 from celery.signals import celeryd_init
 
-import makeit.global_config as gc
+import askcos.global_config as gc
 
 CORRESPONDING_QUEUE = 'cr_nn_worker'
 
@@ -21,7 +21,7 @@ def configure_worker(options={}, **kwargs):
         return
     print('### STARTING UP A NEAREST NEIGHBOR CONTEXT RECOMMENDER WORKER ###')
 
-    from makeit.synthetic.context.nearestneighbor import NNContextRecommender
+    from askcos.synthetic.context.nearestneighbor import NNContextRecommender
 
     global recommender
 
