@@ -352,7 +352,7 @@ const visjsOptionsDefault = {
         speed: {x: 10, y: 10, zoom: 0.02},
         bindToWindow: true
         },
-        multiselect: false,
+        multiselect: true,
         navigationButtons: false,
         selectable: true,
         selectConnectedEdges: true,
@@ -1016,67 +1016,52 @@ var app = new Vue({
             }
         },
         deleteChoice: function() {
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='chemical') {
-                    let res = confirm('This will delete all children nodes of the currently selected node. Continue?')
-                    if (res) {
-                        this.deleteChildren()
-                    }
-                }
-                else {
-                    let res = confirm('This will delete the currently selected node and all children node. Continue?')
-                    if (res) {
-                        this.deleteNode()
-                    }
-                }
-            }
-        },
-        deleteNode: function() {
-            if (this.isModalOpen() || typeof(this.network) == "undefined") {
+            // for all selected nodes, delete reaction nodes and delete children of chemical nodes
+            let res = confirm('This will delete all selected reaction nodes and all children of the selected chemical nodes. Continue?')
+            if (!res) {
                 return
             }
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='chemical') {
-                    alert('We do not allow deleting chemical nodes! It will leave its parent reaction node missing information! Only delete reaction nodes with this button.')
-                    continue
+            let selected = this.network.getSelectedNodes();
+            for (let n in selected) {
+                const nodeId = selected[n];
+                const node = this.data.nodes.get(nodeId);
+                if (node === null) {
+                    // the node does not exist, it may have already been deleted
+                    return
                 }
-                var node = this.data.nodes.get(nodeId);
-                var parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
-                var parentNode = this.data.nodes.get(parentNodeId);
-                for (result of this.results[parentNode.smiles]) {
-                    if (result.rank == node.rank) {
-                        result.inViz = false;
-                        break;
-                    }
+                if (node.type === 'chemical') {
+                    this.deleteChildren(node)
+                } else {
+                    this.deleteNode(node)
                 }
-                removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-                this.data.nodes.remove(nodeId);
             }
-            cleanUpEdges(this.data.nodes, this.data.edges);
         },
-        deleteChildren: function() {
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='reaction') {
-                    alert('We do not allow deleting children of reaction nodes! It will leave the reaction node missing information! Only delete children of chemical nodes with this button.')
-                    continue
-                }
-                var node = this.data.nodes.get(nodeId);
-                for (result of this.results[node.smiles]) {
+        deleteNode: function(node) {
+            // delete the specified node and its children from the graph
+            const nodeId = node.id
+            const parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
+            const parentNode = this.data.nodes.get(parentNodeId);
+            for (result of this.results[parentNode.smiles]) {
+                if (result.rank === node.rank) {
                     result.inViz = false;
+                    break;
                 }
-                removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
             }
+            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
+            this.data.nodes.remove(nodeId);
             cleanUpEdges(this.data.nodes, this.data.edges);
-            var oldSelected = this.selected;
+            this.selected = null;
+        },
+        deleteChildren: function(node) {
+            // delete the children for the specified node from the graph
+            const nodeId = node.id
+            for (result of this.results[node.smiles]) {
+                result.inViz = false;
+            }
+            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
+            cleanUpEdges(this.data.nodes, this.data.edges);
             this.selected = null;
             this.network.unselectAll();
-//             this.selected = oldSelected;
         },
         toggleResolver: function() {
             if (this.allowResolve) {
