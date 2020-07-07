@@ -3,6 +3,21 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+function updateObj(dest, src) {
+    // take properties of src and overwrite matching properties of dest
+    // ignores properties in src if they do not exist in dest
+    // modifies dest object in place
+    for (let p in src) {
+        if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
+            if ( typeof dest[p] === 'object' ) {
+                updateObj(dest[p], src[p])
+            } else {
+                dest[p] = src[p];
+            }
+        }
+    }
+}
+
 function num2str(n, len) {
     if (len == undefined) {
         return n == undefined || isNaN(n) ? 'N/A' : n.toString();
@@ -559,32 +574,30 @@ var app = new Vue({
         },
         loadNetworkOptions() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('visjsOptions')
+            const settings = localStorage.getItem('visjsOptions')
             if (!settings) return
-            obj = JSON.parse(decodeURIComponent(settings))
-            this.$set(this, 'networkOptions', obj)
+            const obj = JSON.parse(decodeURIComponent(settings))
+            updateObj(this.networkOptions, obj)
         },
         loadTarget() {
             if (!storageAvailable('localStorage')) return
-            target = localStorage.getItem('target')
+            const target = localStorage.getItem('target')
             if (!target) return
             this.target = target
         },
         loadTbSettings() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('tbSettings')
+            const settings = localStorage.getItem('tbSettings')
             if (!settings) return
-            obj = JSON.parse(decodeURIComponent(settings))
-            this.$set(this.tb, 'settings', obj)
+            const obj = JSON.parse(decodeURIComponent(settings))
+            updateObj(this.tb.settings, obj)
         },
         loadIppSettings() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('ippSettings')
+            const settings = localStorage.getItem('ippSettings')
             if (!settings) return
             const obj = JSON.parse(decodeURIComponent(settings))
-            for (let key in obj) {
-                this.$set(this, key, obj[key])
-            }
+            updateObj(this, obj)
         },
         handleResize: function() {
             this.window.width = window.innerWidth;
