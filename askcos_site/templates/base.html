@@ -352,7 +352,7 @@ $("#savepage").click(function () {
         });
     };
 });
-// For drawing
+// For drawing using JSME
 function jsmeOnLoad() {
     jsmeApplet = new JSApplet.JSME("jsme_container", "565px", "400px");
 };
@@ -375,6 +375,56 @@ function setSmilesDrawing(id) {
 // onclick action for drawing popup
 function drawBox(id) {
     setSmilesDrawing(id);
+    drawBoxId = id;
+};
+// For drawing using Ketcher
+// set the value of an ID with the current SMILES string
+// note: assumes drawBoxID has been assigned as global var!
+function setSmilesTextKetcher() {
+    var data = ketcher.getSmiles();
+    document.getElementById(drawBoxId).value = data;
+    $("#" + drawBoxId).trigger("change");
+};
+// set the drawing to match the SMILES string of a certain id's value
+function setSmilesDrawingKetcher(id) {
+    // get SMILES string
+    var smi = $("#" + id).val();
+    if(!smi) {
+        smi = "";
+    }
+    // Post to api endpoint to get molfile
+    fetch(
+        '/api/v2/rdkit/smiles/to_molfile/',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                "smiles": smi,
+            })
+        }
+    )
+    .then(resp => {
+        if (!resp.ok) {
+            throw Error(resp.statusText)
+        }
+        return resp
+    })
+    .then(resp => resp.json())
+    .then(json => {
+        // Set the molfile in Ketcher
+        molfile = json["molfile"];
+        ketcher.setMolecule(molfile);
+    })
+    .catch(error => {
+        console.log('Could not convert SMILES to molfile for Ketcher use: ' + error)
+    })
+};
+// onclick action for drawing popup
+function drawBoxKetcher(id) {
+    setSmilesDrawingKetcher(id);
     drawBoxId = id;
 };
 </script>
