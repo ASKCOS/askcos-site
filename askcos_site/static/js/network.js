@@ -384,6 +384,31 @@ const visjsOptionsDefault = {
     }
 };
 
+function getVisjsUserOptions(obj) {
+    // extract user adjustable options from the full visjs options object
+    return {
+        nodes: {
+            mass: obj.nodes.mass,
+            size: obj.nodes.size,
+            font: {
+                size: obj.nodes.font.size,
+            },
+        },
+        layout: {
+            hierarchical: {
+                enabled: obj.layout.hierarchical.enabled,
+                levelSeparation: obj.layout.hierarchical.levelSeparation,
+                direction: obj.layout.hierarchical.direction,
+            }
+        },
+        physics: {
+            barnesHut: {
+                springConstant: obj.physics.barnesHut.springConstant,
+            }
+        }
+    }
+}
+
 const ippSettingsDefault = {
     allowCluster: true,
     allowResolve: false,
@@ -550,7 +575,7 @@ var app = new Vue({
         },
         saveNetworkOptions() {
             if (!storageAvailable('localStorage')) return
-            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
+            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(getVisjsUserOptions(this.networkOptions))))
         },
         saveTarget() {
             if (!storageAvailable('localStorage')) return
@@ -577,7 +602,9 @@ var app = new Vue({
             const settings = localStorage.getItem('visjsOptions')
             if (!settings) return
             const obj = JSON.parse(decodeURIComponent(settings))
-            updateObj(this.networkOptions, obj)
+            const userOptions = getVisjsUserOptions(this.networkOptions)
+            updateObj(userOptions, obj)
+            updateObj(this.networkOptions, userOptions)
         },
         loadTarget() {
             if (!storageAvailable('localStorage')) return
