@@ -3,6 +3,21 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+function updateObj(dest, src) {
+    // take properties of src and overwrite matching properties of dest
+    // ignores properties in src if they do not exist in dest
+    // modifies dest object in place
+    for (let p in src) {
+        if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
+            if ( typeof dest[p] === 'object' ) {
+                updateObj(dest[p], src[p])
+            } else {
+                dest[p] = src[p];
+            }
+        }
+    }
+}
+
 function num2str(n, len) {
     if (len == undefined) {
         return n == undefined || isNaN(n) ? 'N/A' : n.toString();
@@ -337,7 +352,7 @@ const visjsOptionsDefault = {
         speed: {x: 10, y: 10, zoom: 0.02},
         bindToWindow: true
         },
-        multiselect: false,
+        multiselect: true,
         navigationButtons: false,
         selectable: true,
         selectConnectedEdges: true,
@@ -368,6 +383,31 @@ const visjsOptionsDefault = {
         adaptiveTimestep: true
     }
 };
+
+function getVisjsUserOptions(obj) {
+    // extract user adjustable options from the full visjs options object
+    return {
+        nodes: {
+            mass: obj.nodes.mass,
+            size: obj.nodes.size,
+            font: {
+                size: obj.nodes.font.size,
+            },
+        },
+        layout: {
+            hierarchical: {
+                enabled: obj.layout.hierarchical.enabled,
+                levelSeparation: obj.layout.hierarchical.levelSeparation,
+                direction: obj.layout.hierarchical.direction,
+            }
+        },
+        physics: {
+            barnesHut: {
+                springConstant: obj.physics.barnesHut.springConstant,
+            }
+        }
+    }
+}
 
 const ippSettingsDefault = {
     allowCluster: true,
@@ -535,7 +575,7 @@ var app = new Vue({
         },
         saveNetworkOptions() {
             if (!storageAvailable('localStorage')) return
-            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
+            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(getVisjsUserOptions(this.networkOptions))))
         },
         saveTarget() {
             if (!storageAvailable('localStorage')) return
@@ -559,32 +599,32 @@ var app = new Vue({
         },
         loadNetworkOptions() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('visjsOptions')
+            const settings = localStorage.getItem('visjsOptions')
             if (!settings) return
-            obj = JSON.parse(decodeURIComponent(settings))
-            this.$set(this, 'networkOptions', obj)
+            const obj = JSON.parse(decodeURIComponent(settings))
+            const userOptions = getVisjsUserOptions(this.networkOptions)
+            updateObj(userOptions, obj)
+            updateObj(this.networkOptions, userOptions)
         },
         loadTarget() {
             if (!storageAvailable('localStorage')) return
-            target = localStorage.getItem('target')
+            const target = localStorage.getItem('target')
             if (!target) return
             this.target = target
         },
         loadTbSettings() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('tbSettings')
+            const settings = localStorage.getItem('tbSettings')
             if (!settings) return
-            obj = JSON.parse(decodeURIComponent(settings))
-            this.$set(this.tb, 'settings', obj)
+            const obj = JSON.parse(decodeURIComponent(settings))
+            updateObj(this.tb.settings, obj)
         },
         loadIppSettings() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('ippSettings')
+            const settings = localStorage.getItem('ippSettings')
             if (!settings) return
             const obj = JSON.parse(decodeURIComponent(settings))
-            for (let key in obj) {
-                this.$set(this, key, obj[key])
-            }
+            updateObj(this, obj)
         },
         handleResize: function() {
             this.window.width = window.innerWidth;
@@ -1003,67 +1043,52 @@ var app = new Vue({
             }
         },
         deleteChoice: function() {
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='chemical') {
-                    let res = confirm('This will delete all children nodes of the currently selected node. Continue?')
-                    if (res) {
-                        this.deleteChildren()
-                    }
-                }
-                else {
-                    let res = confirm('This will delete the currently selected node and all children node. Continue?')
-                    if (res) {
-                        this.deleteNode()
-                    }
-                }
-            }
-        },
-        deleteNode: function() {
-            if (this.isModalOpen() || typeof(this.network) == "undefined") {
+            // for all selected nodes, delete reaction nodes and delete children of chemical nodes
+            let res = confirm('This will delete all selected reaction nodes and all children of the selected chemical nodes. Continue?')
+            if (!res) {
                 return
             }
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='chemical') {
-                    alert('We do not allow deleting chemical nodes! It will leave its parent reaction node missing information! Only delete reaction nodes with this button.')
-                    continue
+            let selected = this.network.getSelectedNodes();
+            for (let n in selected) {
+                const nodeId = selected[n];
+                const node = this.data.nodes.get(nodeId);
+                if (node === null) {
+                    // the node does not exist, it may have already been deleted
+                    return
                 }
-                var node = this.data.nodes.get(nodeId);
-                var parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
-                var parentNode = this.data.nodes.get(parentNodeId);
-                for (result of this.results[parentNode.smiles]) {
-                    if (result.rank == node.rank) {
-                        result.inViz = false;
-                        break;
-                    }
+                if (node.type === 'chemical') {
+                    this.deleteChildren(node)
+                } else {
+                    this.deleteNode(node)
                 }
-                removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-                this.data.nodes.remove(nodeId);
             }
-            cleanUpEdges(this.data.nodes, this.data.edges);
         },
-        deleteChildren: function() {
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='reaction') {
-                    alert('We do not allow deleting children of reaction nodes! It will leave the reaction node missing information! Only delete children of chemical nodes with this button.')
-                    continue
-                }
-                var node = this.data.nodes.get(nodeId);
-                for (result of this.results[node.smiles]) {
+        deleteNode: function(node) {
+            // delete the specified node and its children from the graph
+            const nodeId = node.id
+            const parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
+            const parentNode = this.data.nodes.get(parentNodeId);
+            for (result of this.results[parentNode.smiles]) {
+                if (result.rank === node.rank) {
                     result.inViz = false;
+                    break;
                 }
-                removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
             }
+            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
+            this.data.nodes.remove(nodeId);
             cleanUpEdges(this.data.nodes, this.data.edges);
-            var oldSelected = this.selected;
+            this.selected = null;
+        },
+        deleteChildren: function(node) {
+            // delete the children for the specified node from the graph
+            const nodeId = node.id
+            for (result of this.results[node.smiles]) {
+                result.inViz = false;
+            }
+            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
+            cleanUpEdges(this.data.nodes, this.data.edges);
             this.selected = null;
             this.network.unselectAll();
-//             this.selected = oldSelected;
         },
         toggleResolver: function() {
             if (this.allowResolve) {
