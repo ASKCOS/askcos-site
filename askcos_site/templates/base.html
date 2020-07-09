@@ -424,9 +424,16 @@ function setSmilesDrawingKetcher(id) {
 };
 // onclick action for drawing popup
 function drawBoxKetcher(id) {
-    setSmilesDrawingKetcher(id);
     drawBoxId = id;
+    $("#drawingbox").modal();
 };
+// Initialize a modal callback function, so that Ketcher sets the molecule only when open.
+// note: assumes drawBoxID has been assigned as global var!
+$(document).ready(function() {
+    $('#drawingbox').on('shown.bs.modal', function (e) {
+        setSmilesDrawingKetcher(drawBoxId);
+    })
+});
 </script>
 {% block javascript %}{% endblock %}
 </body>
