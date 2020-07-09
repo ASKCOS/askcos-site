@@ -800,6 +800,14 @@ var app = new Vue({
                         setTimeout(() => this.pollForTbResult(), 1000)
                     }
                 })
+                .catch(error => {
+                    if (error instanceof TypeError) {
+                        console.log('Unable to fetch tree builder results due to connection error. Will keep trying.')
+                        setTimeout(() => this.pollForTbResult(), 2000)
+                    } else {
+                        console.error('There was a problem fetching results:', error);
+                    }
+                });
         },
         requestRetro: function(smiles, callback) {
             showLoader()
@@ -858,6 +866,14 @@ var app = new Vue({
                     setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 1000)
                 }
             })
+            .catch(error => {
+                if (error instanceof TypeError) {
+                    console.log('Unable to fetch celery results due to connection error. Will keep trying.')
+                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 2000)
+                } else {
+                    console.error('There was a problem fetching results:', error);
+                }
+            });
         },
         resolveChemName: function(name) {
             if (this.enableResolve && this.allowResolve) {
