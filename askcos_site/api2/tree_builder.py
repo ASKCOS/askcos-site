@@ -38,6 +38,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     filter_threshold = serializers.FloatField(default=0.75)
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer_version = serializers.IntegerField(default=0)
+    buyables_source = serializers.CharField(default='all', allow_blank=True)
     return_first = serializers.BooleanField(default=True)
     max_trees = serializers.IntegerField(default=500)
 
@@ -169,6 +170,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): template set to use
     - `template_prioritizer_version` (int, optional): version number of template relevance model to use
+    - `buyables_source` (str, optional): source(s) to consider when looking up buyables (accepts comma delimited list)
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `max_trees` (int, optional): maximum number of pathways to return
     - `store_results` (bool, optional): whether to permanently save this result
@@ -233,6 +235,14 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         else:
             min_history = None
 
+        # Clean buyables source
+        buyables_source = data.get('buyables_source')
+        if buyables_source != 'all':
+            # split and strip whitespace
+            sources = (token.strip() for token in buyables_source.split(','))
+            # remove empty strings and change 'none' to None
+            buyables_source = [source if source != 'none' else None for source in sources if source]
+
         # Retrieve user specific banlists
         banned_reactions = data.get('banned_reactions', [])
         banned_chemicals = data.get('banned_chemicals', [])
@@ -257,6 +267,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             'filter_threshold': data['filter_threshold'],
             'template_set': data['template_set'],
             'template_prioritizer_version': data['template_prioritizer_version'],
+            'buyables_source': buyables_source,
             'known_bad_reactions': banned_reactions,
             'forbidden_molecules': banned_chemicals,
             'return_first': data['return_first'],
