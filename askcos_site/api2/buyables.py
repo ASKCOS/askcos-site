@@ -19,7 +19,7 @@ class BuyableSerializer(serializers.Serializer):
     """Serializer for buyable attributes"""
     smiles = serializers.CharField()
     ppg = serializers.FloatField(min_value=0.0)
-    source = serializers.CharField(default='')
+    source = serializers.CharField(default='all', allow_blank=True)
     allowOverwrite = serializers.BooleanField(required=False)  # no default so the field is empty when not specified
 
     def validate_smiles(self, value):
@@ -56,7 +56,7 @@ class BuyablesViewSet(ViewSet):
     Query Parameters:
 
     - `q` (str): search query, e.g. SMILES string
-    - `source` (str): source of buyables data
+    - `source` (str): source(s) of buyables data (accepts comma delimited list)
     - `regex` (bool): whether or not to treat `q` as regex pattern
     - `returnLimit` (int): maximum number of results to return
     - `canonicalize` (bool): whether or not to canonicalize `q`
@@ -127,8 +127,12 @@ class BuyablesViewSet(ViewSet):
                         search = Chem.MolToSmiles(mol, isomericSmiles=True)
                 query['smiles'] = search
 
-        if source:
-            query['source'] = source
+        if source != 'all':
+            # split and strip whitespace
+            sources = (token.strip() for token in source.split(','))
+            # remove empty strings and change 'none' to None
+            sources = [source if source != 'none' else None for source in sources if source]
+            query['source'] = {'$in': sources}
 
         search_result = list(buyables_db.find(query, {'smiles': 1, 'ppg': 1, 'source': 1}).limit(limit))
 
