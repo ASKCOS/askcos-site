@@ -1938,11 +1938,6 @@ var app = new Vue({
                 this[input] = json.smiles
             })
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
-            this.target = smiles
-            this.canonicalize(smiles, drawBoxId)
-        },
         updateSmilesFromKetcher() {
             var smiles = ketcher.getSmiles();
             this.target = smiles
