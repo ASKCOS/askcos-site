@@ -33,8 +33,8 @@ class RetroSerializer(serializers.Serializer):
         return value
 
 
-class RetroModelsSerializer(serializers.Serializer):
-    """Serializer for drawing parameters."""
+class TFXRetroModelsSerializer(serializers.Serializer):
+    """Serializer for available retro models parameters."""
     template_set = serializers.CharField()
 
 
@@ -107,7 +107,7 @@ class RetroAPIView(CeleryTaskAPIView):
         return result
 
 
-class RetroModels(GenericAPIView):
+class TFXRetroModels(GenericAPIView):
     """
     API endpoint for querying available retrosynthetic models for a given template set.
 
@@ -122,7 +122,7 @@ class RetroModels(GenericAPIView):
     - `versions`: List of version numbers that are available
     """
 
-    serializer_class = RetroModelsSerializer
+    serializer_class = TFXRetroModelsSerializer
 
     def get(self, request, *args, **kwargs):
         """
@@ -144,11 +144,11 @@ class RetroModels(GenericAPIView):
             resp = {'request': data, 'error': 'tensorflow serving model(s) not available for {}'.format(data['template_set'])}
             return Response(resp)
 
-        versions = [
+        versions = sorted([
             model.get('version')
             for model in model_version_status
             if model.get('state') == 'AVAILABLE'
-        ]
+        ])
 
         resp = {
             'request': data,
@@ -158,5 +158,5 @@ class RetroModels(GenericAPIView):
         return Response(resp)
 
 
-models = RetroModels.as_view()
+models = TFXRetroModels.as_view()
 singlestep = RetroAPIView.as_view()
