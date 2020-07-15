@@ -143,7 +143,7 @@ def configure_worker(options={}, **kwargs):
 @shared_task
 def get_top_precursors(
         smiles, precursor_prioritizer=None,
-        template_set='reaxys', template_prioritizer='reaxys',
+        template_set='reaxys', template_prioritizer_version=None,
         fast_filter=None, max_num_templates=1000,
         max_cum_prob=1, fast_filter_threshold=0.75,
         cluster=True, cluster_method='kmeans', cluster_feature='original',
@@ -186,9 +186,9 @@ def get_top_precursors(
             precursors found.
     """
 
-    template_relevance_hostname = 'template-relevance-{}'.format(template_prioritizer)
+    template_relevance_hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=template_relevance_hostname, model_name='template_relevance'
+        hostname=template_relevance_hostname, model_name='template_relevance', version=template_prioritizer_version
     )
 
     fast_filter_hostname = 'fast-filter'

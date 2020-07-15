@@ -384,10 +384,19 @@
                             <div class="form-inline mb-2">
                                 <i title="When there are multiple trained models available to make a prediction, you can choose between them using this dropdown."
                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <label class="mr-2" for="templateSet">Template set/relevance model:</label>
-                                <select id="templateSet" v-model="tb.settings.templateSet" class="form-control form-control-sm">
-                                    <template v-for="set in templateSets">
-                                        <option :value="set">%% set %%</option>
+                                <label class="mr-2" for="templateSet">Template set:</label>
+                                <select id="templateSet" v-model="tb.settings.templateSet" @change="resetTemplateSetVersion($event)" class="form-control form-control-sm">
+                                    <template v-for="(value, name) in templateSets">
+                                        <option :value="name">%% name %%</option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="When multiple versions of a template relevance model are available for a given template set, you can choose between them here." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="templateSetVersion">Relevance model version:</label>
+                                <select id="templateSetVersion" v-model="tb.settings.templateSetVersion" class="form-control form-control-sm">
+                                    <template v-for="version in templateSets[tb.settings.templateSet]">
+                                        <option :value="version">%% version %%</option>
                                     </template>
                                 </select>
                             </div>
@@ -706,6 +715,12 @@
                     <button id="download-btn" class="btn btn-outline-dark mx-1" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
                     <button id="load-btn" class="btn btn-outline-dark mx-1" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
                     <button class="btn btn-outline-dark mx-1" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center my-2">
+                    <i @click="showSettingsModal = true" class="fas fa-edit" style="cursor: pointer"></i>&nbsp;
+                    Using template set&nbsp;<samp><code>%% tb.settings.templateSet %%</code></samp>&nbsp;
+                    version&nbsp;<samp><code>%% tb.settings.templateSetVersion %%</code></samp>
                 </div>
 
                 <div id="network" class="mx-auto my-2"></div>
