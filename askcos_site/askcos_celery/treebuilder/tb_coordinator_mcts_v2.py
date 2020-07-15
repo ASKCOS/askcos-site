@@ -117,9 +117,7 @@ def get_buyable_paths(smiles, **kwargs):
     tree_builder = MCTS(**kwargs)
 
     try:
-        paths = tree_builder.get_buyable_paths(smiles, **kwargs)
-        status = (len(tree_builder.chemicals), len(tree_builder.reactions))
-        graph = tree_builder.dump_tree()
+        paths, status, graph = tree_builder.get_buyable_paths(smiles, **kwargs)
         result_doc = {
             'status': status,
             'paths': paths,
