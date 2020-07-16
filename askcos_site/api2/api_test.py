@@ -733,6 +733,21 @@ M  END
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
 
+    def test_retro_models(self):
+        """Test /retro/models endpoint"""
+        data = {'template_set': 'reaxys'}
+        response = self.get('/retro/models/', params=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertEqual(result['request'], data)
+        self.assertEqual(result['versions'], ['1'])
+
+        # Test insufficient data
+        response = self.get('/retro/models/')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'template_set': ['This field is required.']})
+
     def test_root(self):
         """Test / endpoint"""
         response = self.get('/')
