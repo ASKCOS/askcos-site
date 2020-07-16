@@ -707,7 +707,7 @@ M  END
         self.assertEqual(request['max_cum_prob'], 0.995)
         self.assertEqual(request['filter_threshold'], 0.75)
         self.assertEqual(request['template_set'], 'reaxys')
-        self.assertEqual(request['template_prioritizer'], 'reaxys')
+        self.assertEqual(request['template_prioritizer_version'], 0)
         self.assertTrue(request['cluster'])
         self.assertEqual(request['cluster_method'], 'kmeans')
         self.assertEqual(request['cluster_feature'], 'original')
