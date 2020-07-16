@@ -881,6 +881,15 @@ M  END
         self.assertEqual(field['value'],
                          '100336; 100337; 555364; 3948785; 3948834; 28127174; 35585623; 38022824; 38022828; 38022830; 38022834; 38022833; 38022835; 38022845; 41610599; 41610601; 41610620')
 
+    def test_template_sets(self):
+        """Test /template/sets endpoint"""
+        response = self.get('/template/sets/')
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertIn('template_sets', result)
+        self.assertIn('reaxys', result['template_sets'])
+
     def test_tree_builder(self):
         """Test /tree-builder endpoint"""
         data = {
