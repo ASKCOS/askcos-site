@@ -93,8 +93,8 @@ urlpatterns = [
     re_path(r'^ajax/user_save_page/$', views.ajax_user_save_page, name='ajax_user_save_page'),
     re_path(r'^saved/delete/id=(?P<_id>.+)$', views.user_saved_results_del, name='user_saved_results_del'),
 
-    # Blacklisted chemicals and reactions
-    path('blacklist/', views.blacklist, name='user_blacklist'),
+    # Banned chemicals and reactions
+    path('banlist/', views.banlist, name='user_banlist'),
 
     # async results
     re_path(r'^view-result/$', views.view_result, name='view_result'),

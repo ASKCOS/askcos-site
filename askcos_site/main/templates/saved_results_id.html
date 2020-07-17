@@ -237,14 +237,14 @@ $('#results').on('click', '.hidechem', function () {
     $(".chembox" + targetid).closest('.tree').hide();
     $(".chembox" + targetid).closest('.tree').collapse('hide');
 });
-$('#results').on('click', '.blacklistrxn', function () {
+$('#results').on('click', '.banrxn', function () {
     var smiles = $(this).attr("smiles");
     var desc = prompt("Please enter a reason (for your records only)", "no reason");
     const body = {
         smiles: smiles,
         description: desc,
     };
-    fetch('/api/v2/blacklist/reactions/', {
+    fetch('/api/v2/banlist/reactions/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -255,17 +255,17 @@ $('#results').on('click', '.blacklistrxn', function () {
         .then(resp => resp.json())
         .then(json => {
             const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
-            alert(`Blacklisted reaction ${smiles} at ${datetime}`)
+            alert(`Banned reaction ${smiles} at ${datetime}`)
         });
 });
-$('#results').on('click', '.blacklistchem', function () {
+$('#results').on('click', '.banchem', function () {
     var smiles = $(this).attr("smiles");
     var desc = prompt("Please enter a reason (for your records only)", "no reason");
     const body = {
         smiles: smiles,
         description: desc,
     };
-    fetch('/api/v2/blacklist/chemicals/', {
+    fetch('/api/v2/banlist/chemicals/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -276,7 +276,7 @@ $('#results').on('click', '.blacklistchem', function () {
         .then(resp => resp.json())
         .then(json => {
             const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
-            alert(`Blacklisted chemical ${smiles} at ${datetime}`)
+            alert(`Banned chemical ${smiles} at ${datetime}`)
         });
 });
 // On load, if entries defined, switch it out

@@ -27,10 +27,10 @@
     - [Main results endpoint](#main-results-endpoint)
     - [Specific result endpoint](#specific-result-endpoint)
     - [Check result endpoint](#check-result-endpoint)
-- [Blacklist API](#blacklist-api)
-    - [Main blacklist endpoints](#main-blacklist-endpoints)
-    - [Specific blacklist entry endpoints](#specific-blacklist-entry-endpoints)
-    - [Blacklist entry activation/deactivation endpoints](#blacklist-entry-activationdeactivation-endpoints)
+- [Banlist API](#banlist-api)
+    - [Main banlist endpoints](#main-banlist-endpoints)
+    - [Specific banlist entry endpoints](#specific-banlist-entry-endpoints)
+    - [Banlist entry activation/deactivation endpoints](#banlist-entry-activationdeactivation-endpoints)
 - [Authentication Token API](#authentication-token-api)
     - [Request token](#request-token)
     - [Refresh token](#refresh-token)
@@ -251,8 +251,8 @@ Parameters:
 - `return_first` (bool, optional): whether to return upon finding the first pathway
 - `store_results` (bool, optional): whether to permanently save this result
 - `description` (str, optional): description to associate with stored result
-- `blacklisted_reactions` (list, optional): list of reactions to not consider
-- `blacklisted_chemicals` (list, optional): list of molecules to not consider
+- `banned_reactions` (list, optional): list of reactions to not consider
+- `banned_chemicals` (list, optional): list of molecules to not consider
 
 Returns:
 
@@ -498,20 +498,20 @@ Returns:
 - `error`: error message if encountered
 
 
-## Blacklist API
-The API endpoints in this section are for accessing and modifying user chemical and reaction blacklists.
+## Banlist API
+The API endpoints in this section are for accessing and modifying user chemical and reaction banlists.
 User authentication is required to access these endpoints.
 
-### Main blacklist endpoints
+### Main banlist endpoints
 
 URLs:
 
-- `/api/v2/blacklist/chemicals`
-- `/api/v2/blacklist/reactions`
+- `/api/v2/banlist/chemicals`
+- `/api/v2/banlist/reactions`
 
 Method: GET
 
-Returns: list of blacklisted chemical or reaction entries belonging to the currently authenticated user
+Returns: list of banned chemical or reaction entries belonging to the currently authenticated user
 
 Method: POST
 
@@ -524,14 +524,14 @@ Parameters:
 
 Returns: created entry
 
-### Specific blacklist entry endpoints
-API endpoints for accessing or deleting a particular blacklist entry.
-The entry ID can be obtained from the main blacklist endpoints.
+### Specific banlist entry endpoints
+API endpoints for accessing or deleting a particular banlist entry.
+The entry ID can be obtained from the main banlist endpoints.
 
 URLs:
 
-- `/api/v2/blacklist/chemicals/<id>`
-- `/api/v2/blacklist/reactions/<id>`
+- `/api/v2/banlist/chemicals/<id>`
+- `/api/v2/banlist/reactions/<id>`
 
 Method: GET
 
@@ -544,16 +544,16 @@ Returns:
 - `success`: true if successfully deleted
 - `data`: data from deleted entry
 
-### Blacklist entry activation/deactivation endpoints
-API endpoints for activating or deactivating a particular blacklist entry.
-The entry ID can be obtained from the main blacklist endpoints.
+### Banlist entry activation/deactivation endpoints
+API endpoints for activating or deactivating a particular banlist entry.
+The entry ID can be obtained from the main banlist endpoints.
 
 URLs:
 
-- `/api/v2/blacklist/chemicals/<id>/activate`
-- `/api/v2/blacklist/chemicals/<id>/deactivate`
-- `/api/v2/blacklist/reactions/<id>/activate`
-- `/api/v2/blacklist/reactions/<id>/deactivate`
+- `/api/v2/banlist/chemicals/<id>/activate`
+- `/api/v2/banlist/chemicals/<id>/deactivate`
+- `/api/v2/banlist/reactions/<id>/activate`
+- `/api/v2/banlist/reactions/<id>/deactivate`
 
 
 Method: GET

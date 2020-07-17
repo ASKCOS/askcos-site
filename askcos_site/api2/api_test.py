@@ -98,19 +98,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reactants using rdkit.']})
 
     @unittest.skipIf(not (username and password), 'Requires login credentials.')
-    def test_blacklist_chemicals(self):
-        """Test /blacklist/chemicals endpoint"""
-        response = self.get('/blacklist/chemicals/')
+    def test_banlist_chemicals(self):
+        """Test /banlist/chemicals endpoint"""
+        response = self.get('/banlist/chemicals/')
         self.assertEqual(response.status_code, 401)
 
         headers = self.authenticate()
 
-        # Post request to add blacklisted chemical
+        # Post request to add banned chemical
         data = {
             'smiles': 'c1ccccc1',
             'description': 'test',
         }
-        response = self.post('/blacklist/chemicals/', data=data, headers=headers)
+        response = self.post('/banlist/chemicals/', data=data, headers=headers)
         self.assertEqual(response.status_code, 201)
         result = response.json()
         self.assertEqual(result['smiles'], data['smiles'])
@@ -119,8 +119,8 @@ class TestAPI(unittest.TestCase):
         self.assertIn('created', result)
         created_entry = result
 
-        # Get list of blacklisted chemicals
-        response = self.get('/blacklist/chemicals/', headers=headers)
+        # Get list of banned chemicals
+        response = self.get('/banlist/chemicals/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -130,37 +130,37 @@ class TestAPI(unittest.TestCase):
         entry_id = entries[0]['id']
 
         # Get detail view of specific entry
-        response = self.get('/blacklist/chemicals/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(result, created_entry)
 
         # Deactivate entry
-        response = self.get('/blacklist/chemicals/{0}/deactivate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/deactivate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertFalse(result['data']['active'])
 
         # Activate entry
-        response = self.get('/blacklist/chemicals/{0}/activate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/activate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertTrue(result['data']['active'])
 
         # Delete entry
-        response = self.delete('/blacklist/chemicals/{0}/'.format(entry_id), headers=headers)
+        response = self.delete('/banlist/chemicals/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
 
         # Try to retrieve entry again
-        response = self.get('/blacklist/chemicals/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 404)
 
         # List entries again
-        response = self.get('/blacklist/chemicals/', headers=headers)
+        response = self.get('/banlist/chemicals/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -168,19 +168,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(entries, [])
 
     @unittest.skipIf(not (username and password), 'Requires login credentials.')
-    def test_blacklist_reactions(self):
-        """Test /blacklist/reactions endpoint"""
-        response = self.get('/blacklist/reactions/')
+    def test_banlist_reactions(self):
+        """Test /banlist/reactions endpoint"""
+        response = self.get('/banlist/reactions/')
         self.assertEqual(response.status_code, 401)
 
         headers = self.authenticate()
 
-        # Post request to add blacklisted chemical
+        # Post request to add banned chemical
         data = {
             'smiles': 'c1ccccc1>>Brc1ccccc1',
             'description': 'test',
         }
-        response = self.post('/blacklist/reactions/', data=data, headers=headers)
+        response = self.post('/banlist/reactions/', data=data, headers=headers)
         self.assertEqual(response.status_code, 201)
         result = response.json()
         self.assertEqual(result['smiles'], data['smiles'])
@@ -189,8 +189,8 @@ class TestAPI(unittest.TestCase):
         self.assertIn('created', result)
         created_entry = result
 
-        # Get list of blacklisted chemicals
-        response = self.get('/blacklist/reactions/', headers=headers)
+        # Get list of banned chemicals
+        response = self.get('/banlist/reactions/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -200,37 +200,37 @@ class TestAPI(unittest.TestCase):
         entry_id = entries[0]['id']
 
         # Get detail view of specific entry
-        response = self.get('/blacklist/reactions/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(result, created_entry)
 
         # Deactivate entry
-        response = self.get('/blacklist/reactions/{0}/deactivate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/deactivate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertFalse(result['data']['active'])
 
         # Activate entry
-        response = self.get('/blacklist/reactions/{0}/activate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/activate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertTrue(result['data']['active'])
 
         # Delete entry
-        response = self.delete('/blacklist/reactions/{0}/'.format(entry_id), headers=headers)
+        response = self.delete('/banlist/reactions/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
 
         # Try to retrieve entry again
-        response = self.get('/blacklist/reactions/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 404)
 
         # List entries again
-        response = self.get('/blacklist/reactions/', headers=headers)
+        response = self.get('/banlist/reactions/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)

@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 
 from askcos_site.globals import db_client
-from askcos_site.main.models import SavedResults, BlacklistedReactions, BlacklistedChemicals
+from askcos_site.main.models import SavedResults
 
 results_collection = db_client['results']['results']
 
@@ -96,5 +96,5 @@ def ajax_user_save_page(request):
 
 
 @login_required
-def blacklist(request):
-    return render(request, 'blacklist.html')
+def banlist(request):
+    return render(request, 'banlist.html')
