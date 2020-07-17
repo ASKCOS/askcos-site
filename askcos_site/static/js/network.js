@@ -1935,7 +1935,9 @@ var app = new Vue({
             )
             .then(resp => resp.json())
             .then(json => {
-                this[input] = json.smiles
+                if (json.smiles) {
+                    this[input] = json.smiles
+                }
             })
         },
         updateSmilesFromKetcher() {
