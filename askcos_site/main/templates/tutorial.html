@@ -183,9 +183,9 @@ OR
 <p>The tree-builder produces a rank-ordered list of recommended synthetic routes.  Compounds that are buyable are outlined in green; those that are not are outlined in orange.  Between each target compound and its retrospective precursor(s) is a number that specifies the number of examples of reactions in Reaxys that support the template(s) that was (were) applied to make the proposed disconnection. </p>
 
 
-<p>You can store the results of an expansion and review them later.  To do this after an expansion is complete, scroll to the top of the website and click the "My Results" tab in the  black banner.  In the list that appears, click the “Save this page” link to save your results.  From this list, you can also access results that you have saved previously (to do this, click "See saved results" instead of "Save this page").</p>
+<p>You can store the results of an expansion and review them later.  To do this after an expansion is complete, scroll to the top of the website and click the "My Results" tab in the navigation bar.  In the list that appears, click the “Save this page” link to save your results.  From this list, you can also access results that you have saved previously (to do this, click "See saved results" instead of "Save this page").</p>
 
-<p>Additionally, once a retrosynthetic expansion is performed, the user has the option to blacklist a chemical or reaction that appears in the tree if it is, e.g., known to be patented.  Then, the user may re-run the expansion to obtain recommendations that exclude the chemical(s) or reaction(s) that were deemed undesirable.  The list of compounds and reactions that you have blacklisted can be accessed by clicking the "My Banlist" tab in the black banner at the top of the website.  For more information, see the Example below.</p>
+<p>Additionally, once a retrosynthetic expansion is performed, the user has the option to ban a chemical or reaction that appears in the tree if it is, e.g., known to be patented.  Then, the user may re-run the expansion to obtain recommendations that exclude the chemical(s) or reaction(s) that were deemed undesirable.  The list of compounds and reactions that you have banned can be accessed by clicking the "My Banlist" link in the navigation bar at the top of the website.  For more information, see the Example below.</p>
 
 <h4>Example</h4>
 
@@ -211,22 +211,16 @@ The summary of the expansion results shows the number of chemicals (or, at half-
 
 <img src="/static/images/tut_treebuilder_res2.png" class="center tutorialimage">
 
-<p>Hovering over each of the compounds pulls up a pale-yellow window with additional information, including the compound’s SMILES string, frequency of appearance as a reactant or product in Reaxys, and the options to “blacklist” or “hide all” (see Tree Builder - Output).  For compounds that are commercially available, the price per gram is listed (non-purchasable compounds show the words “not buyable”).  For example, for the non-purchasable epoxide intermediate:</p>
+<p>Hovering over each of the compounds pulls up a pale-yellow window with additional information, including the compound’s SMILES string, frequency of appearance as a reactant or product in Reaxys, and the options to “ban” or “hide all” (see Tree Builder - Output).  For compounds that are commercially available, the price per gram is listed (non-purchasable compounds show the words “not buyable”).  For example, for the non-purchasable epoxide intermediate:</p>
 
 <img src="/static/images/tut_treebuilder_mouseoverchem.png" class="center tutorialimage">
 
 
-<p>As described in Tree Builder - Output, compounds and reactions may be blacklisted, if desired.  To do this, for example, for the epoxide intermediate in Option 2, mouse over the compound, and click the blacklist link in the pale-yellow window that appears.  Another pop-up will appear with a text field where you can specify the reason for blacklisting the chemical (for your records only).  After you click OK, another window will appear, confirming that the compound with the specified SMILES string was blacklisted.  Click OK again.</p>
+<p>As described in Tree Builder - Output, compounds and reactions may be banned, if desired.  To do this, for example, for the epoxide intermediate in Option 2, mouse over the compound, and click the ban link in the pale-yellow window that appears.  Another pop-up will appear with a text field where you can specify the reason for banning the chemical (for your records only).  After you click OK, another window will appear, confirming that the compound with the specified SMILES string was banned.  Click OK again.</p>
 
-<p>To review the compounds and reactions that you’ve blacklisted, scroll to the top of the webpage and click the "My Banlist" tab.  A list of options will appear, including the option to “View banned chemicals”:</p>
+<p>To review the compounds and reactions that you’ve banned, scroll to the top of the webpage and click the "My Banlist" tab. You will be taken to a new webpage that shows a list of the chemicals you’ve banned.  For now, only the epoxide intermediate appears.  You have the option to temporarily disable compounds on your banlist by clicking the checkmark under the Active column on the left; you may also permanently delete compounds on your banlist by clicking the trash icon under the Delete column on the right</p>
 
-<img src="/static/images/tut_blacklisted_view.png" class="center tutorialimage">
-
-<p>If you click the “View banned chemicals” link, you will be taken to a new webpage that shows a list of the chemicals you’ve blacklisted.  For now, only the epoxide intermediate appears.  You have the option to temporarily disable compounds on your blacklist by clicking the True link under the Active column on the left; you may also permanently delete compounds on your blacklist by clicking the X under the Delete column on the right:</p>
-
-<img src="/static/images/tut_blacklisted_chemicals.png" class="center tutorialimage">
-
-<p>Now that we’ve blacklisted this chemical, it is possible to return to the Tree Builder tab and rerun the Fluconazole expansion.  This time, none of the trees that the algorithm recommends will contain the blacklisted chemical. </p>
+<p>Now that we’ve banned this chemical, it is possible to return to the Tree Builder tab and rerun the Fluconazole expansion.  This time, none of the trees that the algorithm recommends will contain the banned chemical. </p>
 
 
 <h1 id="synthpred"><a href="/synth_interactive/" target="_blank">Synthesis Predictor</a></h1>

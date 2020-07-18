@@ -9,9 +9,9 @@ from rest_framework.viewsets import ModelViewSet
 from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals
 
 
-class BlacklistSerializer(serializers.Serializer):
+class BanlistSerializer(serializers.Serializer):
     """
-    Base serializer class for blacklisted items.
+    Base serializer class for banned items.
     """
     smiles = serializers.CharField()
     description = serializers.CharField(required=False)
@@ -20,7 +20,7 @@ class BlacklistSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         """
-        Create a new blacklisted instance.
+        Create a new banlist instance.
         """
         now = timezone.now()
         return self.Meta.model.objects.create(
@@ -34,7 +34,7 @@ class BlacklistSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         """
-        Create serialized representation of a blacklisted instance.
+        Create serialized representation of a banlist instance.
         """
         ret = {
             'id': instance.id,
@@ -63,9 +63,9 @@ def standardize(smiles, isomericSmiles=True):
     return '.'.join(canonicalized_parts)
 
 
-class BlacklistedReactionsSerializer(BlacklistSerializer):
+class BannedReactionsSerializer(BanlistSerializer):
     """
-    Serializer for a blacklisted reaction.
+    Serializer for a banned reaction.
     """
     class Meta:
         model = BlacklistedReactions
@@ -93,9 +93,9 @@ class BlacklistedReactionsSerializer(BlacklistSerializer):
         return reactants + '>' + agents + '>' + products
 
 
-class BlacklistedChemicalsSerializer(BlacklistSerializer):
+class BannedChemicalsSerializer(BanlistSerializer):
     """
-    Serializer for a blacklisted reaction.
+    Serializer for a banned reaction.
     """
     class Meta:
         model = BlacklistedChemicals
@@ -112,19 +112,19 @@ class BlacklistedChemicalsSerializer(BlacklistSerializer):
         return value
 
 
-class BlacklistViewSet(ModelViewSet):
+class BanlistViewSet(ModelViewSet):
     """
-    Base class for API endpoint for accessing blacklisted items.
+    Base class for API endpoint for accessing banned items.
 
     Implements custom queryset to return objects belonging to current user
-    and custom actions for activating and deactivating a blacklist entry.
+    and custom actions for activating and deactivating a banned entry.
     """
     lookup_field = 'id'
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
-        Returns blacklisted items associated with the authenticated user.
+        Returns banned items associated with the authenticated user.
         """
         return self.model.objects.filter(user=self.request.user)
 
@@ -148,7 +148,7 @@ class BlacklistViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def activate(self, request, *args, **kwargs):
         """
-        API endpoint to activate specified blacklist entry.
+        API endpoint to activate specified banlist entry.
 
         Method: GET
 
@@ -166,7 +166,7 @@ class BlacklistViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def deactivate(self, request, *args, **kwargs):
         """
-        API endpoint to deactivate specified blacklist entry.
+        API endpoint to deactivate specified banlist entry.
 
         Method: GET
 
@@ -182,13 +182,13 @@ class BlacklistViewSet(ModelViewSet):
         return Response({'success': True, 'data': data})
 
 
-class BlacklistedReactionsViewSet(BlacklistViewSet):
+class BannedReactionsViewSet(BanlistViewSet):
     """
-    API endpoint for accessing blacklisted reactions.
+    API endpoint for accessing banned reactions.
 
     Method: GET
 
-    Returns: list of blacklisted reaction entries belonging to the currently authenticated user
+    Returns: list of banned reaction entries belonging to the currently authenticated user
 
     Method: POST
 
@@ -202,7 +202,7 @@ class BlacklistedReactionsViewSet(BlacklistViewSet):
     Returns: created entry
 
     ----------
-    For a particular entry, specified as URI parameter (`/api/v2/blacklist/reactions/<id>/`):
+    For a particular entry, specified as URI parameter (`/api/v2/banlist/reactions/<id>/`):
 
     Method: GET
 
@@ -216,16 +216,16 @@ class BlacklistedReactionsViewSet(BlacklistViewSet):
     - `data`: data from deleted entry
     """
     model = BlacklistedReactions
-    serializer_class = BlacklistedReactionsSerializer
+    serializer_class = BannedReactionsSerializer
 
 
-class BlacklistedChemicalsViewSet(BlacklistViewSet):
+class BannedChemicalsViewSet(BanlistViewSet):
     """
-    API endpoint for accessing blacklisted chemicals.
+    API endpoint for accessing banned chemicals.
 
     Method: GET
 
-    Returns: list of blacklisted chemical entries belonging to the currently authenticated user
+    Returns: list of banned chemical entries belonging to the currently authenticated user
 
     Method: POST
 
@@ -239,7 +239,7 @@ class BlacklistedChemicalsViewSet(BlacklistViewSet):
     Returns: created entry
 
     ----------
-    For a particular entry, specified as URI parameter (`/api/v2/blacklist/chemicals/<id>/`):
+    For a particular entry, specified as URI parameter (`/api/v2/banlist/chemicals/<id>/`):
 
     Method: GET
 
@@ -253,4 +253,4 @@ class BlacklistedChemicalsViewSet(BlacklistViewSet):
     - `data`: data from deleted entry
     """
     model = BlacklistedChemicals
-    serializer_class = BlacklistedChemicalsSerializer
+    serializer_class = BannedChemicalsSerializer

@@ -6,7 +6,7 @@
 <img src="" data-async-load="{% url 'draw_smiles' target.smiles %}" alt="{{ target.smiles }}" width="75%">
 <div>
 	<center>
-        <span class="hidechem" targetid="{{ target.id }}"><span class="pseudolink" style="float:right; font-size:smaller">hide all</span></span><span class="blacklistchem pseudolink" style="padding-right:5px; float:right; font-size:smaller" smiles="{{ target.smiles }}">blacklist</span></span><br>
+        <span class="hidechem" targetid="{{ target.id }}"><span class="pseudolink" style="float:right; font-size:smaller">hide all</span></span><span class="banchem pseudolink" style="padding-right:5px; float:right; font-size:smaller" smiles="{{ target.smiles }}">ban</span></span><br>
 		<span class="smiles">{{ target.smiles }}</span>
         {% if target.score %}<br>score: {{ target.score }}{% endif %}
 		
@@ -27,7 +27,7 @@
 {% if target.plausibility %}<br>FF score: {{ target.plausibility|floatformat:3 }}{% endif %}
 <div style="width:300px">
     <center>
-        <span class="hiderxn" targetid="{{ target.id }}"><span class="pseudolink" style="float:right; font-size:smaller">hide all</span></span><span class="blacklistrxn pseudolink" style="padding-right:5px; float:right; font-size:smaller" smiles="{{ target.smiles }}">blacklist</span></span><br>
+        <span class="hiderxn" targetid="{{ target.id }}"><span class="pseudolink" style="float:right; font-size:smaller">hide all</span></span><span class="banrxn pseudolink" style="padding-right:5px; float:right; font-size:smaller" smiles="{{ target.smiles }}">ban</span></span><br>
         <span class="pseudolink" onclick="window.open('/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent('{{ target.smiles }}'))"><i>Evaluate in new tab</i></span><br>
         {% if target.info %}{{ target.info }}<br>{% endif %}
         {% if target.necessary_reagent %}Needs source of {{ target.necessary_reagent }}<br>{% endif %}

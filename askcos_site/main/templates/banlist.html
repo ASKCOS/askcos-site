@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 
-{% block title %}Blacklisted Items{% endblock %}
-{% block page_title %}Your blacklisted items{% endblock %}
+{% block title %}Banned Items{% endblock %}
+{% block page_title %}Your banned items{% endblock %}
 
 {% block extrahead %}
 <script src="{% static 'js/browser-compat.js' %}"></script>
@@ -19,7 +19,7 @@
             <div class="modal-dialog modal-dialog-centered fade-d">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Add new blacklist entry</h5>
+                        <h5 class="modal-title">Add new banlist entry</h5>
                         <button type="button" class="close" aria-label="Close" @click="showAddModal = false">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -189,5 +189,5 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/blacklist.js' %}"></script>
+<script src="{% static 'js/banlist.js' %}"></script>
 {% endblock %}

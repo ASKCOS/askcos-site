@@ -256,12 +256,12 @@ def ajax_start_retro_mcts_celery(request):
     return_first = json.loads(request.GET.get('return_first', 'false'))
 
     if request.user.is_authenticated:
-        blacklisted_reactions = list(set(
+        banned_reactions = list(set(
             [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
         forbidden_molecules = list(set(
             [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
     else:
-        blacklisted_reactions = []
+        banned_reactions = []
         forbidden_molecules = []
 
     default_val = 1e9 if chemical_property_logic == 'and' else 0
@@ -278,7 +278,7 @@ def ajax_start_retro_mcts_celery(request):
         'as_product': min_chempop_products,
     }
     print('Tree building {} for user {} ({} forbidden reactions)'.format(
-        smiles, request.user.id, len(blacklisted_reactions)))
+        smiles, request.user.id, len(banned_reactions)))
     print('Using chemical property logic: {}'.format(max_natom_dict))
     print('Using chemical popularity logic: {}'.format(min_chemical_history_dict))
     print('Returning as soon as any pathway found? {}'.format(return_first))
@@ -287,7 +287,7 @@ def ajax_start_retro_mcts_celery(request):
 
     res = get_buyable_paths_mcts.delay(smiles, max_branching=max_branching, max_depth=max_depth,
                                   max_ppg=max_ppg, expansion_time=expansion_time, max_trees=500,
-                                  known_bad_reactions=blacklisted_reactions,
+                                  known_bad_reactions=banned_reactions,
                                   forbidden_molecules=forbidden_molecules,
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
@@ -314,7 +314,7 @@ def ajax_start_retro_mcts_celery(request):
         (tree_status, trees) = res.get(expansion_time * 3)
         (num_chemicals, num_reactions, _) = tree_status
         data['html_stats'] = 'After expanding (with {} banned reactions, {} banned chemicals), {} total chemicals and {} total reactions'.format(
-            len(blacklisted_reactions), len(forbidden_molecules), num_chemicals, num_reactions)
+            len(banned_reactions), len(forbidden_molecules), num_chemicals, num_reactions)
         if trees:
             data['html_trees'] = render_to_string('trees_only.html',
                                                 {'trees': trees, 'can_control_robot': can_control_robot(request)})

@@ -1,5 +1,5 @@
 from . import atom_mapper
-from . import blacklist
+from . import banlist
 from . import buyables
 from . import celery
 from . import cluster

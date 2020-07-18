@@ -303,17 +303,17 @@ var app = new Vue({
           this.treeStats.push(treeStats(tree))
         }
       },
-      blacklist: function() {
+      banItem: function() {
         var nodeId = this.network.getSelectedNodes();
         if (!nodeId.length) { return }
         var desc = prompt("Please enter a reason (for your records only)", "no reason");
         var node = this.networkData.nodes.get(nodeId[0]);
         if (node['type'] === 'chemical') {
-            var url =  '/api/v2/blacklist/chemicals/'
+            var url =  '/api/v2/banlist/chemicals/'
             var speciesName = 'chemical'
         }
         else {
-            var url = '/api/v2/blacklist/reactions/'
+            var url = '/api/v2/banlist/reactions/'
             var speciesName = 'reaction'
         }
         const body = {
@@ -331,7 +331,7 @@ var app = new Vue({
             .then(resp => resp.json())
             .then(json => {
                 const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
-                alert(`Blacklisted ${speciesName} ${node.smiles} at ${datetime}`)
+                alert(`Banned ${speciesName} ${node.smiles} at ${datetime}`)
             });
       },
       showNode: function(nodeId) {
