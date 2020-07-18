@@ -426,6 +426,16 @@ function setSmilesDrawingKetcher(id) {
 };
 // onclick action for drawing popup
 function drawBoxKetcher(id) {
+    // Set ketcher var if using an iframe, and it hasn't been set yet
+    // (We need to delay setting ketcher var til the iframe loads,
+    //  so iframe html doesn't set ketcher var on its own)
+    if (typeof ketcher === 'undefined') {
+        ketcherFrame = document.getElementById('ketcher-iframe');
+        if (ketcherFrame) {
+            ketcher = ketcherFrame.contentWindow.ketcher;
+        }
+    }
+
     // To avoid a graphical glitch, the ketcher drawing must be set while ketcher is on screen.
     // We ensure this by running everything synchronously: first drawBoxId is set; 
     // then the ketcher modal is shown and immediately (through a callback) the drawing is set.

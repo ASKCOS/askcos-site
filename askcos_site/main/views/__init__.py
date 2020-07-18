@@ -12,3 +12,4 @@ from .results import *
 from .sites import *
 from .impurity import *
 from .mapping import *
+from .ketcher import *

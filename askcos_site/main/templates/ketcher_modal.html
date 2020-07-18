@@ -5,7 +5,19 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="width: auto;">
             <div class="modal-body">
-                <div role="application"></div>
+                <div role="application">
+                    <link href="{% static 'ketcher/dist/ketcher.css' %}" rel="stylesheet" type="text/css" />
+                    <script>
+                        var ketcher_svg_url = "{% static 'ketcher/dist/ketcher.svg' %}"
+                        var ketcher_api_path = "/api/v2/indigo/"
+                        // original value ^: 'https://lifescience.opensource.epam.com/v2'
+                        // this would potentially expose info through API calls (like the third-party name resolution issue)
+                        // TODO Toggle official Indigo use through a configurable setting? Install and run the Dockerized version of Indigo?
+                        // Switch to our own API endpoints?
+                    </script>
+                    <script src="{% static 'ketcher/dist/ketcher.js' %}"></script>
+                </div>
+                <!-- <iframe id="ketcher-iframe" src="{% url 'ketcher_iframe' %}" width="800" height="432" scrolling="no" style="border-width: 0"></iframe> -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
@@ -16,16 +28,5 @@
                 {% endif %}
             </div>
         </div>
-
-        <link href="{% static 'ketcher/dist/ketcher.css' %}" rel="stylesheet" type="text/css" />
-        <script>
-            var ketcher_svg_url = "{% static 'ketcher/dist/ketcher.svg' %}"
-            var ketcher_api_path = "/api/v2/indigo/"
-            // original value ^: 'https://lifescience.opensource.epam.com/v2'
-            // this would potentially expose info through API calls (like the third-party name resolution issue)
-            // TODO Toggle official Indigo use through a configurable setting? Install and run the Dockerized version of Indigo?
-            // Switch to our own API endpoints?
-        </script>
-        <script src="{% static 'ketcher/dist/ketcher.js' %}"></script>
     </div>
 </div>

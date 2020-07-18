@@ -111,6 +111,9 @@ urlpatterns = [
     re_path(r'^atom_mapping/$', views.atom_mapping, name='atom_mapping'),
     re_path(r'^ajax/find_atom_mapping/$', views.ajax_find_atom_mapping, name='ajax_find_atom_mapping'),
 
+    # Ketcher
+    re_path(r'^ketcher/iframe/$', views.ketcher_iframe, name='ketcher_iframe'),
+
     # API endpoints
     path('api/', include('askcos_site.api.urls')),
     path('api/v1/', include('askcos_site.api.urls')),

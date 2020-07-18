@@ -1,0 +1,21 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <div role="application">
+    </div>
+</body>
+
+</html>
+
+<link href="{% static 'ketcher/dist/ketcher.css' %}" rel="stylesheet" type="text/css" />
+<script>
+    var ketcher_svg_url = "{% static 'ketcher/dist/ketcher.svg' %}"
+    var ketcher_api_path = "/api/v2/indigo/"
+</script>
+<script src="{% static 'ketcher/dist/ketcher.js' %}"></script>
