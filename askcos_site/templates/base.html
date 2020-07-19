@@ -417,11 +417,13 @@ function setSmilesDrawingKetcher(id) {
         // Set the molfile in Ketcher
         molfile = json["molfile"];
         ketcher.setMolecule(molfile);
+        $("#ketcher-spinner").fadeOut();
     })
     .catch(error => {
         console.log('Could not convert SMILES to molfile for Ketcher use: ' + error);
         // Since we cleared ketcher, we need to restore the previous molecule.
         ketcher.setMolecule(molfileOld);
+        $("#ketcher-spinner").first().fadeOut();
     })
 };
 // onclick action for drawing popup
@@ -446,6 +448,7 @@ function drawBoxKetcher(id) {
     // Also save the old ketcher window, in case we can't render the new one.
     molfileOld = ketcher.getMolfile();
     ketcher.editor.struct(null);
+    $("#ketcher-spinner").fadeIn(0);
     $('#drawingbox').modal('toggle');
 };
 // Initialize a modal callback function, so that Ketcher sets the molecule only when open.
