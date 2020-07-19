@@ -1,21 +1,11 @@
 <!-- Popup drawing tool -->
-{% load staticfiles %}
 
 <div class="modal fade" id="drawingbox">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="width: auto;">
             <div class="modal-body">
                 <div role="application">
-                    <link href="{% static 'ketcher/dist/ketcher.css' %}" rel="stylesheet" type="text/css" />
-                    <script>
-                        var ketcher_svg_url = "{% static 'ketcher/dist/ketcher.svg' %}"
-                        var ketcher_api_path = "/api/v2/indigo/"
-                        // original value ^: 'https://lifescience.opensource.epam.com/v2'
-                        // this would potentially expose info through API calls (like the third-party name resolution issue)
-                        // TODO Toggle official Indigo use through a configurable setting? Install and run the Dockerized version of Indigo?
-                        // Switch to our own API endpoints?
-                    </script>
-                    <script src="{% static 'ketcher/dist/ketcher.js' %}"></script>
+                    {% include "ketcher_scripts.html" %}
                 </div>
                 <!-- <iframe id="ketcher-iframe" src="{% url 'ketcher_iframe' %}" width="800" height="432" scrolling="no" style="border-width: 0"></iframe> -->
                 <div id="ketcher-spinner" class="spinner-border" role="status">
