@@ -75,6 +75,11 @@ def get_buyable_paths(*args, **kwargs):
     run_async = kwargs.pop('run_async', False)
     paths_only = kwargs.pop('paths_only', False)
 
+    template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
+    if template_prioritizer_version:
+        treeBuilder.template_prioritizer_version = template_prioritizer_version
+
+
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(args[0]))
     _id = get_buyable_paths.request.id
     try:

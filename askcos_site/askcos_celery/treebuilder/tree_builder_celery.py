@@ -56,6 +56,7 @@ class MCTSCelery(MCTS):
                     'max_cum_prob': self.max_cum_template_prob,
                     'fast_filter_threshold': self.filter_threshold,
                     'template_prioritizer': self.template_prioritizer,
+                    'template_prioritizer_version': self.template_prioritizer_version,
                     'template_set': self.template_set},
             # queue=self.private_worker_queue, ## CWC TEST: don't reserve
         ))
@@ -106,7 +107,10 @@ class MCTSCelery(MCTS):
         """
         Get template prioritizer predictions to initialize the tree search.
         """
-        res = tb_c_worker.template_relevance.delay(self.smiles, self.template_count, self.max_cum_template_prob, relevance_model=self.template_prioritizer)
+        res = tb_c_worker.template_relevance.delay(
+            self.smiles, self.template_count, self.max_cum_template_prob, 
+            template_set=self.template_set, template_prioritizer_version=self.template_prioritizer_version
+        )
         return res.get(10)
 
     def work(self, i):

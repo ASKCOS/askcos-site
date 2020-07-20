@@ -30,6 +30,7 @@ class TreeBuilderSerializer(serializers.Serializer):
 
     filter_threshold = serializers.FloatField(default=0.75)
     template_prioritizer = serializers.CharField(default='reaxys')
+    template_prioritizer_version = serializers.IntegerField(default=0)
     template_set = serializers.CharField(default='reaxys')
     return_first = serializers.BooleanField(default=True)
 
@@ -206,6 +207,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             apply_fast_filter=data['filter_threshold'] > 0,
             filter_threshold=data['filter_threshold'],
             template_prioritizer=data['template_prioritizer'],
+            template_prioritizer_version=data['template_prioritizer_version'],
             template_set=data['template_set'],
             return_first=data['return_first'],
             paths_only=True,

@@ -705,6 +705,7 @@ var app = new Vue({
                 smiles: this.target,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer: this.tb.settings.templateSet,
+                template_prioritizer_version: this.tb.settings.templateSetVersion,
                 max_depth: this.tb.settings.maxDepth,
                 max_branching: this.tb.settings.maxBranching,
                 expansion_time: this.tb.settings.expansionTime,
