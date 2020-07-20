@@ -1,5 +1,7 @@
+ARG KETCHER_VERSION=dev
 ARG CORE_VERSION=dev
 
+FROM registry.gitlab.com/mlpds_mit/askcos/ketcher:$KETCHER_VERSION as ketcher
 FROM registry.gitlab.com/mlpds_mit/askcos/askcos-core:$CORE_VERSION as core
 
 USER root
@@ -8,6 +10,7 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && rm requirements.txt
 
 COPY --chown=askcos:askcos . /usr/local/askcos-site
+COPY --chown=askcos:askcos --from=ketcher /data/dist/ /usr/local/askcos-site/askcos_site/static/ketcher/dist/
 
 USER askcos
 
