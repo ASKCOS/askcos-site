@@ -47,6 +47,12 @@
             </div>
         </div>
         <table class="table">
+            <tr v-if="settings.template_set">
+                <th>Template set:</th>
+                <td>Name: %% settings.template_set %%</td>
+                <td v-if="settings.template_prioritizer_version">Version: %% settings.template_prioritizer_version %%</td>
+                <td v-else>Version: N/A</td>
+            </tr>
             <tr>
                 <th>Expansion settings:</th>
                 <td>Max. depth: %% settings.max_depth %%</td>

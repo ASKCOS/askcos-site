@@ -98,6 +98,7 @@ def get_buyable_paths(*args, **kwargs):
         update_result_state(_id, 'completed')
         settings = {'smiles': args[0]}
         settings.update(kwargs)
+        settings['template_prioritizer_version'] = template_prioritizer_version
         save_results(result_doc, settings, _id)
     print('Task completed, returning results.')
 
