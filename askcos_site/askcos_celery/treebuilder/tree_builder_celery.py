@@ -34,6 +34,7 @@ class MCTSCelery(MCTS):
 
         from celery.result import allow_join_result
         self.allow_join_result = allow_join_result
+        self.template_prioritizer_version = None
 
     def reset_workers(self, soft_reset=False):
         # general parameters in celery format
@@ -55,7 +56,6 @@ class MCTSCelery(MCTS):
             kwargs={'max_num_templates': self.template_count,
                     'max_cum_prob': self.max_cum_template_prob,
                     'fast_filter_threshold': self.filter_threshold,
-                    'template_prioritizer': self.template_prioritizer,
                     'template_prioritizer_version': self.template_prioritizer_version,
                     'template_set': self.template_set},
             # queue=self.private_worker_queue, ## CWC TEST: don't reserve
@@ -72,7 +72,6 @@ class MCTSCelery(MCTS):
                 'CCOC(=O)[C@H]1C[C@@H](C(=O)N2[C@@H](c3ccccc3)CC[C@@H]2c2ccccc2)[C@@H](c2ccccc2)N1',
                 1,
                 template_set=self.template_set,
-                template_prioritizer=self.template_prioritizer,
                 template_prioritizer_version=self.template_prioritizer_version
             )
             res.get(20)
