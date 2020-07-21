@@ -29,8 +29,8 @@ class TreeBuilderSerializer(serializers.Serializer):
     min_chempop_products = serializers.IntegerField(required=False)
 
     filter_threshold = serializers.FloatField(default=0.75)
-    template_prioritizer = serializers.CharField(default='reaxys')
     template_set = serializers.CharField(default='reaxys')
+    template_prioritizer_version = serializers.IntegerField(default=0)
     return_first = serializers.BooleanField(default=True)
 
     store_results = serializers.BooleanField(default=False)
@@ -136,8 +136,8 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `min_chempop_reactants` (int, optional): minimum reactant precedents for termination
     - `min_chempop_products` (int, optional): minimum product precedents for termination
     - `filter_threshold` (float, optional): fast filter threshold
-    - `template_prioritizer` (str, optional): template prioritization model to use
     - `template_set` (str, optional): template set to use
+    - `template_prioritizer_version` (str, optional): version number of template relevance model to use
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
@@ -205,7 +205,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             min_chemical_history_dict=min_chemical_history_dict,
             apply_fast_filter=data['filter_threshold'] > 0,
             filter_threshold=data['filter_threshold'],
-            template_prioritizer=data['template_prioritizer'],
+            template_prioritizer_version=data['template_prioritizer_version'],
             template_set=data['template_set'],
             return_first=data['return_first'],
             paths_only=True,

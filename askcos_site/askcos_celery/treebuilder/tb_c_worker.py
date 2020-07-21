@@ -225,12 +225,16 @@ def get_top_precursors(
         return smiles, result
 
 @shared_task
-def template_relevance(smiles, max_num_templates, max_cum_prob, relevance_model='reaxys'):
+def template_relevance(
+    smiles, max_num_templates, max_cum_prob, 
+    template_set='reaxys', template_prioritizer_version=None,
+    ):
     global retroTransformer
-    hostname = 'template-relevance-{}'.format(relevance_model)
+    hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=hostname, model_name='template_relevance'
+        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
     )
+
     scores, indices = template_prioritizer.predict(
         smiles, max_num_templates=max_num_templates, max_cum_prob=max_cum_prob
     )
@@ -250,11 +254,12 @@ def apply_one_template_by_idx(*args, **kwargs):
     """
     global retroTransformer
 
-    template_prioritizer = kwargs.pop('template_prioritizer', 'reaxys')
+    template_set = kwargs.get('template_set', 'reaxys')
+    template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
 
-    hostname = 'template-relevance-{}'.format(template_prioritizer)
+    hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=hostname, model_name='template_relevance'
+        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
     )
 
     fast_filter_hostname = 'fast-filter'
