@@ -7,7 +7,7 @@ var app = new Vue({
     methods: {
         update: function() {
             showLoader();
-            fetch('/api/celery/')
+            fetch('/api/v2/celery/')
             .then(resp => resp.json())
             .then(json => {
                 console.log(json['queues']);
