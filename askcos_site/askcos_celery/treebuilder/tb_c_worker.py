@@ -254,7 +254,7 @@ def apply_one_template_by_idx(*args, **kwargs):
     """
     global retroTransformer
 
-    template_set = kwargs.pop('template_set', 'reaxys')
+    template_set = kwargs.get('template_set', 'reaxys')
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
 
     hostname = 'template-relevance-{}'.format(template_set)
