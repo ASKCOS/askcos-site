@@ -4,12 +4,12 @@
 {% block title %}Synthesis Predictor{% endblock %}
 
 {% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/bootstrap-tourist.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/forward.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
-<script src="{% static 'js/bootstrap-tourist.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/bootstrap-tourist.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/forward.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}?v{{ static_version }}" type="text/css">
+<script src="{% static 'js/bootstrap-tourist.min.js' %}?v{{ static_version }}"></script>
 {% endblock %}
 
 {% block page_title %}
@@ -320,5 +320,5 @@ Synthesis Predictor
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/forward.js' %}"></script>
+<script src="{% static 'js/forward.js' %}?v{{ static_version }}"></script>
 {% endblock %}

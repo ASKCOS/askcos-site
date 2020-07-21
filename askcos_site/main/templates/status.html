@@ -4,7 +4,7 @@
 {% block title %}Server Status{% endblock %}
 
 {% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
 {% endblock %}
 
@@ -46,5 +46,5 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/status.js' %}"></script>
+<script src="{% static 'js/status.js' %}?v{{ static_version }}"></script>
 {% endblock %}
