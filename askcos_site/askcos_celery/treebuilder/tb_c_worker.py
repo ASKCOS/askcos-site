@@ -234,6 +234,7 @@ def template_relevance(
     template_prioritizer = TemplateRelevanceAPIModel(
         hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
     )
+
     scores, indices = template_prioritizer.predict(
         smiles, max_num_templates=max_num_templates, max_cum_prob=max_cum_prob
     )

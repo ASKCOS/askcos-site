@@ -71,7 +71,9 @@ class MCTSCelery(MCTS):
                 1,
                 'CCOC(=O)[C@H]1C[C@@H](C(=O)N2[C@@H](c3ccccc3)CC[C@@H]2c2ccccc2)[C@@H](c2ccccc2)N1',
                 1,
-                template_prioritizer='reaxys'
+                template_set=self.template_set,
+                template_prioritizer=self.template_prioritizer,
+                template_prioritizer_version=self.template_prioritizer_version
             )
             res.get(20)
         except Exception as e:
