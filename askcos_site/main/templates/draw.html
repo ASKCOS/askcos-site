@@ -5,10 +5,10 @@
 {% block page_title %}Drawing{% endblock %}
 
 {% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/drawing.css' %}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/tooltip.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/drawing.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/tooltip.css' %}?v{{ static_version }}" type="text/css">
 {% endblock %}
 
 {% block page_body %}
@@ -72,5 +72,5 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/draw.js' %}"></script>
+<script src="{% static 'js/draw.js' %}?v{{ static_version }}"></script>
 {% endblock %}

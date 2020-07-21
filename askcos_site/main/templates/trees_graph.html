@@ -4,11 +4,11 @@
 {% block title %}Tree Builder Visualization{% endblock %}
 
 {% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/vis.min.css' %}" type="text/css">
-<script src="{% static 'js/vis.min.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/tree-graph.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vis.min.css' %}?v{{ static_version }}" type="text/css">
+<script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
+<link rel="stylesheet" href="{% static 'css/tree-graph.css' %}?v{{ static_version }}" type="text/css">
 {% endblock %}
 
 {% block page_title %}Tree Builder Visualization{% endblock %}
@@ -197,5 +197,5 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/tree-graph.js' %}"></script>
+<script src="{% static 'js/tree-graph.js' %}?v{{ static_version }}"></script>
 {% endblock %}

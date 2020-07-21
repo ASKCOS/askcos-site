@@ -5,9 +5,9 @@
 {% block page_title %}Your banned items{% endblock %}
 
 {% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vue-modal.css' %}?v{{ static_version }}" type="text/css">
 {% endblock %}
 
 {% block page_body %}
@@ -189,5 +189,5 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/banlist.js' %}"></script>
+<script src="{% static 'js/banlist.js' %}?v{{ static_version }}"></script>
 {% endblock %}

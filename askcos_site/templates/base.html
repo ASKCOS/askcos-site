@@ -14,8 +14,8 @@
     <script src="{% static 'js/jquery-3.5.1.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <!-- Our CSS (overrides) -->
-    <link href="{% static 'css/default.css' %}?v3" rel="stylesheet" type="text/css"/>
-    <script src="{% static 'js/default.js' %}"></script>
+    <link href="{% static 'css/default.css' %}?v{{ static_version }}" rel="stylesheet" type="text/css"/>
+    <script src="{% static 'js/default.js' %}?v{{ static_version }}"></script>
     <script src="{% static 'js/dayjs.min.js' %}"></script>
     <!-- Javascript drawing -->
     <script src="{% static 'jsme/jsme/jsme.nocache.js' %}"></script>

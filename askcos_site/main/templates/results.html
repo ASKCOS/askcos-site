@@ -4,7 +4,7 @@
 {% block title %}My Results{% endblock %}
 
 {% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}"></script>
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
 {% endblock %}
 
@@ -63,5 +63,5 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="{% static 'js/results.js' %}"></script>
+<script src="{% static 'js/results.js' %}?v{{ static_version }}"></script>
 {% endblock %}
