@@ -7,19 +7,15 @@
 
 Web application for the prediction of feasible synthetic routes towards a desired compound and associated tasks related to synthesis planning. Originally developed under the DARPA Make-It program and now being developed under the [MLPDS Consortium](http://mlpds.mit.edu).
 
-## 2020.07 Release Notes
+## Release Notes
 
-User notes:
-
-Developer notes:
-
-Bug fixes:
+For 2020.07 and newer release notes, see the [askcos-site releases page](https://gitlab.com/mlpds_mit/ASKCOS/askcos-site/-/releases).
 
 For old release notes, see the [ASKCOS releases page](https://gitlab.com/mlpds_mit/ASKCOS/ASKCOS/-/releases).
 
 ## Getting Started
 
-This package provides a web interface for the [`askcos-core`](https://gitlab.com/mlpds_mit/ASKCOS/askcos-core) Python package. It is built using Django, with newer pages using Vue.js for dynamic content. Celery is also used for asyncronous task processing. We recommend deployment using Docker, for which scripts can be found in the [`askcos-deploy`](https://gitlab.com/mlpds_mit/ASKCOS/askcos-deploy) repository.
+This package provides a web interface for the [`askcos-core`](https://gitlab.com/mlpds_mit/ASKCOS/askcos-core) Python package. It is built using Django, with newer pages using Vue.js for dynamic content. Celery is also used for asyncronous task processing. We recommend deployment using Docker, for which scripts can be found in the [`askcos-deploy`](https://gitlab.com/mlpds_mit/ASKCOS/askcos-deploy) repository. A detailed deployment guide and supplementary blog posts can be found at our [GitLab pages site](https://mlpds_mit.gitlab.io/ASKCOS/askcos-pages/#/).
 
 ### Downloading with GitLab Deploy Tokens
 
