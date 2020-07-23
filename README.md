@@ -19,7 +19,7 @@ This package provides a web interface for the [`askcos-core`](https://gitlab.com
 
 ### Downloading with GitLab Deploy Tokens
 
-This repository can be downloaded using deploy tokens, which provide __read-only__ access to the source code and our container registry in GitLab. The deploy tokens can be found on the [MLPDS Member Resources ASKCOS Versions Page](https://mlpds.mit.edu/member-resources-releases-versions/). The only software prerequisites are git, docker, and docker-compose.
+This repository can be downloaded using deploy tokens, which provide __read-only__ access to the source code and our container registry in GitLab. The deploy tokens can be found on the [MLPDS Member Resources ASKCOS Versions Page](https://mlpds.mit.edu/member-resources-releases-versions/). When deploying with docker, the only software prerequisites are git, docker, and docker-compose.
 
 ```bash
 $ export DEPLOY_TOKEN_USERNAME=
@@ -35,7 +35,7 @@ Before building the `askcos-site` image, you log in to the ASKCOS GitLab registr
 docker login registry.gitlab.com -u $DEPLOY_TOKEN_USERNAME -p $DEPLOY_TOKEN_PASSWORD
 ```
 
-Then, the askcos-site image can be built using the Dockerfile in this repository.
+Then, the `askcos-site` image can be built using the Dockerfile in this repository.
 
 ```bash
 $ cd askcos-site
