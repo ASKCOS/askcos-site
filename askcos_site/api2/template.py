@@ -26,6 +26,15 @@ class TemplateViewSet(ViewSet):
     Returns:
 
     - JSON format Reaxys query
+
+    ----------
+    Query available template sets (`/api/v2/template/sets/`):
+
+    Method: GET
+
+    Returns:
+
+    - `template_sets`: list of available template sets
     """
 
     def list(self, request):

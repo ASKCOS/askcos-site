@@ -51,7 +51,7 @@ class RetroAPIView(CeleryTaskAPIView):
     - `max_cum_prob` (float, optional): maximum cumulative probability of templates
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): reaction template set to use
-    - `template_prioritizer` (str, optional): template prioritization model to use
+    - `template_prioritizer_version` (int, optional): version number of template relevance model to use
     - `cluster` (bool, optional): whether or not to cluster results
     - `cluster_method` (str, optional): method for clustering results
     - `cluster_feature` (str, optional): which feature to use for clustering

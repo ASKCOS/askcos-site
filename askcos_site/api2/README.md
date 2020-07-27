@@ -23,6 +23,7 @@
 - [Template API](#template-api)
     - [Specific template endpoint](#specific-template-endpoint)
     - [Reaxys query export](#reaxys-query-export)
+    - [Template set query](#template-set-query)
 - [Saved Results API](#saved-results-api)
     - [Main results endpoint](#main-results-endpoint)
     - [Specific result endpoint](#specific-result-endpoint)
@@ -40,6 +41,7 @@
     - [Reaction clustering](#reaction-clustering)
     - [Reaction lookup](#reaction-lookup)
     - [SCScorer](#scscorer)
+    - [Template relevance model versions](#template-relevance-model-versions)
 
 ## Celery Task API
 The API endpoints in this section are used to submit various celery tasks to the queue.
@@ -53,7 +55,7 @@ API endpoint for retrieving status and output of a celery task.
 The task id is obtained from submission of any celery task.
 Celery task results are not permanent, and will expire after 30 minutes.
 
-URL: `/api/v2/celery/task/<task id>`
+URL: `/api/v2/celery/task/<task id>/`
 
 Method: GET
 
@@ -70,7 +72,7 @@ Returns:
 ### Atom mapping tool
 API endpoint for generating atom mappings for reactions.
 
-URL: `/api/v2/atom-mapper`
+URL: `/api/v2/atom-mapper/`
 
 Method: POST
 
@@ -86,7 +88,7 @@ Returns:
 ### Reaction context prediction
 API endpoint for context recommendation prediction using neural network model.
 
-URL: `/api/v2/context`
+URL: `/api/v2/context/`
 
 Method: POST
 
@@ -106,7 +108,7 @@ Returns:
 ### Fast filter scorer
 API endpoint for reaction scoring using fast filter model.
 
-URL: `/api/v2/fast-filter`
+URL: `/api/v2/fast-filter/`
 
 Method: POST
 
@@ -122,7 +124,7 @@ Returns:
 ### Forward prediction
 API endpoint for template-free forward prediction task.
 
-URL: `/api/v2/forward`
+URL: `/api/v2/forward/`
 
 Method: POST
 
@@ -141,7 +143,7 @@ Returns:
 ### Impurity prediction
 API endpoint for impurity prediction task.
 
-URL: `/api/v2/impurity`
+URL: `/api/v2/impurity/`
 
 Method: POST
 
@@ -165,7 +167,7 @@ Returns:
 ### Retrosynthetic prediction
 API endpoint for single-step retrosynthesis task.
 
-URL: `/api/v2/retro`
+URL: `/api/v2/retro/`
 
 Method: POST
 
@@ -176,7 +178,7 @@ Parameters:
 - `max_cum_prob` (float, optional): maximum cumulative probability of templates
 - `filter_threshold` (float, optional): fast filter threshold
 - `template_set` (str, optional): reaction template set to use
-- `template_prioritizer` (str, optional): template prioritization model to use
+- `template_prioritizer_version` (int, optional): version number of template relevance model to use
 - `cluster` (bool, optional): whether or not to cluster results
 - `cluster_method` (str, optional): method for clustering results
 - `cluster_feature` (str, optional): which feature to use for clustering
@@ -192,7 +194,7 @@ Returns:
 ### Site selectivity prediction
 API endpoint for site selectivity prediction task.
 
-URL: `/api/v2/selectivity`
+URL: `/api/v2/selectivity/`
 
 Method: POST
 
@@ -208,7 +210,7 @@ Returns:
 ### General selectivity prediction
 API endpoint for general selectivity prediction task.
 
-URL: `/api/v2/gen-selectivity`
+URL: `/api/v2/gen-selectivity/`
 
 Method: POST
 
@@ -224,7 +226,7 @@ Returns:
 ### Retrosynthetic tree builder tool
 API endpoint for tree builder prediction task.
 
-URL: `/api/v2/tree-builder`
+URL: `/api/v2/tree-builder/`
 
 Method: POST
 
@@ -246,8 +248,8 @@ Parameters:
 - `min_chempop_reactants` (int, optional): minimum reactant precedents for termination
 - `min_chempop_products` (int, optional): minimum product precedents for termination
 - `filter_threshold` (float, optional): fast filter threshold
-- `template_prioritizer` (str, optional): template prioritization model to use
 - `template_set` (str, optional): template set to use
+- `template_prioritizer_version` (int, optional): version number of template relevance model to use
 - `return_first` (bool, optional): whether to return upon finding the first pathway
 - `store_results` (bool, optional): whether to permanently save this result
 - `description` (str, optional): description to associate with stored result
@@ -265,7 +267,7 @@ The API endpoints in this section provide various utilities for working with SMI
 ### Canonicalize
 Canonicalize the specified SMILES using RDKit.
 
-URL: `/api/v2/rdkit/smiles/canonicalize`
+URL: `/api/v2/rdkit/smiles/canonicalize/`
 
 Method: POST
 
@@ -281,7 +283,7 @@ Returns:
 ### Validate
 Check the syntax and validity of a SMILES string.
 
-URL: `/api/v2/rdkit/smiles/validate`
+URL: `/api/v2/rdkit/smiles/validate/`
 
 Method: POST
 
@@ -299,7 +301,7 @@ RDKit ref: https://github.com/rdkit/rdkit/issues/2430
 ### Molfile to SMILES
 Convert the provided Molfile to a SMILES string.
 
-URL: `/api/v2/rdkit/smiles/from_molfile`
+URL: `/api/v2/rdkit/smiles/from_molfile/`
 
 Method: POST
 
@@ -315,7 +317,7 @@ Returns:
 ### SMILES to Molfile
 Convert the provided SMILES string to a Molfile.
 
-URL: `/api/v2/rdkit/smiles/to_molfile`
+URL: `/api/v2/rdkit/smiles/to_molfile/`
 
 Method: POST
 
@@ -335,7 +337,7 @@ User authentication is required for any endpoints which modify the database.
 ### Main buyables endpoint
 API endpoint for viewing buyables or creating new buyables.
 
-URL: `/api/v2/buyables`
+URL: `/api/v2/buyables/`
 
 Method: GET
 
@@ -373,7 +375,7 @@ Returns:
 API endpoint for viewing or deleting specific buyable.
 The buyable ID can be obtained from querying the main buyables endpoint.
 
-URL: `/api/v2/buyables/<buyable id>`
+URL: `/api/v2/buyables/<buyable id>/`
 
 Method: GET
 
@@ -393,7 +395,7 @@ Returns:
 ### Upload buyables endpoint
 API endpoint for uploading buyables data.
 
-URL: `/api/v2/buyables/upload`
+URL: `/api/v2/buyables/upload/`
 
 Method: POST
 
@@ -424,7 +426,7 @@ The API endpoints in this section are for accessing retrosynthetic template data
 API endpoint for accessing a particular template entry.
 The template ID is returned from certain tasks, like the one-step retrosynthetic prediction.
 
-URL: `/api/v2/template/<template id>`
+URL: `/api/v2/template/<template id>/`
 
 Method: GET
 
@@ -436,7 +438,7 @@ Returns:
 API endpoint for exporting template reference data as a Reaxys query.
 Note that this only applies for the `reaxys` template set.
 
-URL: `/api/v2/template/<template id>/export`
+URL: `/api/v2/template/<template id>/export/`
 
 Method: GET
 
@@ -444,6 +446,16 @@ Returns:
 
 - JSON format Reaxys query
 
+### Template set query
+API endpoint to query available template sets.
+
+URL: `/api/v2/template/sets/`
+
+Method: GET
+
+Returns:
+
+- `template_sets`: list of available template sets
 
 ## Saved Results API
 The API endpoints in this section are for accessing saved results.
@@ -455,7 +467,7 @@ User authentication is required to access these endpoints.
 ### Main results endpoint
 API endpoint for accessing a user's job results.
 
-URL: `/api/v2/results`
+URL: `/api/v2/results/`
 
 Method: GET
 
@@ -467,7 +479,7 @@ Returns:
 API endpoint for accessing or deleting a particular result.
 The result ID can be obtained from the main results endpoint.
  
-URL: `/api/v2/results/<result id>`
+URL: `/api/v2/results/<result id>/`
 
 Method: GET
 
@@ -488,7 +500,7 @@ Returns:
 API endpoint for checking the status of a particular result.
 The result ID can be obtained from the main results endpoint.
 
-URL: `/api/v2/results/<result id>/check`
+URL: `/api/v2/results/<result id>/check/`
 
 Method: GET
 
@@ -571,7 +583,7 @@ to API endpoints which require authentication.
 ### Request token
 API endpoint for requesting a temporary authentication token.
 
-URL: `/api/v2/token-auth`
+URL: `/api/v2/token-auth/`
 
 Method: POST
 
@@ -586,7 +598,7 @@ Returns:
 ### Refresh token
 API endpoint for obtaining a refreshed token. Useful for extending expiration time.
 
-URL: `/api/v2/token-refresh`
+URL: `/api/v2/token-refresh/`
 
 Method: POST
 
@@ -603,7 +615,7 @@ Returns:
 ### Celery status
 API endpoint for retrieving celery worker status.
 
-URL: `/api/v2/celery`
+URL: `/api/v2/celery/`
 
 Method: GET
 
@@ -621,7 +633,7 @@ Notes:
 - If `input_type` is not specified, will attempt to determine type.
   Specifying `input_type` can provide faster results.
 
-URL: `/api/v2/draw`
+URL: `/api/v2/draw/`
 
 Method: GET, POST
 
@@ -639,7 +651,7 @@ Returns: PNG image of input SMILES
 ### Reaction clustering
 API endpoint for clustering similar transformed outcomes
 
-URL: `/api/v2/cluster`
+URL: `/api/v2/cluster/`
 
 Method: POST
 
@@ -662,7 +674,7 @@ Returns:
 ### Reaction lookup
 API endpoint for reaction lookup task.
 
-URL: `/api/v2/reactions`
+URL: `/api/v2/reactions/`
 
 Method: POST
 
@@ -678,7 +690,7 @@ Returns:
 ### SCScorer
 API endpoint for scscore prediction task.
 
-URL: `/api/v2/scscore`
+URL: `/api/v2/scscore/`
 
 Method: POST
 
@@ -689,3 +701,18 @@ Parameters:
 Returns:
 
 - `output`: synthetic complexity score
+
+### Template relevance model versions
+API endpoint for querying available retrosynthetic models for a given template set.
+
+URL: `/api/v2/retro/models/`
+
+Method: GET
+
+Parameters:
+
+- `template_set` (str): template set name
+
+Returns:
+
+- `versions`: List of version numbers that are available
