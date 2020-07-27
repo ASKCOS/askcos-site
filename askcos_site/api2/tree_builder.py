@@ -137,7 +137,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `min_chempop_products` (int, optional): minimum product precedents for termination
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): template set to use
-    - `template_prioritizer_version` (str, optional): version number of template relevance model to use
+    - `template_prioritizer_version` (int, optional): version number of template relevance model to use
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
