@@ -1,11 +1,6 @@
 {% extends "rest_framework/base.html" %}
 {% load staticfiles %}
 
-{% block bootstrap_theme %}
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
-    <link href="{% static 'css/default.css' %}?v3" rel="stylesheet" type="text/css"/>
-{% endblock %}
-
 {% block bootstrap_navbar_variant %}navbar-inverse navbar-fixed-top{% endblock %}
 
 {% block branding %}

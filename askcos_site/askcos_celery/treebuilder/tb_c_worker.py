@@ -8,22 +8,16 @@ class, is used for prioritization. Each worker pre-loads a
 transformer and grabs templates from the database.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf import settings
+import numpy as np
+import requests
+import rdkit.Chem as Chem
 from celery import shared_task
 from celery.signals import celeryd_init
-from pymongo import MongoClient
-import makeit.global_config as gc
-from makeit.retrosynthetic.transformer import RetroTransformer
-from makeit.utilities.fingerprinting import create_rxn_Morgan2FP_separately
-from rdkit import RDLogger, Chem
+from rdkit import RDLogger
 from rdkit.Chem import AllChem
-import numpy as np
-from bson import ObjectId
 from scipy.special import softmax
-import rdkit.Chem as Chem
-from rdkit.Chem import AllChem
 
+from askcos.utilities.fingerprinting import create_rxn_Morgan2FP_separately
 from ..tfserving import TFServingAPIModel
 
 lg = RDLogger.logger()
@@ -41,12 +35,22 @@ class TemplateRelevanceAPIModel(TFServingAPIModel):
         model_name (str): Name of model provided to tf serving.
         version (int): version of the model to use when serving
     """
-    def transform_input(self, smiles, fp_length=2048, fp_radius=2, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metaurl = self.baseurl+'/metadata'
+        self.fp_length = self.get_input_dim()
+
+    def get_input_dim(self):
+        resp = requests.get(self.metaurl)
+        metadata = resp.json()['metadata']['signature_def']['signature_def']['serving_default']
+        input_dim = int(list(metadata['inputs'].values())[0]['tensor_shape']['dim'][1]['size'])
+        return input_dim
+
+    def transform_input(self, smiles, fp_radius=2, **kwargs):
         """Transforms the input for the API model from a SMILES string to a fingerprint bit vector
 
         Args:
             smiles (str): SMILES string of input molecule
-            fp_length (int): Length of desired fingerprint. Must agree with model input shape
             fp_radius (int): Radius of desired fingerprint. Should agree with parameter sed when model was trained
 
         Returns:
@@ -57,7 +61,7 @@ class TemplateRelevanceAPIModel(TFServingAPIModel):
             return np.zeros((self.fp_length,), dtype=np.float32)
         return np.array(
             AllChem.GetMorganFingerprintAsBitVect(
-                mol, fp_radius, nBits=fp_length, useChirality=True
+                mol, fp_radius, nBits=self.fp_length, useChirality=True
             ), dtype=np.float32
         ).reshape(1, -1).tolist()
     
@@ -138,6 +142,8 @@ def configure_worker(options={}, **kwargs):
         return
     print('### STARTING UP A TREE BUILDER WORKER ###')
 
+    from askcos.retrosynthetic.transformer import RetroTransformer
+
     # Instantiate and load retro transformer
     global retroTransformer
     retroTransformer = RetroTransformer(template_prioritizer=None, fast_filter=None)
@@ -148,8 +154,7 @@ def configure_worker(options={}, **kwargs):
 @shared_task
 def get_top_precursors(
         smiles, precursor_prioritizer=None,
-        template_set='reaxys', template_prioritizer='reaxys',
-        fast_filter=None, max_num_templates=1000,
+        template_set='reaxys', template_prioritizer_version=None, max_num_templates=1000,
         max_cum_prob=1, fast_filter_threshold=0.75,
         cluster=True, cluster_method='kmeans', cluster_feature='original',
         cluster_fp_type='morgan', cluster_fp_length=512, cluster_fp_radius=1,
@@ -159,31 +164,27 @@ def get_top_precursors(
 
     Args:
         smiles (str): SMILES of node to expand.
-        template_prioritizer (str): Keyword for which prioritization method for
-            the templates should be used. Keywords can be found in
-            global_config.
-        precursor_prioritizer (str): Keyword for which prioritization method for
-            the precursors should be used.
-        mincount (int, optional): Minimum template popularity. (default: {0})
-        max_branching (int, optional): Maximum number of precursor sets to
-            return, prioritized using heuristic chemical scoring function.
-            (default: {20})
-        template_count (int, optional): Maximum number of templates to consider.
-            (default: {10000})
-        mode (str, optional): Mode to use for merging list of scores. Used by
-            prioritizers. (default: {gc.max})
+        precursor_prioritizer (optional, callable): Use to override
+            prioritizer created during initialization. This can be
+            any callable function that reorders a list of precursor
+            dictionary objects. (default: {None})
+        template_set (str): Name of template set to be used during prediction. This 
+            determines which documents to use from mongodb. (default: {reaxys})
+        template_prioritizer_version (str): Version number for tensorflow serving API. If
+            None, the latest model is used. (default: {None})
+        max_num_templates (int, optional): Maximum number of templates to consider.
+            (default: {1000})
         max_cum_prob (float, optional): Maximum cumulative probability of
             selected relevant templates. (default: {1})
-        apply_fast_filter (bool, optional): Whether to use the fast filter to
-            filter precursors. (default: {False})
-        filter_threshold (float, optional): Threshold to use for fast filter.
-            (default: {0.8})
+        fast_filter_threshold (float, optional): Threshold to use for fast filter.
+            (default: {0.75})
         cluster (bool, optional): Whether to cluster results. (default: {True}). This is passed along to RetroResult.return_top()
         cluster_method (str, optional): Clustering method to use ['kmeans', 'hdbscan']. (default: {'kmeans'})
         cluster_feature (str, optional): Features to use for clustering ['original', 'outcomes', 'all']. 'Original' means features that disappear from original target. 'Outcomes' means new features that appear in predicted precursor outcomes. 'All' means the logical 'or' of both. (default: {'original'})
         cluster_fp_type (str, optional): Type of fingerprint to use. Curretnly only 'morgan' is supported. (default: {'morgan'})
         cluster_fp_length (int, optional): Fixed-length folding to use for fingerprint generation. (default: {512})
         cluster_fp_radius (int, optional): Radius to use for fingerprint generation. (default: {1})
+        postprocess (bool): Flag for performing post processing.
         selec_check (bool, optional): apply selectivity checking for precursors to find other outcomes. (default: False)
 
     Returns:
@@ -191,20 +192,29 @@ def get_top_precursors(
             precursors found.
     """
 
-    template_relevance_hostname = 'template-relevance-{}'.format(template_prioritizer)
+    template_relevance_hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=template_relevance_hostname, model_name='template_relevance'
+        hostname=template_relevance_hostname, model_name='template_relevance', version=template_prioritizer_version
     )
 
     fast_filter_hostname = 'fast-filter'
     fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter').predict
+
+    cluster_settings = {
+        'cluster_method': cluster_method,
+        'feature': cluster_feature,
+        'fp_type': cluster_fp_type,
+        'fp_length': cluster_fp_length,
+        'fp_radius': cluster_fp_radius,
+    }
 
     global retroTransformer
     result = retroTransformer.get_outcomes(
         smiles, template_set=template_set,
         max_num_templates=max_num_templates, max_cum_prob=max_cum_prob, 
         fast_filter_threshold=fast_filter_threshold, template_prioritizer=template_prioritizer,
-        precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter, selec_check=selec_check,
+        precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter,
+        cluster_precursors=cluster, cluster_settings=cluster_settings, selec_check=selec_check,
     )
     
     if postprocess:
@@ -215,12 +225,16 @@ def get_top_precursors(
         return smiles, result
 
 @shared_task
-def template_relevance(smiles, max_num_templates, max_cum_prob, relevance_model='reaxys'):
+def template_relevance(
+    smiles, max_num_templates, max_cum_prob, 
+    template_set='reaxys', template_prioritizer_version=None,
+    ):
     global retroTransformer
-    hostname = 'template-relevance-{}'.format(relevance_model)
+    hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=hostname, model_name='template_relevance'
+        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
     )
+
     scores, indices = template_prioritizer.predict(
         smiles, max_num_templates=max_num_templates, max_cum_prob=max_cum_prob
     )
@@ -240,11 +254,12 @@ def apply_one_template_by_idx(*args, **kwargs):
     """
     global retroTransformer
 
-    template_prioritizer = kwargs.pop('template_prioritizer', 'reaxys')
+    template_set = kwargs.get('template_set', 'reaxys')
+    template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
 
-    hostname = 'template-relevance-{}'.format(template_prioritizer)
+    hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=hostname, model_name='template_relevance'
+        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
     )
 
     fast_filter_hostname = 'fast-filter'

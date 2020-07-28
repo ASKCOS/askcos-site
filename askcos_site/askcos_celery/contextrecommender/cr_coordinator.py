@@ -1,13 +1,12 @@
-from __future__ import absolute_import, unicode_literals, print_function
 from celery import shared_task
-from celery.signals import celeryd_init
 from celery.result import allow_join_result
-from makeit.synthetic.context.nearestneighbor import NNContextRecommender
-from askcos_site.askcos_celery.contextrecommender.cr_nn_worker import get_n_conditions as neighbor_get_n_conditions
+from celery.signals import celeryd_init
+
+import askcos.global_config as gc
 from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
-import makeit.global_config as gc
+from askcos_site.askcos_celery.contextrecommender.cr_nn_worker import get_n_conditions as neighbor_get_n_conditions
+
 CORRESPONDING_QUEUE = 'cr_coordinator'
-import time
 
 
 @celeryd_init.connect

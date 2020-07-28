@@ -10,34 +10,25 @@ variables:
 before_script:
   - apk add git make
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - docker pull $CI_REGISTRY_IMAGE:dev || true  # pull dev image for build cache
 
 build-dev:  # build dev branch for continuous deployment
   stage: build
   script:
-    - make push VERSION=$(git describe --tags --always) REGISTRY=$CI_REGISTRY_IMAGE TAG=dev DATA_VERSION=dev
+    - make push VERSION=$(git describe --tags --always) REGISTRY=$CI_REGISTRY_IMAGE TAG=dev CORE_VERSION=dev
   only:
     - dev
 
 build-latest:  # build latest version of the master branch
   stage: build
   script:
-    - make push VERSION=$(git describe --tags --abbrev=0) REGISTRY=$CI_REGISTRY_IMAGE TAG=latest DATA_VERSION=latest
+    - make push VERSION=$(git describe --tags --abbrev=0) REGISTRY=$CI_REGISTRY_IMAGE TAG=latest CORE_VERSION=latest
   only:
     - master
 
 build-release:  # build all releases, as determined by tags
   stage: build
   script:
-    - make push VERSION=$CI_COMMIT_TAG REGISTRY=$CI_REGISTRY_IMAGE TAG=$CI_COMMIT_TAG DATA_VERSION=$CI_COMMIT_TAG
+    - make push VERSION=$CI_COMMIT_TAG REGISTRY=$CI_REGISTRY_IMAGE TAG=$CI_COMMIT_TAG CORE_VERSION=$CI_COMMIT_TAG
   only:
     - tags
-
-pages:  # update GitLab pages when pages branch is updated
-  stage: deploy
-  script:
-    - cp -r src public
-  artifacts:
-    paths:
-      - public
-  only:
-    - pages

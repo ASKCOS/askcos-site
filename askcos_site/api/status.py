@@ -1,7 +1,7 @@
-from django.http import JsonResponse
-from askcos_site.celery import app, READABLE_NAMES
 from celery.result import AsyncResult
-from celery.exceptions import TimeoutError
+from django.http import JsonResponse
+
+from askcos_site.celery import app, READABLE_NAMES
 
 
 def celery_status(request):

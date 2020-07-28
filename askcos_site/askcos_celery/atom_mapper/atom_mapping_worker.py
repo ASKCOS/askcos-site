@@ -18,7 +18,7 @@ def configure_worker(options={}, **kwargs):
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A IMPURITY PREDICTOR WORKER ###')
-    from makeit.synthetic.atom_mapper.wln_mapper import WLN_AtomMapper
+    from askcos.synthetic.atom_mapper.wln_mapper import WLN_AtomMapper
     global wln_mapper
     global heuristic_mapper
 

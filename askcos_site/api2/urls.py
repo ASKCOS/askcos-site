@@ -12,8 +12,8 @@ router.register(r'rdkit/smiles', api2.rdkit.SmilesViewSet, basename='smiles_api'
 router.register(r'template', api2.template.TemplateViewSet, basename='template_api')
 router.register(r'results', api2.results.ResultsViewSet, basename='results_api')
 router.register(r'celery/task', api2.celery.CeleryTaskViewSet, basename='celery_task_api')
-router.register(r'blacklist/chemicals', api2.blacklist.BlacklistedChemicalsViewSet, basename='blacklist_chemicals_api')
-router.register(r'blacklist/reactions', api2.blacklist.BlacklistedReactionsViewSet, basename='blacklist_reactions_api')
+router.register(r'banlist/chemicals', api2.banlist.BannedChemicalsViewSet, basename='banlist_chemicals_api')
+router.register(r'banlist/reactions', api2.banlist.BannedReactionsViewSet, basename='banlist_reactions_api')
 
 urlpatterns = router.urls
 
@@ -28,6 +28,7 @@ urlpatterns += [
     path('impurity/', api2.impurity.impurity_predict, name='impurity_api'),
     path('reactions/', api2.reactions.reactions, name='reactions_api'),
     path('retro/', api2.retro.singlestep, name='retro_api'),
+    path('retro/models/', api2.retro.models, name='retro_models_api'),
     path('scscore/', api2.scscore.scscore, name='scscore_api'),
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
     path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),

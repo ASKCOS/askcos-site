@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from makeit.utilities.cluster import group_results
+from askcos.utilities.cluster import group_results
 
 
 class ClusterSerializer(serializers.Serializer):

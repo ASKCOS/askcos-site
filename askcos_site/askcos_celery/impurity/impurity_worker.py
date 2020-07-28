@@ -2,7 +2,7 @@ from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
 
-from makeit.synthetic.impurity.impurity_predictor import ImpurityPredictor
+from askcos.synthetic.impurity.impurity_predictor import ImpurityPredictor
 from ..atom_mapper.atom_mapping_worker import get_atom_mapping
 from ..impurity.impurity_predictor_worker import predict_reaction
 from ..treebuilder.tb_c_worker import fast_filter_check

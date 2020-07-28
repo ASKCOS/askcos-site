@@ -137,23 +137,23 @@ class CeleryStatusAPIView(GenericAPIView):
         for worker in stats:
             name, server = worker.split('@')
             if not status.get(name):
-                status[name] = {'available': 0, 'busy': 0}
+                status[name] = {'total': 0, 'busy': 0}
             status[name]['busy'] += len(active[worker])
-            status[name]['available'] += stats[worker]['pool']['max-concurrency'] - status[name]['busy']
+            status[name]['total'] += stats[worker]['pool']['max-concurrency']
 
         status_list = []
-        for key in status:
+        for key, value in status.items():
             status_list.append({
                 'name': READABLE_NAMES.get(key, key),
                 'queue': key,
-                'busy': status[key]['busy'],
-                'available': status[key]['available']
+                'busy': value['busy'],
+                'available': max(value['total'] - value['busy'], 0)
             })
 
-        for key, val in READABLE_NAMES.items():
+        for key, value in READABLE_NAMES.items():
             if key not in status:
                 status_list.append({
-                    'name': READABLE_NAMES.get(key),
+                    'name': value,
                     'queue': key,
                     'busy': 0,
                     'available': 0

@@ -1,13 +1,7 @@
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf import settings
 from celery import shared_task
 from celery.signals import celeryd_init
-from pymongo import MongoClient
-from celery.result import allow_join_result
-from celery.exceptions import Terminated
-import time
 from rdkit import RDLogger
-from makeit.synthetic.evaluation.evaluator import Evaluator
+
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
@@ -21,6 +15,8 @@ def configure_coordinator(options={}, **kwargs):
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A SCORING COORDINATOR ###')
+
+    from askcos.synthetic.evaluation.evaluator import Evaluator
 
     global evaluator
 

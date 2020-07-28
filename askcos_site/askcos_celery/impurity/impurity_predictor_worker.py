@@ -18,7 +18,7 @@ def configure_worker(options={}, **kwargs):
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A IMPURITY PREDICTOR WORKER ###')
-    from makeit.synthetic.evaluation.template_free import TemplateFreeNeuralNetScorer
+    from askcos.synthetic.evaluation.template_free import TemplateFreeNeuralNetScorer
     global WLN_predictor
     global transformer_predictor
 

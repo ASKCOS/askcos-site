@@ -1,13 +1,3 @@
-function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "block";
-}
-
-function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "none";
-}
-
 var app = new Vue({
     el: '#app',
     data: {queues: []},
@@ -17,7 +7,7 @@ var app = new Vue({
     methods: {
         update: function() {
             showLoader();
-            fetch('/api/celery/')
+            fetch('/api/v2/celery/')
             .then(resp => resp.json())
             .then(json => {
                 console.log(json['queues']);

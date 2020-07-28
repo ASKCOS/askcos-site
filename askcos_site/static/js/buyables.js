@@ -1,33 +1,3 @@
-function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "block";
-}
-
-function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "none";
-}
-
-function getCookie(cname) {
-    var name = cname + "=";
-    var cookie_str = document.cookie;
-    if (cookie_str && cookie_str != '') {
-        var cookie_splitted = cookie_str.split(';');
-        for(var i = 0; i <cookie_splitted.length; i++) {
-            var c = cookie_splitted[i].trim();
-            if (c.indexOf(name) == 0) {
-                return decodeURIComponent(c.substring(name.length, c.length));
-            }
-        }
-    }
-  return undefined;
-}
-
-
-Vue.component('modal', {
-    template: '#modal-template'
-})
-
 var app = new Vue({
     el: '#app',
     data: {

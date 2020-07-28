@@ -1,9 +1,11 @@
-import json
-from rdkit import Chem
 from collections import defaultdict
-from django.http import JsonResponse
+
 from celery.exceptions import TimeoutError
+from django.http import JsonResponse
+from rdkit import Chem
+
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+
 
 def tree_builder(request):
     resp = {}
@@ -43,8 +45,8 @@ def tree_builder(request):
     hashed_historian = request.GET.get('hashed_historian') in ['True', 'true']
     return_first = request.GET.get('return_first', 'True') in ['True', 'true']
     
-    blacklisted_reactions = request.GET.get('blacklisted_reactions', '')
-    blacklisted_reactions = blacklisted_reactions.split(';')
+    banned_reactions = request.GET.get('banned_reactions', '')
+    banned_reactions = banned_reactions.split(';')
     forbidden_molecules = request.GET.get('forbidden_molecules', '')
     forbidden_molecules = forbidden_molecules.split(';')
     
@@ -67,7 +69,7 @@ def tree_builder(request):
     
     res = get_buyable_paths_mcts.delay(smiles, max_branching=max_branching, max_depth=max_depth,
                                   max_ppg=max_ppg, expansion_time=expansion_time, max_trees=500,
-                                  known_bad_reactions=blacklisted_reactions,
+                                  known_bad_reactions=banned_reactions,
                                   forbidden_molecules=forbidden_molecules,
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,

@@ -29,15 +29,15 @@ class TreeBuilderSerializer(serializers.Serializer):
     min_chempop_products = serializers.IntegerField(required=False)
 
     filter_threshold = serializers.FloatField(default=0.75)
-    template_prioritizer = serializers.CharField(default='reaxys')
     template_set = serializers.CharField(default='reaxys')
+    template_prioritizer_version = serializers.IntegerField(default=0)
     return_first = serializers.BooleanField(default=True)
 
     store_results = serializers.BooleanField(default=False)
     description = serializers.CharField(default='')
 
-    blacklisted_reactions = serializers.ListField(child=serializers.CharField(), required=False)
-    blacklisted_chemicals = serializers.ListField(child=serializers.CharField(), required=False)
+    banned_reactions = serializers.ListField(child=serializers.CharField(), required=False)
+    banned_chemicals = serializers.ListField(child=serializers.CharField(), required=False)
 
     def validate_smiles(self, value):
         """Verify that the requested smiles is valid. Returns canonicalized SMILES."""
@@ -58,7 +58,7 @@ class TreeBuilderSerializer(serializers.Serializer):
             raise serializers.ValidationError("Logic should be one of ['none', 'and', 'or'].")
         return value
 
-    def validate_blacklisted_chemicals(self, value):
+    def validate_banned_chemicals(self, value):
         """
         Verify that the provided SMILES is valid. Returns canonicalized SMILES.
         """
@@ -70,7 +70,7 @@ class TreeBuilderSerializer(serializers.Serializer):
             new_value.append(Chem.MolToSmiles(mol, isomericSmiles=True))
         return new_value
 
-    def validate_blacklisted_reactions(self, value):
+    def validate_banned_reactions(self, value):
         """
         Verify that the provided SMILES is valid. Returns canonicalized SMILES.
         """
@@ -136,13 +136,13 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `min_chempop_reactants` (int, optional): minimum reactant precedents for termination
     - `min_chempop_products` (int, optional): minimum product precedents for termination
     - `filter_threshold` (float, optional): fast filter threshold
-    - `template_prioritizer` (str, optional): template prioritization model to use
     - `template_set` (str, optional): template set to use
+    - `template_prioritizer_version` (int, optional): version number of template relevance model to use
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
-    - `blacklisted_reactions` (list, optional): list of reactions to not consider
-    - `blacklisted_chemicals` (list, optional): list of molecules to not consider
+    - `banned_reactions` (list, optional): list of reactions to not consider
+    - `banned_chemicals` (list, optional): list of molecules to not consider
 
     Returns:
 
@@ -181,13 +181,13 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         else:
             min_chemical_history_dict = None
 
-        # Retrieve user specific blacklists
-        blacklisted_reactions = data.get('blacklisted_reactions', [])
-        blacklisted_chemicals = data.get('blacklisted_chemicals', [])
+        # Retrieve user specific banlists
+        banned_reactions = data.get('banned_reactions', [])
+        banned_chemicals = data.get('banned_chemicals', [])
         if request.user.is_authenticated:
-            blacklisted_reactions += list(set(
+            banned_reactions += list(set(
                 [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
-            blacklisted_chemicals += list(set(
+            banned_chemicals += list(set(
                 [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
 
         result = get_buyable_paths_mcts.delay(
@@ -197,15 +197,15 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             expansion_time=data['expansion_time'],
             max_trees=500,
             max_ppg=data['max_ppg'],
-            known_bad_reactions=blacklisted_reactions,
-            forbidden_molecules=blacklisted_chemicals,
+            known_bad_reactions=banned_reactions,
+            forbidden_molecules=banned_chemicals,
             template_count=data['template_count'],
             max_cum_template_prob=data['max_cum_prob'],
             max_natom_dict=max_natom_dict,
             min_chemical_history_dict=min_chemical_history_dict,
             apply_fast_filter=data['filter_threshold'] > 0,
             filter_threshold=data['filter_threshold'],
-            template_prioritizer=data['template_prioritizer'],
+            template_prioritizer_version=data['template_prioritizer_version'],
             template_set=data['template_set'],
             return_first=data['return_first'],
             paths_only=True,

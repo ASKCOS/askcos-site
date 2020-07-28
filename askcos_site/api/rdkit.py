@@ -1,6 +1,8 @@
 import json
-from rdkit import Chem
+
 from django.http import JsonResponse
+from rdkit import Chem
+
 
 def canonicalize(request):
     resp = {}

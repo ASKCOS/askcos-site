@@ -5,12 +5,8 @@ load a pre-trained neural network model. For each request, this worker
 must query the database to get details about the instance.
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
-from django.conf import settings
 from celery import shared_task
 from celery.signals import celeryd_init
-from makeit.synthetic.context.neuralnetwork import NeuralNetContextRecommender
-import makeit.global_config as gc
 
 CORRESPONDING_QUEUE = 'cr_network_worker'
 
@@ -29,6 +25,8 @@ def configure_worker(options={}, **kwargs):
     from rdkit import RDLogger
     lg = RDLogger.logger()
     lg.setLevel(RDLogger.CRITICAL)
+
+    from askcos.synthetic.context.neuralnetwork import NeuralNetContextRecommender
     try:
         recommender = NeuralNetContextRecommender()
         recommender.load()

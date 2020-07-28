@@ -1,22 +1,3 @@
-function getCookie(cname) {
-    var name = cname + "=";
-    var cookie_str = document.cookie;
-    if (cookie_str && cookie_str !== '') {
-        var cookie_parts = cookie_str.split(';');
-        for ( var i = 0; i <cookie_parts.length; i++ ) {
-            var c = cookie_parts[i].trim();
-            if (c.indexOf(name) === 0) {
-                return decodeURIComponent(c.substring(name.length, c.length));
-            }
-        }
-    }
-    return undefined;
-}
-
-Vue.component('modal', {
-    template: '#modal-template'
-});
-
 var app = new Vue({
     el: "#app",
     data: {
@@ -68,7 +49,7 @@ var app = new Vue({
             this.loadCollection('reactions')
         },
         loadCollection: function (category) {
-            fetch(`/api/v2/blacklist/${category}/`)
+            fetch(`/api/v2/banlist/${category}/`)
             .then(resp => resp.json())
             .then(json => {
                 json.forEach(function (doc) {
@@ -87,7 +68,7 @@ var app = new Vue({
                 description: this.newDesc || 'no description',
                 active: this.newActive,
             };
-            fetch(`/api/v2/blacklist/${this.newType}/`, {
+            fetch(`/api/v2/banlist/${this.newType}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -122,7 +103,7 @@ var app = new Vue({
         },
         deleteEntry: function (id, category) {
             if (window.confirm('Click "OK" to confirm deleting this entry')) {
-                fetch(`/api/v2/blacklist/${category}/${encodeURIComponent(id)}`, {
+                fetch(`/api/v2/banlist/${category}/${encodeURIComponent(id)}`, {
                     method: 'delete',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
@@ -159,7 +140,7 @@ var app = new Vue({
             this.toggleActivation(id, 'reactions', 'deactivate')
         },
         toggleActivation: function (id, category, action) {
-            fetch(`/api/v2/blacklist/${category}/${encodeURIComponent(id)}/${action}/`)
+            fetch(`/api/v2/banlist/${category}/${encodeURIComponent(id)}/${action}/`)
             .then(resp => resp.json())
             .then(json => {
                 if (json['success']) {

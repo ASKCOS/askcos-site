@@ -3,6 +3,21 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+function updateObj(dest, src) {
+    // take properties of src and overwrite matching properties of dest
+    // ignores properties in src if they do not exist in dest
+    // modifies dest object in place
+    for (let p in src) {
+        if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
+            if ( typeof dest[p] === 'object' ) {
+                updateObj(dest[p], src[p])
+            } else {
+                dest[p] = src[p];
+            }
+        }
+    }
+}
+
 function num2str(n, len) {
     if (len == undefined) {
         return n == undefined || isNaN(n) ? 'N/A' : n.toString();
@@ -28,65 +43,6 @@ function subSet(s, otherSet) {
         return true;
     }
 };
-
-function storageAvailable(type) {
-    var storage;
-    try {
-        storage = window[type];
-        var x = '__storage_test__';
-        storage.setItem(x, x);
-        storage.removeItem(x);
-        return true;
-    }
-    catch(e) {
-        return e instanceof DOMException && (
-            // everything except Firefox
-            e.code === 22 ||
-            // Firefox
-            e.code === 1014 ||
-            // test name field too, because code might not be present
-            // everything except Firefox
-            e.name === 'QuotaExceededError' ||
-            // Firefox
-            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-            // acknowledge QuotaExceededError only if there's something already stored
-            (storage && storage.length !== 0);
-    }
-}
-
-function getCookie(cname) {
-    var name = cname + "=";
-    var cookie_str = document.cookie;
-    if (cookie_str && cookie_str != '') {
-        var cookie_splitted = cookie_str.split(';');
-        for(var i = 0; i <cookie_splitted.length; i++) {
-            var c = cookie_splitted[i].trim();
-            if (c.indexOf(name) == 0) {
-                return decodeURIComponent(c.substring(name.length, c.length));
-            }
-        }
-    }
-  return undefined;
-}
-
-function copyToClipboard(text) {
-    var dummy = document.createElement("textarea");
-    document.body.appendChild(dummy);
-    dummy.value = text;
-    dummy.select();
-    document.execCommand("copy");
-    document.body.removeChild(dummy);
-}
-
-function showLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "block";
-}
-
-function hideLoader() {
-    var loader = document.getElementsByClassName("loader")[0];
-    loader.style.display = "none";
-}
 
 function ctaToNode(cta, id) {
     if (cta.is_reaction) {
@@ -157,10 +113,13 @@ function addReaction(reaction, sourceNode, nodes, edges) {
         node['outcomes'] = reaction['outcomes'].split('.')
         node['selectivity'] = new Array(node.outcomes.length)
         node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
-        node['borderWidth'] = 3
-        node['color'] = { border: '#ff0000' }
+        node['borderWidth'] = 2
+        node['color'] = { border: '#ff4444' }
         node['title'] = "Selectivity warning! Select this node to see more details"
-
+    } else if ('selec_error' in reaction) {
+        node['selec_error'] = reaction['selec_error']
+        node['borderWidth'] = 2
+        node['color'] = { border: '#ffbb00' }
     }
 
     nodes.add(node)
@@ -326,14 +285,6 @@ function clusteredit_dragleave_handler(event) {
     event.target.classList.remove('dragover');
 }
 
-Vue.component('modal', {
-    template: '#modal-template'
-})
-
-Vue.component('settings-modal', {
-    template: '#modal-template-settings'
-})
-
 const tbSettingsDefault = {
     quick: "normal",
     maxDepth: 5,
@@ -349,8 +300,8 @@ const tbSettingsDefault = {
     chemicalPopularityReactants: 0,
     chemicalPopularityProducts: 0,
     returnFirst: false,
-    templatePrioritization: "reaxys",
     templateSet: "reaxys",
+    templateSetVersion: 1,
     precursorScoring: "RelevanceHeuristic",
     numTemplates: 1000,
     maxCumProb: 0.999,
@@ -401,7 +352,7 @@ const visjsOptionsDefault = {
         speed: {x: 10, y: 10, zoom: 0.02},
         bindToWindow: true
         },
-        multiselect: false,
+        multiselect: true,
         navigationButtons: false,
         selectable: true,
         selectConnectedEdges: true,
@@ -433,6 +384,31 @@ const visjsOptionsDefault = {
     }
 };
 
+function getVisjsUserOptions(obj) {
+    // extract user adjustable options from the full visjs options object
+    return {
+        nodes: {
+            mass: obj.nodes.mass,
+            size: obj.nodes.size,
+            font: {
+                size: obj.nodes.font.size,
+            },
+        },
+        layout: {
+            hierarchical: {
+                enabled: obj.layout.hierarchical.enabled,
+                levelSeparation: obj.layout.hierarchical.levelSeparation,
+                direction: obj.layout.hierarchical.direction,
+            }
+        },
+        physics: {
+            barnesHut: {
+                springConstant: obj.physics.barnesHut.springConstant,
+            }
+        }
+    }
+}
+
 const ippSettingsDefault = {
     allowCluster: true,
     allowResolve: false,
@@ -463,7 +439,7 @@ var app = new Vue({
             edges: {}
         },
         results: {},
-        templateSets: [],
+        templateSets: {},
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
@@ -545,6 +521,7 @@ var app = new Vue({
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
+        this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
         this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
     },
     created: function() {
@@ -570,10 +547,19 @@ var app = new Vue({
         if (loadTreeBuilder) {
             this.loadFromTreeBuilder(loadTreeBuilder, numTrees)
         }
-        fetch('/api/template-sets/')
+        fetch('/api/v2/template/sets/')
             .then(resp => resp.json())
             .then(json => {
-                this.templateSets = json.template_sets
+                for (templateSet of json.template_sets) {
+                    this.templateSets[templateSet] = { versions: [] }
+                    fetch('/api/v2/retro/models/?template_set='+templateSet)
+                        .then(resp => resp.json())
+                        .then(json => {
+                            if (json.versions) {
+                                this.templateSets[json.request.template_set] = json.versions.map(x => Number(x))    
+                            }
+                        })
+                }
             })
     },
     destroyed: function() {
@@ -598,7 +584,7 @@ var app = new Vue({
         },
         saveNetworkOptions() {
             if (!storageAvailable('localStorage')) return
-            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(this.networkOptions)))
+            localStorage.setItem('visjsOptions', encodeURIComponent(JSON.stringify(getVisjsUserOptions(this.networkOptions))))
         },
         saveTarget() {
             if (!storageAvailable('localStorage')) return
@@ -622,32 +608,32 @@ var app = new Vue({
         },
         loadNetworkOptions() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('visjsOptions')
+            const settings = localStorage.getItem('visjsOptions')
             if (!settings) return
-            obj = JSON.parse(decodeURIComponent(settings))
-            this.$set(this, 'networkOptions', obj)
+            const obj = JSON.parse(decodeURIComponent(settings))
+            const userOptions = getVisjsUserOptions(this.networkOptions)
+            updateObj(userOptions, obj)
+            updateObj(this.networkOptions, userOptions)
         },
         loadTarget() {
             if (!storageAvailable('localStorage')) return
-            target = localStorage.getItem('target')
+            const target = localStorage.getItem('target')
             if (!target) return
             this.target = target
         },
         loadTbSettings() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('tbSettings')
+            const settings = localStorage.getItem('tbSettings')
             if (!settings) return
-            obj = JSON.parse(decodeURIComponent(settings))
-            this.$set(this.tb, 'settings', obj)
+            const obj = JSON.parse(decodeURIComponent(settings))
+            updateObj(this.tb.settings, obj)
         },
         loadIppSettings() {
             if (!storageAvailable('localStorage')) return
-            settings = localStorage.getItem('ippSettings')
+            const settings = localStorage.getItem('ippSettings')
             if (!settings) return
             const obj = JSON.parse(decodeURIComponent(settings))
-            for (let key in obj) {
-                this.$set(this, key, obj[key])
-            }
+            updateObj(this, obj)
         },
         handleResize: function() {
             this.window.width = window.innerWidth;
@@ -718,7 +704,7 @@ var app = new Vue({
                 description: description,
                 smiles: this.target,
                 template_set: this.tb.settings.templateSet,
-                template_prioritizer: this.tb.settings.templateSet,
+                template_prioritizer_version: this.tb.settings.templateSetVersion,
                 max_depth: this.tb.settings.maxDepth,
                 max_branching: this.tb.settings.maxBranching,
                 expansion_time: this.tb.settings.expansionTime,
@@ -823,6 +809,14 @@ var app = new Vue({
                         setTimeout(() => this.pollForTbResult(), 1000)
                     }
                 })
+                .catch(error => {
+                    if (error instanceof TypeError) {
+                        console.log('Unable to fetch tree builder results due to connection error. Will keep trying.')
+                        setTimeout(() => this.pollForTbResult(), 2000)
+                    } else {
+                        console.error('There was a problem fetching results:', error);
+                    }
+                });
         },
         requestRetro: function(smiles, callback) {
             showLoader()
@@ -830,7 +824,7 @@ var app = new Vue({
             const body = {
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
-                template_prioritizer: this.tb.settings.templateSet,
+                template_prioritizer_version: this.tb.settings.templateSetVersion,
                 precursor_prioritization: this.tb.settings.precursorScoring,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
@@ -840,7 +834,7 @@ var app = new Vue({
                 cluster_fp_type: this.clusterOptions.fingerprint,
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
-                allow_selec: this.tb.settings.allowSelec,
+                selec_check: this.tb.settings.allowSelec,
             };
             fetch(url,{
                 method: 'POST',
@@ -881,9 +875,17 @@ var app = new Vue({
                     setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 1000)
                 }
             })
+            .catch(error => {
+                if (error instanceof TypeError) {
+                    console.log('Unable to fetch celery results due to connection error. Will keep trying.')
+                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 2000)
+                } else {
+                    console.error('There was a problem fetching results:', error);
+                }
+            });
         },
         resolveChemName: function(name) {
-            if (this.allowResolve) {
+            if (this.enableResolve && this.allowResolve) {
                 var url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
                 console.log(url)
                 var text = fetch(url)
@@ -1066,67 +1068,52 @@ var app = new Vue({
             }
         },
         deleteChoice: function() {
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='chemical') {
-                    let res = confirm('This will delete all children nodes of the currently selected node. Continue?')
-                    if (res) {
-                        this.deleteChildren()
-                    }
-                }
-                else {
-                    let res = confirm('This will delete the currently selected node and all children node. Continue?')
-                    if (res) {
-                        this.deleteNode()
-                    }
-                }
-            }
-        },
-        deleteNode: function() {
-            if (this.isModalOpen() || typeof(this.network) == "undefined") {
+            // for all selected nodes, delete reaction nodes and delete children of chemical nodes
+            let res = confirm('This will delete all selected reaction nodes and all children of the selected chemical nodes. Continue?')
+            if (!res) {
                 return
             }
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='chemical') {
-                    alert('We do not allow deleting chemical nodes! It will leave its parent reaction node missing information! Only delete reaction nodes with this button.')
-                    continue
+            let selected = this.network.getSelectedNodes();
+            for (let n in selected) {
+                const nodeId = selected[n];
+                const node = this.data.nodes.get(nodeId);
+                if (node === null) {
+                    // the node does not exist, it may have already been deleted
+                    return
                 }
-                var node = this.data.nodes.get(nodeId);
-                var parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
-                var parentNode = this.data.nodes.get(parentNodeId);
-                for (result of this.results[parentNode.smiles]) {
-                    if (result.rank == node.rank) {
-                        result.inViz = false;
-                        break;
-                    }
+                if (node.type === 'chemical') {
+                    this.deleteChildren(node)
+                } else {
+                    this.deleteNode(node)
                 }
-                removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-                this.data.nodes.remove(nodeId);
             }
-            cleanUpEdges(this.data.nodes, this.data.edges);
         },
-        deleteChildren: function() {
-            var selected = this.network.getSelectedNodes();
-            for (n in selected) {
-                var nodeId = selected[n];
-                if (this.data.nodes.get(nodeId).type=='reaction') {
-                    alert('We do not allow deleting children of reaction nodes! It will leave the reaction node missing information! Only delete children of chemical nodes with this button.')
-                    continue
-                }
-                var node = this.data.nodes.get(nodeId);
-                for (result of this.results[node.smiles]) {
+        deleteNode: function(node) {
+            // delete the specified node and its children from the graph
+            const nodeId = node.id
+            const parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
+            const parentNode = this.data.nodes.get(parentNodeId);
+            for (result of this.results[parentNode.smiles]) {
+                if (result.rank === node.rank) {
                     result.inViz = false;
+                    break;
                 }
-                removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
             }
+            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
+            this.data.nodes.remove(nodeId);
             cleanUpEdges(this.data.nodes, this.data.edges);
-            var oldSelected = this.selected;
+            this.selected = null;
+        },
+        deleteChildren: function(node) {
+            // delete the children for the specified node from the graph
+            const nodeId = node.id
+            for (result of this.results[node.smiles]) {
+                result.inViz = false;
+            }
+            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
+            cleanUpEdges(this.data.nodes, this.data.edges);
             this.selected = null;
             this.network.unselectAll();
-//             this.selected = oldSelected;
         },
         toggleResolver: function() {
             if (this.allowResolve) {
@@ -1192,12 +1179,15 @@ var app = new Vue({
             }})(file);
             reader.readAsText(file)
         },
-        clear: function() {
-            this.target = '';
-            this.data.nodes.remove(this.data.nodes.getIds());
-            this.data.edges.remove(this.data.edges.getIds());
-            this.selected = null;
-            document.querySelector('#hierarchical-button').innerHTML = 'G';
+        clear: function(skipConfirm = false) {
+            if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
+                this.target = '';
+                this.selected = null;
+                if (this.network) {
+                    this.data.nodes.remove(this.data.nodes.getIds());
+                    this.data.edges.remove(this.data.edges.getIds());
+                }
+            }
         },
         clearSelection: function() {
             this.selected = null;
@@ -1586,6 +1576,7 @@ var app = new Vue({
                     this.addNewPrecursorModal['newprecursorsmiles'],
                     gid);
                 this.$forceUpdate();
+                this.closeAddNewPrecursorModal();
             }
         },
         getMolDrawEndPoint: function(precursor, isHighlight, isTransparent) {
@@ -1644,14 +1635,10 @@ var app = new Vue({
             return res;
         },
         startTour: function() {
-            if (this.network) {
-                if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?'))
-                {
-                    this.clear();
-                }
+            if (confirm('Starting the tutorial will clear all of your current results. Continue anyway?')) {
+                this.clear(true);
+                tour.restart();
             }
-            tour.init();
-            tour.restart();
         },
         initClusterShowCard: function(selected) {
             // always sort first
@@ -1956,6 +1943,9 @@ var app = new Vue({
             this.target = smiles
             this.canonicalize(smiles, drawBoxId)
         },
+        resetTemplateSetVersion(event) {
+            this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
+        }
 
     },
     computed: {
@@ -1996,11 +1986,12 @@ var app = new Vue({
 });
 
 var tour = new Tour({
+    framework: 'bootstrap4',
     storage: false,
     steps: [
         {
             title: "A guided tour through retrosynthesis",
-            content: "Welcome to this guided tour through retrosynthesis planning using our interactive path planning tool. This will demonstrate the purpose of the tool and explain the user interface using a real example. Thanks to <a href='http://bootstraptour.com/' target='_blank'>bootstrap-tour</a> for the great guided tour JavaScript package making it very easy to provide this tour to you!",
+            content: "Welcome to this guided tour through retrosynthesis planning using our interactive path planning tool. This will demonstrate the purpose of the tool and explain the user interface using a real example. Thanks to <a href='https://github.com/IGreatlyDislikeJavascript/bootstrap-tourist' target='_blank'>bootstrap-tourist</a> for the great guided tour JavaScript package making it very easy to provide this tour to you!",
             orphan: true,
             backdropContainer: '#body'
         },

@@ -1,5 +1,8 @@
+import requests
 from rdkit import Chem
 from rest_framework import serializers
+from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
 
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from .celery import CeleryTaskAPIView
@@ -12,7 +15,7 @@ class RetroSerializer(serializers.Serializer):
     max_cum_prob = serializers.FloatField(min_value=0.0, max_value=1.0, default=0.995)
     filter_threshold = serializers.FloatField(default=0.75)
     template_set = serializers.CharField(default='reaxys')
-    template_prioritizer = serializers.CharField(default='reaxys')
+    template_prioritizer_version = serializers.IntegerField(default=0)
 
     cluster = serializers.BooleanField(default=True)
     cluster_method = serializers.CharField(default='kmeans')
@@ -23,23 +26,16 @@ class RetroSerializer(serializers.Serializer):
 
     selec_check = serializers.BooleanField(default=True)
 
-    def validate_template_set(self, value):
-        """Verify that the requested template set is valid."""
-        if value not in ['reaxys', 'uspto_50k']:
-            raise serializers.ValidationError('Template set {} not available.'.format(value))
-        return value
-
-    def validate_template_prioritizer(self, value):
-        """Verify that the requested template prioritizer is valid."""
-        if value not in ['reaxys', 'uspto_50k']:
-            raise serializers.ValidationError('Template prioritizer {} not available.'.format(value))
-        return value
-
     def validate_target(self, value):
         """Verify that the requested target is valid."""
         if not Chem.MolFromSmiles(value):
             raise serializers.ValidationError('Cannot parse target smiles with rdkit.')
         return value
+
+
+class TFXRetroModelsSerializer(serializers.Serializer):
+    """Serializer for available retro models parameters."""
+    template_set = serializers.CharField()
 
 
 class RetroAPIView(CeleryTaskAPIView):
@@ -55,7 +51,7 @@ class RetroAPIView(CeleryTaskAPIView):
     - `max_cum_prob` (float, optional): maximum cumulative probability of templates
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): reaction template set to use
-    - `template_prioritizer` (str, optional): template prioritization model to use
+    - `template_prioritizer_version` (int, optional): version number of template relevance model to use
     - `cluster` (bool, optional): whether or not to cluster results
     - `cluster_method` (str, optional): method for clustering results
     - `cluster_feature` (str, optional): which feature to use for clustering
@@ -80,7 +76,7 @@ class RetroAPIView(CeleryTaskAPIView):
         max_cum_prob = data['max_cum_prob']
         fast_filter_threshold = data['filter_threshold']
         template_set = data['template_set']
-        template_prioritizer = data['template_prioritizer']
+        template_prioritizer_version = data['template_prioritizer_version']
 
         cluster = data['cluster']
         cluster_method = data['cluster_method']
@@ -94,7 +90,7 @@ class RetroAPIView(CeleryTaskAPIView):
         result = get_top_precursors.delay(
             target,
             template_set=template_set,
-            template_prioritizer=template_prioritizer,
+            template_prioritizer_version=template_prioritizer_version,
             fast_filter_threshold=fast_filter_threshold,
             max_cum_prob=max_cum_prob,
             max_num_templates=max_num_templates,
@@ -111,4 +107,56 @@ class RetroAPIView(CeleryTaskAPIView):
         return result
 
 
+class TFXRetroModels(GenericAPIView):
+    """
+    API endpoint for querying available retrosynthetic models for a given template set.
+
+    Method: GET
+
+    Parameters:
+
+    - `template_set` (str): template set name
+
+    Returns:
+
+    - `versions`: List of version numbers that are available
+    """
+
+    serializer_class = TFXRetroModelsSerializer
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for retro models endpoint.
+        """
+        serializer = self.get_serializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        url = 'http://template-relevance-{}:8501/v1/models/template_relevance'.format(data['template_set'])
+        try:
+            api_resp = requests.get(url)
+        except requests.exceptions.ConnectionError:
+            resp = {'request': data, 'error': 'tensorflow serving model(s) not available for {}'.format(data['template_set'])}
+            return Response(resp)
+
+        model_version_status = api_resp.json().get('model_version_status')
+        if not model_version_status:
+            resp = {'request': data, 'error': 'tensorflow serving model(s) not available for {}'.format(data['template_set'])}
+            return Response(resp)
+
+        versions = sorted([
+            model.get('version')
+            for model in model_version_status
+            if model.get('state') == 'AVAILABLE'
+        ])
+
+        resp = {
+            'request': data,
+            'versions': versions
+        }
+
+        return Response(resp)
+
+
+models = TFXRetroModels.as_view()
 singlestep = RetroAPIView.as_view()

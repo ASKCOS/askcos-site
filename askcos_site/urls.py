@@ -38,14 +38,11 @@ urlpatterns = [
     re_path(r'^retro/target=(?P<smiles>.+)$', views.retro_target, name='retro_target'),
 
     # Interactive retrosynthesis
-    re_path(r'^retro_interactive/$', views.retro_interactive, name='retro_interactive'),
-    re_path(r'^retro_interactive/target=(?P<target>.+)$', views.retro_interactive, name='retro_interactive_target'),
     re_path(r'^retro_interactive_mcts/$', views.retro_interactive_mcts, name='retro_interactive_mcts'),
     re_path(r'^retro_interactive_mcts/target=(?P<target>.+)$', views.retro_interactive_mcts, name='retro_interactive_mcts_target'),
     re_path(r'^ajax/smiles_to_image/$', views.ajax_smiles_to_image, name='ajax_smiles_to_image'),
     re_path(r'^ajax/rxn_to_image/$', views.ajax_rxn_to_image, name='ajax_rxn_to_image'),
     re_path(r'^ajax/start_retro_mcts_celery/$', views.ajax_start_retro_mcts_celery, name='ajax_start_retro_mcts_celery'),
-    re_path(r'^retro_interactive/export/(?P<_id>.+)$', views.export_retro_results, name='export_retro_results'),
 
     # Interactive forward prediction
     re_path(r'^synth_interactive/$', views.synth_interactive, name='synth_interactive'),
@@ -96,8 +93,8 @@ urlpatterns = [
     re_path(r'^ajax/user_save_page/$', views.ajax_user_save_page, name='ajax_user_save_page'),
     re_path(r'^saved/delete/id=(?P<_id>.+)$', views.user_saved_results_del, name='user_saved_results_del'),
 
-    # Blacklisted chemicals and reactions
-    path('blacklist/', views.blacklist, name='user_blacklist'),
+    # Banned chemicals and reactions
+    path('banlist/', views.banlist, name='user_banlist'),
 
     # async results
     re_path(r'^view-result/$', views.view_result, name='view_result'),

@@ -1,30 +1,22 @@
-from django.shortcuts import render, HttpResponse, redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-import django.contrib.auth.views
-from pymongo.message import bson
-from bson.objectid import ObjectId
-from collections import defaultdict
-from datetime import datetime
-import time
-import numpy as np
 import json
 import os
+import time
+from collections import defaultdict
+from datetime import datetime
 
-from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
-
-from ..utils import ajax_error_wrapper, resolve_smiles
-from .users import can_control_robot
-from ..forms import SmilesInputForm
-from ..models import BlacklistedReactions, BlacklistedChemicals, SavedResults
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
+from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
+from askcos_site.main.utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.views.users import can_control_robot
 
-from celery.result import AsyncResult
-from askcos_site.celery import app
 
 #@login_required
 def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
@@ -194,34 +186,12 @@ def retro_target(request, smiles):
 
 def retro_network(request):
     context = {}
-    allow_resolve = os.environ.get('ALLOW_SMILES_RESOLVER') == 'True'
-    context['allowResolve'] = 'checked' if allow_resolve else ''
+    
+    enable_resolve = os.environ.get('ENABLE_SMILES_RESOLVER') == 'True'
+    context['enableResolve'] = 'checked' if enable_resolve else ''
+
     return render(request, 'reaction_network.html', context)
 
-@login_required
-def retro_interactive(request, target=None):
-    '''Builds an interactive retrosynthesis page'''
-
-    context = {}
-    context['warn'] = 'If requests seem to take a long time, check the <a href="/status/">Server Status</a> page to see which resources are currently being used!'
-
-    context['max_depth_default'] = 4
-    context['max_branching_default'] = 20
-    context['retro_mincount_default'] = 0
-    context['synth_mincount_default'] = 0
-    context['expansion_time_default'] = 60
-    context['max_ppg_default'] = 100
-    context['template_count_default'] = 100
-    context['template_prioritization'] = 'Relevance'
-    context['max_cum_prob_default'] = 0.995
-    context['precursor_prioritization'] = 'RelevanceHeuristic'
-    context['forward_scorer'] = 'Template_Free'
-    context['filter_threshold_default'] = 0.75
-
-    if target is not None:
-        context['target_mol'] = target
-
-    return render(request, 'retro_interactive.html', context)
 
 @login_required
 def retro_interactive_mcts(request, target=None):
@@ -286,12 +256,12 @@ def ajax_start_retro_mcts_celery(request):
     return_first = json.loads(request.GET.get('return_first', 'false'))
 
     if request.user.is_authenticated:
-        blacklisted_reactions = list(set(
+        banned_reactions = list(set(
             [x.smiles for x in BlacklistedReactions.objects.filter(user=request.user, active=True)]))
         forbidden_molecules = list(set(
             [x.smiles for x in BlacklistedChemicals.objects.filter(user=request.user, active=True)]))
     else:
-        blacklisted_reactions = []
+        banned_reactions = []
         forbidden_molecules = []
 
     default_val = 1e9 if chemical_property_logic == 'and' else 0
@@ -308,7 +278,7 @@ def ajax_start_retro_mcts_celery(request):
         'as_product': min_chempop_products,
     }
     print('Tree building {} for user {} ({} forbidden reactions)'.format(
-        smiles, request.user.id, len(blacklisted_reactions)))
+        smiles, request.user.id, len(banned_reactions)))
     print('Using chemical property logic: {}'.format(max_natom_dict))
     print('Using chemical popularity logic: {}'.format(min_chemical_history_dict))
     print('Returning as soon as any pathway found? {}'.format(return_first))
@@ -317,7 +287,7 @@ def ajax_start_retro_mcts_celery(request):
 
     res = get_buyable_paths_mcts.delay(smiles, max_branching=max_branching, max_depth=max_depth,
                                   max_ppg=max_ppg, expansion_time=expansion_time, max_trees=500,
-                                  known_bad_reactions=blacklisted_reactions,
+                                  known_bad_reactions=banned_reactions,
                                   forbidden_molecules=forbidden_molecules,
                                   max_cum_template_prob=max_cum_prob, template_count=template_count,
                                   max_natom_dict=max_natom_dict, min_chemical_history_dict=min_chemical_history_dict,
@@ -344,7 +314,7 @@ def ajax_start_retro_mcts_celery(request):
         (tree_status, trees) = res.get(expansion_time * 3)
         (num_chemicals, num_reactions, _) = tree_status
         data['html_stats'] = 'After expanding (with {} banned reactions, {} banned chemicals), {} total chemicals and {} total reactions'.format(
-            len(blacklisted_reactions), len(forbidden_molecules), num_chemicals, num_reactions)
+            len(banned_reactions), len(forbidden_molecules), num_chemicals, num_reactions)
         if trees:
             data['html_trees'] = render_to_string('trees_only.html',
                                                 {'trees': trees, 'can_control_robot': can_control_robot(request)})

@@ -1,17 +1,7 @@
 var container = document.getElementsByClassName('container')[0];
 container.style.width=null;
 
-var loader = document.getElementsByClassName("loader")[0];
-loader.style.top = "300px";
-
-function showLoader() {
-    loader.style.display = "block";
-}
 showLoader();
-
-function hideLoader() {
-    loader.style.display = "none";
-}
 
 function hideNetwork(n) {
   var networkDiv = document.querySelectorAll('.tree-graph')[n];
@@ -222,21 +212,6 @@ function initializeNetwork(data, elementDiv) {
     return network
 }
 
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
 var csrftoken = getCookie('csrftoken');
 
 var app = new Vue({
@@ -328,17 +303,17 @@ var app = new Vue({
           this.treeStats.push(treeStats(tree))
         }
       },
-      blacklist: function() {
+      banItem: function() {
         var nodeId = this.network.getSelectedNodes();
         if (!nodeId.length) { return }
         var desc = prompt("Please enter a reason (for your records only)", "no reason");
         var node = this.networkData.nodes.get(nodeId[0]);
         if (node['type'] === 'chemical') {
-            var url =  '/api/v2/blacklist/chemicals/'
+            var url =  '/api/v2/banlist/chemicals/'
             var speciesName = 'chemical'
         }
         else {
-            var url = '/api/v2/blacklist/reactions/'
+            var url = '/api/v2/banlist/reactions/'
             var speciesName = 'reaction'
         }
         const body = {
@@ -356,7 +331,7 @@ var app = new Vue({
             .then(resp => resp.json())
             .then(json => {
                 const datetime = dayjs(json.created).format('MMMM D, YYYY h:mm A');
-                alert(`Blacklisted ${speciesName} ${node.smiles} at ${datetime}`)
+                alert(`Banned ${speciesName} ${node.smiles} at ${datetime}`)
             });
       },
       showNode: function(nodeId) {

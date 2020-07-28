@@ -1,10 +1,10 @@
-from __future__ import absolute_import, unicode_literals, print_function
-from django.shortcuts import render 
-from django.http import JsonResponse 
-from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import render
 from django.template.loader import render_to_string
-from ...askcos_celery.siteselectivity.sites_worker import get_sites
-from ..utils import ajax_error_wrapper 
+
+from askcos_site.askcos_celery.siteselectivity.sites_worker import get_sites
+from askcos_site.main.utils import ajax_error_wrapper
+
 
 def site_prediction(request, err=None):
     '''

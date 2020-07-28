@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+
 from askcos_site.globals import scscorer
-from ..utils import ajax_error_wrapper
+from askcos_site.main.utils import ajax_error_wrapper
+
 
 @ajax_error_wrapper
 def ajax_scscore_smiles(request):

@@ -1,15 +1,10 @@
 import os
-from django.http import JsonResponse
-import rdkit.Chem as Chem
-import sys
-if sys.version_info[0] < 3:
-    from urllib2 import urlopen
-    from urllib2 import HTTPError
-else:
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
+from urllib.error import HTTPError
+from urllib.request import urlopen
 
-from askcos_site.celery import app
+import rdkit.Chem as Chem
+from django.http import JsonResponse
+
 
 def ajax_error_wrapper(ajax_func):
     def ajax_func_call(*args, **kwargs):
@@ -50,8 +45,8 @@ def fancyjoin(lst, nonemessage='(none)'):
 
 def resolve_smiles(smiles):
     mol = Chem.MolFromSmiles(smiles)
-    allow_resolve = os.environ.get('ALLOW_SMILES_RESOLVER') in ['True', 'true', 'TRUE', 1, '1', 'yes', 'Yes']
-    if not allow_resolve and not mol:
+    enable_resolve = os.environ.get('ENABLE_SMILES_RESOLVER') in ['True', 'true', 'TRUE', 1, '1', 'yes', 'Yes']
+    if not enable_resolve and not mol:
         return None
     if not mol:
         # Try to resolve using NIH
@@ -68,8 +63,8 @@ def resolve_smiles(smiles):
     return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 def get_name_from_smiles(smiles):
-    allow_resolve = os.environ.get('ALLOW_SMILES_RESOLVER') == 'True'
-    if not allow_resolve:
+    enable_resolve = os.environ.get('ENABLE_SMILES_RESOLVER') == 'True'
+    if not enable_resolve:
         return smiles
     try:
         names = urlopen('https://cactus.nci.nih.gov/chemical/structure/{}/names'.format(smiles)).read()

@@ -10,10 +10,11 @@ class TFServingAPIModel(object):
         version (int): version of the model to use when serving
 
     """
-    def __init__(self, hostname, model_name, version=1):
-        self.url = 'http://{}:8501/v{}/models/{}:predict'.format(
-            hostname, version, model_name
-        )
+    def __init__(self, hostname, model_name, version=None):
+        self.baseurl = 'http://{}:8501/v1/models/{}'.format(hostname, model_name)
+        if version:
+            self.baseurl += '/versions/{}'.format(version)
+        self.url = self.baseurl+':predict'
 
     def load_model(self, model_path=None):
         """Override load method, no model to load"""

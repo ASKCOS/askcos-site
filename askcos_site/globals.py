@@ -8,10 +8,10 @@ from rdkit import RDLogger
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
-import makeit.global_config as gc
-from makeit.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
-from makeit.retrosynthetic.transformer import RetroTransformer
-from makeit.utilities.buyable.pricer import Pricer
+import askcos.global_config as gc
+from askcos.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
+from askcos.interfaces.template_transformer import TemplateTransformer
+from askcos.utilities.buyable.pricer import Pricer
 from askcos_site.celery import app
 
 ################################################################################
@@ -34,8 +34,7 @@ forward_templates = db_client[gc.FORWARD_TEMPLATES['database']][gc.FORWARD_TEMPL
 
 ################################################################################
 # Retro Transformer
-retro_transformer = RetroTransformer(template_prioritizer=None, precursor_prioritizer=None, fast_filter=None)
-retro_transformer.load()
+retro_transformer = TemplateTransformer(load_all=False, use_db=True, TEMPLATE_DB=retro_templates)
 RETRO_CHIRAL_FOOTNOTE = 'Using {} chiral retrosynthesis templates from {}/{}'.format(
     gc.RELEVANCE_TEMPLATE_PRIORITIZATION['reaxys']['output_size'],
     gc.RETRO_TEMPLATES['database'],

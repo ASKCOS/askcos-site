@@ -98,19 +98,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reactants using rdkit.']})
 
     @unittest.skipIf(not (username and password), 'Requires login credentials.')
-    def test_blacklist_chemicals(self):
-        """Test /blacklist/chemicals endpoint"""
-        response = self.get('/blacklist/chemicals/')
+    def test_banlist_chemicals(self):
+        """Test /banlist/chemicals endpoint"""
+        response = self.get('/banlist/chemicals/')
         self.assertEqual(response.status_code, 401)
 
         headers = self.authenticate()
 
-        # Post request to add blacklisted chemical
+        # Post request to add banned chemical
         data = {
             'smiles': 'c1ccccc1',
             'description': 'test',
         }
-        response = self.post('/blacklist/chemicals/', data=data, headers=headers)
+        response = self.post('/banlist/chemicals/', data=data, headers=headers)
         self.assertEqual(response.status_code, 201)
         result = response.json()
         self.assertEqual(result['smiles'], data['smiles'])
@@ -119,8 +119,8 @@ class TestAPI(unittest.TestCase):
         self.assertIn('created', result)
         created_entry = result
 
-        # Get list of blacklisted chemicals
-        response = self.get('/blacklist/chemicals/', headers=headers)
+        # Get list of banned chemicals
+        response = self.get('/banlist/chemicals/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -130,37 +130,37 @@ class TestAPI(unittest.TestCase):
         entry_id = entries[0]['id']
 
         # Get detail view of specific entry
-        response = self.get('/blacklist/chemicals/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(result, created_entry)
 
         # Deactivate entry
-        response = self.get('/blacklist/chemicals/{0}/deactivate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/deactivate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertFalse(result['data']['active'])
 
         # Activate entry
-        response = self.get('/blacklist/chemicals/{0}/activate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/activate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertTrue(result['data']['active'])
 
         # Delete entry
-        response = self.delete('/blacklist/chemicals/{0}/'.format(entry_id), headers=headers)
+        response = self.delete('/banlist/chemicals/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
 
         # Try to retrieve entry again
-        response = self.get('/blacklist/chemicals/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/chemicals/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 404)
 
         # List entries again
-        response = self.get('/blacklist/chemicals/', headers=headers)
+        response = self.get('/banlist/chemicals/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -168,19 +168,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(entries, [])
 
     @unittest.skipIf(not (username and password), 'Requires login credentials.')
-    def test_blacklist_reactions(self):
-        """Test /blacklist/reactions endpoint"""
-        response = self.get('/blacklist/reactions/')
+    def test_banlist_reactions(self):
+        """Test /banlist/reactions endpoint"""
+        response = self.get('/banlist/reactions/')
         self.assertEqual(response.status_code, 401)
 
         headers = self.authenticate()
 
-        # Post request to add blacklisted chemical
+        # Post request to add banned chemical
         data = {
             'smiles': 'c1ccccc1>>Brc1ccccc1',
             'description': 'test',
         }
-        response = self.post('/blacklist/reactions/', data=data, headers=headers)
+        response = self.post('/banlist/reactions/', data=data, headers=headers)
         self.assertEqual(response.status_code, 201)
         result = response.json()
         self.assertEqual(result['smiles'], data['smiles'])
@@ -189,8 +189,8 @@ class TestAPI(unittest.TestCase):
         self.assertIn('created', result)
         created_entry = result
 
-        # Get list of blacklisted chemicals
-        response = self.get('/blacklist/reactions/', headers=headers)
+        # Get list of banned chemicals
+        response = self.get('/banlist/reactions/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -200,37 +200,37 @@ class TestAPI(unittest.TestCase):
         entry_id = entries[0]['id']
 
         # Get detail view of specific entry
-        response = self.get('/blacklist/reactions/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(result, created_entry)
 
         # Deactivate entry
-        response = self.get('/blacklist/reactions/{0}/deactivate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/deactivate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertFalse(result['data']['active'])
 
         # Activate entry
-        response = self.get('/blacklist/reactions/{0}/activate'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/activate'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
         self.assertTrue(result['data']['active'])
 
         # Delete entry
-        response = self.delete('/blacklist/reactions/{0}/'.format(entry_id), headers=headers)
+        response = self.delete('/banlist/reactions/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertTrue(result['success'])
 
         # Try to retrieve entry again
-        response = self.get('/blacklist/reactions/{0}/'.format(entry_id), headers=headers)
+        response = self.get('/banlist/reactions/{0}/'.format(entry_id), headers=headers)
         self.assertEqual(response.status_code, 404)
 
         # List entries again
-        response = self.get('/blacklist/reactions/', headers=headers)
+        response = self.get('/banlist/reactions/', headers=headers)
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIsInstance(result, list)
@@ -599,25 +599,25 @@ class TestAPI(unittest.TestCase):
      RDKit          2D
 
  19 20  0  0  0  0  0  0  0  0999 V2000
-   -1.4064   -1.2224    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.2720   -1.7232    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -3.1384   -1.2238    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -3.1392   -0.2238    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.2736    0.2770    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.4072   -0.2224    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5416    0.2784    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5424    1.2784    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
-    0.3232    1.7790    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.3224    2.7790    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1880    3.2796    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1872    4.2796    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    2.0544    2.7804    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.3248   -0.2210    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.3256   -1.2210    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1920   -1.7204    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    2.0576   -1.2196    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    2.0568   -0.2196    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1904    0.2798    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500   -1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7500   -1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    3.8971    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    5.1962    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    6.4952    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5000    7.7942    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7500    9.0933    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0000    7.7942    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2500    1.2990    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0000    2.5981    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2500    3.8971    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7500    3.8971    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  2  0
   2  3  1  0
   3  4  2  0
@@ -707,7 +707,7 @@ M  END
         self.assertEqual(request['max_cum_prob'], 0.995)
         self.assertEqual(request['filter_threshold'], 0.75)
         self.assertEqual(request['template_set'], 'reaxys')
-        self.assertEqual(request['template_prioritizer'], 'reaxys')
+        self.assertEqual(request['template_prioritizer_version'], 0)
         self.assertTrue(request['cluster'])
         self.assertEqual(request['cluster_method'], 'kmeans')
         self.assertEqual(request['cluster_feature'], 'original')
@@ -732,6 +732,21 @@ M  END
         response = self.post('/retro/', data={'target': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
+
+    def test_retro_models(self):
+        """Test /retro/models endpoint"""
+        data = {'template_set': 'reaxys'}
+        response = self.get('/retro/models/', params=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertEqual(result['request'], data)
+        self.assertEqual(result['versions'], ['1'])
+
+        # Test insufficient data
+        response = self.get('/retro/models/')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'template_set': ['This field is required.']})
 
     def test_root(self):
         """Test / endpoint"""
@@ -866,6 +881,15 @@ M  END
         self.assertEqual(field['value'],
                          '100336; 100337; 555364; 3948785; 3948834; 28127174; 35585623; 38022824; 38022828; 38022830; 38022834; 38022833; 38022835; 38022845; 41610599; 41610601; 41610620')
 
+    def test_template_sets(self):
+        """Test /template/sets endpoint"""
+        response = self.get('/template/sets/')
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        self.assertIn('template_sets', result)
+        self.assertIn('reaxys', result['template_sets'])
+
     def test_tree_builder(self):
         """Test /tree-builder endpoint"""
         data = {
@@ -883,7 +907,7 @@ M  END
         self.assertEqual(request['chemical_property_logic'], 'none')
         self.assertEqual(request['chemical_popularity_logic'], 'none')
         self.assertEqual(request['template_set'], 'reaxys')
-        self.assertEqual(request['template_prioritizer'], 'reaxys')
+        self.assertEqual(request['template_prioritizer_version'], 0)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)

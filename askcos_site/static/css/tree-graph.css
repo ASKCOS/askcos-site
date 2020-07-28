@@ -23,7 +23,7 @@ table {
   border: none !important;
 }
 
-.blacklist {
+.ban-button {
   position: fixed;
   bottom: 25px;
   right: 25px;

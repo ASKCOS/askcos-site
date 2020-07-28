@@ -1,9 +1,10 @@
 from django.http import JsonResponse
 from rdkit import Chem
-from makeit import global_config as gc
+
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import fast_filter_check
 
 TIMEOUT = 30
+
 
 def fast_filter(request):
     resp = {}
