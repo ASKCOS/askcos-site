@@ -907,7 +907,7 @@ M  END
         self.assertEqual(request['chemical_property_logic'], 'none')
         self.assertEqual(request['chemical_popularity_logic'], 'none')
         self.assertEqual(request['template_set'], 'reaxys')
-        self.assertEqual(request['template_prioritizer'], 'reaxys')
+        self.assertEqual(request['template_prioritizer_version'], 0)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
