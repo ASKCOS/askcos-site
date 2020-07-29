@@ -10,7 +10,7 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && rm requirements.txt
 
 COPY --chown=askcos:askcos . /usr/local/askcos-site
-COPY --chown=askcos:askcos --from=ketcher /data/dist/ /usr/local/askcos-site/askcos_site/static/ketcher/dist/
+COPY --chown=askcos:askcos --from=ketcher /build/dist/ /usr/local/askcos-site/askcos_site/static/ketcher/dist/
 
 USER askcos
 
