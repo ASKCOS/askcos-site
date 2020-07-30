@@ -135,3 +135,10 @@ MEDIA_URL = '/media/'  # url from which user uploaded files are served
 ################################################################################
 
 LOCAL_STORAGE = {}
+
+
+# Try importing any custom settings here so they replace the defaults above
+try:
+    from askcos_site.custom_settings import *
+except ImportError:
+    pass
