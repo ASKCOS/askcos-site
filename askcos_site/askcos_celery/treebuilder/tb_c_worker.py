@@ -17,8 +17,13 @@ from rdkit import RDLogger
 from rdkit.Chem import AllChem
 from scipy.special import softmax
 
+from askcos.prioritization.precursors.relevanceheuristic import RelevanceHeuristicPrecursorPrioritizer
 from askcos.utilities.fingerprinting import create_rxn_Morgan2FP_separately
+from askcos_site.globals import scscorer
 from ..tfserving import TFServingAPIModel
+
+relevance_heuristic_prioritizer = RelevanceHeuristicPrecursorPrioritizer()
+relevance_heuristic_prioritizer.load_model()
 
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
@@ -207,6 +212,11 @@ def get_top_precursors(
         'fp_length': cluster_fp_length,
         'fp_radius': cluster_fp_radius,
     }
+
+    if precursor_prioritizer == 'SCScore':
+        precursor_prioritizer = scscorer.reorder_precursors
+    else:
+        precursor_prioritizer = relevance_heuristic_prioritizer.reorder_precursors
 
     global retroTransformer
     result = retroTransformer.get_outcomes(

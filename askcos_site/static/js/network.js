@@ -825,7 +825,7 @@ var app = new Vue({
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
-                precursor_prioritization: this.tb.settings.precursorScoring,
+                precursor_prioritizer: this.tb.settings.precursorScoring,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,

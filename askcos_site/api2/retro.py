@@ -16,6 +16,7 @@ class RetroSerializer(serializers.Serializer):
     filter_threshold = serializers.FloatField(default=0.75)
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer_version = serializers.IntegerField(default=0)
+    precursor_prioritizer = serializers.CharField(default='RelevanceHeuristic')
 
     cluster = serializers.BooleanField(default=True)
     cluster_method = serializers.CharField(default='kmeans')
@@ -52,6 +53,7 @@ class RetroAPIView(CeleryTaskAPIView):
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): reaction template set to use
     - `template_prioritizer_version` (int, optional): version number of template relevance model to use
+    - `precursor_prioritizer` (str, optional): name of precursor prioritizer to use (Relevanceheuristic or SCScore)
     - `cluster` (bool, optional): whether or not to cluster results
     - `cluster_method` (str, optional): method for clustering results
     - `cluster_feature` (str, optional): which feature to use for clustering
@@ -77,6 +79,7 @@ class RetroAPIView(CeleryTaskAPIView):
         fast_filter_threshold = data['filter_threshold']
         template_set = data['template_set']
         template_prioritizer_version = data['template_prioritizer_version']
+        precursor_prioritizer = data['precursor_prioritizer']
 
         cluster = data['cluster']
         cluster_method = data['cluster_method']
@@ -91,6 +94,7 @@ class RetroAPIView(CeleryTaskAPIView):
             target,
             template_set=template_set,
             template_prioritizer_version=template_prioritizer_version,
+            precursor_prioritizer=precursor_prioritizer,
             fast_filter_threshold=fast_filter_threshold,
             max_cum_prob=max_cum_prob,
             max_num_templates=max_num_templates,
