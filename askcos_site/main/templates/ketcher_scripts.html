@@ -27,8 +27,11 @@ function setSmilesTextKetcher() {
 function setSmilesDrawingKetcher(id) {
     // get SMILES string
     var smi = $("#" + id).val();
+    // If SMILES string empty, stop here 
     if(!smi) {
-        smi = "";
+        // smi = "";
+        $("#ketcher-spinner").first().fadeOut();
+        return;
     }
     // Post to api endpoint to get molfile
     fetch(
