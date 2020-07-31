@@ -10,9 +10,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
-# Get settings from separate celeryconfig.py
-from askcos_site.askcos_celery.celeryconfig import *
-
 
 PROJECT_PATH = os.path.dirname(__file__)
 BASE_DIR = os.path.dirname(PROJECT_PATH)
