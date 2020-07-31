@@ -41,6 +41,8 @@ class RetroSerializer(serializers.Serializer):
 
     attribute_filter = AttributeFilterSerializer(default=[], many=True)
 
+    priority = serializers.IntegerField(default=1)
+
     def validate_target(self, value):
         """Verify that the requested target is valid."""
         if not Chem.MolFromSmiles(value):
@@ -76,6 +78,7 @@ class RetroAPIView(CeleryTaskAPIView):
     - `cluster_fp_radius` (int, optional): fingerprint radius for clustering
     - `selec_check` (bool, optional): whether or not to check for potential selectivity issues
     - `attribute_filter` (list[dict], optional): template attribute filter to apply before template application
+    - `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
     Returns:
 
@@ -88,43 +91,26 @@ class RetroAPIView(CeleryTaskAPIView):
         """
         Execute single step retro task and return celery result object.
         """
-        target = data['target']
-        max_num_templates = data['num_templates']
-        max_cum_prob = data['max_cum_prob']
-        fast_filter_threshold = data['filter_threshold']
-        template_set = data['template_set']
-        template_prioritizer_version = data['template_prioritizer_version']
-        precursor_prioritizer = data['precursor_prioritizer']
+        args = (data['target'],)
+        kwargs = {
+            'max_num_templates': data['num_templates'],
+            'max_cum_prob': data['max_cum_prob'],
+            'fast_filter_threshold': data['filter_threshold'],
+            'template_set': data['template_set'],
+            'template_prioritizer_version': data['template_prioritizer_version'],
+            'precursor_prioritizer': data['precursor_prioritizer'],
+            'cluster': data['cluster'],
+            'cluster_method': data['cluster_method'],
+            'cluster_feature': data['cluster_feature'],
+            'cluster_fp_type': data['cluster_fp_type'],
+            'cluster_fp_length': data['cluster_fp_length'],
+            'cluster_fp_radius': data['cluster_fp_radius'],
+            'selec_check': data['selec_check'],
+            'attribute_filter': data['attribute_filter'],
+            'postprocess': True,
+        }
 
-        cluster = data['cluster']
-        cluster_method = data['cluster_method']
-        cluster_feature = data['cluster_feature']
-        cluster_fp_type = data['cluster_fp_type']
-        cluster_fp_length = data['cluster_fp_length']
-        cluster_fp_radius = data['cluster_fp_radius']
-
-        selec_check = data['selec_check']
-
-        attribute_filter = data['attribute_filter']
-
-        result = get_top_precursors.delay(
-            target,
-            template_set=template_set,
-            template_prioritizer_version=template_prioritizer_version,
-            precursor_prioritizer=precursor_prioritizer,
-            fast_filter_threshold=fast_filter_threshold,
-            max_cum_prob=max_cum_prob,
-            max_num_templates=max_num_templates,
-            cluster=cluster,
-            cluster_method=cluster_method,
-            cluster_feature=cluster_feature,
-            cluster_fp_type=cluster_fp_type,
-            cluster_fp_length=cluster_fp_length,
-            cluster_fp_radius=cluster_fp_radius,
-            selec_check=selec_check,
-            attribute_filter=attribute_filter,
-            postprocess=True,
-        )
+        result = get_top_precursors.apply_async(args, kwargs, priority=data['priority'])
 
         return result
 
