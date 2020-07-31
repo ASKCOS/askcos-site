@@ -13,3 +13,87 @@
     var ketcher_logo_url = "{% static 'ketcher/dist/logo/ketcher-logo.svg' %}"
 </script>
 <script src="{% static 'ketcher/dist/ketcher.js' %}"></script>
+
+<script>
+// For drawing using Ketcher
+// set the value of an ID with the current SMILES string
+// note: assumes drawBoxID has been assigned as global var!
+function setSmilesTextKetcher() {
+    var data = ketcher.getSmiles();
+    document.getElementById(drawBoxId).value = data;
+    $("#" + drawBoxId).trigger("change");
+};
+// set the drawing to match the SMILES string of a certain id's value
+function setSmilesDrawingKetcher(id) {
+    // get SMILES string
+    var smi = $("#" + id).val();
+    if(!smi) {
+        smi = "";
+    }
+    // Post to api endpoint to get molfile
+    fetch(
+        '/api/v2/rdkit/smiles/to_molfile/',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                "smiles": smi,
+            })
+        }
+    )
+    .then(resp => {
+        if (!resp.ok) {
+            throw Error(resp.statusText)
+        }
+        return resp
+    })
+    .then(resp => resp.json())
+    .then(json => {
+        // Set the molfile in Ketcher
+        molfile = json["molfile"];
+        ketcher.setMolecule(molfile);
+        $("#ketcher-spinner").fadeOut();
+    })
+    .catch(error => {
+        console.log('Could not convert SMILES to molfile for Ketcher use: ' + error);
+        // Since we cleared ketcher, we need to restore the previous molecule.
+        ketcher.setMolecule(molfileOld);
+        $("#ketcher-spinner").first().fadeOut();
+    })
+};
+// onclick action for drawing popup
+function drawBoxKetcher(id) {
+    // Set ketcher var if using an iframe, and it hasn't been set yet
+    // (We need to delay setting ketcher var til the iframe loads,
+    //  so iframe html doesn't set ketcher var on its own)
+    if (typeof ketcher === 'undefined') {
+        ketcherFrame = document.getElementById('ketcher-iframe');
+        if (ketcherFrame) {
+            ketcher = ketcherFrame.contentWindow.ketcher;
+        }
+    }
+
+    // To avoid a graphical glitch, the ketcher drawing must be set while ketcher is on screen.
+    // We ensure this by running everything synchronously: first drawBoxId is set; 
+    // then the ketcher modal is shown and immediately (through a callback) the drawing is set.
+    // (The callback needs to know drawBoxId; we pass this info through a global var.)
+
+    drawBoxId = id;
+    // Clear ketcher before it shows, because it looks nicer during the delay as we set the drawer.
+    // Also save the old ketcher window, in case we can't render the new one.
+    molfileOld = ketcher.getMolfile();
+    ketcher.editor.struct(null);
+    $("#ketcher-spinner").fadeIn(0);
+    $('#drawingbox').modal('toggle');
+};
+// Initialize a modal callback function, so that Ketcher sets the molecule only when open.
+// note: assumes drawBoxID has been assigned as global var!
+$(document).ready(function() {
+    $('#drawingbox').on('shown.bs.modal', function (e) {
+        setSmilesDrawingKetcher(drawBoxId);
+    })
+});
+</script>
