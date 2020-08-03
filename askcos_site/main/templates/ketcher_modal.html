@@ -1,0 +1,25 @@
+<!-- Popup drawing tool -->
+
+<div class="modal fade" id="drawingbox">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="width: auto;">
+            <div class="modal-body">
+                <div role="application">
+                    {% include "ketcher_scripts.html" %}
+                </div>
+                <!-- <iframe id="ketcher-iframe" src="{% url 'ketcher_iframe' %}" width="800" height="432" style="border-width: 0"></iframe> -->
+                <div id="ketcher-spinner" class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>      
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                {% if vue %}
+                <button type="button" class="btn btn-success" data-dismiss="modal" @click="updateSmilesFromKetcher">Done drawing</button>
+                {% else %}
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="setSmilesTextKetcher();">Done drawing</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

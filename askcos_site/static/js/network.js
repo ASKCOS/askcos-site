@@ -1935,18 +1935,19 @@ var app = new Vue({
             )
             .then(resp => resp.json())
             .then(json => {
-                this[input] = json.smiles
+                if (json.smiles) {
+                    this[input] = json.smiles
+                }
             })
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
+        updateSmilesFromKetcher() {
+            var smiles = ketcher.getSmiles();
             this.target = smiles
             this.canonicalize(smiles, drawBoxId)
         },
         resetTemplateSetVersion(event) {
             this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
         }
-
     },
     computed: {
         // {'target_smiles0':[[{result0}, {result1}, ...], [...]], ...}
