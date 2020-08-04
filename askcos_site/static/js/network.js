@@ -154,14 +154,14 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     })
     for (n in reaction['smiles_split']) {
         var smi = reaction['smiles_split'][n];
-        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
+        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}&source=${app.buyablesSource}&canonicalize=True`)
         .then(resp => resp.json())
         .then(json => {
             var mysmi = json['search'];
-            if (json.buyables.length > 0) {
-                var ppg = json.buyables[0].ppg
+            if (json.result.length > 0) {
+                var ppg = json.result[0].ppg
                 var buyable = true
-                var source = json.buyables[0].source
+                var source = json.result[0].source
             }
             else {
                 var ppg = "not buyable"
@@ -303,6 +303,8 @@ const tbSettingsDefault = {
     chemicalPopularityLogic: 'none',
     chemicalPopularityReactants: 0,
     chemicalPopularityProducts: 0,
+    buyablesSource: [],
+    buyablesSourceAll: true,
     returnFirst: false,
     maxTrees: 500,
     templateSet: "reaxys",
@@ -448,6 +450,7 @@ var app = new Vue({
         results: {},
         templateSets: {},
         templateAttributes: {},
+        buyablesSources: [],
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
@@ -572,6 +575,9 @@ var app = new Vue({
                         })
                 }
             })
+        fetch('/api/v2/buyables/sources/')
+            .then(resp => resp.json())
+            .then(json => {this.buyablesSources = json.sources})
     },
     destroyed: function() {
         window.removeEventListener('resize', this.handleResize);
@@ -737,7 +743,8 @@ var app = new Vue({
                 max_chemprop_h: this.tb.settings.chemicalPropertyH,
                 chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
                 min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
-                min_chempop_products: this.tb.settings.chemicalPopularityProducts
+                min_chempop_products: this.tb.settings.chemicalPopularityProducts,
+                buyables_source: this.buyablesSource,
             }
             fetch(url, {
                 method: 'POST', 
@@ -983,11 +990,11 @@ var app = new Vue({
                         app.initClusterShowCard(smi); // must be called immediately after adding results
                         addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
-                        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
+                        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}&source=${app.buyablesSource}&canonicalize=True`)
                             .then(resp => resp.json())
                             .then(json => {
-                                if (json.buyables.length > 0) {
-                                    var ppg = json.buyables[0].ppg
+                                if (json.result.length > 0) {
+                                    var ppg = json.result[0].ppg
                                 }
                                 else {
                                     var ppg = "not buyable"
@@ -1323,7 +1330,7 @@ var app = new Vue({
             this.selected = node;
             this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
-                fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
+                fetch(`/api/v2/buyables/?q=${encodeURIComponent(node.smiles)}&source=${this.buyablesSource}`)
                     .then(resp => resp.json())
                     .then(json => {
                         if (json.result.length) {
@@ -2028,7 +2035,10 @@ var app = new Vue({
                 res[x] = Array.from(ids).sort(function(a, b){return a-b});
             }
             return res;
-        }
+        },
+        buyablesSource: function() {
+            return this.tb.settings.buyablesSourceAll ? 'all' : this.tb.settings.buyablesSource.toString()
+        },
     },
     delimiters: ['%%', '%%'],
 });

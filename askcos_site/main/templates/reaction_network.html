@@ -461,6 +461,32 @@ The plausibility score can help filter out bad suggestions, but in some cases ca
                                 <input id="minPlausibility" style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
                             </div>
                             <div class="form-inline mb-2">
+                                <i title="Restrict buyables database lookup to specific sources."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <span class="mr-2" for="buyablesSourceType">Buyables sources:</span>
+                                <div class="dropdown">
+                                    <button class="form-control form-control-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        %% tb.settings.buyablesSourceAll ? 'All' : tb.settings.buyablesSource.length ? tb.settings.buyablesSource.toString() : 'Select Sources' %%
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <form>
+                                            <div class="form-check justify-content-start m-2">
+                                                <input class="form-check-input" id="buyablesCheckAll" type="checkbox" value="all" v-model="tb.settings.buyablesSourceAll" @change="tb.settings.buyablesSource = []">
+                                                <label class="form-check-label" for="buyablesCheckAll">All</label>
+                                            </div>
+                                            <div class="form-check justify-content-start m-2">
+                                                <input class="form-check-input" id="buyablesCheckNoSource" type="checkbox" value="none" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
+                                                <label class="form-check-label" for="buyablesCheckNoSource">No Source</label>
+                                            </div>
+                                            <div class="form-check justify-content-start m-2" v-for="source in buyablesSources">
+                                                <input class="form-check-input" :id="'buyablesCheck' + source" type="checkbox" :value="source" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
+                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source %%</label>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-inline mb-2">
                                 <i title="When enabled, will automatically identify reactions which have potential regio-selectivity considerations." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <input class="form-check-input" id="checkSelec" type="checkbox" ref="allowSelec" v-model="tb.settings.allowSelec" {{ tb.settings.allowSelec }}/>
                                 <label class="form-check-label" for="checkSelec">Apply regio-selectivity checking?</label>
