@@ -9,7 +9,7 @@ function updateObj(dest, src) {
     // modifies dest object in place
     for (let p in src) {
         if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
-            if ( typeof dest[p] === 'object' ) {
+            if ( typeof dest[p] === 'object' && !Array.isArray(dest[p]) ) {
                 updateObj(dest[p], src[p])
             } else {
                 dest[p] = src[p];
