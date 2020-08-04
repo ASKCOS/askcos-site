@@ -212,6 +212,12 @@ class BuyablesViewSet(ViewSet):
 
         return Response(resp)
 
+    @action(detail=False, methods=['GET'])
+    def sources(self, request):
+        """Returns available sources that exist in mongodb"""
+        resp = {'sources': buyables_db.distinct('source')}
+        return Response(resp)
+
     @action(detail=False, methods=['post'])
     def upload(self, request):
         """
