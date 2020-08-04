@@ -350,7 +350,7 @@ class BuyablesViewSet(ViewSet):
             'source': source
         }
 
-        existing_doc = buyables_db.find_one({'smiles': smiles})
+        existing_doc = buyables_db.find_one({'smiles': smiles, 'source': source})
         if existing_doc and allow_overwrite:
             buyables_db.update_one(
                 {'smiles': smiles},
