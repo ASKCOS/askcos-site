@@ -111,6 +111,10 @@
                                                                     <td>Score</td>
                                                                     <td>%% num2str(res.score, 3) %%</td>
                                                                 </tr>
+                                                                <tr v-if="clusterPopoutModalData.optionsDisplay.showSCScore">
+                                                                    <td>Synthetic complexity</td>
+                                                                    <td>%% num2str(res.scscore, 3) %%</td>
+                                                                </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
                                                                     <td>%% num2str(res.num_examples)%%</td>
@@ -160,6 +164,8 @@
                             <div class="form-check-inline">
                                 <input class="form-check-input" id="cpShowScore" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showScore"/>
                                 <label class="form-check-label mr-2" for="cpShowScore">Score</label>
+                                <input class="form-check-input" id="cpShowSCScore" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showSCScore"/>
+                                <label class="form-check-label mr-2" for="cpShowSCScore">Synthetic complexity</label>
                                 <input class="form-check-input" id="cpShowNumEx" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showNumExample"/>
                                 <label class="form-check-label mr-2" for="cpShowNumEx"># Examples</label>
                                 <input class="form-check-input" id="cpShowTemp" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showTemplateScore"/>
@@ -209,6 +215,10 @@
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showScore">
                                                                     <td>Score</td>
                                                                     <td>%% num2str(res.score, 3) %%</td>
+                                                                </tr>
+                                                                <tr v-if="clusterEditModalData.optionsDisplay.showSCScore">
+                                                                    <td>Synthetic complexity</td>
+                                                                    <td>%% num2str(res.scscore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
@@ -283,6 +293,8 @@
                             <div class="form-check-inline">
                                 <input class="form-check-input" id="ceShowScore" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showScore"/>
                                 <label class="form-check-label mr-2" for="ceShowScore">Score</label>
+                                <input class="form-check-input" id="ceShowSCScore" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showSCScore"/>
+                                <label class="form-check-label mr-2" for="ceShowSCScore">Synthetic complexity</label>
                                 <input class="form-check-input" id="ceShowNumEx" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showNumExample"/>
                                 <label class="form-check-label mr-2" for="ceShowNumEx"># Examples</label>
                                 <input class="form-check-input" id="ceShowTemp" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showTemplateScore"/>
@@ -762,14 +774,20 @@
                                         </div>
                                         <div v-if="!allowCluster" class="form-group mb-2">
                                             <label class="mr-2" for="sortingCategory">Reorder by:</label>
-                                            <select class="form-control" id="sortingCategory" @change="reorderResults" v-model="sortingCategory">
+                                            <select class="form-control" id="sortingCategory" @change="handleSortingChange" v-model="sortingCategory">
                                                 <option value="score">Score</option>
+                                                <option value="scscore">Synthetic complexity</option>
                                                 <option value="num_examples"># Examples</option>
                                                 <option value="template_score">Template score</option>
                                                 <option value="plausibility">Plausibility</option>
-                                                <option value="rms_molwt">Root mean square molecular weight (inverse)</option>
-                                                <option value="num_rings">Number of rings (inverse)</option>
+                                                <option value="rms_molwt">Root mean square molecular weight</option>
+                                                <option value="num_rings">Number of rings</option>
                                             </select>
+                                            <div style="cursor: pointer; padding-left: 2rem" @click="sortOrderAscending = !sortOrderAscending; reorderResults()">
+                                                Sorting: 
+                                                <code v-if="sortOrderAscending">Low-to-high <i class="fas fa-caret-up"></i></code>
+                                                <code v-else style="cursor: pointer">High-to-low <i class="fas fa-caret-down"></i></code>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -811,6 +829,10 @@
                                                                                     <tr>
                                                                                         <td>Score</td>
                                                                                         <td>%% num2str(res.score, 3) %%</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td>Synthetic complexity</td>
+                                                                                        <td>%% num2str(res.scscore, 3) %%</td>
                                                                                     </tr>
                                                                                     <tr>
                                                                                         <td># Examples</td>
@@ -865,6 +887,10 @@
                                                                     <tr>
                                                                         <td>Score</td>
                                                                         <td>%% num2str(res.score, 3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Synthetic complexity</td>
+                                                                        <td>%% num2str(res.scscore, 3) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td># Examples</td>

@@ -151,7 +151,7 @@ def configure_worker(options={}, **kwargs):
 
     # Instantiate and load retro transformer
     global retroTransformer
-    retroTransformer = RetroTransformer(template_prioritizer=None, fast_filter=None)
+    retroTransformer = RetroTransformer(template_prioritizer=None, fast_filter=None, scscorer=scscorer.get_max_score_from_joined_smiles)
     retroTransformer.load()
     print('### TREE BUILDER WORKER STARTED UP ###')
 

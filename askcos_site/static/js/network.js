@@ -415,6 +415,7 @@ const ippSettingsDefault = {
     isHighlightAtom: true,
     reactionLimit: 5,
     sortingCategory: "score",
+    sortOrderAscending: false,
     clusterOptions: {
         allowRemovePrecursor: true,
         feature: 'original',
@@ -497,6 +498,7 @@ var app = new Vue({
         clusterPopoutModalData: {
             optionsDisplay : {
                 showScore: false,
+                showSCScore: false,
                 showNumExample: true,
                 showTemplateScore: false,
                 showPlausibility: true,
@@ -518,6 +520,7 @@ var app = new Vue({
         isHighlightAtom: ippSettingsDefault.isHighlightAtom,
         reactionLimit: ippSettingsDefault.reactionLimit,
         sortingCategory: ippSettingsDefault.sortingCategory,
+        sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
@@ -1044,7 +1047,7 @@ var app = new Vue({
                 addReactions(app.results[smi], app.data.nodes.get(nodeId), app.data.nodes, app.data.edges, app.reactionLimit);
                 app.getTemplateNumExamples(app.results[smi]);
                 app.selected = node;
-                app.reorderResults();
+                app.handleSortingChange();
                 app.network.fit()
             }
             this.requestRetro(smi, callback);
@@ -1247,10 +1250,24 @@ var app = new Vue({
         },
         resetSortingCategory: function() {
             this.sortingCategory = 'score'
+            this.sortOrderAscending = false
             this.reorderResults()
+        },
+        handleSortingChange: function() {
+            this.selectSortingOrder()
+            this.reorderResults()
+        },
+        selectSortingOrder: function() {
+            if (["rms_molwt", "num_rings", "scscore"].includes(this.sortingCategory)) {
+                this.sortOrderAscending = true
+            }
+            else {
+                this.sortOrderAscending = false
+            }
         },
         reorderResults: function() {
             var sortingCategory = this.sortingCategory;
+
             if (this.selected.type != 'chemical') {
                 return
             }
@@ -1264,6 +1281,9 @@ var app = new Vue({
                 var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
                 return b_ - a_;
             })
+            if (this.sortOrderAscending) {
+                results.reverse()
+            }
             var prevSelected = this.selected;
             this.selected = undefined;
             this.selected = prevSelected;
@@ -1275,7 +1295,7 @@ var app = new Vue({
                 return
             }
             this.selected = node;
-            this.reorderResults();
+            this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
                 fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
                     .then(resp => resp.json())
