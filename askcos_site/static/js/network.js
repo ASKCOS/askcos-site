@@ -1275,14 +1275,17 @@ var app = new Vue({
             if (typeof(results) == 'undefined') {
                 return
             }
+            var cmp
+            if (this.sortOrderAscending) {
+                cmp = function(a, b) {return a - b}
+            } else {
+                cmp = function(a, b) {return b - a}
+            }
             results.sort((a, b) => {
                 var a_ = a[sortingCategory] == undefined ? 0 : a[sortingCategory];
                 var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
-                return b_ - a_;
+                return cmp(a_, b_);
             })
-            if (this.sortOrderAscending) {
-                results.reverse()
-            }
             var prevSelected = this.selected;
             this.selected = undefined;
             this.selected = prevSelected;
