@@ -973,7 +973,7 @@ var app = new Vue({
                                 }
                                 app.data.nodes.update({id: 0, ppg: ppg});
                                 app.network.selectNodes([0]);
-                                app.selected = app.data.nodes.get(0);
+                                app.showInfo({'nodes': [0]});
                         })
                     }
                     this.requestRetro(smi, callback);
@@ -1250,15 +1250,14 @@ var app = new Vue({
         },
         resetSortingCategory: function() {
             this.sortingCategory = 'score'
-            this.sortOrderAscending = false
-            this.reorderResults()
+            this.handleSortingChange()
         },
         handleSortingChange: function() {
             this.selectSortingOrder()
             this.reorderResults()
         },
         selectSortingOrder: function() {
-            if (["rms_molwt", "num_rings", "scscore"].includes(this.sortingCategory)) {
+            if (["rms_molwt", "num_rings", "scscore"].includes(this.sortingCategory) || (this.sortingCategory === 'score' && this.tb.settings.precursorScoring === 'SCScore')) {
                 this.sortOrderAscending = true
             }
             else {
