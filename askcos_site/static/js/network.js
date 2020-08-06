@@ -415,6 +415,7 @@ const ippSettingsDefault = {
     isHighlightAtom: true,
     reactionLimit: 5,
     sortingCategory: "score",
+    sortOrderAscending: false,
     clusterOptions: {
         allowRemovePrecursor: true,
         feature: 'original',
@@ -497,6 +498,7 @@ var app = new Vue({
         clusterPopoutModalData: {
             optionsDisplay : {
                 showScore: false,
+                showSCScore: false,
                 showNumExample: true,
                 showTemplateScore: false,
                 showPlausibility: true,
@@ -518,6 +520,7 @@ var app = new Vue({
         isHighlightAtom: ippSettingsDefault.isHighlightAtom,
         reactionLimit: ippSettingsDefault.reactionLimit,
         sortingCategory: ippSettingsDefault.sortingCategory,
+        sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
@@ -825,7 +828,7 @@ var app = new Vue({
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
-                precursor_prioritization: this.tb.settings.precursorScoring,
+                precursor_prioritizer: this.tb.settings.precursorScoring,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,
@@ -970,7 +973,7 @@ var app = new Vue({
                                 }
                                 app.data.nodes.update({id: 0, ppg: ppg});
                                 app.network.selectNodes([0]);
-                                app.selected = app.data.nodes.get(0);
+                                app.showInfo({'nodes': [0]});
                         })
                     }
                     this.requestRetro(smi, callback);
@@ -1044,7 +1047,7 @@ var app = new Vue({
                 addReactions(app.results[smi], app.data.nodes.get(nodeId), app.data.nodes, app.data.edges, app.reactionLimit);
                 app.getTemplateNumExamples(app.results[smi]);
                 app.selected = node;
-                app.reorderResults();
+                app.handleSortingChange();
                 app.network.fit()
             }
             this.requestRetro(smi, callback);
@@ -1247,10 +1250,23 @@ var app = new Vue({
         },
         resetSortingCategory: function() {
             this.sortingCategory = 'score'
+            this.handleSortingChange()
+        },
+        handleSortingChange: function() {
+            this.selectSortingOrder()
             this.reorderResults()
+        },
+        selectSortingOrder: function() {
+            if (["rms_molwt", "num_rings", "scscore"].includes(this.sortingCategory) || (this.sortingCategory === 'score' && this.tb.settings.precursorScoring === 'SCScore')) {
+                this.sortOrderAscending = true
+            }
+            else {
+                this.sortOrderAscending = false
+            }
         },
         reorderResults: function() {
             var sortingCategory = this.sortingCategory;
+
             if (this.selected.type != 'chemical') {
                 return
             }
@@ -1259,10 +1275,19 @@ var app = new Vue({
             if (typeof(results) == 'undefined') {
                 return
             }
+            var cmp
+            if (this.sortOrderAscending) {
+                cmp = function(a, b) {return a - b}
+            } else {
+                cmp = function(a, b) {return b - a}
+            }
             results.sort((a, b) => {
                 var a_ = a[sortingCategory] == undefined ? 0 : a[sortingCategory];
                 var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
-                return b_ - a_;
+                if (a_ == b_) {
+                    return a.rank - b.rank
+                }
+                return cmp(a_, b_);
             })
             var prevSelected = this.selected;
             this.selected = undefined;
@@ -1275,7 +1300,7 @@ var app = new Vue({
                 return
             }
             this.selected = node;
-            this.reorderResults();
+            this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
                 fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
                     .then(resp => resp.json())

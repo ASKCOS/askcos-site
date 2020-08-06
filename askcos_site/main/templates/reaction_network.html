@@ -111,6 +111,10 @@
                                                                     <td>Score</td>
                                                                     <td>%% num2str(res.score, 3) %%</td>
                                                                 </tr>
+                                                                <tr v-if="clusterPopoutModalData.optionsDisplay.showSCScore">
+                                                                    <td>Synthetic complexity</td>
+                                                                    <td>%% num2str(res.scscore, 3) %%</td>
+                                                                </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
                                                                     <td>%% num2str(res.num_examples)%%</td>
@@ -160,6 +164,8 @@
                             <div class="form-check-inline">
                                 <input class="form-check-input" id="cpShowScore" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showScore"/>
                                 <label class="form-check-label mr-2" for="cpShowScore">Score</label>
+                                <input class="form-check-input" id="cpShowSCScore" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showSCScore"/>
+                                <label class="form-check-label mr-2" for="cpShowSCScore">Synthetic complexity</label>
                                 <input class="form-check-input" id="cpShowNumEx" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showNumExample"/>
                                 <label class="form-check-label mr-2" for="cpShowNumEx"># Examples</label>
                                 <input class="form-check-input" id="cpShowTemp" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showTemplateScore"/>
@@ -209,6 +215,10 @@
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showScore">
                                                                     <td>Score</td>
                                                                     <td>%% num2str(res.score, 3) %%</td>
+                                                                </tr>
+                                                                <tr v-if="clusterEditModalData.optionsDisplay.showSCScore">
+                                                                    <td>Synthetic complexity</td>
+                                                                    <td>%% num2str(res.scscore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
@@ -283,6 +293,8 @@
                             <div class="form-check-inline">
                                 <input class="form-check-input" id="ceShowScore" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showScore"/>
                                 <label class="form-check-label mr-2" for="ceShowScore">Score</label>
+                                <input class="form-check-input" id="ceShowSCScore" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showSCScore"/>
+                                <label class="form-check-label mr-2" for="ceShowSCScore">Synthetic complexity</label>
                                 <input class="form-check-input" id="ceShowNumEx" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showNumExample"/>
                                 <label class="form-check-label mr-2" for="ceShowNumEx"># Examples</label>
                                 <input class="form-check-input" id="ceShowTemp" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showTemplateScore"/>
@@ -405,7 +417,6 @@
                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="precursorScoring">Precursor scoring:</label>
                                 <select id="precursorScoring" v-model="tb.settings.precursorScoring" class="form-control form-control-sm">
-                                    <option value="Heuristic">Heuristic</option>
                                     <option value="RelevanceHeuristic">Relevance+Heuristic</option>
                                     <option value="SCScore">SCScore</option>
                                 </select>
@@ -762,15 +773,22 @@
                                             <input id="allowCluster" type="checkbox" ref="allowCluster" v-model="allowCluster" @change="resetSortingCategory" {{ allowCluster }}/>
                                         </div>
                                         <div v-if="!allowCluster" class="form-group mb-2">
-                                            <label class="mr-2" for="sortingCategory">Reorder by:</label>
-                                            <select class="form-control" id="sortingCategory" @change="reorderResults" v-model="sortingCategory">
-                                                <option value="score">Score</option>
-                                                <option value="num_examples"># Examples</option>
-                                                <option value="template_score">Template score</option>
-                                                <option value="plausibility">Plausibility</option>
-                                                <option value="rms_molwt">Root mean square molecular weight (inverse)</option>
-                                                <option value="num_rings">Number of rings (inverse)</option>
-                                            </select>
+                                            <label class="mr-2" for="sortingCategory">Sort by:</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend" @click="sortOrderAscending = !sortOrderAscending; reorderResults()">
+                                                    <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
+                                                    <button class="input-group-text" v-else>Descending <i class="fas fa-sort-amount-down ml-1"></i></button>
+                                                </div>
+                                                <select class="form-control" id="sortingCategory" @change="handleSortingChange" v-model="sortingCategory">
+                                                    <option value="score">Score</option>
+                                                    <option value="scscore">Synthetic complexity</option>
+                                                    <option value="num_examples"># Examples</option>
+                                                    <option value="template_score">Template score</option>
+                                                    <option value="plausibility">Plausibility</option>
+                                                    <option value="rms_molwt">Root mean square molecular weight</option>
+                                                    <option value="num_rings">Number of rings</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -812,6 +830,10 @@
                                                                                     <tr>
                                                                                         <td>Score</td>
                                                                                         <td>%% num2str(res.score, 3) %%</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td>Synthetic complexity</td>
+                                                                                        <td>%% num2str(res.scscore, 3) %%</td>
                                                                                     </tr>
                                                                                     <tr>
                                                                                         <td># Examples</td>
@@ -866,6 +888,10 @@
                                                                     <tr>
                                                                         <td>Score</td>
                                                                         <td>%% num2str(res.score, 3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Synthetic complexity</td>
+                                                                        <td>%% num2str(res.scscore, 3) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td># Examples</td>
