@@ -403,6 +403,24 @@
                                     </template>
                                 </select>
                             </div>
+                            <div v-if="templateAttributes && templateAttributes[tb.settings.templateSet] && templateAttributes[tb.settings.templateSet].length" class="form-inline mb-2">
+                                <i title="Template attribute filters to use during retrosynthetic prediction. These are attributes that are defined for each template, and only those templates that satisfy the filter provided here will be considered. Normally, only the top 'Max. Num. templates' will be applied - with these filters, the top 'Max. Num. templates' that satisfy the filters will be applied." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label>Template attribute filters: <i style="cursor: pointer" @click="addAttributeFilter" class="fas fa-plus ml-1"></i></label>
+                            </div>
+                            <div class="form-inline mb-2 ml-3" v-for="(filter, idx) in tb.settings.attributeFilter">
+                                <i @click="tb.settings.attributeFilter.pop(idx)" class="fas fa-times mr-2" style="cursor: pointer"></i>
+                                <select class="form-control form-control-sm mr-2" v-model="filter.name">
+                                    <option v-for="attribute in templateAttributes[tb.settings.templateSet]" :value="attribute">%% attribute %%</option>
+                                </select>
+                                <select class="form-control form-control-sm mr-2" v-model="filter.logic">
+                                    <option value="&gt;">&gt;</option>
+                                    <option value="&ge;">&ge;</option>
+                                    <option value="&lt;">&lt;</option>
+                                    <option value="&le;">&le;</option>
+                                    <option value="==">==</option>
+                                </select>
+                                <input class="form-control form-control-sm mr-2" type="number" v-model="filter.value">
+                            </div>
                             <div class="form-inline mb-2">
                                 <i title="When multiple versions of a template relevance model are available for a given template set, you can choose between them here." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="templateSetVersion">Relevance model version:</label>
@@ -732,6 +750,9 @@
                     <i @click="showSettingsModal = true" class="fas fa-edit" style="cursor: pointer"></i>&nbsp;
                     Using template set&nbsp;<samp><code>%% tb.settings.templateSet %%</code></samp>&nbsp;
                     version&nbsp;<samp><code>%% tb.settings.templateSetVersion %%</code></samp>
+                    <div v-if="templateAttributes && templateAttributes[tb.settings.templateSet] && tb.settings.attributeFilter.length">
+                        &nbsp;with <samp><code>%% tb.settings.attributeFilter.length %%</code></samp> active attribute filters
+                    </div>
                 </div>
 
                 <div id="network" class="mx-auto my-2"></div>

@@ -8,6 +8,18 @@ from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from .celery import CeleryTaskAPIView
 
 
+class AttributeFilterSerializer(serializers.Serializer):
+    """Serializer for individual attribute filter object"""
+    name = serializers.CharField()
+    logic = serializers.CharField()
+    value = serializers.FloatField()
+
+    def validate_logic(self, value):
+        if value not in ['>', '>=', '<', '<=', '==']:
+            raise serializers.ValidationError('Attribute filter logic "{}" not supported.'.format(value))
+        return value
+
+
 class RetroSerializer(serializers.Serializer):
     """Serializer for retrosynthesis task parameters."""
     target = serializers.CharField()
@@ -26,6 +38,8 @@ class RetroSerializer(serializers.Serializer):
     cluster_fp_radius = serializers.IntegerField(default=1)
 
     selec_check = serializers.BooleanField(default=True)
+
+    attribute_filter = AttributeFilterSerializer(default=[], many=True)
 
     def validate_target(self, value):
         """Verify that the requested target is valid."""
@@ -61,6 +75,7 @@ class RetroAPIView(CeleryTaskAPIView):
     - `cluster_fp_length` (int, optional): fingerprint length for clustering
     - `cluster_fp_radius` (int, optional): fingerprint radius for clustering
     - `selec_check` (bool, optional): whether or not to check for potential selectivity issues
+    - `attribute_filter` (list[dict], optional): template attribute filter to apply before template application
 
     Returns:
 
@@ -90,6 +105,8 @@ class RetroAPIView(CeleryTaskAPIView):
 
         selec_check = data['selec_check']
 
+        attribute_filter = data['attribute_filter']
+
         result = get_top_precursors.delay(
             target,
             template_set=template_set,
@@ -105,6 +122,7 @@ class RetroAPIView(CeleryTaskAPIView):
             cluster_fp_length=cluster_fp_length,
             cluster_fp_radius=cluster_fp_radius,
             selec_check=selec_check,
+            attribute_filter=attribute_filter,
             postprocess=True,
         )
 
