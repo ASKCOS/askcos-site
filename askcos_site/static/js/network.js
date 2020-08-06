@@ -1284,6 +1284,9 @@ var app = new Vue({
             results.sort((a, b) => {
                 var a_ = a[sortingCategory] == undefined ? 0 : a[sortingCategory];
                 var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
+                if (a_ == b_) {
+                    return a.rank - b.rank
+                }
                 return cmp(a_, b_);
             })
             var prevSelected = this.selected;
