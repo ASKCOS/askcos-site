@@ -773,20 +773,21 @@
                                             <input id="allowCluster" type="checkbox" ref="allowCluster" v-model="allowCluster" @change="resetSortingCategory" {{ allowCluster }}/>
                                         </div>
                                         <div v-if="!allowCluster" class="form-group mb-2">
-                                            <label class="mr-2" for="sortingCategory">Reorder by:</label>
-                                            <select class="form-control" id="sortingCategory" @change="handleSortingChange" v-model="sortingCategory">
-                                                <option value="score">Score</option>
-                                                <option value="scscore">Synthetic complexity</option>
-                                                <option value="num_examples"># Examples</option>
-                                                <option value="template_score">Template score</option>
-                                                <option value="plausibility">Plausibility</option>
-                                                <option value="rms_molwt">Root mean square molecular weight</option>
-                                                <option value="num_rings">Number of rings</option>
-                                            </select>
-                                            <div style="cursor: pointer; padding-left: 2rem" @click="sortOrderAscending = !sortOrderAscending; reorderResults()">
-                                                Sorting: 
-                                                <code v-if="sortOrderAscending">Low-to-high <i class="fas fa-caret-up"></i></code>
-                                                <code v-else style="cursor: pointer">High-to-low <i class="fas fa-caret-down"></i></code>
+                                            <label class="mr-2" for="sortingCategory">Sort by:</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend" @click="sortOrderAscending = !sortOrderAscending; reorderResults()">
+                                                    <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
+                                                    <button class="input-group-text" v-else>Descending <i class="fas fa-sort-amount-down ml-1"></i></button>
+                                                </div>
+                                                <select class="form-control" id="sortingCategory" @change="handleSortingChange" v-model="sortingCategory">
+                                                    <option value="score">Score</option>
+                                                    <option value="scscore">Synthetic complexity</option>
+                                                    <option value="num_examples"># Examples</option>
+                                                    <option value="template_score">Template score</option>
+                                                    <option value="plausibility">Plausibility</option>
+                                                    <option value="rms_molwt">Root mean square molecular weight</option>
+                                                    <option value="num_rings">Number of rings</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
