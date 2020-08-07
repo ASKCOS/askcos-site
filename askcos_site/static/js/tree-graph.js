@@ -338,7 +338,7 @@ var app = new Vue({
         var node = this.networkData.nodes.get(nodeId)
         this.selected = node
         if (node.type=='chemical' && !!!node.source) {
-            fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
+            fetch(`/api/v2/buyables/?q=${encodeURIComponent(node.smiles)}&source=${this.settings.buyables_source}`)
                 .then(resp => resp.json())
                 .then(json => {
                     if (json.result.length) {
