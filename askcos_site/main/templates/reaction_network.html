@@ -451,14 +451,14 @@ For example, if the sum of the scores of the top two templates exceeds this valu
 For computational efficiency, this value is limited to a maximum value of 0.99999. Please directly use the asynchronous API if you need to apply all templates."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="maxCumProb">Max. cum. prob.:</label>
-                                <input id="maxCumProb" style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control form-control-sm text-center">
+                                <input id="maxCumProb" style="width: 100px" type="number" min="0" max="1" step="0.000001" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control form-control-sm text-center">
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="This is the minimum plausibility that a predictor transformation must receive from the Fast Filter model in order to be kept and returned as a result.
 The plausibility score can help filter out bad suggestions, but in some cases can be over conservative and filter out false negatives."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="minPlausibility">Min. plausibility:</label>
-                                <input id="minPlausibility" style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
+                                <input id="minPlausibility" style="width: 100px" type="number" min="0" max="1" step="0.000001" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="Restrict buyables database lookup to specific sources."
