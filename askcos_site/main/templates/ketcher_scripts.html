@@ -58,6 +58,7 @@ function setSmilesDrawingKetcher(id) {
         // Set the molfile in Ketcher
         molfile = json["molfile"];
         ketcher.setMolecule(molfile);
+        $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
         $("#ketcher-spinner").fadeOut();
     })
     .catch(error => {
