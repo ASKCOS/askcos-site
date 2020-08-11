@@ -461,32 +461,6 @@ The plausibility score can help filter out bad suggestions, but in some cases ca
                                 <input id="minPlausibility" style="width: 100px" type="number" min="0" max="1" step="0.000001" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
                             </div>
                             <div class="form-inline mb-2">
-                                <i title="Restrict buyables database lookup to specific sources."
-                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <span class="mr-2" for="buyablesSourceType">Buyables sources:</span>
-                                <div class="dropdown">
-                                    <button class="form-control form-control-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        %% tb.settings.buyablesSourceAll ? 'All' : tb.settings.buyablesSource.length ? tb.settings.buyablesSource.toString() : 'Select Sources' %%
-                                    </button>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <form>
-                                            <div class="form-check justify-content-start m-2">
-                                                <input class="form-check-input" id="buyablesCheckAll" type="checkbox" value="all" v-model="tb.settings.buyablesSourceAll" @change="tb.settings.buyablesSource = []">
-                                                <label class="form-check-label" for="buyablesCheckAll">All</label>
-                                            </div>
-                                            <div class="form-check justify-content-start m-2">
-                                                <input class="form-check-input" id="buyablesCheckNoSource" type="checkbox" value="none" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
-                                                <label class="form-check-label" for="buyablesCheckNoSource">No Source</label>
-                                            </div>
-                                            <div class="form-check justify-content-start m-2" v-for="source in buyablesSources">
-                                                <input class="form-check-input" :id="'buyablesCheck' + source" type="checkbox" :value="source" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
-                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source %%</label>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-inline mb-2">
                                 <i title="When enabled, will automatically identify reactions which have potential regio-selectivity considerations." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <input class="form-check-input" id="checkSelec" type="checkbox" ref="allowSelec" v-model="tb.settings.allowSelec" {{ tb.settings.allowSelec }}/>
                                 <label class="form-check-label" for="checkSelec">Apply regio-selectivity checking?</label>
@@ -514,6 +488,32 @@ It is roughly how long it will take for results to be returned, however there is
                             <h5>Terminal chemical criteria</h5>
                             <p>The following options allow you to set additional criteria to be used in determining whether a precursor is terminal. All AND criteria must be satisfied simultaneously. Any OR criteria are sufficient on their own.</p>
                             <div class="form-inline mb-2">
+                                <i title="Restrict buyables database lookup to specific sources. Note that this also applies to one-step predictions."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <span class="mr-2" for="buyablesSourceType">Buyables sources:</span>
+                                <div class="dropdown">
+                                    <button class="form-control form-control-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        %% tb.settings.buyablesSourceAll ? 'All' : tb.settings.buyablesSource.length ? tb.settings.buyablesSource.toString() : 'Select Sources' %%
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <form>
+                                            <div class="form-check justify-content-start m-2">
+                                                <input class="form-check-input" id="buyablesCheckAll" type="checkbox" value="all" v-model="tb.settings.buyablesSourceAll" @change="tb.settings.buyablesSource = []">
+                                                <label class="form-check-label" for="buyablesCheckAll">All</label>
+                                            </div>
+                                            <div class="form-check justify-content-start m-2">
+                                                <input class="form-check-input" id="buyablesCheckNoSource" type="checkbox" value="none" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
+                                                <label class="form-check-label" for="buyablesCheckNoSource">No Source</label>
+                                            </div>
+                                            <div class="form-check justify-content-start m-2" v-for="source in buyablesSources">
+                                                <input class="form-check-input" :id="'buyablesCheck' + source" type="checkbox" :value="source" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
+                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source %%</label>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-inline mb-2">
                                 <i title="Sets the logic type for considering buyability. This only checks for existence in the buyables database and does not consider price."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="buyableLogic">Buyability logic:</label>
@@ -533,7 +533,7 @@ It is roughly how long it will take for results to be returned, however there is
                                     <option value="and">And</option>
                                 </select>
                             </div>
-                            <div v-if="tb.settings.maxPPGLogic!='none'" class="form-inline mb-2">
+                            <div v-if="tb.settings.maxPPGLogic!='none'" class="form-inline mb-2 ml-3">
                                 <i title="This is the maximum price below which a precursor will be considered terminal in the MCTS search."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="maxPPG">Max chemical price ($/g):</label>
@@ -549,7 +549,7 @@ It is roughly how long it will take for results to be returned, however there is
                                     <option value="and">And</option>
                                 </select>
                             </div>
-                            <div v-if="tb.settings.maxScscoreLogic!='none'" class="form-inline mb-2">
+                            <div v-if="tb.settings.maxScscoreLogic!='none'" class="form-inline mb-2 ml-3">
                                 <i title="This is the maximum synthetic complexity score below which a precursor will be considered terminal in the MCTS search. Values range from 1-5, with 5 being most synthetically complex."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="maxScscore">Max chemical SCScore (1-5):</label>
@@ -565,7 +565,7 @@ It is roughly how long it will take for results to be returned, however there is
                                     <option value="and">And</option>
                                 </select>
                             </div>
-                            <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-2">
+                            <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-2 ml-3">
                                 <i title="This is the maximum number of each element below which a precursor will be considered terminal in the MCTS search."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <div class="mr-2">Max atoms:</div>
@@ -596,17 +596,17 @@ It is roughly how long it will take for results to be returned, however there is
                                     <option value="and">And</option>
                                 </select>
                             </div>
-                            <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-2">
+                            <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-2 ml-3">
                                 <i title="This is the minimum number of prior occurrences above which a precursor will be considered terminal in the MCTS search."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <div class="mr-2">Minimum occurrences:</div>
+                                <div class="mr-2">Min occurrences:</div>
                                 <div class="form-group">
                                     <label class="mx-2" for="chemPopR">As reactant &ge;</label>
-                                    <input id="chemPopR" style="width: 75px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityReactants">
+                                    <input id="chemPopR" style="width: 5rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityReactants">
                                 </div>
                                 <div class="form-group">
                                     <label class="mx-2" for="chemPopP">As product &ge;</label>
-                                    <input id="chemPopP" style="width: 75px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityProducts">
+                                    <input id="chemPopP" style="width: 5rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityProducts">
                                 </div>
                             </div>
                             <h5>Result output options</h5>
