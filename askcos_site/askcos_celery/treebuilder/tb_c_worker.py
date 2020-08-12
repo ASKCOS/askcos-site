@@ -170,7 +170,7 @@ def apply_one_template_by_idx(*args, **kwargs):
     )
 
     fast_filter_hostname = 'fast-filter'
-    fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter').predict
+    fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter').predict
 
     kwargs.update({
         'template_prioritizer': template_prioritizer,
@@ -191,7 +191,7 @@ def fast_filter_check(*args, **kwargs):
     """
     print('got request for fast filter')
     fast_filter_hostname = 'fast-filter'
-    fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter')
+    fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter')
     return fast_filter.predict(*args, **kwargs)
 
 
