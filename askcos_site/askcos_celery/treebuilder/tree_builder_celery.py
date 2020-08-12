@@ -4,6 +4,8 @@ Tree builder subclass using celery for multiprocessing.
 
 import askcos_site.askcos_celery.treebuilder.tb_c_worker as tb_c_worker
 from askcos.retrosynthetic.mcts.tree_builder import MCTS, WAITING
+from askcos_site.askcos_celery.treebuilder.retro_transformer_celery import RetroTransformerCelery
+from askcos_site.globals import retro_templates
 
 
 class MCTSCelery(MCTS):
@@ -35,6 +37,20 @@ class MCTSCelery(MCTS):
         from celery.result import allow_join_result
         self.allow_join_result = allow_join_result
         self.template_prioritizer_version = None
+
+    @staticmethod
+    def load_retro_transformer(template_set='reaxys', precursor_prioritizer='relevanceheuristic'):
+        """
+        Loads retro transformer model.
+        """
+        retro_transformer = RetroTransformerCelery(
+            template_set=template_set,
+            template_prioritizer=None,
+            precursor_prioritizer=precursor_prioritizer,
+            fast_filter=None
+        )
+        retro_transformer.load()
+        return retro_transformer
 
     def reset_workers(self, soft_reset=False):
         # general parameters in celery format
@@ -126,3 +142,20 @@ class MCTSCelery(MCTS):
         """
         pass
 
+    def tid_list_to_info_dict(self, tids):
+        """
+        Returns dict of info from a given list of templates.
+
+            Args:
+                tids (list of int): Template IDs to get info about.
+        """
+        templates = list(retro_templates.find({
+            'index': {'$in': tids},
+            'template_set': self.template_set,
+        }))
+
+        return {
+            'tforms': [str(t.get('_id', -1)) for t in templates],
+            'num_examples': int(sum([t.get('count', 1) for t in templates])),
+            'necessary_reagent': templates[0].get('necessary_reagent', ''),
+        }

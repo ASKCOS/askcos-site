@@ -307,6 +307,7 @@ const tbSettingsDefault = {
     maxCumProb: 0.999,
     minPlausibility: 0.1,
     allowSelec: true,
+    attributeFilter: []
 };
 
 const visjsOptionsDefault = {
@@ -441,6 +442,7 @@ var app = new Vue({
         },
         results: {},
         templateSets: {},
+        templateAttributes: {},
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
@@ -553,6 +555,7 @@ var app = new Vue({
         fetch('/api/v2/template/sets/')
             .then(resp => resp.json())
             .then(json => {
+                this.templateAttributes = json.attributes
                 for (templateSet of json.template_sets) {
                     this.templateSets[templateSet] = { versions: [] }
                     fetch('/api/v2/retro/models/?template_set='+templateSet)
@@ -821,6 +824,13 @@ var app = new Vue({
                     }
                 });
         },
+        addAttributeFilter: function() {
+            this.tb.settings.attributeFilter.push({
+                name: this.templateAttributes[this.tb.settings.templateSet][0],
+                logic: '>',
+                value: 0.5
+            })
+        },
         requestRetro: function(smiles, callback) {
             showLoader()
             const url = '/api/v2/retro/';
@@ -838,6 +848,7 @@ var app = new Vue({
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
                 selec_check: this.tb.settings.allowSelec,
+                attribute_filter: this.tb.settings.attributeFilter,
             };
             fetch(url,{
                 method: 'POST',
@@ -1971,6 +1982,7 @@ var app = new Vue({
             this.canonicalize(smiles, drawBoxId)
         },
         resetTemplateSetVersion(event) {
+            this.tb.settings.attributeFilter = []
             this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
         }
     },

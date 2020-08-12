@@ -10,8 +10,8 @@ lg.setLevel(RDLogger.CRITICAL)
 
 import askcos.global_config as gc
 from askcos.prioritization.precursors.scscore import SCScorePrecursorPrioritizer
-from askcos.interfaces.template_transformer import TemplateTransformer
 from askcos.utilities.buyable.pricer import Pricer
+from askcos_site.askcos_celery.treebuilder.retro_transformer_celery import RetroTransformerCelery
 from askcos_site.celery import app
 
 ################################################################################
@@ -34,7 +34,7 @@ forward_templates = db_client[gc.FORWARD_TEMPLATES['database']][gc.FORWARD_TEMPL
 
 ################################################################################
 # Retro Transformer
-retro_transformer = TemplateTransformer(load_all=False, use_db=True, TEMPLATE_DB=retro_templates)
+retro_transformer = RetroTransformerCelery()
 RETRO_CHIRAL_FOOTNOTE = 'Using {} chiral retrosynthesis templates from {}/{}'.format(
     gc.RELEVANCE_TEMPLATE_PRIORITIZATION['reaxys']['output_size'],
     gc.RETRO_TEMPLATES['database'],

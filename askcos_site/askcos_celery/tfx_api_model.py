@@ -1,7 +1,7 @@
 import numpy as np
 import requests
 
-class TFServingAPIModel(object):
+class TFXAPIModel(object):
     """Base tensorflow serving API Model class.
     
     Attributes:
