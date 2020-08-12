@@ -128,10 +128,8 @@ class BuyablesViewSet(ViewSet):
                 query['smiles'] = search
 
         if source is not None:
-            # split and strip whitespace
-            sources = (token.strip() for token in source.split(','))
-            # remove empty strings and change 'none' to None
-            sources = [source if source != 'none' else None for source in sources if source]
+            sources = source.split(',') if ',' in source else [source]
+            sources = [source if source != 'none' else None for source in sources]  # replace 'none' with None
             query['source'] = {'$in': sources}
 
         search_result = list(buyables_db.find(query, {'smiles': 1, 'ppg': 1, 'source': 1}).limit(limit))

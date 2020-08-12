@@ -507,7 +507,7 @@ It is roughly how long it will take for results to be returned, however there is
                                             </div>
                                             <div class="form-check justify-content-start m-2" v-for="source in buyablesSources">
                                                 <input class="form-check-input" :id="'buyablesCheck' + source" type="checkbox" :value="source" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
-                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source %%</label>
+                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% !!source ? source : "(blank)" %%</label>
                                             </div>
                                         </form>
                                     </div>

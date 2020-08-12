@@ -124,7 +124,7 @@
             </tr>
             <tr>
                 <th>Buyables source(s):</th>
-                <td colspan=2>%% !!settings.buyables_source ? settings.buyables_source.map(item => item == null ? 'none' : item).toString() : 'all' %%</td>
+                <td colspan=2>%% !!settings.buyables_source ? settings.buyables_source.map(item => item == null ? '(no source)' : item == '' ? '(blank)' : item).toString() : 'all' %%</td>
             </tr>
         </table>
     </div>
