@@ -154,7 +154,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     })
     for (n in reaction['smiles_split']) {
         var smi = reaction['smiles_split'][n];
-        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}&source=${app.buyablesSource}&canonicalize=True`)
+        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}${app.buyablesSourceQuery}&canonicalize=True`)
         .then(resp => resp.json())
         .then(json => {
             var mysmi = json['search'];
@@ -744,7 +744,9 @@ var app = new Vue({
                 chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
                 min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
                 min_chempop_products: this.tb.settings.chemicalPopularityProducts,
-                buyables_source: this.buyablesSource,
+            }
+            if (!this.tb.settings.buyablesSourceAll) {
+                body.buyables_source = this.tb.settings.buyablesSource.toString()
             }
             fetch(url, {
                 method: 'POST', 
@@ -990,7 +992,7 @@ var app = new Vue({
                         app.initClusterShowCard(smi); // must be called immediately after adding results
                         addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
-                        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}&source=${app.buyablesSource}&canonicalize=True`)
+                        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}${app.buyablesSourceQuery}&canonicalize=True`)
                             .then(resp => resp.json())
                             .then(json => {
                                 if (json.result.length > 0) {
@@ -1330,7 +1332,7 @@ var app = new Vue({
             this.selected = node;
             this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
-                fetch(`/api/v2/buyables/?q=${encodeURIComponent(node.smiles)}&source=${this.buyablesSource}`)
+                fetch(`/api/v2/buyables/?q=${encodeURIComponent(node.smiles)}${this.buyablesSourceQuery}`)
                     .then(resp => resp.json())
                     .then(json => {
                         if (json.result.length) {
@@ -2036,8 +2038,8 @@ var app = new Vue({
             }
             return res;
         },
-        buyablesSource: function() {
-            return this.tb.settings.buyablesSourceAll ? 'all' : this.tb.settings.buyablesSource.toString()
+        buyablesSourceQuery: function() {
+            return this.tb.settings.buyablesSourceAll ? '' : '&source=' + this.tb.settings.buyablesSource.toString()
         },
     },
     delimiters: ['%%', '%%'],

@@ -38,7 +38,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     filter_threshold = serializers.FloatField(default=0.75)
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer_version = serializers.IntegerField(default=0)
-    buyables_source = serializers.CharField(default='all', allow_blank=True)
+    buyables_source = serializers.CharField(required=False, allow_blank=True)
     return_first = serializers.BooleanField(default=True)
     max_trees = serializers.IntegerField(default=500)
 
@@ -237,7 +237,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
         # Clean buyables source
         buyables_source = data.get('buyables_source')
-        if buyables_source != 'all':
+        if buyables_source is not None:
             # split and strip whitespace
             sources = (token.strip() for token in buyables_source.split(','))
             # remove empty strings and change 'none' to None

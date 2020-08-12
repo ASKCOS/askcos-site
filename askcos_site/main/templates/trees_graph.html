@@ -122,9 +122,9 @@
                 <th>Evaluation settings:</th>
                 <td colspan=2>Min. plausibility: %% settings.filter_threshold %%</td>
             </tr>
-            <tr v-if="'buyables_source' in settings">
+            <tr>
                 <th>Buyables source(s):</th>
-                <td colspan=2>%% settings.buyables_source.toString() %%</td>
+                <td colspan=2>%% !!settings.buyables_source ? settings.buyables_source.map(item => item == null ? 'none' : item).toString() : 'all' %%</td>
             </tr>
         </table>
     </div>
