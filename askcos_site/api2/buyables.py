@@ -41,7 +41,7 @@ class BuyableUploadSerializer(serializers.Serializer):
 class BuyableQuerySerializer(serializers.Serializer):
     """Serializer for a buyable query"""
     q = serializers.CharField(default='')
-    source = serializers.CharField(required=False, allow_blank=True)
+    source = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, allow_empty=True)
     regex = serializers.BooleanField(default=False)
     returnLimit = serializers.IntegerField(default=100)
     canonicalize = serializers.BooleanField(default=True)
@@ -128,8 +128,11 @@ class BuyablesViewSet(ViewSet):
                 query['smiles'] = search
 
         if source is not None:
-            sources = source.split(',') if ',' in source else [source]
-            sources = [source if source != 'none' else None for source in sources]  # replace 'none' with None
+            if '[]' in source:
+                # Special case to allow requesting empty list via query params
+                sources = []
+            else:
+                sources = [s if s != 'none' else None for s in source]  # replace 'none' with None
             query['source'] = {'$in': sources}
 
         search_result = list(buyables_db.find(query, {'smiles': 1, 'ppg': 1, 'source': 1}).limit(limit))

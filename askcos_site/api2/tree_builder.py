@@ -38,7 +38,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     filter_threshold = serializers.FloatField(default=0.75)
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer_version = serializers.IntegerField(default=0)
-    buyables_source = serializers.CharField(required=False, allow_blank=True)
+    buyables_source = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, allow_empty=True)
     return_first = serializers.BooleanField(default=True)
     max_trees = serializers.IntegerField(default=500)
 
@@ -238,8 +238,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         # Clean buyables source
         buyables_source = data.get('buyables_source')
         if buyables_source is not None:
-            sources = buyables_source.split(',') if ',' in buyables_source else [buyables_source]
-            buyables_source = [source if source != 'none' else None for source in sources]  # replace 'none' with None
+            buyables_source = [s if s != 'none' else None for s in buyables_source]  # replace 'none' with None
 
         # Retrieve user specific banlists
         banned_reactions = data.get('banned_reactions', [])

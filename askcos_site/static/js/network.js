@@ -746,7 +746,7 @@ var app = new Vue({
                 min_chempop_products: this.tb.settings.chemicalPopularityProducts,
             }
             if (!this.tb.settings.buyablesSourceAll) {
-                body.buyables_source = this.tb.settings.buyablesSource.toString()
+                body.buyables_source = this.tb.settings.buyablesSource
             }
             fetch(url, {
                 method: 'POST', 
@@ -2039,7 +2039,15 @@ var app = new Vue({
             return res;
         },
         buyablesSourceQuery: function() {
-            return this.tb.settings.buyablesSourceAll ? '' : '&source=' + this.tb.settings.buyablesSource.toString()
+            if (this.tb.settings.buyablesSourceAll) {
+                return ''
+            } else if (this.tb.settings.buyablesSource.length) {
+                let query = ''
+                this.tb.settings.buyablesSource.forEach(source => {query += '&source=' + source})
+                return query
+            } else{
+                return '&source=[]'
+            }
         },
     },
     delimiters: ['%%', '%%'],
