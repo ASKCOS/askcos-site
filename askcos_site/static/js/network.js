@@ -154,20 +154,12 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     })
     for (n in reaction['smiles_split']) {
         var smi = reaction['smiles_split'][n];
-        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}${app.buyablesSourceQuery}&canonicalize=True`)
-        .then(resp => resp.json())
-        .then(json => {
-            var mysmi = json['search'];
-            if (json.result.length > 0) {
-                var ppg = json.result[0].ppg
-                var buyable = true
-                var source = json.result[0].source
-            }
-            else {
-                var ppg = "not buyable"
-                var buyable = false
-                var source = ''
-            }
+        app.lookupPrice(smi)
+        .then(result => {
+            const mysmi = result.search;
+            const ppg = result.ppg
+            const buyable = ppg !== 'not buyable'
+            const source = result.source
             if (buyable) {
                 var color = "#008800"
             }
@@ -961,6 +953,36 @@ var app = new Vue({
                 })
             return res;
         },
+        lookupPrice: function(smiles) {
+            let url = `/api/v2/buyables/?q=${encodeURIComponent(smiles)}&canonicalize=True`
+            if (!this.tb.settings.buyablesSourceAll) {
+                if (this.tb.settings.buyablesSource.length) {
+                    this.tb.settings.buyablesSource.forEach(source => {url += '&source=' + source})
+                } else{
+                    url += '&source=[]'
+                }
+            }
+            return fetch(url)
+                .then(resp => resp.json())
+                .then(json => {
+                    let result = {
+                        'search': json.search,
+                        'ppg': 'not buyable',
+                        'source': '',
+                    }
+                    if (json.result.length > 0) {
+                        result.ppg = json.result[0].ppg;
+                        result.source = json.result[0].source;
+                        for (entry of json.result) {
+                            if (entry.ppg < result.ppg) {
+                                result.ppg = entry.ppg;
+                                result.source = entry.source;
+                            }
+                        }
+                    }
+                    return result
+                })
+        },
         changeTarget: function() {
             showLoader();
             this.saveTbSettings()
@@ -992,16 +1014,9 @@ var app = new Vue({
                         app.initClusterShowCard(smi); // must be called immediately after adding results
                         addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
-                        fetch(`/api/v2/buyables/?q=${encodeURIComponent(smi)}${app.buyablesSourceQuery}&canonicalize=True`)
-                            .then(resp => resp.json())
-                            .then(json => {
-                                if (json.result.length > 0) {
-                                    var ppg = json.result[0].ppg
-                                }
-                                else {
-                                    var ppg = "not buyable"
-                                }
-                                app.data.nodes.update({id: 0, ppg: ppg});
+                        app.lookupPrice(smi)
+                            .then(result => {
+                                app.data.nodes.update({id: 0, ppg: result.ppg, source: result.source});
                                 app.network.selectNodes([0]);
                                 app.showInfo({'nodes': [0]});
                         })
@@ -1332,13 +1347,11 @@ var app = new Vue({
             this.selected = node;
             this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
-                fetch(`/api/v2/buyables/?q=${encodeURIComponent(node.smiles)}${this.buyablesSourceQuery}`)
-                    .then(resp => resp.json())
-                    .then(json => {
-                        if (json.result.length) {
-                            this.data.nodes.update({id: node.id, source: json.result[0].source})
-                            this.$set(this.selected, 'source', json.result[0].source)
-                        }
+                this.lookupPrice(node.smiles)
+                    .then(result => {
+                        this.data.nodes.update({id: node.id, ppg: result.ppg, source: result.source})
+                        this.$set(this.selected, 'ppg', result.ppg)
+                        this.$set(this.selected, 'source', result.source)
                     })
             }
         },
@@ -2037,17 +2050,6 @@ var app = new Vue({
                 res[x] = Array.from(ids).sort(function(a, b){return a-b});
             }
             return res;
-        },
-        buyablesSourceQuery: function() {
-            if (this.tb.settings.buyablesSourceAll) {
-                return ''
-            } else if (this.tb.settings.buyablesSource.length) {
-                let query = ''
-                this.tb.settings.buyablesSource.forEach(source => {query += '&source=' + source})
-                return query
-            } else{
-                return '&source=[]'
-            }
         },
     },
     delimiters: ['%%', '%%'],
