@@ -245,6 +245,12 @@ var app = new Vue({
             this.numReactions = stats[1];
             this.trees = trees;
             this.settings = result['settings'];
+            if (!!this.settings.buyables_source
+                    && (this.settings.buyables_source.includes(null) || this.settings.buyables_source.includes(''))) {
+                const to_remove = [null, '']
+                this.settings.buyables_source = this.settings.buyables_source.filter(item => !to_remove.includes(item))
+                this.settings.buyables_source.push('(no source)')
+            }
             this.networkContainer = document.getElementById('left-pane')
             if (this.trees.length) {
                 this.allTreeStats()

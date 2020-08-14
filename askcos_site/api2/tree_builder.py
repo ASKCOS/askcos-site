@@ -237,8 +237,10 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
 
         # Clean buyables source
         buyables_source = data.get('buyables_source')
-        if buyables_source is not None:
-            buyables_source = [s if s != 'none' else None for s in buyables_source]  # replace 'none' with None
+        if buyables_source is not None and 'none' in buyables_source:
+            # Include both null and empty string source in query
+            buyables_source.remove('none')
+            buyables_source.extend([None, ''])
 
         # Retrieve user specific banlists
         banned_reactions = data.get('banned_reactions', [])

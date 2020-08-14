@@ -130,10 +130,12 @@ class BuyablesViewSet(ViewSet):
         if source is not None:
             if '[]' in source:
                 # Special case to allow requesting empty list via query params
-                sources = []
-            else:
-                sources = [s if s != 'none' else None for s in source]  # replace 'none' with None
-            query['source'] = {'$in': sources}
+                source = []
+            elif 'none' in source:
+                # Include both null and empty string source in query
+                source.remove('none')
+                source.extend([None, ''])
+            query['source'] = {'$in': source}
 
         search_result = list(buyables_db.find(query, {'smiles': 1, 'ppg': 1, 'source': 1}).limit(limit))
 
@@ -215,8 +217,17 @@ class BuyablesViewSet(ViewSet):
 
     @action(detail=False, methods=['GET'])
     def sources(self, request):
-        """Returns available sources that exist in mongodb"""
-        resp = {'sources': buyables_db.distinct('source')}
+        """
+        Returns available buyables sources that exist in mongodb.
+        Excludes empty string from result, if entries with empty source exist.
+
+        Method: GET
+
+        Returns:
+
+        - `sources`: list of sources present in buyables database
+        """
+        resp = {'sources': [s for s in buyables_db.distinct('source') if s]}
         return Response(resp)
 
     @action(detail=False, methods=['post'])
