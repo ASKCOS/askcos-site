@@ -245,6 +245,12 @@ var app = new Vue({
             this.numReactions = stats[1];
             this.trees = trees;
             this.settings = result['settings'];
+            if (!!this.settings.buyables_source
+                    && (this.settings.buyables_source.includes(null) || this.settings.buyables_source.includes(''))) {
+                const to_remove = [null, '']
+                this.settings.buyables_source = this.settings.buyables_source.filter(item => !to_remove.includes(item))
+                this.settings.buyables_source.push('(no source)')
+            }
             this.networkContainer = document.getElementById('left-pane')
             if (this.trees.length) {
                 this.allTreeStats()
@@ -338,7 +344,7 @@ var app = new Vue({
         var node = this.networkData.nodes.get(nodeId)
         this.selected = node
         if (node.type=='chemical' && !!!node.source) {
-            fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
+            fetch(`/api/v2/buyables/?q=${encodeURIComponent(node.smiles)}&source=${this.settings.buyables_source}`)
                 .then(resp => resp.json())
                 .then(json => {
                     if (json.result.length) {

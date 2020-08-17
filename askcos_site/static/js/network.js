@@ -9,7 +9,7 @@ function updateObj(dest, src) {
     // modifies dest object in place
     for (let p in src) {
         if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
-            if ( typeof dest[p] === 'object' ) {
+            if ( typeof dest[p] === 'object' && !Array.isArray(dest[p]) ) {
                 updateObj(dest[p], src[p])
             } else {
                 dest[p] = src[p];
@@ -154,20 +154,12 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     })
     for (n in reaction['smiles_split']) {
         var smi = reaction['smiles_split'][n];
-        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
-        .then(resp => resp.json())
-        .then(json => {
-            var mysmi = json['search'];
-            if (json.buyables.length > 0) {
-                var ppg = json.buyables[0].ppg
-                var buyable = true
-                var source = json.buyables[0].source
-            }
-            else {
-                var ppg = "not buyable"
-                var buyable = false
-                var source = ''
-            }
+        app.lookupPrice(smi)
+        .then(result => {
+            const mysmi = result.search;
+            const ppg = result.ppg
+            const buyable = ppg !== 'not buyable'
+            const source = result.source
             if (buyable) {
                 var color = "#008800"
             }
@@ -290,7 +282,11 @@ const tbSettingsDefault = {
     maxDepth: 5,
     maxBranching: 20,
     expansionTime: 60,
+    buyableLogic: 'and',
+    maxPPGLogic: 'none',
     maxPPG: 100,
+    maxScscoreLogic: 'none',
+    maxScscore: 0,
     chemicalPropertyLogic: 'none',
     chemicalPropertyC: 0,
     chemicalPropertyN: 0,
@@ -299,7 +295,10 @@ const tbSettingsDefault = {
     chemicalPopularityLogic: 'none',
     chemicalPopularityReactants: 0,
     chemicalPopularityProducts: 0,
+    buyablesSource: [],
+    buyablesSourceAll: true,
     returnFirst: false,
+    maxTrees: 500,
     templateSet: "reaxys",
     templateSetVersion: 1,
     precursorScoring: "RelevanceHeuristic",
@@ -443,6 +442,7 @@ var app = new Vue({
         results: {},
         templateSets: {},
         templateAttributes: {},
+        buyablesSources: [],
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
@@ -567,6 +567,9 @@ var app = new Vue({
                         })
                 }
             })
+        fetch('/api/v2/buyables/sources/')
+            .then(resp => resp.json())
+            .then(json => {this.buyablesSources = json.sources})
     },
     destroyed: function() {
         window.removeEventListener('resize', this.handleResize);
@@ -714,11 +717,16 @@ var app = new Vue({
                 max_depth: this.tb.settings.maxDepth,
                 max_branching: this.tb.settings.maxBranching,
                 expansion_time: this.tb.settings.expansionTime,
+                buyable_logic: this.tb.settings.buyableLogic,
+                max_ppg_logic: this.tb.settings.maxPPGLogic,
                 max_ppg: this.tb.settings.maxPPG,
+                max_scscore_logic: this.tb.settings.maxScscoreLogic,
+                max_scscore: this.tb.settings.maxScscore,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,
                 return_first: this.tb.settings.returnFirst,
+                max_trees: this.tb.settings.maxTrees,
                 store_results: true,
                 chemical_property_logic: this.tb.settings.chemicalPropertyLogic,
                 max_chemprop_c: this.tb.settings.chemicalPropertyC,
@@ -727,7 +735,10 @@ var app = new Vue({
                 max_chemprop_h: this.tb.settings.chemicalPropertyH,
                 chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
                 min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
-                min_chempop_products: this.tb.settings.chemicalPopularityProducts
+                min_chempop_products: this.tb.settings.chemicalPopularityProducts,
+            }
+            if (!this.tb.settings.buyablesSourceAll) {
+                body.buyables_source = this.tb.settings.buyablesSource
             }
             fetch(url, {
                 method: 'POST', 
@@ -942,6 +953,36 @@ var app = new Vue({
                 })
             return res;
         },
+        lookupPrice: function(smiles) {
+            let url = `/api/v2/buyables/?q=${encodeURIComponent(smiles)}&canonicalize=True`
+            if (!this.tb.settings.buyablesSourceAll) {
+                if (this.tb.settings.buyablesSource.length) {
+                    this.tb.settings.buyablesSource.forEach(source => {url += '&source=' + source})
+                } else{
+                    url += '&source=[]'
+                }
+            }
+            return fetch(url)
+                .then(resp => resp.json())
+                .then(json => {
+                    let result = {
+                        'search': json.search,
+                        'ppg': 'not buyable',
+                        'source': '',
+                    }
+                    if (json.result.length > 0) {
+                        result.ppg = json.result[0].ppg;
+                        result.source = json.result[0].source;
+                        for (entry of json.result) {
+                            if (entry.ppg < result.ppg) {
+                                result.ppg = entry.ppg;
+                                result.source = entry.source;
+                            }
+                        }
+                    }
+                    return result
+                })
+        },
         changeTarget: function() {
             showLoader();
             this.saveTbSettings()
@@ -973,16 +1014,9 @@ var app = new Vue({
                         app.initClusterShowCard(smi); // must be called immediately after adding results
                         addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
-                        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
-                            .then(resp => resp.json())
-                            .then(json => {
-                                if (json.buyables.length > 0) {
-                                    var ppg = json.buyables[0].ppg
-                                }
-                                else {
-                                    var ppg = "not buyable"
-                                }
-                                app.data.nodes.update({id: 0, ppg: ppg});
+                        app.lookupPrice(smi)
+                            .then(result => {
+                                app.data.nodes.update({id: 0, ppg: result.ppg, source: result.source});
                                 app.network.selectNodes([0]);
                                 app.showInfo({'nodes': [0]});
                         })
@@ -1313,13 +1347,11 @@ var app = new Vue({
             this.selected = node;
             this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
-                fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
-                    .then(resp => resp.json())
-                    .then(json => {
-                        if (json.result.length) {
-                            this.data.nodes.update({id: node.id, source: json.result[0].source})
-                            this.$set(this.selected, 'source', json.result[0].source)
-                        }
+                this.lookupPrice(node.smiles)
+                    .then(result => {
+                        this.data.nodes.update({id: node.id, ppg: result.ppg, source: result.source})
+                        this.$set(this.selected, 'ppg', result.ppg)
+                        this.$set(this.selected, 'source', result.source)
                     })
             }
         },
@@ -2018,7 +2050,7 @@ var app = new Vue({
                 res[x] = Array.from(ids).sort(function(a, b){return a-b});
             }
             return res;
-        }
+        },
     },
     delimiters: ['%%', '%%'],
 });

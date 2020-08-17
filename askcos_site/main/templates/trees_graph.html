@@ -67,28 +67,64 @@
                 <th></th>
                 <td colspan=2>Expansion time (s): %% settings.expansion_time %%</td>
             </tr>
-            <tr>
-                <th>Stop criteria:</th>
-                <td colspan=2>Maximum chemical price ($/g): %% settings.max_ppg %%</td>
-            </tr>
-            <tr v-if="!!settings.max_natom_dict && settings.max_natom_dict.logic != 'none'">
-                <th></th>
-                <td colspan=2>Chemical property logic: C=%% settings.max_natom_dict.C %% N=%%
-                    settings.max_natom_dict.N %% H=%% settings.max_natom_dict.H %% O=%%
-                    settings.max_natom_dict.O %%
-                </td>
-            </tr>
-            <tr v-if="!!settings.min_chemical_history_dict && settings.min_chemical_history_dict.logic != 'none'">
-                <th></th>
-                <td colspan=2>Chemical popularity logic: Min. freq. as reactant=%%
-                    settings.min_chemical_history_dict.as_reactant %% Min. freq. as product=%%
-                    settings.min_chemical_history_dict.as_product %%
-                </td>
-            </tr>
+            <template v-if="!!settings.termination_logic">
+                {# New termination settings #}
+                <template v-for="(criteria, logic) in settings.termination_logic">
+                    <tr v-for="(criterion, index) in criteria">
+                        <th v-if="index === 0">Stop criteria (%% logic.toUpperCase() %%):</th>
+                        <th v-else></th>
+                        <td v-if="criterion === 'buyable'" colspan=2>
+                            Chemical found in buyables database
+                        </td>
+                        <td v-if="criterion === 'max_ppg'" colspan=2>
+                            Max. chemical price ($/g): %% settings.max_ppg %%
+                        </td>
+                        <td v-if="criterion === 'max_scscore'" colspan=2>
+                            Max. SCScore: %% settings.max_scscore %%
+                        </td>
+                        <td v-if="criterion === 'max_elements'" colspan=2>
+                            Max. element counts:
+                            <span v-if="'C' in settings.max_elements">C = %% settings.max_elements.C %%;</span>
+                            <span v-if="'N' in settings.max_elements">N = %% settings.max_elements.N %%;</span>
+                            <span v-if="'H' in settings.max_elements">H = %% settings.max_elements.H %%;</span>
+                            <span v-if="'O' in settings.max_elements">O = %% settings.max_elements.O %%;</span>
+                        </td>
+                        <td v-if="criterion === 'min_history'" colspan=2>
+                            Min. popularity:
+                            <span v-if="'as_reactant' in settings.min_history">occurrences as reactant = %% settings.min_history.as_reactant %%;</span>
+                            <span v-if="'as_product' in settings.min_history">occurrences as product = %% settings.min_history.as_product %%;</span>
+                        </td>
+                    </tr>
+                </template>
+            </template>
+            <template v-else>
+                {# Old termination settings #}
+                <tr>
+                    <th>Stop criteria:</th>
+                    <td colspan=2>Maximum chemical price ($/g): %% settings.max_ppg %%</td>
+                </tr>
+                <tr v-if="!!settings.max_natom_dict && settings.max_natom_dict.logic != 'none'">
+                    <th></th>
+                    <td colspan=2>Chemical property logic: C=%% settings.max_natom_dict.C %% N=%%
+                        settings.max_natom_dict.N %% H=%% settings.max_natom_dict.H %% O=%%
+                        settings.max_natom_dict.O %%
+                    </td>
+                </tr>
+                <tr v-if="!!settings.min_chemical_history_dict && settings.min_chemical_history_dict.logic != 'none'">
+                    <th></th>
+                    <td colspan=2>Chemical popularity logic: Min. freq. as reactant=%%
+                        settings.min_chemical_history_dict.as_reactant %% Min. freq. as product=%%
+                        settings.min_chemical_history_dict.as_product %%
+                    </td>
+                </tr>
+            </template>
             <tr>
                 <th>Evaluation settings:</th>
-                <td>Min. plausibility: %% settings.filter_threshold %%</td>
-                <td></td>
+                <td colspan=2>Min. plausibility: %% settings.filter_threshold %%</td>
+            </tr>
+            <tr>
+                <th>Buyables source(s):</th>
+                <td colspan=2>%% !!settings.buyables_source ? settings.buyables_source.toString() : 'All' %%</td>
             </tr>
         </table>
     </div>

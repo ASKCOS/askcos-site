@@ -249,6 +249,7 @@ class TestAPI(unittest.TestCase):
         data = {
             'smiles': 'C1CCC1',
             'ppg': '2.0',
+            'source': 'test',
             'allowOverwrite': False,
         }
         response = self.post('/buyables/', data=data)
@@ -257,8 +258,8 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(result['success'])
         _id = result['inserted']['_id']
 
-        # Post request to upload buyables (both are duplicates)
-        filedata = '[{"smiles": "C1CCC1","ppg": "2.0"},{"smiles": "C1CCCC1","ppg": "3.0"}]'
+        # Post request to upload buyables (duplicate entry)
+        filedata = '[{"smiles": "C1CCC1","ppg": "2.0","source": "test"}]'
         files = {'file': ('upload.json', filedata)}
         data = {'format': 'json', 'allowOverwrite': False}
         response = self.post('/buyables/upload/', data=data, files=files)
@@ -267,8 +268,8 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(result['success'])
         self.assertEqual(result['inserted'], [])
         self.assertEqual(result['updated'], [])
-        self.assertEqual(result['duplicate_count'], 2)
-        self.assertEqual(result['total'], 2)
+        self.assertEqual(result['duplicate_count'], 1)
+        self.assertEqual(result['total'], 1)
 
         # Get request with query
         response = self.get('/buyables/?q=C1CCC1')
@@ -894,6 +895,7 @@ M  END
         """Test /tree-builder endpoint"""
         data = {
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
             'return_first': True,
         }
         response = self.post('/tree-builder/', data=data)

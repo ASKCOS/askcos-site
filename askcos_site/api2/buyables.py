@@ -41,7 +41,7 @@ class BuyableUploadSerializer(serializers.Serializer):
 class BuyableQuerySerializer(serializers.Serializer):
     """Serializer for a buyable query"""
     q = serializers.CharField(default='')
-    source = serializers.CharField(default='')
+    source = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, allow_empty=True)
     regex = serializers.BooleanField(default=False)
     returnLimit = serializers.IntegerField(default=100)
     canonicalize = serializers.BooleanField(default=True)
@@ -56,7 +56,7 @@ class BuyablesViewSet(ViewSet):
     Query Parameters:
 
     - `q` (str): search query, e.g. SMILES string
-    - `source` (str): source of buyables data
+    - `source` (str): source(s) of buyables data (accepts comma delimited list)
     - `regex` (bool): whether or not to treat `q` as regex pattern
     - `returnLimit` (int): maximum number of results to return
     - `canonicalize` (bool): whether or not to canonicalize `q`
@@ -111,7 +111,7 @@ class BuyablesViewSet(ViewSet):
         data = serializer.validated_data
 
         search = data['q']
-        source = data['source']
+        source = data.get('source')
         regex = data['regex']
         limit = data['returnLimit']
         canon = data['canonicalize']
@@ -127,8 +127,15 @@ class BuyablesViewSet(ViewSet):
                         search = Chem.MolToSmiles(mol, isomericSmiles=True)
                 query['smiles'] = search
 
-        if source:
-            query['source'] = source
+        if source is not None:
+            if '[]' in source:
+                # Special case to allow requesting empty list via query params
+                source = []
+            elif 'none' in source:
+                # Include both null and empty string source in query
+                source.remove('none')
+                source.extend([None, ''])
+            query['source'] = {'$in': source}
 
         search_result = list(buyables_db.find(query, {'smiles': 1, 'ppg': 1, 'source': 1}).limit(limit))
 
@@ -206,6 +213,21 @@ class BuyablesViewSet(ViewSet):
         if result.get('updated'):
             resp['updated'] = result['updated']
 
+        return Response(resp)
+
+    @action(detail=False, methods=['GET'])
+    def sources(self, request):
+        """
+        Returns available buyables sources that exist in mongodb.
+        Excludes empty string from result, if entries with empty source exist.
+
+        Method: GET
+
+        Returns:
+
+        - `sources`: list of sources present in buyables database
+        """
+        resp = {'sources': [s for s in buyables_db.distinct('source') if s]}
         return Response(resp)
 
     @action(detail=False, methods=['post'])
@@ -340,7 +362,7 @@ class BuyablesViewSet(ViewSet):
             'source': source
         }
 
-        existing_doc = buyables_db.find_one({'smiles': smiles})
+        existing_doc = buyables_db.find_one({'smiles': smiles, 'source': source})
         if existing_doc and allow_overwrite:
             buyables_db.update_one(
                 {'smiles': smiles},
