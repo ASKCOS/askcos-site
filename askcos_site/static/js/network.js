@@ -532,8 +532,7 @@ var app = new Vue({
     created: function() {
         window.addEventListener('resize', this.handleResize);
         this.handleResize();
-    },
-    mounted: function() {
+
         this.loadNetworkOptions()
         this.loadTarget()
         this.loadTbSettings()
@@ -570,6 +569,11 @@ var app = new Vue({
         fetch('/api/v2/buyables/sources/')
             .then(resp => resp.json())
             .then(json => {this.buyablesSources = json.sources})
+    },
+    mounted: function() {
+        setTimeout(() => {
+            document.querySelector('#splash').classList.replace("d-flex", "d-none")
+        }, 1000)
     },
     destroyed: function() {
         window.removeEventListener('resize', this.handleResize);
