@@ -12,6 +12,7 @@ class ForwardPredictorSerializer(serializers.Serializer):
     solvent = serializers.CharField(default='')
     num_results = serializers.IntegerField(default=100)
     atommap = serializers.BooleanField(default=False)
+    priority = serializers.IntegerField(default=1)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid. Returns canonicalized SMILES."""
@@ -52,6 +53,7 @@ class ForwardPredictorAPIView(CeleryTaskAPIView):
     - `solvent` (str, optional): SMILES string of solvent (default='')
     - `num_results` (int, optional): max number of results to return (default=100)
     - `atommap` (bool, optional): Flag to keep atom mapping from the prediction (default=False)
+    - `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
     Returns:
 
@@ -67,8 +69,6 @@ class ForwardPredictorAPIView(CeleryTaskAPIView):
         reactants = data['reactants']
         reagents = data['reagents']
         solvent = data['solvent']
-        num_results = data['num_results']
-        atommap = data['atommap']
 
         combined_smiles = reactants
         if reagents:
@@ -76,7 +76,13 @@ class ForwardPredictorAPIView(CeleryTaskAPIView):
         if solvent:
             combined_smiles += '.{}'.format(solvent)
 
-        result = get_outcomes.delay(combined_smiles, top_n=num_results, atommap=atommap)
+        args = (combined_smiles,)
+        kwargs = {
+            'top_n': data['num_results'],
+            'atommap': data['atommap'],
+        }
+
+        result = get_outcomes.apply_async(args, kwargs, priority=data['priority'])
 
         return result
 
