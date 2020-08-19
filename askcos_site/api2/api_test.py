@@ -74,6 +74,7 @@ class TestAPI(unittest.TestCase):
         request = result['request']
         self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
         self.assertEqual(request['mapper'], 'WLN atom mapper')
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -96,6 +97,18 @@ class TestAPI(unittest.TestCase):
         response = self.post('/atom-mapper/', data={'rxnsmiles': 'X>>Y'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reactants using rdkit.']})
+
+        # Test task priority argument
+        data = {
+            'rxnsmiles': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'priority': 2,
+        }
+        response = self.post('/atom-mapper/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     @unittest.skipIf(not (username and password), 'Requires login credentials.')
     def test_banlist_chemicals(self):
@@ -496,6 +509,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['reagents'], '')
         self.assertEqual(request['solvent'], '')
         self.assertEqual(request['num_results'], data['num_results'])
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -520,6 +534,19 @@ class TestAPI(unittest.TestCase):
         response = self.post('/forward/', data={'reactants': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.']})
+
+        # Test task priority argument
+        data = {
+            'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+            'num_results': 5,
+            'priority': 2,
+        }
+        response = self.post('/forward/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     def test_impurity(self):
         """Test /impurity endpoint"""
@@ -715,6 +742,7 @@ M  END
         self.assertEqual(request['cluster_fp_type'], 'morgan')
         self.assertEqual(request['cluster_fp_length'], 512)
         self.assertEqual(request['cluster_fp_radius'], 1)
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -733,6 +761,18 @@ M  END
         response = self.post('/retro/', data={'target': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
+
+        # Test task priority argument
+        data = {
+            'target': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'priority': 2,
+        }
+        response = self.post('/retro/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     def test_retro_models(self):
         """Test /retro/models endpoint"""
@@ -910,6 +950,7 @@ M  END
         self.assertEqual(request['chemical_popularity_logic'], 'none')
         self.assertEqual(request['template_set'], 'reaxys')
         self.assertEqual(request['template_prioritizer_version'], 0)
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -940,6 +981,20 @@ M  END
         self.assertEqual(response.status_code, 401)
         result = response.json()
         self.assertEqual(result['error'], 'You must be authenticated to store tree builder results.')
+
+        # Test task priority argument
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
+            'return_first': True,
+            'priority': 2,
+        }
+        response = self.post('/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     @classmethod
     def tearDownClass(cls):
