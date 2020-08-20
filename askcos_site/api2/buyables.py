@@ -55,11 +55,11 @@ class BuyablesViewSet(ViewSet):
 
     Query Parameters:
 
-    - `q` (str): search query, e.g. SMILES string
-    - `source` (str): source(s) of buyables data (accepts comma delimited list)
-    - `regex` (bool): whether or not to treat `q` as regex pattern
-    - `returnLimit` (int): maximum number of results to return
-    - `canonicalize` (bool): whether or not to canonicalize `q`
+    - `q` (str, optional): search query, e.g. SMILES string
+    - `source` (list, optional): list of source(s) to consider when looking up buyables
+    - `regex` (bool, optional): whether or not to treat `q` as regex pattern (default: False)
+    - `returnLimit` (int, optional): maximum number of results to return (default: 100)
+    - `canonicalize` (bool, optional): whether or not to canonicalize `q` (default: True)
 
     Returns:
 
@@ -72,8 +72,8 @@ class BuyablesViewSet(ViewSet):
 
     - `smiles` (str): SMILES string of buyable
     - `ppg` (float): price of buyable
-    - `source` (float): source of data
-    - `allowOverwrite` (bool): whether or not to overwrite existing duplicates
+    - `source` (str, optional): source of data (default: '')
+    - `allowOverwrite` (bool, optional): whether or not to overwrite existing duplicates (default: True)
 
     Returns:
 
@@ -100,6 +100,15 @@ class BuyablesViewSet(ViewSet):
 
     - `success`: true if deletion was successful
     - `error`: error message if encountered
+
+    ----------
+    Query available buyables sources (`/api/v2/buyables/sources/`):
+
+    Method: GET
+
+    Returns:
+
+    - `sources`: list of available buyables sources
     """
 
     authentication_classes = [SessionAuthentication, JSONWebTokenAuthentication]
