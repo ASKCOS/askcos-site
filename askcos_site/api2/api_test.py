@@ -247,7 +247,7 @@ class TestAPI(unittest.TestCase):
 
         # Post request to add buyable
         data = {
-            'smiles': 'C1CCC1',
+            'smiles': 'C1CC2(C1)CCC2',
             'ppg': '2.0',
             'source': 'test',
             'allowOverwrite': False,
@@ -259,7 +259,7 @@ class TestAPI(unittest.TestCase):
         _id = result['inserted']['_id']
 
         # Post request to upload buyables (duplicate entry)
-        filedata = '[{"smiles": "C1CCC1","ppg": "2.0","source": "test"}]'
+        filedata = '[{"smiles": "C1CC2(C1)CCC2","ppg": "2.0","source": "test"}]'
         files = {'file': ('upload.json', filedata)}
         data = {'format': 'json', 'allowOverwrite': False}
         response = self.post('/buyables/upload/', data=data, files=files)
@@ -272,18 +272,18 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(result['total'], 1)
 
         # Get request with query
-        response = self.get('/buyables/?q=C1CCC1')
+        response = self.get('/buyables/?q=C1CC2(C1)CCC2')
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(len(result['result']), 1)
-        self.assertEqual(result['result'][0]['smiles'], 'C1CCC1')
+        self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
 
         # Get request for specific buyable
         response = self.get('/buyables/{0}/'.format(_id))
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(len(result['result']), 1)
-        self.assertEqual(result['result'][0]['smiles'], 'C1CCC1')
+        self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
 
         # Delete request for specific buyable
         response = self.delete('/buyables/{0}/'.format(_id))
