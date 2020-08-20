@@ -237,6 +237,8 @@ class BuyablesViewSet(ViewSet):
         - `sources`: list of sources present in buyables database
         """
         resp = {'sources': [s for s in buyables_db.distinct('source') if s]}
+        if buyables_db.find_one(filter={'source': {'$in': [None, '']}}) is not None:
+            resp['sources'].append('none')
         return Response(resp)
 
     @action(detail=False, methods=['post'])
