@@ -291,6 +291,13 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(len(result['result']), 1)
         self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
 
+        # Get request with source query
+        response = self.get('/buyables/?source=test')
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(len(result['result']), 1)
+        self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
+
         # Get request for specific buyable
         response = self.get('/buyables/{0}/'.format(_id))
         self.assertEqual(response.status_code, 200)
