@@ -74,7 +74,7 @@ class MCTSCelery(MCTS):
                     'fast_filter_threshold': self.filter_threshold,
                     'template_prioritizer_version': self.template_prioritizer_version,
                     'template_set': self.template_set},
-            # queue=self.private_worker_queue, ## CWC TEST: don't reserve
+            priority=2,  # Send high priority task
         ))
         self.status[(smiles, template_idx)] = WAITING
         self.active_pathways_pending[_id] += 1
@@ -82,13 +82,11 @@ class MCTSCelery(MCTS):
     def prepare(self):
         """Starts parallelization with Celery."""
         try:
-            ## CWC TEST: don't reserve
-            res = tb_c_worker.apply_one_template_by_idx.delay(
-                1,
-                'CCOC(=O)[C@H]1C[C@@H](C(=O)N2[C@@H](c3ccccc3)CC[C@@H]2c2ccccc2)[C@@H](c2ccccc2)N1',
-                1,
-                template_set=self.template_set,
-                template_prioritizer_version=self.template_prioritizer_version
+            res = tb_c_worker.apply_one_template_by_idx.apply_async(
+                args=(1, 'CCOC(=O)[C@H]1C[C@@H](C(=O)N2[C@@H](c3ccccc3)CC[C@@H]2c2ccccc2)[C@@H](c2ccccc2)N1', 1),
+                kwargs={'template_set': self.template_set,
+                        'template_prioritizer_version': self.template_prioritizer_version},
+                priority=2,
             )
             res.get(20)
         except Exception as e:
@@ -124,9 +122,11 @@ class MCTSCelery(MCTS):
         """
         Get template prioritizer predictions to initialize the tree search.
         """
-        res = tb_c_worker.template_relevance.delay(
-            self.smiles, self.template_count, self.max_cum_template_prob, 
-            template_set=self.template_set, template_prioritizer_version=self.template_prioritizer_version
+        res = tb_c_worker.template_relevance.apply_async(
+            args=(self.smiles, self.template_count, self.max_cum_template_prob),
+            kwargs={'template_set': self.template_set,
+                    'template_prioritizer_version': self.template_prioritizer_version},
+            priority=2,  # Send high priority task
         )
         return res.get(10)
 

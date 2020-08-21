@@ -48,6 +48,8 @@ class TreeBuilderSerializer(serializers.Serializer):
     banned_reactions = serializers.ListField(child=serializers.CharField(), required=False)
     banned_chemicals = serializers.ListField(child=serializers.CharField(), required=False)
 
+    priority = serializers.IntegerField(default=1)
+
     def validate_smiles(self, value):
         """Verify that the requested smiles is valid. Returns canonicalized SMILES."""
         mol = Chem.MolFromSmiles(value)
@@ -177,6 +179,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `description` (str, optional): description to associate with stored result
     - `banned_reactions` (list, optional): list of reactions to not consider
     - `banned_chemicals` (list, optional): list of molecules to not consider
+    - `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
     Returns:
 
@@ -276,7 +279,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
         }
 
         if data['version'] == 1:
-            result = get_buyable_paths_v1.apply_async(args, kwargs)
+            result = get_buyable_paths_v1.apply_async(args, kwargs, priority=data['priority'])
 
         if data['store_results']:
             now = timezone.now()
