@@ -61,7 +61,9 @@ def get_n_conditions(*args, **kwargs):
                 'temperature': context[0],
                 'solvent': context[1],
                 'reagent': context[2],
-                'catalyst': context[3]
+                'catalyst': context[3],
+                'solvent_score': context[6],
+                'best': context[7]
             })
 
         if scores is not None:
