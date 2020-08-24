@@ -150,7 +150,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     Parameters:
 
     - `smiles` (str): SMILES string of target
-    - `version` (int): tree builder version to use
+    - `version` (int, optional): tree builder version to use
     - `max_depth` (int, optional): maximum depth of returned pathways
     - `max_branching` (int, optional): maximum branching during pathway exploration
     - `expansion_time` (int, optional): time limit for tree expansion
@@ -172,13 +172,13 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `filter_threshold` (float, optional): fast filter threshold
     - `template_set` (str, optional): template set to use
     - `template_prioritizer_version` (int, optional): version number of template relevance model to use
-    - `buyables_source` (str, optional): source(s) to consider when looking up buyables (accepts comma delimited list)
+    - `buyables_source` (list[str], optional): list of source(s) to consider when looking up buyables
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `max_trees` (int, optional): maximum number of pathways to return
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
-    - `banned_reactions` (list, optional): list of reactions to not consider
-    - `banned_chemicals` (list, optional): list of molecules to not consider
+    - `banned_reactions` (list[str], optional): list of reactions to not consider
+    - `banned_chemicals` (list[str], optional): list of molecules to not consider
     - `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
     Returns:

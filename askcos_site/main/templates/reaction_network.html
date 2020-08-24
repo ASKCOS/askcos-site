@@ -514,13 +514,9 @@ It is roughly how long it will take for results to be returned, however there is
                                                 <input class="form-check-input" id="buyablesCheckAll" type="checkbox" value="all" v-model="tb.settings.buyablesSourceAll" @change="tb.settings.buyablesSource = []">
                                                 <label class="form-check-label" for="buyablesCheckAll">All</label>
                                             </div>
-                                            <div class="form-check justify-content-start m-2">
-                                                <input class="form-check-input" id="buyablesCheckNoSource" type="checkbox" value="none" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
-                                                <label class="form-check-label" for="buyablesCheckNoSource">No Source</label>
-                                            </div>
                                             <div class="form-check justify-content-start m-2" v-for="source in buyablesSources">
                                                 <input class="form-check-input" :id="'buyablesCheck' + source" type="checkbox" :value="source" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
-                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source %%</label>
+                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source == 'none' ? 'No Source' : source %%</label>
                                             </div>
                                         </form>
                                     </div>
