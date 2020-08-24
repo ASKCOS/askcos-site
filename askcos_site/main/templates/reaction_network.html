@@ -497,22 +497,22 @@ It is roughly how long it will take for results to be returned, however there is
                                 <label class="mr-2" for="expansionTime">Expansion time (seconds):</label>
                                 <input id="expansionTime" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" max="300" step="1" v-model.number="tb.settings.expansionTime">
                             </div>
-                            <div class="form-inline mb-2">
+                            <div v-if="tb.settings.version==2" class="form-inline mb-2">
                                 <i title="This is how many iterations the MCTS algorithm is allowed to perform before returning results."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <label class="mr-2" for="maxIterations">Maximum iterations (v2 only):</label>
+                                <label class="mr-2" for="maxIterations">Maximum iterations:</label>
                                 <input id="maxIterations" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxIterations">
                             </div>
-                            <div class="form-inline mb-2">
+                            <div v-if="tb.settings.version==2" class="form-inline mb-2">
                                 <i title="This is how many chemicals the MCTS algorithm is allowed to explore before returning results."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <label class="mr-2" for="maxChemicals">Maximum chemicals (v2 only):</label>
+                                <label class="mr-2" for="maxChemicals">Maximum chemicals:</label>
                                 <input id="maxChemicals" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxChemicals">
                             </div>
-                            <div class="form-inline mb-2">
+                            <div v-if="tb.settings.version==2" class="form-inline mb-2">
                                 <i title="This is how many reactions the MCTS algorithm is allowed to explore before returning results."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <label class="mr-2" for="maxReactions">Maximum reactions (v2 only):</label>
+                                <label class="mr-2" for="maxReactions">Maximum reactions:</label>
                                 <input id="maxReactions" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxReactions">
                             </div>
                             <div class="form-inline mb-2">
