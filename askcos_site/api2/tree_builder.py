@@ -22,7 +22,7 @@ class TreeBuilderSerializer(serializers.Serializer):
     max_reactions = serializers.IntegerField(required=False, allow_null=True)
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
 
-    buyable_logic = serializers.CharField(default='none')
+    buyable_logic = serializers.CharField(default='and')
     max_ppg_logic = serializers.CharField(default='none')
     max_ppg = serializers.IntegerField(required=False)
 
