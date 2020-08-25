@@ -222,6 +222,7 @@ var app = new Vue({
       numReactions: 0,
       trees: [],
       settings: {},
+      tbVersion: null,
       showSettings: false,
       selected: null,
       currentTreeId: 0,
@@ -251,6 +252,8 @@ var app = new Vue({
                 this.settings.buyables_source = this.settings.buyables_source.filter(item => !to_remove.includes(item))
                 this.settings.buyables_source.push('(no source)')
             }
+            // If version is not present in the result, then it is version 1
+            this.tbVersion = result['result']['version'] || 1;
             this.networkContainer = document.getElementById('left-pane')
             if (this.trees.length) {
                 this.allTreeStats()

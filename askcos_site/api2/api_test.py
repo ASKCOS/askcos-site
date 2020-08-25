@@ -1003,6 +1003,54 @@ M  END
         request = result['request']
         self.assertEqual(request['priority'], 2)
 
+    def test_tree_builder_v2(self):
+        """Test /tree-builder endpoint for tree-builder v2"""
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
+            'return_first': True,
+            'version': 2,
+        }
+        response = self.post('/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+        self.assertEqual(request['version'], 2)
+        self.assertEqual(request['return_first'], True)
+        self.assertEqual(request['chemical_property_logic'], 'none')
+        self.assertEqual(request['chemical_popularity_logic'], 'none')
+        self.assertEqual(request['template_set'], 'reaxys')
+        self.assertEqual(request['template_prioritizer_version'], 0)
+        self.assertEqual(request['priority'], 1)
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertIsInstance(result['output'], list)
+        self.assertIsInstance(result['output'][0], dict)
+        self.assertIsInstance(result['output'][0]['children'], list)
+
+        # Test task priority argument
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
+            'return_first': True,
+            'version': 2,
+            'priority': 2,
+        }
+        response = self.post('/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
+
     @classmethod
     def tearDownClass(cls):
         """This method is run once after all tests in this class."""

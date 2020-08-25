@@ -54,6 +54,10 @@
                 <td v-else>Version: N/A</td>
             </tr>
             <tr>
+                <th>Tree builder version:</th>
+                <td colspan=2>Version %% tbVersion %%</td>
+            </tr>
+            <tr>
                 <th>Expansion settings:</th>
                 <td>Max. depth: %% settings.max_depth %%</td>
                 <td>Max. branching factor: %% settings.max_branching %%</td>
@@ -65,7 +69,13 @@
             </tr>
             <tr>
                 <th></th>
-                <td colspan=2>Expansion time (s): %% settings.expansion_time %%</td>
+                <td>Expansion time (s): %% settings.expansion_time %%</td>
+                <td>Max iterations: %% settings.max_iterations || "N/A" %%</td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Max chemicals: %% settings.max_chemicals || "N/A" %%</td>
+                <td>Max reactions: %% settings.max_reactions || "N/A" %%</td>
             </tr>
             <template v-if="!!settings.termination_logic">
                 {# New termination settings #}
