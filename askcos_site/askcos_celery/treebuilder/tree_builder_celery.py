@@ -141,21 +141,3 @@ class MCTSCelery(MCTS):
         No need to wait for Celery workers since they should be pre-initialized.
         """
         pass
-
-    def tid_list_to_info_dict(self, tids):
-        """
-        Returns dict of info from a given list of templates.
-
-            Args:
-                tids (list of int): Template IDs to get info about.
-        """
-        templates = list(retro_templates.find({
-            'index': {'$in': tids},
-            'template_set': self.template_set,
-        }))
-
-        return {
-            'tforms': [str(t.get('_id', -1)) for t in templates],
-            'num_examples': int(sum([t.get('count', 1) for t in templates])),
-            'necessary_reagent': templates[0].get('necessary_reagent', ''),
-        }
