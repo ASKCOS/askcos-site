@@ -253,7 +253,7 @@ var app = new Vue({
                 this.settings.buyables_source.push('(no source)')
             }
             // If version is not present in the result, then it is version 1
-            this.tbVersion = result['result']['version'] || 1;
+            this.tbVersion = result['settings']['version'] || 1;
             this.networkContainer = document.getElementById('left-pane')
             if (this.trees.length) {
                 this.allTreeStats()

@@ -83,12 +83,12 @@ def get_buyable_paths(*args, **kwargs):
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(args[0]))
     _id = get_buyable_paths.request.id
     try:
-        status, paths = treeBuilder.get_buyable_paths(*args, **kwargs)
-        graph = treeBuilder.return_chemical_results()
+        paths, status, graph = treeBuilder.get_buyable_paths(*args, **kwargs)
         result_doc = {
             'status': status,
             'paths': paths,
-            'graph': graph
+            'graph': graph,
+            'version': 2,  # Refers to graph version
         }
     except:
         if run_async:
@@ -96,7 +96,7 @@ def get_buyable_paths(*args, **kwargs):
         raise
     if run_async:
         update_result_state(_id, 'completed')
-        settings = {'smiles': args[0]}
+        settings = {'smiles': args[0], 'version': 1}  # Refers to tree builder version
         settings.update(kwargs)
         settings['template_prioritizer_version'] = template_prioritizer_version
         save_results(result_doc, settings, _id)
