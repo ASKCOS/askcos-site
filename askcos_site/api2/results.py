@@ -5,6 +5,7 @@ from rest_framework.viewsets import ViewSet
 
 from askcos_site.globals import db_client
 from askcos_site.main.models import SavedResults
+from askcos_site.utils.graph import combine_trees, graph_to_results
 
 results_collection = db_client['results']['results']
 
@@ -96,6 +97,36 @@ class ResultsViewSet(ViewSet):
             return Response(resp, status=404)
         else:
             resp['state'] = result.result_state
+
+        return Response(resp)
+
+    @action(detail=True, methods=['GET'])
+    def ipp(self, request, pk):
+        """Process results for display in IPP."""
+        resp = {'id': pk, 'result': None, 'error': None}
+
+        try:
+            result = SavedResults.objects.get(user=request.user, result_id=pk)
+        except SavedResults.DoesNotExist:
+            resp['error'] = 'Result not found!'
+            return Response(resp, status=404)
+        else:
+            if result.result_state == 'completed':
+                result_doc = results_collection.find_one({'_id': pk})
+                tb_results = result_doc['result']
+                if tb_results.get('version') == 2:
+                    # Do additional processing
+                    try:
+                        num = int(request.query_params['num'])
+                    except (KeyError, ValueError):
+                        trees = tb_results['paths']
+                    else:
+                        trees = tb_results['paths'][:num]
+                    tb_results['tree'] = combine_trees(trees)
+                    tb_results['results'] = graph_to_results(tb_results['graph'])
+                resp['result'] = result_doc
+            else:
+                resp['error'] = 'Job not yet complete.'
 
         return Response(resp)
 
