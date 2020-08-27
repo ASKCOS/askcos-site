@@ -1978,26 +1978,105 @@ var app = new Vue({
         loadFromTreeBuilder: function(objectId, numTrees) {
             this.allowCluster = false
             showLoader()
-            fetch('/api/get-result/?id='+objectId)
-            .then(resp => resp.json())
-            .then(json => {
-              if (json.error) {
-                  alert(json.error)
-              }
-              var result = json['result'];
-              var target = result['settings']['smiles'];
-              var stats = result['result']['status'];
-              var trees = result['result']['paths'];
-              var graph = result['result']['graph'];
-              this.addResultsFromTreeBuilder(graph, target)
-              if (numTrees == 'all') {
-                this.addPathsFromTreeBuilder(trees)
-              }
-              else {
-                this.addPathsFromTreeBuilder(trees.slice(0, Number(numTrees)))
-              }
-            })
-            .finally(() => hideLoader())
+            let url = `/api/v2/results/${objectId}/ipp/`
+            if (numTrees !== 'all') {
+                url += `?num=${numTrees}`
+            }
+            fetch(url)
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp.json()
+                })
+                .then(json => {
+                    if (json.error) {
+                        alert(json.error)
+                    }
+                    let result = json['result'];
+                    let resultVersion = result['result']['version'];
+                    let target = result['settings']['smiles'];
+                    if (resultVersion === 2) {
+                        let results = result['result']['results']
+                        let tree = result['result']['tree']
+                        this.results = results
+                        Object.values(results).forEach(this.getTemplateNumExamples)
+                        this.loadNodeLinkGraph(tree, target)
+                    } else {
+                        let trees = result['result']['paths'];
+                        let graph = result['result']['graph'];
+                        this.addResultsFromTreeBuilder(graph, target)
+                        if (numTrees === 'all') {
+                            this.addPathsFromTreeBuilder(trees)
+                        }
+                        else {
+                            this.addPathsFromTreeBuilder(trees.slice(0, Number(numTrees)))
+                        }
+                    }
+                })
+                .finally(() => hideLoader())
+        },
+        loadNodeLinkGraph(data, target) {
+            /* Load tree in node link format into visjs and add visualization related attributes. */
+            for (node of data.nodes) {
+                if (node.type === 'chemical') {
+                    node.image = `/api/v2/draw/?smiles=${encodeURIComponent(node.smiles)}`;
+                    node.shape = 'image';
+                    node.borderWidth = 2;
+                    let color
+                    if (node.smiles === target) {
+                        node.borderWidth = 3;
+                        color = '#000088';
+                    } else if (node.ppg !== 0) {
+                        color = '#008800';
+                    } else {
+                        node.ppg = 'not buyable'
+                        color = '#880000';
+                    }
+                    node.color = {
+                        border: color
+                    }
+                } else {
+                    node.label = '#' + node.rank;
+                    node.ffScore = num2str(node.plausibility ,3);
+                    node.retroscore = num2str(node.template_score, 3);
+                    node.templateScore = num2str(node.template_score, 3);
+                    node.numExamples = num2str(node.num_examples);
+                    node.templateIds = node.tforms;
+                    node.reactionSmiles = node.smiles;
+                }
+            }
+            this.data.nodes = new vis.DataSet(data.nodes);
+            for (edge of data.edges) {
+                edge.scaling = {
+                    min: 1,
+                    max: 5,
+                    customScalingFunction: function(min, max, total, value) {
+                        if (value > 0.25) {
+                            return 1.0
+                        }
+                        else{
+                            return 16*value*value
+                        }
+                    }
+                };
+                let from = this.data.nodes.get(edge.from)
+                let to = this.data.nodes.get(edge.to)
+                if (from.type === 'reaction') {
+                    edge.value = from.template_score
+                } else if (to.type === 'reaction') {
+                    edge.value = to.template_score
+                }
+                edge.color = {
+                    color: '#000000',
+                    inherit: false
+                }
+            }
+            this.data.edges = new vis.DataSet(data.edges);
+            this.networkOptions.layout.hierarchical.enabled = true
+            this.initializeNetwork(this.data);
+            this.network.on('selectNode', this.showInfo);
+            this.network.on('deselectNode', this.clearSelection);
         },
         canonicalize(smiles, input) {
             return fetch(
