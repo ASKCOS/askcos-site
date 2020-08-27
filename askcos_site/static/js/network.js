@@ -2044,6 +2044,13 @@ var app = new Vue({
                     node.numExamples = num2str(node.num_examples);
                     node.templateIds = node.tforms;
                     node.reactionSmiles = node.smiles;
+                    let smi_split = node.smiles.split('>>')
+                    for (let reaction of this.results[smi_split[1]]) {
+                        if (reaction.smiles === smi_split[0]) {
+                            reaction.inViz = true
+                            break
+                        }
+                    }
                 }
             }
             this.data.nodes = new vis.DataSet(data.nodes);
