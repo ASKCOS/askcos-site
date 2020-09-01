@@ -96,38 +96,73 @@ var app = new Vue({
             this.mode = mode
             window.history.pushState({mode: mode}, mode, '?mode='+mode)
         },
-        constructForwardQuery(reagents, solvent) {
-            var query = `reactants=${encodeURIComponent(this.reactants)}`
+        constructForwardPostData(reagents, solvent) {
+            var data = {
+                reactants: this.reactants,
+                num_results: this.numForwardResults
+            }
             if (!!reagents) {
-                query += `&reagents=${encodeURIComponent(reagents)}`
+                data.reagents = reagents
             }
             if (!!solvent) {
-                query += `&solvent=${encodeURIComponent(solvent)}`
+                data.solvent = solvent
             }
-            query += `&num_results=${this.numForwardResults}`
-            return query
+            return data
         },
-        constructuContextQuery() {
-            var reactants = encodeURIComponent(this.reactants)
-            var product = encodeURIComponent(this.product)
-            return `reactants=${reactants}&products=${product}&return_scores=True&num_results=${this.numContextResults}`
+        constructuContextPostData() {
+            return {
+                reactants: this.reactants,
+                products: this.product,
+                return_scores: true,
+                num_results: this.numContextResults
+            }
         },
-        constructFastFilterQuery() {
-            var reactants = encodeURIComponent(this.reactants)
-            var product = encodeURIComponent(this.product)
-            return `reactants=${reactants}&products=${product}`
+        constructFastFilterPostData() {
+            return {
+                reactants: this.reactants,
+                products: this.product
+            }
         },
-        constructImpurityQuery() {
-            var query = `reactants=${encodeURIComponent(this.reactants)}`
-            query += `&products=${encodeURIComponent(this.product)}`
+        constructImpurityPostData() {
+            var data = {
+                reactants: this.reactants,
+                products: this.product,
+                top_k: this.impurityTopk,
+                threshold: this.inspectionThreshold,
+                check_mapping: this.impurityCheckMapping
+            }
             if (!!this.reagents) {
-                query += `&reagents=${encodeURIComponent(this.reagents)}`
+                data.reagents = this.reagents
             }
             if (!!this.solvent) {
-                query += `&solvent=${encodeURIComponent(this.solvent)}`
+                data.solvent = this.solvent
             }
-            query += `&top_k=${this.impurityTopk}&threshold=${this.inspectionThreshold}&check_mapping=${this.impurityCheckMapping}`
-            return query
+            return data
+        },
+        pollCeleryResult: function(taskId, callback) {
+            fetch(`/api/v2/celery/task/${taskId}/`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.complete) {
+                    callback(json.output);
+                    hideLoader();
+                }
+                else if (json.failed) {
+                    hideLoader();
+                    throw Error('Celery task failed.');
+                }
+                else {
+                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 1000)
+                }
+            })
+            .catch(error => {
+                if (error instanceof TypeError) {
+                    console.log('Unable to fetch celery results due to connection error. Will keep trying.')
+                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 2000)
+                } else {
+                    console.error('There was a problem fetching results:', error);
+                }
+            });
         },
         predict() {
             showLoader()
@@ -159,13 +194,33 @@ var app = new Vue({
                 hideLoader()
                 return
             }
-            var query = this.constructForwardQuery(this.reagents, this.solvent)
-            fetch('/api/forward/?'+query)
-            .then(resp => resp.json())
-            .then(json => {
-                this.forwardResults = json['outcomes']
-                hideLoader()
+            var postData = this.constructForwardPostData(this.reagents, this.solvent)
+            const app = this;
+            var callback = (output) => {
+                app.forwardResults = output
+            }
+            fetch('/api/v2/forward/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(postData)
             })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting precursors for this target: '+error)
+                })
         },
         goToForward(index) {
             window.history.pushState({mode: 'forward'}, 'forward', '?mode=forward')
@@ -199,15 +254,36 @@ var app = new Vue({
         contextPredict() {
             showLoader()
             this.contextResults = []
-            var query = this.constructuContextQuery()
-            fetch('/api/context/?'+query)
-            .then(resp => resp.json())
-            .then(json => {
-                this.contextResults = json['contexts']
-                hideLoader()
+            var postData = this.constructuContextPostData()
+            const app = this;
+            var callback = (output) => {
+                app.contextResults = output
+            }
+            fetch('/api/v2/context/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(postData)
             })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting precursors for this target: '+error)
+                })
         },
         evaluateIndex(index) {
+            this.$set(this.contextResults[index], 'evaluating', true)
             var reagents = this.contextResults[index]['reagent']
             if (!!this.contextResults[index]['catalyst']) {
                 if (!!reagents) {
@@ -216,25 +292,48 @@ var app = new Vue({
                 reagents += this.contextResults[index]['catalyst']
             }
             var solvent = this.contextResults[index]['solvent']
-            var query = this.constructForwardQuery(reagents, solvent)
-            return fetch('/api/forward/?'+query)
-            .then(resp => resp.json())
-            .then(json => {
-                for (var n in json['outcomes']) {
-                    var outcome = json['outcomes'][n]
-                    if (outcome['smiles'] == this.product) {
-                        this.$set(this.contextResults[index], 'evaluation', Number(n)+1)
+
+            var postData = this.constructForwardPostData(reagents, solvent)
+            const app = this;
+            var callback = (outcomes) => {
+                for (var n in outcomes) {
+                    var outcome = outcomes[n]
+                    if (outcome.smiles == app.product) {
+                        app.$set(app.contextResults[index], 'evaluation', Number(n)+1)
                         break
                     }
                 }
-                if (!this.contextResults[index]['evaluation']) {
-                    this.$set(this.contextResults[index], 'evaluation', 0)
+                if (!app.contextResults[index]['evaluation']) {
+                    app.$set(app.contextResults[index], 'evaluation', 0)
                 }
+                app.$set(app.contextResults[index], 'evaluating', false)
+            }
+            fetch('/api/v2/forward/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(postData)
             })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting precursors for this target: '+error)
+                })
         },
         canonicalize(smiles, input) {
             return fetch(
-                '/api/rdkit/canonicalize/',
+                '/api/v2/rdkit/smiles/canonicalize/',
                 {
                     method: 'POST',
                     headers: {
@@ -268,27 +367,46 @@ var app = new Vue({
             }
             this.clearEvaluation()
             this.evaluating = true
-            var query = this.constructFastFilterQuery()
-            fetch('/api/fast-filter/?'+query)
-            .then(resp => resp.json())
-            .then(json => {
-                this.reactionScore = json['score']
-            })
-            var promises = []
-            for (index in this.contextResults) {
-                promises.push(this.evaluateIndex(index))
+            var postData = this.constructFastFilterPostData()
+            const app = this;
+            var callback = (output) => {
+                app.reactionScore = output
             }
-            Promise.all(promises).then(() => {this.evaluating = false})
+            fetch('/api/v2/fast-filter/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(postData)
+            })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting precursors for this target: '+error)
+                })
+            for (index in this.contextResults) {
+                this.evaluateIndex(index)
+            }
         },
         updateImpurityProgress(taskId) {
             hideLoader()
-            fetch(`/api/celery/task/?task_id=${taskId}`)
+            fetch(`/api/v2/celery/task/${taskId}/`)
             .then(resp => resp.json())
             .then(json => {
                 if (json['complete']) {
                     this.impurityProgress.percent = 1.0
                     this.impurityProgress.message = 'Prediction complete!'
-                    this.impurityResults = json.results.predict_expand
+                    this.impurityResults = json.output.predict_expand
                 }
                 else if (json['failed']) {
                     this.impurityProgress.percent = 0.0
@@ -304,12 +422,29 @@ var app = new Vue({
         impurityPredict() {
             showLoader()
             this.impurityResults = []
-            var query = this.constructImpurityQuery()
-            fetch('/api/impurity/?'+query)
-            .then(resp => resp.json())
-            .then(json => {
-                this.updateImpurityProgress(json['task_id'])
+            var postData = this.constructImpurityPostData()
+            fetch('/api/v2/impurity/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(postData)
             })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    this.updateImpurityProgress(json.task_id)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error predicting precursors for this target: '+error)
+                })
         },
         updateSmilesFromJSME() {
             var smiles = jsmeApplet.smiles();
