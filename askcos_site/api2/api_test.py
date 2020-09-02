@@ -590,6 +590,51 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse smiles with rdkit.']})
 
+    def test_path_ranking(self):
+        """Test /path-ranking endpoint"""
+        data = {
+            'trees': """[{"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9988686442375183, "template_score": 0.07315370440483093, "tforms": ["5e1f4b6e6348832850997243"], "num_examples": 185, "necessary_reagent": "", "id": 10, "is_reaction": true, "children": [{"smiles": "BrC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 9, "is_chemical": true, "children": []}, {"smiles": "CN(C)CCO", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 5, "is_chemical": true, "children": []}], "smiles": "BrC(c1ccccc1)c1ccccc1.CN(C)CCO>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9775225520133972, "template_score": 0.17757552862167358, "tforms": ["5e1f4b6e6348832850996b90"], "num_examples": 266, "necessary_reagent": "", "id": 6, "is_reaction": true, "children": [{"smiles": "CN(C)CCO", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 5, "is_chemical": true, "children": []}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "CN(C)CCO.OC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9868380427360535, "template_score": 0.016103610396385193, "tforms": ["5e1f4b6e634883285099626f"], "num_examples": 697, "necessary_reagent": "", "id": 18, "is_reaction": true, "children": [{"smiles": "BrCCOC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 16, "is_chemical": true, "children": [{"plausibility": 0.915161669254303, "template_score": 0.07843249291181564, "tforms": ["5e1f4b6e6348832850995fbf", "5e1f4b6e6348832850995f00"], "num_examples": 3287, "necessary_reagent": "", "id": 20, "is_reaction": true, "children": [{"smiles": "BrCCBr", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 19, "is_chemical": true, "children": []}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "BrCCBr.OC(c1ccccc1)c1ccccc1>>BrCCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CNC", "ppg": 13.0, "as_reactant": 0, "as_product": 0, "id": 17, "is_chemical": true, "children": []}], "smiles": "BrCCOC(c1ccccc1)c1ccccc1.CNC>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9411429762840271, "template_score": 0.010665317997336388, "tforms": ["5e1f4b6e6348832850995d9c"], "num_examples": 13475, "necessary_reagent": "", "id": 53, "is_reaction": true, "children": [{"smiles": "CN(C)C(=O)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 52, "is_chemical": true, "children": [{"plausibility": 0.9692589640617371, "template_score": 0.00962438341230154, "tforms": ["5e1f4b6e6348832850995e68"], "num_examples": 3231, "necessary_reagent": "", "id": 61, "is_reaction": true, "children": [{"smiles": "CNC", "ppg": 13.0, "as_reactant": 0, "as_product": 0, "id": 17, "is_chemical": true, "children": []}, {"smiles": "O=C(Cl)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 60, "is_chemical": true, "children": [{"plausibility": 0.9996992349624634, "template_score": 0.8562169075012207, "tforms": ["5e1f4b6e6348832850995d80"], "num_examples": 26695, "necessary_reagent": "[Cl]", "id": 59, "is_reaction": true, "children": [{"smiles": "O=C(O)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 58, "is_chemical": true, "children": [{"plausibility": 0.9207471013069153, "template_score": 0.053130947053432465, "tforms": ["5e1f4b6e6348832850995d76"], "num_examples": 112035, "necessary_reagent": "", "id": 71, "is_reaction": true, "children": [{"smiles": "COC(=O)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 70, "is_chemical": true, "children": [{"plausibility": 0.9830392599105835, "template_score": 0.1137804239988327, "tforms": ["5e1f4b6e634883285099602f"], "num_examples": 1201, "necessary_reagent": "", "id": 69, "is_reaction": true, "children": [{"smiles": "COC(=O)CBr", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 68, "is_chemical": true, "children": []}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "COC(=O)CBr.OC(c1ccccc1)c1ccccc1>>COC(=O)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "COC(=O)COC(c1ccccc1)c1ccccc1>>O=C(O)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "O=C(O)COC(c1ccccc1)c1ccccc1>>O=C(Cl)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "CNC.O=C(Cl)COC(c1ccccc1)c1ccccc1>>CN(C)C(=O)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "CN(C)C(=O)COC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9868380427360535, "template_score": 0.016103610396385193, "tforms": ["5e1f4b6e634883285099626f"], "num_examples": 697, "necessary_reagent": "", "id": 18, "is_reaction": true, "children": [{"smiles": "BrCCOC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 16, "is_chemical": true, "children": [{"plausibility": 0.9061155915260315, "template_score": 0.014876967296004295, "tforms": ["5e1f4b6e6348832850996936"], "num_examples": 319, "necessary_reagent": "", "id": 27, "is_reaction": true, "children": [{"smiles": "BrCCI", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 26, "is_chemical": true, "children": [{"plausibility": 0.9610458612442017, "template_score": 0.05479388311505318, "tforms": ["5e1f4b6e6348832850996027"], "num_examples": 1208, "necessary_reagent": "[I]", "id": 33, "is_reaction": true, "children": [{"smiles": "CS(=O)(=O)OCCBr", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 32, "is_chemical": true, "children": [{"plausibility": 0.9341546893119812, "template_score": 0.011639130301773548, "tforms": ["5e1f4b6e634883285099633a"], "num_examples": 615, "necessary_reagent": "[Br]", "id": 36, "is_reaction": true, "children": [{"smiles": "CS(=O)(=O)OCCOS(C)(=O)=O", "ppg": 21.0, "as_reactant": 0, "as_product": 0, "id": 35, "is_chemical": true, "children": []}], "smiles": "CS(=O)(=O)OCCOS(C)(=O)=O>>CS(=O)(=O)OCCBr"}]}], "smiles": "CS(=O)(=O)OCCBr>>BrCCI"}]}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "BrCCI.OC(c1ccccc1)c1ccccc1>>BrCCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CNC", "ppg": 13.0, "as_reactant": 0, "as_product": 0, "id": 17, "is_chemical": true, "children": []}], "smiles": "BrCCOC(c1ccccc1)c1ccccc1.CNC>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}]""",
+        }
+        response = self.post('/path-ranking/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertTrue(request['cluster'])
+        self.assertEqual(request['cluster_method'], 'hdbscan')
+        self.assertEqual(request['min_samples'], 5)
+        self.assertEqual(request['min_cluster_size'], 5)
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+
+        output = result['output']
+        self.assertIn('scores', output)
+        self.assertEqual(len(output['scores']), 5)
+        self.assertEqual(output['scores'][0], -1)
+        self.assertEqual(output['scores'][1], -1)
+
+        self.assertIn('encoded_trees', output)
+        self.assertEqual(len(output['encoded_trees']), 5)
+        self.assertEqual(len(output['encoded_trees'][0]), 0)
+        self.assertEqual(len(output['encoded_trees'][1]), 0)
+        self.assertEqual(len(output['encoded_trees'][2]), 512)
+        self.assertEqual(len(output['encoded_trees'][3]), 512)
+        self.assertEqual(len(output['encoded_trees'][4]), 512)
+
+        self.assertIn('clusters', output)
+        self.assertEqual(output['clusters'], [-1, -1, 0, 1, 2])
+
+        # Test insufficient data
+        response = self.post('/path-ranking/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'trees': ['This field is required.']})
+
     def test_reactions(self):
         """Test /reactions endpoint"""
         data = {
