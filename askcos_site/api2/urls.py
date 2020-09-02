@@ -26,6 +26,7 @@ urlpatterns += [
     path('fast-filter/', api2.fast_filter.fast_filter, name='fast_filter_api'),
     path('forward/', api2.forward.template_free, name='forward_api'),
     path('impurity/', api2.impurity.impurity_predict, name='impurity_api'),
+    path('path-ranking/', api2.path_ranking.path_ranker, name='path_ranking_api'),
     path('reactions/', api2.reactions.reactions, name='reactions_api'),
     path('retro/', api2.retro.singlestep, name='retro_api'),
     path('retro/models/', api2.retro.models, name='retro_models_api'),
