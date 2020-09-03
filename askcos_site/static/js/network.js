@@ -1868,7 +1868,10 @@ var app = new Vue({
                     Object.values(results).forEach(this.getTemplateNumExamples)
                     this.loadNodeLinkGraph(tree, target)
                 })
-                .finally(() => hideLoader())
+                .catch(error => {
+                    hideLoader()
+                    console.error('There was a problem loading tree builder results:', error);
+                });
         },
         loadNodeLinkGraph(data, target) {
             /* Load tree in node link format into visjs and add visualization related attributes. */
@@ -1938,6 +1941,7 @@ var app = new Vue({
             this.initializeNetwork(this.data);
             this.network.on('selectNode', this.showInfo);
             this.network.on('deselectNode', this.clearSelection);
+            this.network.on('afterDrawing', hideLoader);
         },
         canonicalize(smiles, input) {
             return fetch(
