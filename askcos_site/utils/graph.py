@@ -194,3 +194,26 @@ def combine_old_trees(trees):
             del node_data['is_reaction']
 
     return nx.node_link_data(graph, attrs=NODE_LINK_ATTRS)
+
+
+def tree_data_to_node_link(tree):
+    """
+    Convert a single tree from tree data format to node link format.
+
+    Args:
+        tree (dict): tree in networkx tree data json format
+
+    Returns:
+        tree (dict): tree in networkx node link json format
+    """
+    tree = nx.tree_graph(tree)
+
+    for node, node_data in tree.nodes.items():
+        if node_data.get('is_chemical'):
+            node_data['type'] = 'chemical'
+            del node_data['is_chemical']
+        elif node_data.get('is_reaction'):
+            node_data['type'] = 'reaction'
+            del node_data['is_reaction']
+
+    return nx.node_link_data(tree, attrs=NODE_LINK_ATTRS)
