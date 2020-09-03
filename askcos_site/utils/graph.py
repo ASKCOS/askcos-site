@@ -58,7 +58,7 @@ def combine_trees(trees):
     Combine a list of retrosynthetic trees into a unified tree.
 
     Args:
-        trees (list): list of pathways in networkx tree data json format
+        trees (list): list of pathways in networkx node link json format
 
     Returns:
         graph in networkx node link json format
@@ -66,15 +66,7 @@ def combine_trees(trees):
     if not trees:
         return
 
-    graph = nx.compose_all([nx.tree_graph(tree) for tree in trees])
-
-    for node, node_data in graph.nodes.items():
-        if node_data.get('is_chemical'):
-            node_data['type'] = 'chemical'
-            del node_data['is_chemical']
-        elif node_data.get('is_reaction'):
-            node_data['type'] = 'reaction'
-            del node_data['is_reaction']
+    graph = nx.compose_all([nx.node_link_graph(tree, attrs=NODE_LINK_ATTRS) for tree in trees])
 
     return nx.node_link_data(graph, attrs=NODE_LINK_ATTRS)
 
