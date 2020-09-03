@@ -3,6 +3,8 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+
 function updateObj(dest, src) {
     // take properties of src and overwrite matching properties of dest
     // ignores properties in src if they do not exist in dest
@@ -58,7 +60,7 @@ function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
 }
 
 function addReaction(reaction, sourceNode, nodes, edges) {
-    var rId = nodes.max('id').id+1;
+    let rId = uuidv4();
     var node = {
         id: rId,
         label: '#'+reaction['rank'],
@@ -86,12 +88,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     }
 
     nodes.add(node)
-    if (edges.max('id')) {
-        var eId = edges.max('id').id+1
-    }
-    else {
-        var eId = 0
-    }
+    let eId = uuidv4()
 
     edges.add({
         id: eId,
@@ -129,7 +126,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
             else {
                 var color = "#880000"
             }
-            var nId = nodes.max('id').id+1;
+            let nId = uuidv4();
             nodes.add({
                 id: nId,
                 smiles: mysmi,
@@ -144,7 +141,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
                 }
             })
             edges.add({
-                id: edges.max('id').id+1,
+                id: uuidv4(),
                 from: rId,
                 to: nId,
                 scaling: {
@@ -987,13 +984,13 @@ var app = new Vue({
                         app.network.on('deselectNode', app.clearSelection);
                         app.$set(app.results, smi, precursors);
                         app.initClusterShowCard(smi); // must be called immediately after adding results
-                        addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
+                        addReactions(app.results[smi], app.data.nodes.get(NIL_UUID), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
                         app.lookupPrice(smi)
                             .then(result => {
-                                app.data.nodes.update({id: 0, ppg: result.ppg, source: result.source});
-                                app.network.selectNodes([0]);
-                                app.showInfo({'nodes': [0]});
+                                app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
+                                app.network.selectNodes([NIL_UUID]);
+                                app.showInfo({'nodes': [NIL_UUID]});
                         })
                     }
                     this.requestRetro(smi, callback);
@@ -1831,7 +1828,7 @@ var app = new Vue({
         },
         createTargetNode: function(target) {
             return {
-                id: 0,
+                id: NIL_UUID,
                 smiles: target,
                 image: this.getMolDrawEndPoint(target),
                 shape: "image",
@@ -2053,8 +2050,12 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the highest ranked prediction is highlighted.",
             onShown: function () {
-                app.network.selectNodes([1]);
-                app.selected = app.data.nodes.get(1);
+                app.data.nodes.forEach(function(n) {
+                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
+                        app.network.selectNodes([n.id])
+                        app.selected = app.data.nodes.get(n.id);
+                    }
+                })
             },
             placement: 'right',
         },
@@ -2065,7 +2066,7 @@ var tour = new Tour({
             placement: 'right',
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
+                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
@@ -2113,7 +2114,7 @@ var tour = new Tour({
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.reactionSmiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
+                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
@@ -2127,7 +2128,7 @@ var tour = new Tour({
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
+                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
