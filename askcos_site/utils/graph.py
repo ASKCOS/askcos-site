@@ -1,5 +1,6 @@
 import networkx as nx
 
+from askcos.retrosynthetic.mcts.utils import generate_unique_node
 from askcos.utilities.descriptors import rms_molecular_weight, number_of_rings
 from askcos_site.globals import scscorer, retro_transformer
 
@@ -172,7 +173,7 @@ def combine_old_trees(trees):
             # This stores the children of this node
             children.setdefault(node['smiles'], []).extend(rest)
         for smiles, attributes in nodes.items():
-            new_id = nx.utils.generate_unique_node()
+            new_id = generate_unique_node()
             _graph.add_node(new_id, **attributes)
             _graph.add_edge(_root, new_id)
             _helper(children[smiles], new_id, _graph)
@@ -185,6 +186,10 @@ def combine_old_trees(trees):
 
     # Merge the individual trees into a prefix tree
     _helper(trees, root, graph)
+
+    # Relabel root with NIL UUID so we can easily identify it
+    real_root = next(graph.successors(root))
+    nx.relabel_nodes(graph, {real_root: '00000000-0000-0000-0000-000000000000'}, copy=False)
 
     graph.remove_node(root)
 
