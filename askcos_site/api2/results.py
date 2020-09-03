@@ -5,7 +5,7 @@ from rest_framework.viewsets import ViewSet
 
 from askcos_site.globals import db_client
 from askcos_site.main.models import SavedResults
-from askcos_site.utils.graph import combine_trees, graph_to_results
+from askcos_site.utils.graph import combine_trees, graph_to_results, combine_old_trees, chem_to_results
 
 results_collection = db_client['results']['results']
 
@@ -102,7 +102,17 @@ class ResultsViewSet(ViewSet):
 
     @action(detail=True, methods=['GET'])
     def ipp(self, request, pk):
-        """Process results for display in IPP."""
+        """
+        Process results for display in IPP.
+
+        Method: GET
+
+        Returns:
+
+        - `id`: the requested result id
+        - `result`: the requested result, containing `settings` and `result`
+        - `error`: error message if encountered
+        """
         resp = {'id': pk, 'result': None, 'error': None}
 
         try:
@@ -115,7 +125,6 @@ class ResultsViewSet(ViewSet):
                 result_doc = results_collection.find_one({'_id': pk})
                 tb_results = result_doc['result']
                 if tb_results.get('version') == 2:
-                    # Do additional processing
                     try:
                         num = int(request.query_params['num'])
                     except (KeyError, ValueError):
@@ -124,6 +133,19 @@ class ResultsViewSet(ViewSet):
                         trees = tb_results['paths'][:num]
                     tb_results['tree'] = combine_trees(trees)
                     tb_results['results'] = graph_to_results(tb_results['graph'])
+                else:
+                    try:
+                        num = int(request.query_params['num'])
+                    except (KeyError, ValueError):
+                        trees = tb_results['paths']
+                    else:
+                        trees = tb_results['paths'][:num]
+                    tb_results['tree'] = combine_old_trees(trees)
+                    tb_results['results'] = chem_to_results(tb_results['graph'], tree=tb_results['tree'],
+                                                            template_set=result_doc['settings'].get('template_set'))
+                # Remove unnecessary data to reduce response size
+                del tb_results['graph']
+                del tb_results['paths']
                 resp['result'] = result_doc
             else:
                 resp['error'] = 'Job not yet complete.'

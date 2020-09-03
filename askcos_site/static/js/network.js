@@ -1994,25 +1994,12 @@ var app = new Vue({
                         alert(json.error)
                     }
                     let result = json['result'];
-                    let resultVersion = result['result']['version'];
                     let target = result['settings']['smiles'];
-                    if (resultVersion === 2) {
-                        let results = result['result']['results']
-                        let tree = result['result']['tree']
-                        this.results = results
-                        Object.values(results).forEach(this.getTemplateNumExamples)
-                        this.loadNodeLinkGraph(tree, target)
-                    } else {
-                        let trees = result['result']['paths'];
-                        let graph = result['result']['graph'];
-                        this.addResultsFromTreeBuilder(graph, target)
-                        if (numTrees === 'all') {
-                            this.addPathsFromTreeBuilder(trees)
-                        }
-                        else {
-                            this.addPathsFromTreeBuilder(trees.slice(0, Number(numTrees)))
-                        }
-                    }
+                    let results = result['result']['results']
+                    let tree = result['result']['tree']
+                    this.results = results
+                    Object.values(results).forEach(this.getTemplateNumExamples)
+                    this.loadNodeLinkGraph(tree, target)
                 })
                 .finally(() => hideLoader())
         },
