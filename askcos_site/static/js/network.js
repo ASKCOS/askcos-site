@@ -1863,7 +1863,19 @@ var app = new Vue({
                     let tree = result['result']['tree']
                     this.results = results
                     Object.values(results).forEach(this.getTemplateNumExamples)
-                    this.loadNodeLinkGraph(tree, target)
+                    if (tree) {
+                        this.loadNodeLinkGraph(tree, target)
+                    } else {
+                        this.data.nodes = new vis.DataSet([
+                            this.createTargetNode(target)
+                        ]);
+                        this.data.edges = new vis.DataSet([]);
+                    }
+                    this.networkOptions.layout.hierarchical.enabled = true
+                    this.initializeNetwork(this.data);
+                    this.network.on('selectNode', this.showInfo);
+                    this.network.on('deselectNode', this.clearSelection);
+                    this.network.on('afterDrawing', hideLoader);
                 })
                 .catch(error => {
                     hideLoader()
@@ -1934,11 +1946,6 @@ var app = new Vue({
                 }
             }
             this.data.edges = new vis.DataSet(data.edges);
-            this.networkOptions.layout.hierarchical.enabled = true
-            this.initializeNetwork(this.data);
-            this.network.on('selectNode', this.showInfo);
-            this.network.on('deselectNode', this.clearSelection);
-            this.network.on('afterDrawing', hideLoader);
         },
         canonicalize(smiles, input) {
             return fetch(
