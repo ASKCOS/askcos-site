@@ -109,7 +109,7 @@ var app = new Vue({
             }
             return data
         },
-        constructuContextPostData() {
+        constructContextPostData() {
             return {
                 reactants: this.reactants,
                 products: this.product,
@@ -139,26 +139,62 @@ var app = new Vue({
             }
             return data
         },
-        pollCeleryResult: function(taskId, callback) {
+        apiAsyncPost(endpoint, postData, callback) {
+            return fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(postData)
+            })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    callback(json)
+                })
+                .catch(error => {
+                    hideLoader();
+                    alert('There was an error executing this POST request: '+error)
+                })
+        },
+        celeryTaskAsyncPost(taskName, postData, callback) {
+            var celeryCallback = (json) => {
+                setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+            }
+            return this.apiAsyncPost(`/api/v2/${taskName}/`, postData, celeryCallback)
+        },
+        pollCeleryResult: function(taskId, complete, progress, failed) {
             fetch(`/api/v2/celery/task/${taskId}/`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.complete) {
-                    callback(json.output);
+                    complete(json);
                     hideLoader();
                 }
                 else if (json.failed) {
+                    if (!!failed) {
+                        failed(json)
+                    }
                     hideLoader();
                     throw Error('Celery task failed.');
                 }
                 else {
-                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 1000)
+                    if (!!progress) {
+                        progress(json)
+                    }
+                    setTimeout(() => {this.pollCeleryResult(taskId, complete, progress, failed)}, 1000)
                 }
             })
             .catch(error => {
                 if (error instanceof TypeError) {
                     console.log('Unable to fetch celery results due to connection error. Will keep trying.')
-                    setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 2000)
+                    setTimeout(() => {this.pollCeleryResult(taskId, complete, progress, failed)}, 2000)
                 } else {
                     console.error('There was a problem fetching results:', error);
                 }
@@ -195,32 +231,10 @@ var app = new Vue({
                 return
             }
             var postData = this.constructForwardPostData(this.reagents, this.solvent)
-            const app = this;
-            var callback = (output) => {
-                app.forwardResults = output
+            var callback = (json) => {
+                this.forwardResults = json.output
             }
-            fetch('/api/v2/forward/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(postData)
-            })
-                .then(resp => {
-                    if (!resp.ok) {
-                        throw Error(resp.statusText)
-                    }
-                    return resp
-                })
-                .then(resp => resp.json())
-                .then(json => {
-                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
-                })
-                .catch(error => {
-                    hideLoader();
-                    alert('There was an error predicting precursors for this target: '+error)
-                })
+            this.celeryTaskAsyncPost('forward', postData, callback)
         },
         goToForward(index) {
             window.history.pushState({mode: 'forward'}, 'forward', '?mode=forward')
@@ -254,33 +268,11 @@ var app = new Vue({
         contextPredict() {
             showLoader()
             this.contextResults = []
-            var postData = this.constructuContextPostData()
-            const app = this;
-            var callback = (output) => {
-                app.contextResults = output
+            var postData = this.constructContextPostData()
+            var callback = (json) => {
+                this.contextResults = json.output
             }
-            fetch('/api/v2/context/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(postData)
-            })
-                .then(resp => {
-                    if (!resp.ok) {
-                        throw Error(resp.statusText)
-                    }
-                    return resp
-                })
-                .then(resp => resp.json())
-                .then(json => {
-                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
-                })
-                .catch(error => {
-                    hideLoader();
-                    alert('There was an error predicting precursors for this target: '+error)
-                })
+            this.celeryTaskAsyncPost('context', postData, callback)
         },
         evaluateIndex(index) {
             this.$set(this.contextResults[index], 'evaluating', true)
@@ -295,7 +287,8 @@ var app = new Vue({
 
             var postData = this.constructForwardPostData(reagents, solvent)
             const app = this;
-            var callback = (outcomes) => {
+            var callback = (json) => {
+                var outcomes = json.output
                 for (var n in outcomes) {
                     var outcome = outcomes[n]
                     if (outcome.smiles == app.product) {
@@ -308,47 +301,14 @@ var app = new Vue({
                 }
                 app.$set(app.contextResults[index], 'evaluating', false)
             }
-            fetch('/api/v2/forward/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(postData)
-            })
-                .then(resp => {
-                    if (!resp.ok) {
-                        throw Error(resp.statusText)
-                    }
-                    return resp
-                })
-                .then(resp => resp.json())
-                .then(json => {
-                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
-                })
-                .catch(error => {
-                    hideLoader();
-                    alert('There was an error predicting precursors for this target: '+error)
-                })
+            this.celeryTaskAsyncPost('forward', postData, callback)
         },
         canonicalize(smiles, input) {
-            return fetch(
-                '/api/v2/rdkit/smiles/canonicalize/',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: JSON.stringify({
-                        smiles: smiles
-                    })
-                }
-            )
-            .then(resp => resp.json())
-            .then(json => {
+            var postData = {smiles: smiles}
+            var callback = (json) => {
                 this[input] = json.smiles
-            })
+            }
+            return this.apiAsyncPost('/api/v2/rdkit/smiles/canonicalize/', postData, callback)
         },
         canonicalizeAll() {
             var promises = []
@@ -368,83 +328,39 @@ var app = new Vue({
             this.clearEvaluation()
             this.evaluating = true
             var postData = this.constructFastFilterPostData()
-            const app = this;
-            var callback = (output) => {
-                app.reactionScore = output
+            var callback = (json) => {
+                this.reactionScore = json.output
             }
-            fetch('/api/v2/fast-filter/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(postData)
-            })
-                .then(resp => {
-                    if (!resp.ok) {
-                        throw Error(resp.statusText)
-                    }
-                    return resp
-                })
-                .then(resp => resp.json())
-                .then(json => {
-                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
-                })
-                .catch(error => {
-                    hideLoader();
-                    alert('There was an error predicting precursors for this target: '+error)
-                })
+            this.celeryTaskAsyncPost('fast-filter', postData, callback)
             for (index in this.contextResults) {
                 this.evaluateIndex(index)
             }
         },
         updateImpurityProgress(taskId) {
             hideLoader()
-            fetch(`/api/v2/celery/task/${taskId}/`)
-            .then(resp => resp.json())
-            .then(json => {
-                if (json['complete']) {
-                    this.impurityProgress.percent = 1.0
-                    this.impurityProgress.message = 'Prediction complete!'
-                    this.impurityResults = json.output.predict_expand
-                }
-                else if (json['failed']) {
-                    this.impurityProgress.percent = 0.0
-                    this.impurityProgress.message = 'impurity prediction failed!'
-                }
-                else {
-                    this.impurityProgress.percent = json['percent']
-                    this.impurityProgress.message = json['message']
-                    setTimeout(() => {this.updateImpurityProgress(taskId)}, 1000)
-                }
-            })
+            var complete = (json) => {
+                this.impurityProgress.percent = 1.0
+                this.impurityProgress.message = 'Prediction complete!'
+                this.impurityResults = json.output.predict_expand
+            }
+            var progress = (json) => {
+                this.impurityProgress.percent = json['percent']
+                this.impurityProgress.message = json['message']
+            }
+            var failed = (json) => {
+                this.impurityProgress.percent = 0.0
+                this.impurityProgress.message = 'impurity prediction failed!'
+            }
+            this.pollCeleryResult(taskId, complete, progress, failed)
         },
         impurityPredict() {
             showLoader()
             this.impurityResults = []
             var postData = this.constructImpurityPostData()
-            fetch('/api/v2/impurity/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(postData)
-            })
-                .then(resp => {
-                    if (!resp.ok) {
-                        throw Error(resp.statusText)
-                    }
-                    return resp
-                })
-                .then(resp => resp.json())
-                .then(json => {
-                    this.updateImpurityProgress(json.task_id)
-                })
-                .catch(error => {
-                    hideLoader();
-                    alert('There was an error predicting precursors for this target: '+error)
-                })
+            var callback = (json) => {
+                this.updateImpurityProgress(json.task_id)
+            }
+            this.apiAsyncPost('/api/v2/impurity/', postData, callback)
         },
         updateSmilesFromJSME() {
             var smiles = jsmeApplet.smiles();
