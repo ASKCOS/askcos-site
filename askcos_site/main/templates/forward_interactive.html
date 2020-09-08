@@ -198,7 +198,7 @@ Synthesis Predictor
                     <tr>
                         <td class="text-center">%% index+1 %%</td>
                         <td class="text-center">
-                            <span v-if="evaluating && result.evaluation === undefined">
+                            <span v-if="result.evaluating && result.evaluation === undefined">
                                 <div class="spinner-border text-secondary" role="status"></div>
                             </span>
                             <span v-else-if="result.evaluation">
