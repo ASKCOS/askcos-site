@@ -33,10 +33,6 @@ function showAllNetworks() {
   }
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 function colorOf(child) {
   if (child['ppg']) {
     if (child['as_reactant'] || child['as_product']) {
@@ -56,90 +52,43 @@ function colorOf(child) {
   }
 }
 
-function makeNode(child, id) {
-  var node = {};
-  if (child['is_chemical']) {
-    node['id'] = id
-    node['ppg'] = child['ppg']
-    node['smiles'] = child['smiles']
-    node['image'] = "/api/v2/draw/?smiles="+encodeURIComponent(child['smiles'])
-    node['shape'] = "image"
-    node['type'] = 'chemical'
-    var buyableString = (Number(child['ppg'])) ? '$'+child['ppg']+'/g' : 'not buyable'
-    node['as_reactant'] = child['as_reactant']
-    node['as_product'] = child['as_product']
-    node['title'] = `${child['smiles']}<br>
-    ${child['as_reactant']} precedents as reactant<br>
-    ${child['as_product']} precedents as product<br>
-    ${buyableString}`
-    node['borderWidth'] = 2
-    node['color'] = {
-      border: colorOf(child)
+function loadNodeLinkGraph(data) {
+    /* Load tree in node link format into visjs and add visualization related attributes. */
+    let visdata = {}
+    for (node of data.nodes) {
+        if (node.type === 'chemical') {
+            node.image = `/api/v2/draw/?smiles=${encodeURIComponent(node.smiles)}`;
+            node.shape = 'image';
+            const buyableString = node.ppg !== 0 ? `$${node.ppg}/g` : 'not buyable';
+            node.title = `${node.smiles}<br>${node.as_reactant} precedents as reactant<br>${node.as_product} precedents as product<br>${buyableString}`;
+            node.borderWidth = 2;
+            node.color = {
+                border: colorOf(node)
+            }
+        } else {
+            node.label = `${node.num_examples} examples
+FF score: ${Number(node.plausibility).toFixed(3)}
+Template score: ${Number(node.template_score).toFixed(3)}`;
+            node['font'] = {align: 'center'}
+        }
     }
-  }
-  else if (child['is_reaction']) {
-    node['type'] = 'reaction'
-    node['id'] = id
-    node['necessary_reagent'] = child['necessary_reagent']
-    node['num_examples'] = child['num_examples']
-    node['plausibility'] = child['plausibility']
-    node['smiles'] = child['smiles']
-    node['template_score'] = child['template_score']
-    node['tforms'] = child['tforms']
-    node['label'] = `${child['num_examples']} examples
-FF score: ${Number(child['plausibility']).toFixed(3)}
-Template score: ${Number(child['template_score']).toFixed(3)}`
-    node['font'] = {align: 'center'}
-  }
-  return node
-}
-
-function makeTreeData(obj, parent, nodes, edges) {
-  var node = makeNode(obj, nodes.length);
-  nodes.add(node);
-  if (parent != 0) {
-    edges.add({
-      from: parent.id,
-      to: node.id,
-      length: 0
-    })
-  }
-  for (child of obj.children) {
-    makeTreeData(child, node, nodes, edges);
-  }
-}
-
-function makeNodes(children, root) {
-  var nodes = [];
-  var edges = [];
-  var childrenOfChildren = [];
-  for (child of children) {
-    nodes.push(makeNode(child))
-    edges.push({
-      from: root.id,
-      to: child.id
-    })
-    childrenOfChildren.push(child.children)
-  }
-  var result = {
-    nodes: nodes,
-    edges: edges,
-    children: childrenOfChildren
-  }
-  return result
+    visdata.nodes = new vis.DataSet(data.nodes);
+    visdata.edges = new vis.DataSet(data.edges);
+    return visdata
 }
 
 function treeStats(tree) {
-    let nodes = new vis.DataSet([])
-    let edges = new vis.DataSet([])
-    makeTreeData(tree, 0, nodes, edges)
     let numReactions = 0
     let avgScore = 0
     let avgPlausibility = 0
     let minScore = 1.0
     let minPlausibility = 1.0
-    for (node of nodes.get()) {
-        if (node.type == 'reaction') {
+    for (node of tree.nodes) {
+        if (node.type === 'reaction') {
+            if (node.smiles.includes(app.settings.smiles)) {
+                /* This is the first reaction step */
+                tree.firstStepScore = node.template_score
+            }
             numReactions += 1
             avgScore += node.template_score
             avgPlausibility += node.plausibility
@@ -151,7 +100,6 @@ function treeStats(tree) {
     avgPlausibility /= numReactions
 
     tree.numReactions = numReactions
-    tree.firstStepScore=  nodes.get(1).template_score
     tree.avgScore = avgScore
     tree.avgPlausibility = avgPlausibility
     tree.minPlausibility = minPlausibility
@@ -197,6 +145,7 @@ function initializeNetwork(data, elementDiv) {
           hierarchical: {
             levelSeparation: 150,
             nodeSpacing: 175,
+            sortMethod: 'directed',
           }
         },
         physics: false
@@ -236,7 +185,7 @@ var app = new Vue({
     methods: {
       getResult: function(id) {
         showLoader();
-        fetch('/api/get-result/?id='+id)
+        fetch(`/api/v2/results/${id}/tree/`)
           .then(resp => resp.json())
           .then(json => {
             var result = json['result'];
@@ -253,7 +202,7 @@ var app = new Vue({
                 this.settings.buyables_source.push('(no source)')
             }
             // If version is not present in the result, then it is version 1
-            this.tbVersion = result['result']['version'] || 1;
+            this.tbVersion = result['settings']['version'] || 1;
             this.networkContainer = document.getElementById('left-pane')
             if (this.trees.length) {
                 this.allTreeStats()
@@ -264,18 +213,12 @@ var app = new Vue({
           })
       },
       buildTree: function(treeId, elem) {
-        var nodes = new vis.DataSet([]);
-        var edges = new vis.DataSet([]);
-        makeTreeData(this.trees[treeId], 0, nodes, edges);
-        this.networkData = {
-          nodes: nodes,
-          edges: edges
-        }
+        this.networkData = loadNodeLinkGraph(this.trees[treeId])
         this.network = initializeNetwork(this.networkData, elem);
         this.network.on('selectNode', function(params) {
           app.showNode(params.nodes[0])
         });
-        sleep(500).then(() => app.network.fit())
+        this.network.on('afterDrawing', this.network.fit)
       },
       sortTrees: function(prop, reverse) {
         sortObjectArray(this.trees, prop, reverse)
@@ -307,10 +250,7 @@ var app = new Vue({
         this.buildTree(this.currentTreeId, this.networkContainer)
       },
       allTreeStats: function() {
-        this.treeStats = []
-        for (tree of this.trees) {
-          this.treeStats.push(treeStats(tree))
-        }
+        this.trees.forEach(treeStats)
       },
       banItem: function() {
         var nodeId = this.network.getSelectedNodes();

@@ -3,6 +3,8 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+
 function updateObj(dest, src) {
     // take properties of src and overwrite matching properties of dest
     // ignores properties in src if they do not exist in dest
@@ -44,43 +46,6 @@ function subSet(s, otherSet) {
     }
 };
 
-function ctaToNode(cta, id) {
-    if (cta.is_reaction) {
-        return {
-            id: id,
-            graphId: cta.id,
-            plausibility: cta.plausibility,
-            numExamples: cta.num_examples,
-            reactionSmiles: cta.smiles,
-            templateIds: cta.tforms,
-            templateScore: cta.template_score,
-            retroscore: cta.template_score,
-            type: 'reaction',
-        }
-    }
-    else {
-        let node = {
-            id: id,
-            graphId: cta.id,
-            asProduct: cta.as_product,
-            asReactant: cta.as_reactant,
-            type: 'chemical',
-            ppg: cta.ppg,
-            smiles: cta.smiles,
-            image: "/api/v2/draw/?smiles="+encodeURIComponent(cta.smiles),
-            shape: 'image',
-            borderWidth: 2
-        }
-        if (node.ppg == 0) {
-            node.color = {border: '#880000'}
-        }
-        else {
-            node.color = {border: '#008800'}
-        }
-        return node
-    }
-}
-
 function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
     var added = 0
     for (r of reactions) {
@@ -95,7 +60,7 @@ function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
 }
 
 function addReaction(reaction, sourceNode, nodes, edges) {
-    var rId = nodes.max('id').id+1;
+    let rId = uuidv4();
     var node = {
         id: rId,
         label: '#'+reaction['rank'],
@@ -123,12 +88,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     }
 
     nodes.add(node)
-    if (edges.max('id')) {
-        var eId = edges.max('id').id+1
-    }
-    else {
-        var eId = 0
-    }
+    let eId = uuidv4()
 
     edges.add({
         id: eId,
@@ -166,7 +126,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
             else {
                 var color = "#880000"
             }
-            var nId = nodes.max('id').id+1;
+            let nId = uuidv4();
             nodes.add({
                 id: nId,
                 smiles: mysmi,
@@ -181,7 +141,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
                 }
             })
             edges.add({
-                id: edges.max('id').id+1,
+                id: uuidv4(),
                 from: rId,
                 to: nId,
                 scaling: {
@@ -1024,13 +984,13 @@ var app = new Vue({
                         app.network.on('deselectNode', app.clearSelection);
                         app.$set(app.results, smi, precursors);
                         app.initClusterShowCard(smi); // must be called immediately after adding results
-                        addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
+                        addReactions(app.results[smi], app.data.nodes.get(NIL_UUID), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
                         app.lookupPrice(smi)
                             .then(result => {
-                                app.data.nodes.update({id: 0, ppg: result.ppg, source: result.source});
-                                app.network.selectNodes([0]);
-                                app.showInfo({'nodes': [0]});
+                                app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
+                                app.network.selectNodes([NIL_UUID]);
+                                app.showInfo({'nodes': [NIL_UUID]});
                         })
                     }
                     this.requestRetro(smi, callback);
@@ -1868,7 +1828,7 @@ var app = new Vue({
         },
         createTargetNode: function(target) {
             return {
-                id: 0,
+                id: NIL_UUID,
                 smiles: target,
                 image: this.getMolDrawEndPoint(target),
                 shape: "image",
@@ -1879,125 +1839,113 @@ var app = new Vue({
                 }
             }
         },
-        alreadyAddedToresults: function(chemical, results) {
-            for (var res of results) {
-              if (chemical.reactant_smiles.join('.') == res.smiles) {
-                  return true
-              }
+        loadFromTreeBuilder: function(objectId, numTrees) {
+            this.allowCluster = false
+            showLoader()
+            let url = `/api/v2/results/${objectId}/ipp/`
+            if (numTrees !== 'all') {
+                url += `?num=${numTrees}`
             }
-            return false
-        },
-        addResultsFromTreeBuilder: function(graph, target) {
-            this.target = target
-            this.data.nodes = new vis.DataSet([])
-            this.data.nodes.add(this.createTargetNode(target))
-            this.data.edges = new vis.DataSet([]);
-            for (smiles in graph) {
-              if (!this.results[smiles]) {
-                this.results[smiles] = new Array()
-              }
-              let rank = 1
-              graph[smiles].sort((a, b) => b.template_score - a.template_score)
-              for (chemical of graph[smiles]) {
-                if (this.alreadyAddedToresults(chemical, this.results[smiles])) {
-                    continue
-                }
-                this.results[smiles].push({
-                  rank: rank,
-                  smiles_split: chemical.reactant_smiles,
-                  smiles: chemical.reactant_smiles.join('.'),
-                  plausibility: chemical.plausibility,
-                  visit_count: chemical.visit_count,
-                  price: chemical.price,
-                  estimate_price: chemical.estimate_price,
-                  template_score: chemical.template_score,
-                  score: chemical.template_score
+            fetch(url)
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp.json()
                 })
-                rank += 1
-              }
-            }
-        },
-        addPathsFromTreeBuilder: function(trees) {
-            for (tree of trees) {
-                this.walkTree(tree, 0)
-              }
-            this.networkOptions.layout.hierarchical.enabled = true
-            this.initializeNetwork(this.data);
-            this.network.on('selectNode', this.showInfo);
-            this.network.on('deselectNode', this.clearSelection);
-        },
-        walkTree: function(obj, parent) {
-            var node = undefined
-            for (graphNode of this.data.nodes.get()) {
-                if (graphNode.graphId == obj.id) {
-                    let graphParent = parentOf(graphNode.id, this.data.nodes, this.data.edges)
-                    if (graphParent == -1) {
-                        node = graphNode
+                .then(json => {
+                    if (json.error) {
+                        alert(json.error)
+                    }
+                    let result = json['result'];
+                    let target = result['settings']['smiles'];
+                    let results = result['result']['results']
+                    let tree = result['result']['tree']
+                    this.results = results
+                    Object.values(results).forEach(this.getTemplateNumExamples)
+                    if (tree) {
+                        this.loadNodeLinkGraph(tree, target)
                     } else {
-                        graphParent = this.data.nodes.get(graphParent)
-                        if ((graphParent.graphId == parent.graphId) && (graphParent.id == parent.id)) {
-                            node = graphNode
-                            break
-                        }
+                        this.data.nodes = new vis.DataSet([
+                            this.createTargetNode(target)
+                        ]);
+                        this.data.edges = new vis.DataSet([]);
                     }
-                }
-                if (graphNode.id == 0 && graphNode.smiles == obj.smiles) {
-                    node = graphNode
-                    continue
-                }
-            }
-            if (!node) {
-                node = ctaToNode(obj, this.data.nodes.length)
-                if (node.type == 'reaction') {
-                    for (templateId of node.templateIds) {
-                        this.apiTemplateCount(templateId)
+                    this.networkOptions.layout.hierarchical.enabled = true
+                    this.initializeNetwork(this.data);
+                    this.network.on('selectNode', this.showInfo);
+                    this.network.on('deselectNode', this.clearSelection);
+                    this.network.on('afterDrawing', hideLoader);
+                })
+                .catch(error => {
+                    hideLoader()
+                    console.error('There was a problem loading tree builder results:', error);
+                });
+        },
+        loadNodeLinkGraph(data, target) {
+            /* Load tree in node link format into visjs and add visualization related attributes. */
+            for (node of data.nodes) {
+                if (node.type === 'chemical') {
+                    node.image = `/api/v2/draw/?smiles=${encodeURIComponent(node.smiles)}`;
+                    node.shape = 'image';
+                    node.borderWidth = 2;
+                    let color
+                    if (node.smiles === target) {
+                        node.borderWidth = 3;
+                        color = '#000088';
+                    } else if (node.ppg !== 0) {
+                        color = '#008800';
+                    } else {
+                        node.ppg = 'not buyable'
+                        color = '#880000';
                     }
-                    smi_split = node.reactionSmiles.split('>>')
-                    for (reaction of this.results[smi_split[1]]) {
-                        if (reaction.smiles == smi_split[0]) {
-                            node.rank = reaction.rank
-                            node.label = '#'+node.rank
+                    node.color = {
+                        border: color
+                    }
+                } else {
+                    node.label = '#' + node.rank;
+                    node.ffScore = num2str(node.plausibility ,3);
+                    node.retroscore = num2str(node.template_score, 3);
+                    node.templateScore = num2str(node.template_score, 3);
+                    node.numExamples = num2str(node.num_examples);
+                    node.templateIds = node.tforms;
+                    node.reactionSmiles = node.smiles;
+                    let smi_split = node.smiles.split('>>')
+                    for (let reaction of this.results[smi_split[1]]) {
+                        if (reaction.smiles === smi_split[0]) {
                             reaction.inViz = true
                             break
                         }
                     }
                 }
-                this.data.nodes.add(node)
-                if (parent != 0) {
-                    this.data.edges.add({
-                        from: parent.id,
-                        to: node.id,
-                        length: 0
-                    })
+            }
+            this.data.nodes = new vis.DataSet(data.nodes);
+            for (edge of data.edges) {
+                edge.scaling = {
+                    min: 1,
+                    max: 5,
+                    customScalingFunction: function(min, max, total, value) {
+                        if (value > 0.25) {
+                            return 1.0
+                        }
+                        else{
+                            return 16*value*value
+                        }
+                    }
+                };
+                let from = this.data.nodes.get(edge.from)
+                let to = this.data.nodes.get(edge.to)
+                if (from.type === 'reaction') {
+                    edge.value = from.template_score
+                } else if (to.type === 'reaction') {
+                    edge.value = to.template_score
+                }
+                edge.color = {
+                    color: '#000000',
+                    inherit: false
                 }
             }
-            for (child of obj.children) {
-                this.walkTree(child, node)
-            }
-        },
-        loadFromTreeBuilder: function(objectId, numTrees) {
-            this.allowCluster = false
-            showLoader()
-            fetch('/api/get-result/?id='+objectId)
-            .then(resp => resp.json())
-            .then(json => {
-              if (json.error) {
-                  alert(json.error)
-              }
-              var result = json['result'];
-              var target = result['settings']['smiles'];
-              var stats = result['result']['status'];
-              var trees = result['result']['paths'];
-              var graph = result['result']['graph'];
-              this.addResultsFromTreeBuilder(graph, target)
-              if (numTrees == 'all') {
-                this.addPathsFromTreeBuilder(trees)
-              }
-              else {
-                this.addPathsFromTreeBuilder(trees.slice(0, Number(numTrees)))
-              }
-            })
-            .finally(() => hideLoader())
+            this.data.edges = new vis.DataSet(data.edges);
         },
         canonicalize(smiles, input) {
             return fetch(
@@ -2109,8 +2057,12 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the highest ranked prediction is highlighted.",
             onShown: function () {
-                app.network.selectNodes([1]);
-                app.selected = app.data.nodes.get(1);
+                app.data.nodes.forEach(function(n) {
+                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
+                        app.network.selectNodes([n.id])
+                        app.selected = app.data.nodes.get(n.id);
+                    }
+                })
             },
             placement: 'right',
         },
@@ -2121,7 +2073,7 @@ var tour = new Tour({
             placement: 'right',
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
+                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
@@ -2169,7 +2121,7 @@ var tour = new Tour({
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.reactionSmiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
+                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
@@ -2183,7 +2135,7 @@ var tour = new Tour({
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
+                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }

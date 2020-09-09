@@ -86,7 +86,7 @@ def get_buyable_paths(smiles, **kwargs):
     run_async = kwargs.pop('run_async', False)
     paths_only = kwargs.pop('paths_only', False)
 
-    settings = {'smiles': smiles}
+    settings = {'smiles': smiles, 'version': 2}  # Refers to tree builder version
     settings.update(kwargs)
 
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(smiles))
@@ -112,6 +112,7 @@ def get_buyable_paths(smiles, **kwargs):
         'retro_transformer': retro_transformer,
         'template_prioritizer': template_prioritizer,
         'fast_filter': fast_filter,
+        'json_format': 'nodelink',
     })
 
     tree_builder = MCTS(**kwargs)
@@ -122,7 +123,7 @@ def get_buyable_paths(smiles, **kwargs):
             'status': status,
             'paths': paths,
             'graph': graph,
-            'version': 2,
+            'version': 2,  # Refers to graph version
         }
     except:
         if run_async:

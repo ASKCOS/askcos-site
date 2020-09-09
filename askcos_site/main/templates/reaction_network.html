@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="{% static 'css/tooltip.css' %}?v{{ static_version }}" type="text/css">
 <script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/bootstrap-tourist.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/uuidv4-8.3.0.min.js' %}"></script>
 {% endblock %}
 
 {% block page_title %}Interactive Path Planning{% endblock %}
@@ -487,7 +488,7 @@ The plausibility score can help filter out bad suggestions, but in some cases ca
                                 <label class="mr-2" for="tbVersion">Tree builder version:</label>
                                 <select id="tbVersion" v-model="tb.settings.version" class="form-control form-control-sm">
                                     <option value="1">v1</option>
-                                    <option value="2" disabled>v2</option>
+                                    <option value="2">v2</option>
                                 </select>
                             </div>
                             <div class="form-inline mb-2">
