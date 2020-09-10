@@ -1224,22 +1224,21 @@ var app = new Vue({
             setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
         },
         collapseNode: function() {
-            var selected = this.network.getSelectedNodes();
-            var type = typeof selected[0];
-            if (type == "string") {
-                this.network.openCluster(selected[0])
-            }
-            else {
-                var forCluster = allChildrenOf(selected[0], app.data.nodes, app.data.edges)
-                var options = {
-                    joinCondition:function(nodeOptions) {
-                        if (forCluster.includes(nodeOptions.id) | nodeOptions.id==selected[0]) {
-                            return true;
-                        }
-                    }
+            let selected = this.network.getSelectedNodes();
+            selected.forEach(node => {
+                if (this.network.clustering.isCluster(node)) {
+                    this.network.openCluster(node)
                 }
-                this.network.clustering.cluster(options);
-            }
+                else {
+                    let forCluster = allChildrenOf(node, app.data.nodes, app.data.edges);
+                    let options = {
+                        joinCondition: (nodeOptions) => {
+                            return forCluster.includes(nodeOptions.id) || nodeOptions.id === node
+                        }
+                    };
+                    this.network.clustering.cluster(options);
+                }
+            })
         },
         addFromResults: function(selected, reaction) {
             if (reaction.inViz) {
