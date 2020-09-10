@@ -1012,7 +1012,8 @@ M  END
         self.assertTrue(result['complete'])
         self.assertIsInstance(result['output'], list)
         self.assertIsInstance(result['output'][0], dict)
-        self.assertIsInstance(result['output'][0]['children'], list)
+        self.assertIsInstance(result['output'][0]['nodes'], list)
+        self.assertIsInstance(result['output'][0]['edges'], list)
 
         # Test insufficient data
         response = self.post('/tree-builder/', data={})
@@ -1079,7 +1080,8 @@ M  END
         self.assertTrue(result['complete'])
         self.assertIsInstance(result['output'], list)
         self.assertIsInstance(result['output'][0], dict)
-        self.assertIsInstance(result['output'][0]['children'], list)
+        self.assertIsInstance(result['output'][0]['nodes'], list)
+        self.assertIsInstance(result['output'][0]['edges'], list)
 
         # Test task priority argument
         data = {
