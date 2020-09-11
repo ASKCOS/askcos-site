@@ -92,11 +92,14 @@ def get_buyable_paths(smiles, **kwargs):
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(smiles))
     _id = get_buyable_paths.request.id
 
-    template_prioritizer = kwargs.pop('template_prioritizer', 'reaxys')
+    template_set = kwargs.get('template_set', 'reaxys')
+    template_prioritizer_version = kwargs.get('template_prioritizer_version')
 
-    hostname = 'template-relevance-{}'.format(template_prioritizer)
+    template_relevance_hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TFXRelevanceTemplatePrioritizer(
-        hostname=hostname, model_name='template_relevance'
+        hostname=template_relevance_hostname,
+        model_name='template_relevance',
+        version=template_prioritizer_version,
     )
 
     fast_filter_hostname = 'fast-filter'
