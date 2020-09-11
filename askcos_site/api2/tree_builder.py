@@ -46,6 +46,12 @@ class TreeBuilderSerializer(serializers.Serializer):
     return_first = serializers.BooleanField(default=True)
     max_trees = serializers.IntegerField(default=500)
 
+    score_trees = serializers.BooleanField(default=True)
+    cluster_trees = serializers.BooleanField(default=True)
+    cluster_method = serializers.CharField(default='hdbscan')
+    cluster_min_samples = serializers.IntegerField(default=5)
+    cluster_min_size = serializers.IntegerField(default=5)
+
     store_results = serializers.BooleanField(default=False)
     description = serializers.CharField(default='')
 
@@ -182,6 +188,11 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `buyables_source` (list[str], optional): list of source(s) to consider when looking up buyables
     - `return_first` (bool, optional): whether to return upon finding the first pathway
     - `max_trees` (int, optional): maximum number of pathways to return
+    - `score_trees` (bool, optional): whether to score trees using pathway ranking model
+    - `cluster_trees` (bool, optional): whether to cluster trees
+    - `cluster_method` (bool, optional): method to use for clustering, supports 'hdbscan' or 'kmeans'
+    - `cluster_min_samples` (bool, optional): minimum number of samples when using 'hdbscan'
+    - `cluster_min_size` (bool, optional): minimum cluster size when using 'hdbscan'
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
     - `banned_reactions` (list[str], optional): list of reactions to not consider
@@ -285,6 +296,11 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             'return_first': data['return_first'],
             'max_trees': data['max_trees'],
             'run_async': data['store_results'],
+            'score_trees': data['score_trees'],
+            'cluster_trees': data['cluster_trees'],
+            'cluster_method': data['cluster_method'],
+            'cluster_min_samples': data['cluster_min_samples'],
+            'cluster_min_size': data['cluster_min_size'],
             'paths_only': True,
         }
 
