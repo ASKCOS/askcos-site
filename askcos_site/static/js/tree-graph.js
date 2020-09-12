@@ -1,4 +1,6 @@
 var container = document.getElementsByClassName('container')[0];
+container.classList.remove('container')
+container.classList.add('container-fluid')
 container.style.width = null;
 
 showLoader();
@@ -102,9 +104,9 @@ function treeStats(tree) {
     tree.minPlausibility = minPlausibility
 }
 
-function sortObjectArray(arr, prop, reverse) {
+function sortObjectArray(arr, prop, ascending) {
     arr.sort(function (a, b) {
-        if (!!reverse) {
+        if (ascending) {
             return a[prop] - b[prop]
         } else {
             return b[prop] - a[prop]
@@ -132,14 +134,15 @@ function initializeNetwork(data, elementDiv) {
             multiselect: false,
             hover: true,
             dragNodes: false,
-            // dragView: false,
+            dragView: true,
             selectConnectedEdges: false,
             tooltipDelay: 0,
-            // zoomView: false
+            zoomView: true
         },
         layout: {
             hierarchical: {
-                levelSeparation: 150,
+                direction: 'LR',
+                levelSeparation: 250,
                 nodeSpacing: 175,
                 sortMethod: 'directed',
             }
@@ -168,11 +171,31 @@ var app = new Vue({
         trees: [],
         settings: {},
         tbVersion: null,
-        showSettings: false,
+        showInfoPanel: false,
         selected: null,
         currentTreeId: 0,
         networkData: {},
-        treeSortOption: 'numReactions'
+        sortOrderAscending: false,
+        treeSortOption: 'numReactions',
+        infoPanelOptions: {
+            id: 'infoPanel',
+            headerTitle: 'Info',
+            headerControls: {close: 'remove', size: 'sm'},
+            position: {my: 'left-top', at: 'left-bottom', of: '#toolbarPanel'},
+            panelSize: {width: 500, height: 500},
+        },
+        detailPanelOptions: {
+            id: 'detailPanel',
+            headerTitle: 'Node Details',
+            position: {my: 'right-top', at: 'right-top', of: '#app'},
+            panelSize: {width: 600, height: 400},
+        },
+        toolbarPanelOptions: {
+            id: 'toolbarPanel',
+            headerTitle: '',
+            position: {my: 'left-top', at: 'left-top', of: '#app'},
+            panelSize: {width: 500, height: 160},
+        }
     },
     mounted: function () {
         this.resultId = this.$el.getAttribute('data-id');
@@ -199,10 +222,11 @@ var app = new Vue({
                     }
                     // If version is not present in the result, then it is version 1
                     this.tbVersion = result['settings']['version'] || 1;
-                    this.networkContainer = document.getElementById('left-pane')
+                    this.networkContainer = document.getElementById('graph')
                     if (this.trees.length) {
                         this.allTreeStats()
-                        this.sortTrees(this.treeSortOption, true)
+                        this.setDefaultSortOrder()
+                        this.sortTrees()
                         this.buildTree(this.currentTreeId, this.networkContainer);
                     }
                     hideLoader()
@@ -216,10 +240,13 @@ var app = new Vue({
             });
             this.network.on('afterDrawing', this.network.fit)
         },
-        sortTrees: function (prop, reverse) {
-            sortObjectArray(this.trees, prop, reverse)
+        sortTrees: function () {
+            sortObjectArray(this.trees, this.treeSortOption, this.sortOrderAscending)
             this.currentTreeId = 0
             this.buildTree(this.currentTreeId, this.networkContainer)
+        },
+        setDefaultSortOrder: function() {
+            this.sortOrderAscending = ['numReactions'].includes(this.treeSortOption)
         },
         nextTree: function () {
             if (this.currentTreeId < this.trees.length - 1) {
