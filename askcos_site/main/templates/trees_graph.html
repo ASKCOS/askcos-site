@@ -20,17 +20,32 @@
 
 
 <div id="app" data-id="{{ id }}">
-    <jspanel :visible="true" :options="toolbarPanelOptions">
-        <div class="m-3">
-            <div class="btn-toolbar justify-content-center my-2">
+    <div class="row">
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-between mb-3">
                 <button class="btn btn-dark" href="#" @click="showInfoPanel = true">Open Info Panel</button>
-                <button class="btn btn-primary mx-2" href="/retro/network/?tb={{ id }}&view=25">View top 25 trees in IPP</button>
-                <button class="btn btn-primary" href="/retro/network/?tb={{ id }}&view=all">View all trees in IPP</button>
-            </div>
-            <div class="btn-toolbar justify-content-center my-2">
+                <div class="input-group">
+                    <div class="input-group-text">View trees in IPP</div>
+                    <div class="input-group-append">
+                        <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=10" target="_blank">Top 10</a>
+                        <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=25" target="_blank">Top 25</a>
+                        <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=all" target="_blank">All</a>
+                    </div>
+                </div>
                 <div class="input-group">
                     <div class="input-group-prepend">
-                        <button class="input-group-text">Sort By</button>
+                        <button class='btn btn-outline-dark' @click='firstTree'>&lt;&lt; First</button>
+                        <button class='btn btn-outline-dark' @click='prevTree'>&lt; Previous</button>
+                    </div>
+                    <div class="input-group-text">Tree %% currentTreeId+1 %% of %% trees.length %%</div>
+                    <div class="input-group-append">
+                        <button class='btn btn-outline-dark' @click='nextTree'>Next &gt;</button>
+                        <button class='btn btn-outline-dark' @click='lastTree'>Last &gt;&gt;</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Sort by</div>
                     </div>
                     <select class="form-control" id="sortingCategory" @change="setDefaultSortOrder(); sortTrees()" v-model="treeSortOption">
                         <option value="numReactions">Number of reactions</option>
@@ -46,15 +61,12 @@
                     </div>
                 </div>
             </div>
-            <div class="btn-toolbar justify-content-center align-content-center my-2">
-                <button class='btn btn-outline-dark mx-2' @click='firstTree'>&lt;&lt; First</button>
-                <button class='btn btn-outline-dark mx-2' @click='prevTree'>&lt; Previous</button>
-                <span class="mx-2">Tree %% currentTreeId+1 %% of %% trees.length %%</span>
-                <button class='btn btn-outline-dark mx-2' @click='nextTree'>Next &gt;</button>
-                <button class='btn btn-outline-dark mx-2' @click='lastTree'>Last &gt;&gt;</button>
-            </div>
         </div>
-    </jspanel>
+    </div>
+    <div class="row">
+        <div id="graph" class="col-12" style="height: 600px;"></div>
+    </div>
+
     <jspanel :visible="showInfoPanel" :options="infoPanelOptions" @close="showInfoPanel = false">
         <div id="settings">
             <div id="target" class="my-3">
@@ -171,6 +183,7 @@
             </table>
         </div>
     </jspanel>
+
     <jspanel :visible="!!selected" :options="detailPanelOptions" @close="selected = null">
         <div v-if="selected" class="m-3">
             <div v-if="selected.type=='chemical'">
@@ -180,9 +193,9 @@
                     <div v-if="selected.source">
                         <b>Source: </b>%% selected.source %%
                     </div>
-                </div>
-                <div class="my-3">
-                    <img v-bind:src="selected.image" style="max-width: 100%"/>
+                    <div class="my-3">
+                        <img v-bind:src="selected.image" style="max-width: 100%"/>
+                    </div>
                 </div>
                 <div><b>As reactant: </b>%% selected.as_reactant %%</div>
                 <div><b>As product: </b>%% selected.as_product %%</div>
@@ -218,16 +231,11 @@
                     <div><a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.smiles)" target="_blank">Evaluate reaction</a></div>
                 </div>
             </div>
-            <div class="btn-toolbar justify-content-right">
+            <div class="btn-toolbar justify-content-end">
                 <button class="btn btn-danger ban-button" @click="banItem">Ban</button>
             </div>
         </div>
     </jspanel>
-
-    <div class="row">
-        <div id="graph" class="col-12" style="height: 800px;"></div>
-    </div>
-
 </div>
 
 {% endblock %}

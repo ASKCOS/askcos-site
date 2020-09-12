@@ -137,7 +137,7 @@ function initializeNetwork(data, elementDiv) {
             dragView: true,
             selectConnectedEdges: false,
             tooltipDelay: 0,
-            zoomView: true
+            zoomView: true,
         },
         layout: {
             hierarchical: {
@@ -180,22 +180,17 @@ var app = new Vue({
         infoPanelOptions: {
             id: 'infoPanel',
             headerTitle: 'Info',
-            headerControls: {close: 'remove', size: 'sm'},
-            position: {my: 'left-top', at: 'left-bottom', of: '#toolbarPanel'},
+            headerControls: {size: 'sm'},
+            position: {my: 'left-top', at: 'left-top', of: '#graph'},
             panelSize: {width: 500, height: 500},
         },
         detailPanelOptions: {
             id: 'detailPanel',
             headerTitle: 'Node Details',
-            position: {my: 'right-top', at: 'right-top', of: '#app'},
-            panelSize: {width: 600, height: 400},
+            headerControls: {size: 'sm'},
+            position: {my: 'right-top', at: 'right-top', of: '#graph'},
+            panelSize: {width: 500, height: 500},
         },
-        toolbarPanelOptions: {
-            id: 'toolbarPanel',
-            headerTitle: '',
-            position: {my: 'left-top', at: 'left-top', of: '#app'},
-            panelSize: {width: 500, height: 160},
-        }
     },
     mounted: function () {
         this.resultId = this.$el.getAttribute('data-id');
@@ -238,7 +233,6 @@ var app = new Vue({
             this.network.on('selectNode', function (params) {
                 app.showNode(params.nodes[0])
             });
-            this.network.on('afterDrawing', this.network.fit)
         },
         sortTrees: function () {
             sortObjectArray(this.trees, this.treeSortOption, this.sortOrderAscending)
