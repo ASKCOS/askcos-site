@@ -199,7 +199,7 @@
         </div>
     </jspanel>
 
-    <jspanel :visible="!!selected" :options="detailPanelOptions" @close="selected = null">
+    <jspanel :visible="!!selected" :options="detailPanelOptions" @close="clearSelection">
         <div v-if="selected" class="m-3">
             <div v-if="selected.type=='chemical'">
                 <div class="text-center">

@@ -6,6 +6,11 @@ Vue.component('jspanel', {
             <slot />
         </div>
     `,
+    data: function () {
+        return {
+            panel: null,
+        }
+    },
     props: {
         visible: {
             type: Boolean,
@@ -26,6 +31,9 @@ Vue.component('jspanel', {
             if (isVisible) {
                 this.createPanel()
             }
+            else if (!!this.panel) {
+                this.closePanel()
+            }
         }
     },
     mounted() {
@@ -40,11 +48,14 @@ Vue.component('jspanel', {
                 {content: this.$slots.default[0].elm},
                 this.panelOptions
             )
-            jsPanel.create(options)
+            this.panel = jsPanel.create(options)
+        },
+        closePanel() {
+            this.panel.close();
         },
         close() {
+            this.panel = null;
             this.$emit('close')
-            this.$emit('update:visible', false)
-        }
+        },
     }
 })
