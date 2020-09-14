@@ -44,24 +44,6 @@ function setSmilesDrawingKetcher(id) {
         // Set the molfile in Ketcher
         molfile = json["molfile"];
         ketcher.setMolecule(molfile);
-        $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
-
-        function resizeKetcherIframe () {
-            boundingBox = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.struct().getCoordBoundingBox()
-            boundingBoxX = Math.max(Math.abs(boundingBox.min.x), Math.abs(boundingBox.max.x))
-            boundingBoxY = Math.max(Math.abs(boundingBox.min.y), Math.abs(boundingBox.max.y))
-            console.log("bound XY ", boundingBoxX, boundingBoxY)
-            iframeWidth = Math.ceil(boundingBoxX * 40 + 80)
-            iframeHeight  = Math.ceil(boundingBoxY * 40 + 80)
-            console.log("width, height", iframeWidth, iframeHeight)
-            $('#ketcher-iframe-min')[0].width = iframeWidth;
-            $('#ketcher-iframe-min')[0].height = iframeHeight;
-        }
-
-        // Need timeout because the molecule takes a bit of time to finish displaying,
-        // and we can't properly get coordinates  / bounding boxes until that finishes.
-        setTimeout(resizeKetcherIframe, 1000);
-        $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
         $("#ketcher-spinner").fadeOut();
     })
     .catch(error => {
@@ -103,4 +85,53 @@ $(document).ready(function() {
         setSmilesDrawingKetcher(drawBoxId);
     })
 });
+// Set the minimal Ketcher iframe's drawing to match a SMILES string
+function setSmilesDrawingKetcherMin(smi) {
+    // Post to api endpoint to get molfile
+    fetch(
+        '/api/v2/rdkit/smiles/to_molfile/',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                "smiles": smi,
+            })
+        }
+    )
+    .then(resp => {
+        if (!resp.ok) {
+            throw Error(resp.statusText)
+        }
+        return resp
+    })
+    .then(resp => resp.json())
+    .then(json => {
+        // Set the molfile in Ketcher
+        molfile = json["molfile"];
+        $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
+
+        function resizeKetcherIframe () {
+            boundingBox = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.struct().getCoordBoundingBox()
+            boundingBoxX = Math.max(Math.abs(boundingBox.min.x), Math.abs(boundingBox.max.x))
+            boundingBoxY = Math.max(Math.abs(boundingBox.min.y), Math.abs(boundingBox.max.y))
+            console.log("bound XY ", boundingBoxX, boundingBoxY)
+            iframeWidth = Math.ceil(boundingBoxX * 40 + 80)
+            iframeHeight  = Math.ceil(boundingBoxY * 40 + 80)
+            console.log("width, height", iframeWidth, iframeHeight)
+            $('#ketcher-iframe-min')[0].width = iframeWidth;
+            $('#ketcher-iframe-min')[0].height = iframeHeight;
+        }
+
+        // Need timeout because the molecule takes a bit of time to finish displaying,
+        // and we can't properly get coordinates  / bounding boxes until that finishes.
+        setTimeout(resizeKetcherIframe, 1000);
+        $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
+    })
+    .catch(error => {
+        console.log('Could not convert SMILES to molfile for Ketcher use: ' + error);
+    })
+};
 </script>
