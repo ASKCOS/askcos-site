@@ -111,34 +111,49 @@ function setSmilesDrawingKetcherMin(smi) {
     .then(json => {
         // Set the molfile in Ketcher
         molfile = json["molfile"];
-        $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
 
-        function resizeKetcherIframe () {
-            boundingBox = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.struct().getCoordBoundingBox()
-            boundingBoxX = Math.max(Math.abs(boundingBox.min.x), Math.abs(boundingBox.max.x))
-            boundingBoxY = Math.max(Math.abs(boundingBox.min.y), Math.abs(boundingBox.max.y))
-            console.log("bound XY ", boundingBoxX, boundingBoxY)
-            iframeWidth = Math.ceil(boundingBoxX * 40 + 80)
-            iframeHeight  = Math.ceil(boundingBoxY * 40 + 80)
-            console.log("width, height", iframeWidth, iframeHeight)
+        function setMolfileKetcherMin () {
 
-            // TODO this isn't quite right; need to account for some margins or smth
-            // not even sure if this is necessary; consider removing
-            iframe = $('#ketcher-iframe-min')[0]
-            ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
-            ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
-            iframe.width = iframeWidth;
-            ketcherDivApplication.style.width = iframeWidth + "px";
-            ketcherMainApplication.style.width = iframeWidth + "px";
-            iframe.height = iframeHeight;
-            ketcherDivApplication.style.height = iframeHeight + "px";
-            ketcherMainApplication.style.height = iframeHeight + "px";
+            if (! ($('#ketcher-iframe-min')[0] 
+                && $('#ketcher-iframe-min')[0].contentWindow.ketcher
+                && $('#ketcher-iframe-min')[0].contentWindow.ketcher.ready) ) {
+                // console.log("not ready, will try again in 500 ms...")
+                setTimeout(setMolfileKetcherMin, 500)
+                return;
+            }
+            // console.log("ready!")
+
+            $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
+            function resizeKetcherIframe () {
+                boundingBox = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.struct().getCoordBoundingBox()
+                boundingBoxX = Math.max(Math.abs(boundingBox.min.x), Math.abs(boundingBox.max.x))
+                boundingBoxY = Math.max(Math.abs(boundingBox.min.y), Math.abs(boundingBox.max.y))
+                console.log("bound XY ", boundingBoxX, boundingBoxY)
+                iframeWidth = Math.ceil(boundingBoxX * 40 + 80)
+                iframeHeight  = Math.ceil(boundingBoxY * 40 + 80)
+                console.log("width, height", iframeWidth, iframeHeight)
+
+                // TODO this isn't quite right; need to account for some margins or smth
+                // not even sure if this is necessary; consider removing
+                iframe = $('#ketcher-iframe-min')[0]
+                ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
+                ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
+                iframe.width = iframeWidth;
+                ketcherDivApplication.style.width = iframeWidth + "px";
+                ketcherMainApplication.style.width = iframeWidth + "px";
+                iframe.height = iframeHeight;
+                ketcherDivApplication.style.height = iframeHeight + "px";
+                ketcherMainApplication.style.height = iframeHeight + "px";
+            }
+
+            // Need timeout because the molecule takes a bit of time to finish displaying,
+            // and we can't properly get coordinates  / bounding boxes until that finishes.
+            setTimeout(resizeKetcherIframe, 1000);
+            $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
         }
 
-        // Need timeout because the molecule takes a bit of time to finish displaying,
-        // and we can't properly get coordinates  / bounding boxes until that finishes.
-        setTimeout(resizeKetcherIframe, 1000);
-        $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
+        setMolfileKetcherMin();
+
     })
     .catch(error => {
         console.log('Could not convert SMILES to molfile for Ketcher use: ' + error);
