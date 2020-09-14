@@ -4,6 +4,7 @@ main[role=application] .cellar {
 main[role=application] #canvas {
     top: 0;
     left: 0;
+    border: 0;
 }
 main[role=application] [role=toolbar] {
     display: none;
