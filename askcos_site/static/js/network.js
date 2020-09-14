@@ -376,6 +376,7 @@ function getVisjsUserOptions(obj) {
 
 const ippSettingsDefault = {
     allowCluster: true,
+    filterReactingAtoms: false,
     allowResolve: false,
     isHighlightAtom: true,
     reactionLimit: 5,
@@ -411,6 +412,7 @@ var app = new Vue({
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
+        filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
         allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
         showLoadModal: false,
@@ -576,6 +578,7 @@ var app = new Vue({
             if (!storageAvailable('localStorage')) return
             const obj = {
                 allowCluster: this.allowCluster,
+                filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
                 allowResolve: this.allowResolve,
                 isHighlightAtom: this.isHighlightAtom,
                 reactionLimit: this.reactionLimit,
