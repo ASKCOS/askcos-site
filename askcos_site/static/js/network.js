@@ -1332,6 +1332,12 @@ var app = new Vue({
                         this.data.nodes.update({id: node.id, ppg: result.ppg, source: result.source})
                         this.$set(this.selected, 'ppg', result.ppg)
                         this.$set(this.selected, 'source', result.source)
+                        // Use a little timeout to allow the Ketcher window to finish loading.
+                        // TODO: A callback would be best but idk if Ketcher can signal when it's finished loading.
+                        // TODO Or, instead of Vue's if, use show/hide so that Ketcher doesn't have to be recreated. 
+                        this.$nextTick(function () {
+                            setTimeout(setSmilesDrawingKetcherMin, 500, node.smiles);
+                        })
                     })
             }
         },
