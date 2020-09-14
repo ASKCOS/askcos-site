@@ -121,8 +121,18 @@ function setSmilesDrawingKetcherMin(smi) {
             iframeWidth = Math.ceil(boundingBoxX * 40 + 80)
             iframeHeight  = Math.ceil(boundingBoxY * 40 + 80)
             console.log("width, height", iframeWidth, iframeHeight)
-            $('#ketcher-iframe-min')[0].width = iframeWidth;
-            $('#ketcher-iframe-min')[0].height = iframeHeight;
+
+            // TODO this isn't quite right; need to account for some margins or smth
+            // not even sure if this is necessary; consider removing
+            iframe = $('#ketcher-iframe-min')[0]
+            ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
+            ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
+            iframe.width = iframeWidth;
+            ketcherDivApplication.style.width = iframeWidth + "px";
+            ketcherMainApplication.style.width = iframeWidth + "px";
+            iframe.height = iframeHeight;
+            ketcherDivApplication.style.height = iframeHeight + "px";
+            ketcherMainApplication.style.height = iframeHeight + "px";
         }
 
         // Need timeout because the molecule takes a bit of time to finish displaying,
