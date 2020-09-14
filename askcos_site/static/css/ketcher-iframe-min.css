@@ -8,6 +8,9 @@ main[role=application] #canvas {
     right: 0;
     border: 0;
 }
+.measure-log {
+    display: none;
+}
 main[role=application] [role=toolbar] {
     display: none;
 }
