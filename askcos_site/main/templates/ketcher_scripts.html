@@ -126,24 +126,26 @@ function setSmilesDrawingKetcherMin(smi) {
             $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
             function resizeKetcherIframe () {
                 boundingBox = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.struct().getCoordBoundingBox()
-                boundingBoxX = Math.max(Math.abs(boundingBox.min.x), Math.abs(boundingBox.max.x))
-                boundingBoxY = Math.max(Math.abs(boundingBox.min.y), Math.abs(boundingBox.max.y))
-                // console.log("bound XY ", boundingBoxX, boundingBoxY)
-                iframeWidth = Math.ceil(boundingBoxX * 40 + 80)
-                iframeHeight  = Math.ceil(boundingBoxY * 40 + 80)
+                boundingBoxWidth = boundingBox.max.x - boundingBox.min.x
+                boundingBoxHeight = boundingBox.max.y - boundingBox.min.y
+                // console.log("bound dims", boundingBoxWidth, boundingBoxHeight)
+                iframeWidth = Math.ceil(boundingBoxWidth * 40 + 80)
+                iframeHeight  = Math.ceil(boundingBoxHeight * 40 + 80)
                 // console.log("width, height", iframeWidth, iframeHeight)
 
-                // TODO this isn't quite right; need to account for some margins or smth
-                // not even sure if this is necessary; consider removing
+                // The relevant svg (where the molecules get drawn)
+                // is 20px by 20px smaller than div[role=application] and main[role=application];
+                // making the svg at least as small as the iframe, and having their locations match,
+                // (hopefully) prevents scrolling from possibly occuring.
                 iframe = $('#ketcher-iframe-min')[0]
                 ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
                 ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
                 iframe.width = iframeWidth;
-                ketcherDivApplication.style.width = iframeWidth + "px";
-                ketcherMainApplication.style.width = iframeWidth + "px";
+                ketcherDivApplication.style.width = (iframeWidth+20) + "px";
+                ketcherMainApplication.style.width = (iframeWidth+20) + "px";
                 iframe.height = iframeHeight;
-                ketcherDivApplication.style.height = iframeHeight + "px";
-                ketcherMainApplication.style.height = iframeHeight + "px";
+                ketcherDivApplication.style.height = (iframeHeight+20) + "px";
+                ketcherMainApplication.style.height = (iframeHeight+20) + "px";
             }
 
             // Need timeout because the molecule takes a bit of time to finish displaying,

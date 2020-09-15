@@ -1,3 +1,6 @@
+body {
+    margin: none;
+}
 main[role=application] .cellar {
     display: none;
 }
