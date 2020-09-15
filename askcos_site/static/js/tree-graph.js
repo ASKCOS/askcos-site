@@ -102,6 +102,13 @@ function treeStats(tree) {
     tree.avgScore = avgScore
     tree.avgPlausibility = avgPlausibility
     tree.minPlausibility = minPlausibility
+
+    if ('score' in tree.graph) {
+        tree.score = tree.graph.score
+    }
+    if ('cluster_id' in tree.graph) {
+        tree.cluster_id = tree.graph.cluster_id
+    }
 }
 
 function sortObjectArray(arr, prop, ascending) {
@@ -168,13 +175,15 @@ var app = new Vue({
         resultId: "",
         numChemicals: 0,
         numReactions: 0,
-        trees: [],
+        alltrees: [],
         settings: {},
         tbVersion: null,
         showInfoPanel: false,
         selected: null,
         currentTreeId: 0,
         networkData: {},
+        cluster: false,
+        currentClusterId: 0,
         sortOrderAscending: false,
         treeSortOption: 'numReactions',
         infoPanelOptions: {
@@ -207,7 +216,7 @@ var app = new Vue({
                     var trees = result['result']['paths'];
                     this.numChemicals = stats[0];
                     this.numReactions = stats[1];
-                    this.trees = trees;
+                    this.alltrees = trees;
                     this.settings = result['settings'];
                     if (!!this.settings.buyables_source
                         && (this.settings.buyables_source.includes(null) || this.settings.buyables_source.includes(''))) {
@@ -233,6 +242,7 @@ var app = new Vue({
             this.network.on('selectNode', function (params) {
                 app.showNode(params.nodes[0])
             });
+            this.network.on('deselectNode', this.clearSelection);
         },
         sortTrees: function () {
             sortObjectArray(this.trees, this.treeSortOption, this.sortOrderAscending)
@@ -244,26 +254,54 @@ var app = new Vue({
         },
         nextTree: function () {
             if (this.currentTreeId < this.trees.length - 1) {
-                this.selected = null
+                this.clearSelection()
                 this.currentTreeId = this.currentTreeId + 1
                 this.buildTree(this.currentTreeId, this.networkContainer)
             }
         },
         prevTree: function () {
             if (this.currentTreeId > 0) {
-                this.selected = null
+                this.clearSelection()
                 this.currentTreeId = this.currentTreeId - 1
                 this.buildTree(this.currentTreeId, this.networkContainer)
             }
         },
         firstTree: function () {
-            this.selected = null
+            this.clearSelection()
             this.currentTreeId = 0
             this.buildTree(this.currentTreeId, this.networkContainer)
         },
         lastTree: function () {
-            this.selected = null
+            this.clearSelection()
             this.currentTreeId = this.trees.length - 1
+            this.buildTree(this.currentTreeId, this.networkContainer)
+        },
+        nextCluster: function () {
+            if (this.currentClusterId < this.maxClusterId) {
+                this.clearSelection()
+                this.currentClusterId = this.currentClusterId + 1
+                this.currentTreeId = 0
+                this.buildTree(this.currentTreeId, this.networkContainer)
+            }
+        },
+        prevCluster: function () {
+            if (this.currentClusterId > this.minClusterId) {
+                this.clearSelection()
+                this.currentClusterId = this.currentClusterId - 1
+                this.currentTreeId = 0
+                this.buildTree(this.currentTreeId, this.networkContainer)
+            }
+        },
+        firstCluster: function () {
+            this.clearSelection()
+            this.currentClusterId = this.minClusterId
+            this.currentTreeId = 0
+            this.buildTree(this.currentTreeId, this.networkContainer)
+        },
+        lastCluster: function () {
+            this.clearSelection()
+            this.currentClusterId = this.maxClusterId
+            this.currentTreeId = 0
             this.buildTree(this.currentTreeId, this.networkContainer)
         },
         allTreeStats: function () {
@@ -314,7 +352,40 @@ var app = new Vue({
                         }
                     })
             }
-        }
+        },
+        clearSelection: function () {
+            this.selected = null
+        },
+    },
+    computed: {
+        trees: function () {
+            if (this.cluster) {
+                return this.alltrees.filter(tree => tree.cluster_id === this.currentClusterId)
+            } else {
+                return this.alltrees
+            }
+        },
+        maxClusterId: function () {
+            if (!!this.alltrees.length && 'cluster_id' in this.alltrees[0]) {
+                return Math.max(...this.alltrees.map(tree => tree.cluster_id))
+            } else {
+                return 0
+            }
+        },
+        minClusterId: function () {
+            if (!!this.alltrees.length && 'cluster_id' in this.alltrees[0]) {
+                return Math.min(...this.alltrees.map(tree => tree.cluster_id))
+            } else {
+                return 0
+            }
+        },
+    },
+    watch: {
+        cluster: function () {
+            this.currentClusterId = this.minClusterId;
+            this.currentTreeId = 0;
+            this.buildTree(this.currentTreeId, this.networkContainer)
+        },
     },
     delimiters: ['%%', '%%'],
 });

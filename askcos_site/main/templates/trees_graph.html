@@ -32,12 +32,27 @@
                         <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=all" target="_blank">All</a>
                     </div>
                 </div>
+                <div class="custom-control custom-switch d-flex align-items-center">
+                    <input type="checkbox" class="custom-control-input" id="clusterSwitch" v-model="cluster" :disabled="!!alltrees.length && !('cluster_id' in alltrees[0])">
+                    <label class="custom-control-label" for="clusterSwitch">View by cluster</label>
+                </div>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button class='btn btn-outline-dark' @click='firstCluster' :disabled="!cluster">&lt;&lt; First</button>
+                        <button class='btn btn-outline-dark' @click='prevCluster' :disabled="!cluster">&lt; Previous</button>
+                    </div>
+                    <div class="input-group-text justify-content-center" style="width: 8rem">%% !cluster ? 'Cluster N/A' : currentClusterId === -1 ? 'Unclustered' : `Cluster ${currentClusterId+1} of ${maxClusterId+1}` %%</div>
+                    <div class="input-group-append">
+                        <button class='btn btn-outline-dark' @click='nextCluster' :disabled="!cluster">Next &gt;</button>
+                        <button class='btn btn-outline-dark' @click='lastCluster' :disabled="!cluster">Last &gt;&gt;</button>
+                    </div>
+                </div>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <button class='btn btn-outline-dark' @click='firstTree'>&lt;&lt; First</button>
                         <button class='btn btn-outline-dark' @click='prevTree'>&lt; Previous</button>
                     </div>
-                    <div class="input-group-text">Tree %% currentTreeId+1 %% of %% trees.length %%</div>
+                    <div class="input-group-text justify-content-center" style="width: 8rem">Tree %% currentTreeId+1 %% of %% trees.length %%</div>
                     <div class="input-group-append">
                         <button class='btn btn-outline-dark' @click='nextTree'>Next &gt;</button>
                         <button class='btn btn-outline-dark' @click='lastTree'>Last &gt;&gt;</button>
@@ -53,7 +68,7 @@
                         <option value="avgScore">Average score</option>
                         <option value="avgPlausibility">Average plausibility</option>
                         <option value="minPlausibility">Minimum plausibility</option>
-                        <option value="score">Synthetic strategy score</option>
+                        <option value="score" :disabled="!!alltrees.length && !('score' in alltrees[0])">Strategic quotient</option>
                     </select>
                     <div class="input-group-append" @click="sortOrderAscending = !sortOrderAscending; sortTrees()">
                         <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
