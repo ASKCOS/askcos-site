@@ -1329,11 +1329,21 @@ var app = new Vue({
         },
         checkFilter: function(result)
         {
-            // Right now: returns true/false 50/50
-            // In future: return true if result passes atom filter; false otherwise
-            // console.log("checkFilter called")
-            // console.log("result:", result)
-            return Math.random()<0.5;
+            var reactingAtoms = result.reacting_atoms.map((el) => el-1);
+            var reactingAtomsAray = Array.from(reactingAtoms.values());
+            // console.log("reacting atoms", reactingAtomsAray)            
+
+            var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
+            var selectionAtomsArray = [];
+            if (selection) {
+                var selectionAtomsArray = Array.from(selection.atoms.values());
+            }
+            // console.log("ketcher selection", selectionAtomsArray);
+
+            var filterResult = reactingAtomsAray.every(element => selectionAtomsArray.includes(element));
+            // console.log("are atoms subset of ketcher?", filterResult)
+
+            return filterResult;
         },
         showInfo: function(obj) {
             var nodeId = obj.nodes[obj.nodes.length-1];
