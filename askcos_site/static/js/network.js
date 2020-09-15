@@ -972,6 +972,7 @@ var app = new Vue({
             this.saveTbSettings()
             this.saveNetworkOptions()
             this.saveIppSettings()
+            // console.log('changeTarget')
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
                 if (isvalidsmiles) {
@@ -1323,15 +1324,15 @@ var app = new Vue({
             this.selected = prevSelected;
         },
         applyFilterReactingAtoms: function() {
-            console.log("filterReactingAtoms button pressed");
+            // console.log("filterReactingAtoms button pressed");
             return 
         },
         checkFilter: function(result)
         {
             // Right now: returns true/false 50/50
             // In future: return true if result passes atom filter; false otherwise
-            console.log("checkFilter called")
-            console.log("result:", result)
+            // console.log("checkFilter called")
+            // console.log("result:", result)
             return Math.random()<0.5;
         },
         showInfo: function(obj) {
