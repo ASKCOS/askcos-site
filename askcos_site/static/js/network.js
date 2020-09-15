@@ -1322,6 +1322,18 @@ var app = new Vue({
             this.selected = undefined;
             this.selected = prevSelected;
         },
+        applyFilterReactingAtoms: function() {
+            console.log("filterReactingAtoms button pressed");
+            return 
+        },
+        checkFilter: function(result)
+        {
+            // Right now: returns true/false 50/50
+            // In future: return true if result passes atom filter; false otherwise
+            console.log("checkFilter called")
+            console.log("result:", result)
+            return Math.random()<0.5;
+        },
         showInfo: function(obj) {
             var nodeId = obj.nodes[obj.nodes.length-1];
             var node = this.data.nodes.get(nodeId);
