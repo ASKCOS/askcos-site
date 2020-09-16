@@ -189,6 +189,7 @@ Synthesis Predictor
                     <th class="text-center">Reagents</th>
                     <th class="text-center">Catalyst</th>
                     <th class="text-center">Solvents</th>
+                    <th class="text-center">Solvent Score</th>
                     <th class="text-center">Temperature</th>
                     <th class="text-center">Predict with conditions</th>
                 </tr>
@@ -219,6 +220,11 @@ Synthesis Predictor
                         <td class="text-center">
                             <img v-if="!!result.solvent" :src='"/api/v2/draw/?smiles="+encodeURIComponent(result.solvent)' :alt="result.solvent">
                             <span v-else>none</span>
+                        </td>
+                        <td class="text-center">
+                            <span v-if="result.best"> <p style="color:green"> %% result.solvent_score %% </p>
+                            </span>
+                            <span v-else> %% result.solvent_score %% </span>
                         </td>
                         <td class="text-center">
                             %% Math.round(result.temperature) %% &deg;C
