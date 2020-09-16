@@ -1,5 +1,5 @@
 body {
-    margin: none;
+    margin: 0;
 }
 main[role=application] .cellar {
     display: none;

@@ -129,25 +129,26 @@ function setSmilesDrawingKetcherMin(smi) {
                 boundingBoxWidth = boundingBox.max.x - boundingBox.min.x
                 boundingBoxHeight = boundingBox.max.y - boundingBox.min.y
                 // console.log("bound dims", boundingBoxWidth, boundingBoxHeight)
-                iframeWidth = Math.ceil(boundingBoxWidth * 40 + 80)
-                iframeHeight  = Math.ceil(boundingBoxHeight * 40 + 80)
-                // console.log("width, height", iframeWidth, iframeHeight)
+                baseWidth = Math.ceil(boundingBoxWidth * 40)
+                baseHeight  = Math.ceil(boundingBoxHeight * 40)
+                // console.log("width, height", baseWidth, baseHeight)
 
-                // The relevant svg (where the molecules get drawn)
-                // is 20px by 20px smaller than div[role=application] and main[role=application];
-                // making the svg at least as small as the iframe, and having their locations match,
-                // (hopefully) prevents scrolling from possibly occuring.
+                // The nodes used to render the Ketcher canvas are like this:
+                // iframe --> div[role=application] --> main[role=application] --> svg
+                // Scrolling is prevented happens if their sizes are all in non-increasing order. 
+                // The svg's size is dynamically calculated, 
+                // I think it's always 20x20 smaller than main[role=application].
                 iframe = $('#ketcher-iframe-min')[0]
-                iframe.width = iframeWidth;
-                iframe.height = iframeHeight;
+                iframe.width = baseWidth+60;
+                iframe.height = baseHeight+60;
 
                 ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
-                ketcherDivApplication.style.width = (iframeWidth+20) + "px";
-                ketcherDivApplication.style.height = (iframeHeight+20) + "px";
+                ketcherDivApplication.style.width = (baseWidth+60) + "px";
+                ketcherDivApplication.style.height = (baseHeight+60) + "px";
 
                 ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
-                ketcherMainApplication.style.width = (iframeWidth+20) + "px";
-                ketcherMainApplication.style.height = (iframeHeight+20) + "px";
+                ketcherMainApplication.style.width = (baseWidth+60) + "px";
+                ketcherMainApplication.style.height = (baseHeight+60) + "px";
             }
 
             // Need timeout because the molecule takes a bit of time to finish displaying,
