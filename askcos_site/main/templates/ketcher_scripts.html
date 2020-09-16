@@ -138,13 +138,15 @@ function setSmilesDrawingKetcherMin(smi) {
                 // making the svg at least as small as the iframe, and having their locations match,
                 // (hopefully) prevents scrolling from possibly occuring.
                 iframe = $('#ketcher-iframe-min')[0]
-                ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
-                ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
                 iframe.width = iframeWidth;
-                ketcherDivApplication.style.width = (iframeWidth+20) + "px";
-                ketcherMainApplication.style.width = (iframeWidth+20) + "px";
                 iframe.height = iframeHeight;
+
+                ketcherDivApplication = $('#ketcher-iframe-min').contents().find('div[role=application]')[0]
+                ketcherDivApplication.style.width = (iframeWidth+20) + "px";
                 ketcherDivApplication.style.height = (iframeHeight+20) + "px";
+
+                ketcherMainApplication = $('#ketcher-iframe-min').contents().find('main[role=application]')[0]
+                ketcherMainApplication.style.width = (iframeWidth+20) + "px";
                 ketcherMainApplication.style.height = (iframeHeight+20) + "px";
             }
 
