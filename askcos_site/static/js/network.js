@@ -999,12 +999,12 @@ var app = new Vue({
                         app.initClusterShowCard(smi); // must be called immediately after adding results
                         addReactions(app.results[smi], app.data.nodes.get(NIL_UUID), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
+                        setSmilesDrawingKetcherMin(smi);
                         app.lookupPrice(smi)
                             .then(result => {
                                 app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
                                 app.network.selectNodes([NIL_UUID]);
                                 app.showInfo({'nodes': [NIL_UUID]});
-                                setSmilesDrawingKetcherMin(smi);    
                             })
                     }
                     this.requestRetro(smi, callback);
@@ -1352,6 +1352,7 @@ var app = new Vue({
                 return
             }
             this.selected = node;
+            setSmilesDrawingKetcherMin(node.smiles);
             this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
                 this.lookupPrice(node.smiles)
@@ -1359,9 +1360,6 @@ var app = new Vue({
                         this.data.nodes.update({id: node.id, ppg: result.ppg, source: result.source})
                         this.$set(this.selected, 'ppg', result.ppg)
                         this.$set(this.selected, 'source', result.source)
-                    })
-                    .then(() => {
-                        setSmilesDrawingKetcherMin(node.smiles);
                     })
             }
         },
