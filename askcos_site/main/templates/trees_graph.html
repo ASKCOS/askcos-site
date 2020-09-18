@@ -22,9 +22,14 @@
 <div id="app" data-id="{{ id }}">
     <div class="row">
         <div class="col-12">
-            <div class="btn-toolbar justify-content-between mb-3">
-                <button class="btn btn-dark" href="#" @click="showInfoPanel = true">Open Info Panel</button>
-                <div class="input-group">
+            <p class="lead text-center">
+                Discovered %% alltrees.length %% trees after exploring %% numChemicals %% total chemicals and %% numReactions %% total reactions.
+            </p>
+        </div>
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-center mb-3">
+                <button class="btn btn-dark mr-2" href="#" @click="showInfoPanel = true">Open Job Details</button>
+                <div class="input-group mr-2">
                     <div class="input-group-text">View trees in IPP</div>
                     <div class="input-group-append">
                         <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=10" target="_blank">Top 10</a>
@@ -32,11 +37,30 @@
                         <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=all" target="_blank">All</a>
                     </div>
                 </div>
-                <div class="custom-control custom-switch d-flex align-items-center">
+                <div class="input-group mr-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Sort by</div>
+                    </div>
+                    <select class="form-control" id="sortingCategory" @change="setDefaultSortOrder(); sortTrees()" v-model="treeSortOption">
+                        <option value="numReactions">Number of reactions</option>
+                        <option value="firstStepScore">First step score</option>
+                        <option value="avgScore">Average score</option>
+                        <option value="avgPlausibility">Average plausibility</option>
+                        <option value="minPlausibility">Minimum plausibility</option>
+                        <option value="score" :disabled="!!alltrees.length && !('score' in alltrees[0])">Strategic quotient</option>
+                    </select>
+                    <div class="input-group-append" @click="sortOrderAscending = !sortOrderAscending; sortTrees()">
+                        <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
+                        <button class="input-group-text" v-else>Descending <i class="fas fa-sort-amount-down ml-1"></i></button>
+                    </div>
+                </div>
+                <div class="custom-control custom-switch d-flex align-items-center mr-2">
                     <input type="checkbox" class="custom-control-input" id="clusterSwitch" v-model="cluster" :disabled="!!alltrees.length && !('cluster_id' in alltrees[0])">
                     <label class="custom-control-label" for="clusterSwitch">View by cluster</label>
                 </div>
-                <div class="input-group">
+            </div>
+            <div class="btn-toolbar justify-content-center mb-3">
+                <div class="input-group mr-2">
                     <div class="input-group-prepend">
                         <button class='btn btn-outline-dark' @click='firstCluster' :disabled="!cluster">&lt;&lt; First</button>
                         <button class='btn btn-outline-dark' @click='prevCluster' :disabled="!cluster">&lt; Previous</button>
@@ -58,23 +82,6 @@
                         <button class='btn btn-outline-dark' @click='lastTree'>Last &gt;&gt;</button>
                     </div>
                 </div>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">Sort by</div>
-                    </div>
-                    <select class="form-control" id="sortingCategory" @change="setDefaultSortOrder(); sortTrees()" v-model="treeSortOption">
-                        <option value="numReactions">Number of reactions</option>
-                        <option value="firstStepScore">First step score</option>
-                        <option value="avgScore">Average score</option>
-                        <option value="avgPlausibility">Average plausibility</option>
-                        <option value="minPlausibility">Minimum plausibility</option>
-                        <option value="score" :disabled="!!alltrees.length && !('score' in alltrees[0])">Strategic quotient</option>
-                    </select>
-                    <div class="input-group-append" @click="sortOrderAscending = !sortOrderAscending; sortTrees()">
-                        <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
-                        <button class="input-group-text" v-else>Descending <i class="fas fa-sort-amount-down ml-1"></i></button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -91,11 +98,6 @@
                 <div class="text-center">
                     <img v-if="settings.smiles" :src="'/api/v2/draw/?smiles='+encodeURIComponent(settings.smiles)">
                 </div>
-            </div>
-            <div class="my-3">
-                <p class="text-center">
-                    Explored %% numChemicals %% total chemicals and %% numReactions %% total reactions
-                </p>
             </div>
             <table class="table">
                 <tr v-if="settings.template_set">
