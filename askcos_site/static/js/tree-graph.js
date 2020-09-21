@@ -3,8 +3,6 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width = null;
 
-showLoader();
-
 function hideNetwork(n) {
     var networkDiv = document.querySelectorAll('.tree-graph')[n];
     var hideDiv = document.querySelectorAll('.hideNetwork')[n];
@@ -271,7 +269,6 @@ var app = new Vue({
     },
     methods: {
         getResult: function (id) {
-            showLoader();
             fetch(`/api/v2/results/${id}/tree/`)
                 .then(resp => resp.json())
                 .then(json => {
@@ -297,7 +294,9 @@ var app = new Vue({
                         this.sortTrees()
                         this.buildTree();
                     }
-                    hideLoader()
+                    setTimeout(() => {
+                        document.querySelector('#splash').classList.replace("d-flex", "d-none")
+                    }, 1000)
                 })
         },
         buildTree: function () {

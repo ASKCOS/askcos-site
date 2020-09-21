@@ -7,11 +7,12 @@
 <script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/vis.min.css' %}?v{{ static_version }}" type="text/css">
-<script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
 <link rel="stylesheet" href="{% static 'css/jspanel.min.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/splash.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/tree-graph.css' %}?v{{ static_version }}" type="text/css">
+<script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/jspanel.min.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/jspanel-vue.js' %}?v{{ static_version }}"></script>
-<link rel="stylesheet" href="{% static 'css/tree-graph.css' %}?v{{ static_version }}" type="text/css">
 {% endblock %}
 
 {% block page_title %}Tree Builder Visualization{% endblock %}
@@ -20,6 +21,18 @@
 
 
 <div id="app" data-id="{{ id }}">
+
+    <div id="splash" class="splash-container d-flex flex-column align-items-center justify-content-center">
+        <h3>
+            ASKCOS Tree Visualization
+        </h3>
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="spinner-grow spinner-grow-sm bounce-early"></div>
+            <div class="spinner-grow spinner-grow-sm mx-1"></div>
+            <div class="spinner-grow spinner-grow-sm bounce-late"></div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <p class="lead text-center">
