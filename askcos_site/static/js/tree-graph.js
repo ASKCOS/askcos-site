@@ -292,14 +292,14 @@ var app = new Vue({
                         this.allTreeStats()
                         this.setDefaultSortOrder()
                         this.sortTrees()
-                        this.buildTree(this.currentTreeId, this.networkContainer);
+                        this.buildTree();
                     }
                     hideLoader()
                 })
         },
-        buildTree: function (treeId, elem) {
-            this.networkData = loadNodeLinkGraph(this.trees[treeId], true)
-            this.network = initializeNetwork(this.networkData, elem, true);
+        buildTree: function () {
+            this.networkData = loadNodeLinkGraph(this.trees[this.currentTreeId], true)
+            this.network = initializeNetwork(this.networkData, this.networkContainer, true);
             this.network.on('selectNode', function (params) {
                 app.showNode(params.nodes[0])
             });
@@ -308,7 +308,10 @@ var app = new Vue({
         sortTrees: function () {
             sortObjectArray(this.trees, this.treeSortOption, this.sortOrderAscending)
             this.currentTreeId = 0
-            this.buildTree(this.currentTreeId, this.networkContainer)
+            this.buildTree()
+            if (this.showListView) {
+                buildTreeList()
+            }
         },
         setDefaultSortOrder: function() {
             this.sortOrderAscending = ['numReactions'].includes(this.treeSortOption)
@@ -316,54 +319,66 @@ var app = new Vue({
         nextTree: function () {
             if (this.currentTreeId < this.trees.length - 1) {
                 this.clearSelection()
-                this.currentTreeId = this.currentTreeId + 1
-                this.buildTree(this.currentTreeId, this.networkContainer)
+                this.currentTreeId += 1
+                this.buildTree()
             }
         },
         prevTree: function () {
             if (this.currentTreeId > 0) {
                 this.clearSelection()
-                this.currentTreeId = this.currentTreeId - 1
-                this.buildTree(this.currentTreeId, this.networkContainer)
+                this.currentTreeId -= 1
+                this.buildTree()
             }
         },
         firstTree: function () {
             this.clearSelection()
             this.currentTreeId = 0
-            this.buildTree(this.currentTreeId, this.networkContainer)
+            this.buildTree()
         },
         lastTree: function () {
             this.clearSelection()
             this.currentTreeId = this.trees.length - 1
-            this.buildTree(this.currentTreeId, this.networkContainer)
+            this.buildTree()
         },
         nextCluster: function () {
             if (this.currentClusterId < this.maxClusterId) {
                 this.clearSelection()
-                this.currentClusterId = this.currentClusterId + 1
+                this.currentClusterId += 1
                 this.currentTreeId = 0
-                this.buildTree(this.currentTreeId, this.networkContainer)
+                this.buildTree()
+                if (this.showListView) {
+                    buildTreeList()
+                }
             }
         },
         prevCluster: function () {
             if (this.currentClusterId > this.minClusterId) {
                 this.clearSelection()
-                this.currentClusterId = this.currentClusterId - 1
+                this.currentClusterId -= 1
                 this.currentTreeId = 0
-                this.buildTree(this.currentTreeId, this.networkContainer)
+                this.buildTree()
+                if (this.showListView) {
+                    buildTreeList()
+                }
             }
         },
         firstCluster: function () {
             this.clearSelection()
             this.currentClusterId = this.minClusterId
             this.currentTreeId = 0
-            this.buildTree(this.currentTreeId, this.networkContainer)
+            this.buildTree()
+            if (this.showListView) {
+                buildTreeList()
+            }
         },
         lastCluster: function () {
             this.clearSelection()
             this.currentClusterId = this.maxClusterId
             this.currentTreeId = 0
-            this.buildTree(this.currentTreeId, this.networkContainer)
+            this.buildTree()
+            if (this.showListView) {
+                buildTreeList()
+            }
         },
         allTreeStats: function () {
             this.trees.forEach(treeStats)
@@ -445,7 +460,10 @@ var app = new Vue({
         cluster: function () {
             this.currentClusterId = this.minClusterId;
             this.currentTreeId = 0;
-            this.buildTree(this.currentTreeId, this.networkContainer)
+            this.buildTree()
+            if (this.showListView) {
+                buildTreeList()
+            }
         },
     },
     delimiters: ['%%', '%%'],

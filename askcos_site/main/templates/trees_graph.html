@@ -258,8 +258,11 @@
     <jspanel :visible="showListView" :options="listPanelOptions" @close="showListView = false">
         <div class="m-3">
             <template v-for="(tree, index) in trees">
-                <details open>
-                    <summary>Tree %% index + 1 %%</summary>
+                <details class="mb-3" open>
+                    <summary>
+                        <span>Tree %% index + 1 %%</span>
+                        <a class="float-right" href="#" role="button" @click="showListView = false; currentTreeId = index; buildTree()">View in main window</a>
+                    </summary>
                     <div :id="`treeList-${index}`" style="height: 300px;"></div>
                 </details>
             </template>
