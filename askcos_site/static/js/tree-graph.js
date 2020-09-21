@@ -124,6 +124,9 @@ function treeStats(tree) {
     if ('cluster_id' in tree.graph) {
         tree.cluster_id = tree.graph.cluster_id
     }
+    if ('depth' in tree.graph) {
+        tree.depth = tree.graph.cluster_id
+    }
 }
 
 function sortObjectArray(arr, prop, ascending) {
@@ -314,7 +317,7 @@ var app = new Vue({
             }
         },
         setDefaultSortOrder: function() {
-            this.sortOrderAscending = ['numReactions'].includes(this.treeSortOption)
+            this.sortOrderAscending = ['numReactions', 'depth'].includes(this.treeSortOption)
         },
         nextTree: function () {
             if (this.currentTreeId < this.trees.length - 1) {

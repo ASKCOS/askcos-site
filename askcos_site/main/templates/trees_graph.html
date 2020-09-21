@@ -42,7 +42,8 @@
                         <div class="input-group-text">Sort by</div>
                     </div>
                     <select class="form-control" id="sortingCategory" @change="setDefaultSortOrder(); sortTrees()" v-model="treeSortOption">
-                        <option value="numReactions">Number of reactions</option>
+                        <option value="numReactions">Total number of reactions</option>
+                        <option value="depth" :disabled="!!alltrees.length && !('depth' in alltrees[0])">Length of longest linear path</option>
                         <option value="firstStepScore">First step score</option>
                         <option value="avgScore">Average score</option>
                         <option value="avgPlausibility">Average plausibility</option>
