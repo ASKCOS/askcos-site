@@ -51,29 +51,44 @@ function colorOf(child) {
     }
 }
 
-function loadNodeLinkGraph(data) {
+function loadNodeLinkGraph(data, showDetail = true) {
     /* Load tree in node link format into visjs and add visualization related attributes. */
-    let visdata = {}
-    for (node of data.nodes) {
+    /* Add image data to original object */
+    data.nodes.forEach(node => {
         if (node.type === 'chemical') {
             node.image = `/api/v2/draw/?smiles=${encodeURIComponent(node.smiles)}`;
             node.shape = 'image';
-            const buyableString = node.ppg !== 0 ? `$${node.ppg}/g` : 'not buyable';
-            node.title = `${node.smiles}<br>${node.as_reactant} precedents as reactant<br>${node.as_product} precedents as product<br>${buyableString}`;
-            node.borderWidth = 2;
-            node.color = {
-                border: colorOf(node)
-            }
-        } else {
-            node.label = `${node.num_examples} examples
-FF score: ${Number(node.plausibility).toFixed(3)}
-Template score: ${Number(node.template_score).toFixed(3)}`;
-            node['font'] = {align: 'center'}
         }
+    })
+    let nodes
+    if (showDetail) {
+        /* For detail view, make a shallow copy of the nodes and add extra visual attributes */
+        nodes = []
+        data.nodes.forEach(node => {
+            let newNode = Object.assign({}, node)
+            if (newNode.type === 'chemical') {
+                const buyableString = newNode.ppg !== 0 ? `$${newNode.ppg}/g` : 'not buyable';
+                newNode.title = `${newNode.smiles}<br>${newNode.as_reactant} precedents as reactant<br>${newNode.as_product} precedents as product<br>${buyableString}`;
+                newNode.borderWidth = 2;
+                newNode.color = {
+                    border: colorOf(newNode)
+                }
+            } else {
+                newNode.label = `${newNode.num_examples} examples
+FF score: ${Number(newNode.plausibility).toFixed(3)}
+Template score: ${Number(newNode.template_score).toFixed(3)}`;
+                newNode['font'] = {align: 'center'}
+            }
+            nodes.push(newNode)
+        })
+    } else {
+        /* Otherwise, just display the original data */
+        nodes = data.nodes;
     }
-    visdata.nodes = new vis.DataSet(data.nodes);
-    visdata.edges = new vis.DataSet(data.edges);
-    return visdata
+    return {
+        nodes: new vis.DataSet(nodes),
+        edges: new vis.DataSet(data.edges),
+    }
 }
 
 function treeStats(tree) {
@@ -121,51 +136,88 @@ function sortObjectArray(arr, prop, ascending) {
     })
 }
 
-function initializeNetwork(data, elementDiv) {
-    var container = elementDiv;
-    var options = {
-        nodes: {
-            color: {
-                border: '#000000',
-                background: '#FFFFFF'
-            },
-            shapeProperties: {
-                useBorderWithImage: true,
-                useImageSize: true
-            }
-        },
-        edges: {
-            length: 1
-        },
-        interaction: {
-            multiselect: false,
-            hover: true,
-            dragNodes: false,
-            dragView: true,
-            selectConnectedEdges: false,
-            tooltipDelay: 0,
-            zoomView: true,
-        },
-        layout: {
-            hierarchical: {
-                direction: 'LR',
-                levelSeparation: 250,
-                nodeSpacing: 175,
-                sortMethod: 'directed',
-            }
-        },
-        physics: false
-    };
-    network = new vis.Network(container, data, options);
-    network.on("beforeDrawing", function (ctx) {
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        ctx.restore();
-    })
-    return network
+function initializeNetwork(data, container, showDetail = true) {
+    const options = showDetail ?  defaultVisOptions : condensedVisOptions
+    return new vis.Network(container, data, options);
 }
+
+function buildTreeList() {
+    /* Callback used by list view panel for drawing trees after panel creation */
+    app.trees.forEach((tree, index) => {
+        let elem = document.getElementById(`treeList-${index}`);
+        let networkData = loadNodeLinkGraph(tree, false)
+        let network = initializeNetwork(networkData, elem, false);
+    })
+}
+
+const defaultVisOptions = {
+    nodes: {
+        color: {
+            background: '#FFFFFF',
+            border: '#000000',
+        },
+        shapeProperties: {
+            useBorderWithImage: true,
+            useImageSize: true,
+        }
+    },
+    edges: {
+        length: 1,
+    },
+    interaction: {
+        dragNodes: false,
+        dragView: true,
+        hover: true,
+        multiselect: false,
+        selectConnectedEdges: false,
+        tooltipDelay: 0,
+        zoomView: true,
+    },
+    layout: {
+        hierarchical: {
+            direction: 'LR',
+            levelSeparation: 250,
+            nodeSpacing: 175,
+            sortMethod: 'directed',
+        }
+    },
+    physics: false,
+};
+
+const condensedVisOptions = {
+    nodes: {
+        color: {
+            background: '#FFFFFF',
+            border: '#000000',
+        },
+        shapeProperties: {
+            useImageSize: true
+        }
+    },
+    edges: {
+        length: 1,
+    },
+    interaction: {
+        dragNodes: false,
+        dragView: true,
+        hover: false,
+        multiselect: false,
+        selectable: false,
+        selectConnectedEdges: false,
+        tooltipDelay: 0,
+        zoomView: true,
+    },
+    layout: {
+        hierarchical: {
+            direction: 'LR',
+            levelSeparation: 200,
+            nodeSpacing: 175,
+            sortMethod: 'directed',
+        }
+    },
+    clickToUse: true,
+    physics: false,
+};
 
 var csrftoken = getCookie('csrftoken');
 
@@ -179,6 +231,7 @@ var app = new Vue({
         settings: {},
         tbVersion: null,
         showInfoPanel: false,
+        showListView: false,
         selected: null,
         currentTreeId: 0,
         networkData: {},
@@ -199,6 +252,14 @@ var app = new Vue({
             headerControls: {size: 'sm'},
             position: {my: 'right-top', at: 'right-top', of: '#graph'},
             panelSize: {width: 500, height: 500},
+        },
+        listPanelOptions: {
+            id: 'listPanel',
+            headerTitle: 'List View',
+            headerControls: {size: 'sm'},
+            position: {my: 'center-top', at: 'center-top', of: '#graph'},
+            panelSize: {width: () => window.innerWidth, height: 600},
+            callback: buildTreeList,
         },
     },
     mounted: function () {
@@ -237,8 +298,8 @@ var app = new Vue({
                 })
         },
         buildTree: function (treeId, elem) {
-            this.networkData = loadNodeLinkGraph(this.trees[treeId])
-            this.network = initializeNetwork(this.networkData, elem);
+            this.networkData = loadNodeLinkGraph(this.trees[treeId], true)
+            this.network = initializeNetwork(this.networkData, elem, true);
             this.network.on('selectNode', function (params) {
                 app.showNode(params.nodes[0])
             });

@@ -58,6 +58,7 @@
                     <input type="checkbox" class="custom-control-input" id="clusterSwitch" v-model="cluster" :disabled="!!alltrees.length && !('cluster_id' in alltrees[0])">
                     <label class="custom-control-label" for="clusterSwitch">View by cluster</label>
                 </div>
+                <button class="btn btn-info" href="#" @click="showListView = true">Open List View</button>
             </div>
             <div class="btn-toolbar justify-content-center mb-3">
                 <div class="input-group mr-2">
@@ -251,6 +252,17 @@
             <div class="btn-toolbar justify-content-end">
                 <button class="btn btn-danger ban-button" @click="banItem">Ban</button>
             </div>
+        </div>
+    </jspanel>
+
+    <jspanel :visible="showListView" :options="listPanelOptions" @close="showListView = false">
+        <div class="m-3">
+            <template v-for="(tree, index) in trees">
+                <details open>
+                    <summary>Tree %% index + 1 %%</summary>
+                    <div :id="`treeList-${index}`" style="height: 300px;"></div>
+                </details>
+            </template>
         </div>
     </jspanel>
 </div>
