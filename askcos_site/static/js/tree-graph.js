@@ -233,7 +233,7 @@ var app = new Vue({
         alltrees: [],
         settings: {},
         tbVersion: null,
-        showInfoPanel: false,
+        showInfoPanel: true,
         showListView: false,
         selected: null,
         currentTreeId: 0,
