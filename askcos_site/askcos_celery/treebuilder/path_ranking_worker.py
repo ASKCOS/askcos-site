@@ -63,7 +63,7 @@ class TSPathwayRanker(TorchserveAPI, PathwayRanker):
 
 @celeryd_init.connect
 def configure_worker(options={}, **kwargs):
-    """Initializes coordinator for MCTS tree building.
+    """Initializes coordinator for pathway ranking.
 
     Args:
         options (dict, optional): Used to check if the queue is correct.
