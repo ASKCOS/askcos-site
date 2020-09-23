@@ -59,4 +59,5 @@ task_routes = {
     'askcos_site.askcos_celery.impurity.impurity_predictor_worker.*': {'queue': 'atom_mapping_worker'},
     'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker.*': {'queue': 'atom_mapping_worker'},
     'askcos_site.askcos_celery.generalselectivity.selec_worker.*': {'queue': 'selec_worker'},
+    'askcos_site.askcos_celery.descriptors.ts_descriptors_worker.*': {'queue': 'descriptors_worker'},
 }
