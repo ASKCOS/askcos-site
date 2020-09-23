@@ -24,7 +24,7 @@ def configure_worker(options={}, **kwargs):
     # Import as needed
     from ..torchserve_api import TorchserveAPI
     try:
-        desc_pred = TorchserveAPI(hostname='localhost', model_name='descriptors')
+        desc_pred = TorchserveAPI(hostname='descriptors', model_name='descriptors')
     except Exception as e:
         raise(e)
     print('Initialized')
