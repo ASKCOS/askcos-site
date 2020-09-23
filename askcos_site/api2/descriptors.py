@@ -1,7 +1,7 @@
 from rdkit import Chem
 from rest_framework import serializers
 
-from askcos_site.askcos_celery.descriptors.ts_descriptors_worker import get_descriptors
+from askcos_site.askcos_celery.descriptors.descriptors_worker import get_descriptors
 from .celery import CeleryTaskAPIView
 
 ALLOWED_ATOMS = ['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'B']
