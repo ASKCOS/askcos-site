@@ -8,6 +8,7 @@ from . import draw
 from . import fast_filter
 from . import forward
 from . import impurity
+from . import path_ranking
 from . import rdkit
 from . import reactions
 from . import results

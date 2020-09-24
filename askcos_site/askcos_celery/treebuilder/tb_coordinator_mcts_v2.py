@@ -27,8 +27,9 @@ CORRESPONDING_QUEUE = 'tb_coordinator_mcts_v2'
 
 results_collection = db_client['results']['results']
 
-retroTransformer = None
+retro_transformer = None
 chemhistorian = None
+pathway_ranker = None
 
 
 def update_result_state(id_, state):
@@ -63,6 +64,7 @@ def configure_coordinator(options={}, **kwargs):
     print('### STARTING UP A TREE BUILDER MCTS COORDINATOR ###')
 
     from askcos_site.askcos_celery.treebuilder.retro_transformer_celery import RetroTransformerCelery
+    from .path_ranking_worker import TSPathwayRanker
 
     global retro_transformer
     retro_transformer = RetroTransformerCelery(template_prioritizer=None, fast_filter=None, scscorer=None)
@@ -71,6 +73,8 @@ def configure_coordinator(options={}, **kwargs):
     global chemhistorian
     chemhistorian = ChemHistorian(CHEMICALS_DB=chemical_db, use_db=True)
 
+    global pathway_ranker
+    pathway_ranker = TSPathwayRanker(hostname='ts-pathway-ranker', model_name='pathway-ranker').scorer
     print('Finished initializing treebuilder MCTS coordinator')
 
 
@@ -105,9 +109,6 @@ def get_buyable_paths(smiles, **kwargs):
     fast_filter_hostname = 'fast-filter'
     fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter').predict
 
-    global retro_transformer
-    global chemhistorian
-
     kwargs.update({
         'pricer': pricer,
         'scscorer': scscorer,
@@ -117,6 +118,9 @@ def get_buyable_paths(smiles, **kwargs):
         'fast_filter': fast_filter,
         'json_format': 'nodelink',
     })
+
+    if kwargs.get('score_trees'):
+        kwargs['pathway_ranker'] = pathway_ranker
 
     tree_builder = MCTS(**kwargs)
 

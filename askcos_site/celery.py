@@ -15,6 +15,7 @@ READABLE_NAMES = {
     'atom_mapping_worker': 'Atom Mapping Worker',
     'tffp_worker': 'Template-free Forward Predictor',
     'selec_worker': 'General Selectivity Worker',
+    'path_ranking_worker': 'Pathway Ranking Worker',
 }
 
 # Note: cannot use guest for authenticating with broker unless on localhost

@@ -22,9 +22,3 @@ a {
 table {
   border: none !important;
 }
-
-.ban-button {
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-}

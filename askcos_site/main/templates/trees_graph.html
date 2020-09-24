@@ -7,8 +7,12 @@
 <script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/vue.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/vis.min.css' %}?v{{ static_version }}" type="text/css">
-<script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
+<link rel="stylesheet" href="{% static 'css/jspanel.min.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/splash.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/tree-graph.css' %}?v{{ static_version }}" type="text/css">
+<script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/jspanel.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/jspanel-vue.js' %}?v{{ static_version }}"></script>
 {% endblock %}
 
 {% block page_title %}Tree Builder Visualization{% endblock %}
@@ -17,227 +21,267 @@
 
 
 <div id="app" data-id="{{ id }}">
-    <div class="row">
-        <p class="col-md-12 text-center">
-            Click to view the <a href="/retro/network/?tb={{ id }}&view=25">top 25</a> or <a href="/retro/network/?tb={{ id }}&view=all">all</a>
-            pathways at once in the interactive path planner (expect slow rendering times when clicking 'all')
-        </p>
-    </div>
-    <div class="row">
-        <p class="col-md-12 text-center" v-if="!!settings.known_bad_reactions">
-            After expanding %% numChemicals %% total chemicals and %% numReactions %% total reactions
-            (with %% settings.known_bad_reactions.length %% banned reactions, %% settings.forbidden_molecules.length %% banned chemicals)
-        </p>
-    </div>
-    <div class="row">
-        <div id="settingsBtn" class="col-md-12 text-center">
-            <button class="btn btn-dark" href="#" @click="showSettings = !showSettings">
-                Settings
-                <i class="fas" :class="showSettings ? 'fa-caret-up' : 'fa-caret-down'"></i>
-            </button>
+
+    <div id="splash" class="splash-container d-flex flex-column align-items-center justify-content-center">
+        <h3>
+            ASKCOS Tree Visualization
+        </h3>
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="spinner-grow spinner-grow-sm bounce-early"></div>
+            <div class="spinner-grow spinner-grow-sm mx-1"></div>
+            <div class="spinner-grow spinner-grow-sm bounce-late"></div>
         </div>
     </div>
-    <div id="settings" class="card w-75 mx-auto my-3" v-if="showSettings">
-        <div id="target" class="my-3">
-            <div class="text-center">
-                Target: <span class="smiles">%% settings.smiles %%</span>
+
+    <div class="row">
+        <div class="col-12">
+            <p class="lead text-center">
+                Discovered %% alltrees.length %% trees after exploring %% numChemicals %% total chemicals and %% numReactions %% total reactions.
+            </p>
+        </div>
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-center mb-3">
+                <button class="btn btn-dark mr-2" href="#" @click="showInfoPanel = true">Open Job Details</button>
+                <div class="input-group mr-2">
+                    <div class="input-group-text">View trees in IPP</div>
+                    <div class="input-group-append">
+                        <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=10" target="_blank">Top 10</a>
+                        <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=25" target="_blank">Top 25</a>
+                        <a class="btn btn-outline-dark" href="/retro/network/?tb={{ id }}&view=all" target="_blank">All</a>
+                    </div>
+                </div>
+                <div class="input-group mr-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Sort by</div>
+                    </div>
+                    <select class="form-control" id="sortingCategory" @change="setDefaultSortOrder(); sortTrees()" v-model="treeSortOption">
+                        <option value="numReactions">Total number of reactions</option>
+                        <option value="depth" :disabled="!!alltrees.length && !('depth' in alltrees[0])">Length of longest linear path</option>
+                        <option value="firstStepScore">First step score</option>
+                        <option value="avgScore">Average score</option>
+                        <option value="avgPlausibility">Average plausibility</option>
+                        <option value="minPlausibility">Minimum plausibility</option>
+                        <option value="score" :disabled="!!alltrees.length && !('score' in alltrees[0])">Strategic quotient</option>
+                    </select>
+                    <div class="input-group-append" @click="sortOrderAscending = !sortOrderAscending; sortTrees()">
+                        <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
+                        <button class="input-group-text" v-else>Descending <i class="fas fa-sort-amount-down ml-1"></i></button>
+                    </div>
+                </div>
+                <div class="custom-control custom-switch d-flex align-items-center mr-2">
+                    <input type="checkbox" class="custom-control-input" id="clusterSwitch" v-model="cluster" :disabled="!!alltrees.length && !('cluster_id' in alltrees[0])">
+                    <label class="custom-control-label" for="clusterSwitch">View by cluster</label>
+                </div>
+                <button class="btn btn-info" href="#" @click="showListView = true">Open List View</button>
             </div>
-            <div class="text-center">
-                <img v-if="settings.smiles" :src="'/api/v2/draw/?smiles='+encodeURIComponent(settings.smiles)">
+            <div class="btn-toolbar justify-content-center mb-3">
+                <div class="input-group mr-2">
+                    <div class="input-group-prepend">
+                        <button class='btn btn-outline-dark' @click='firstCluster' :disabled="!cluster">&lt;&lt; First</button>
+                        <button class='btn btn-outline-dark' @click='prevCluster' :disabled="!cluster">&lt; Previous</button>
+                    </div>
+                    <div class="input-group-text justify-content-center" style="width: 8rem">%% !cluster ? 'Cluster N/A' : currentClusterId === -1 ? 'Unclustered' : `Cluster ${currentClusterId+1} of ${maxClusterId+1}` %%</div>
+                    <div class="input-group-append">
+                        <button class='btn btn-outline-dark' @click='nextCluster' :disabled="!cluster">Next &gt;</button>
+                        <button class='btn btn-outline-dark' @click='lastCluster' :disabled="!cluster">Last &gt;&gt;</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button class='btn btn-outline-dark' @click='firstTree'>&lt;&lt; First</button>
+                        <button class='btn btn-outline-dark' @click='prevTree'>&lt; Previous</button>
+                    </div>
+                    <div class="input-group-text justify-content-center" style="width: 8rem">Tree %% currentTreeId+1 %% of %% trees.length %%</div>
+                    <div class="input-group-append">
+                        <button class='btn btn-outline-dark' @click='nextTree'>Next &gt;</button>
+                        <button class='btn btn-outline-dark' @click='lastTree'>Last &gt;&gt;</button>
+                    </div>
+                </div>
             </div>
         </div>
-        <table class="table">
-            <tr v-if="settings.template_set">
-                <th>Template set:</th>
-                <td>Name: %% settings.template_set %%</td>
-                <td v-if="settings.template_prioritizer_version">Version: %% settings.template_prioritizer_version %%</td>
-                <td v-else>Version: N/A</td>
-            </tr>
-            <tr>
-                <th>Tree builder version:</th>
-                <td colspan=2>Version %% tbVersion %%</td>
-            </tr>
-            <tr>
-                <th>Expansion settings:</th>
-                <td>Max. depth: %% settings.max_depth %%</td>
-                <td>Max. branching factor: %% settings.max_branching %%</td>
-            </tr>
-            <tr>
-                <th></th>
-                <td>Num. templates: %% settings.template_count %%</td>
-                <td>Max cum. prob: %% settings.max_cum_template_prob %%</td>
-            </tr>
-            <tr>
-                <th></th>
-                <td>Expansion time (s): %% settings.expansion_time %%</td>
-                <td>Max iterations: %% settings.max_iterations || "N/A" %%</td>
-            </tr>
-            <tr>
-                <th></th>
-                <td>Max chemicals: %% settings.max_chemicals || "N/A" %%</td>
-                <td>Max reactions: %% settings.max_reactions || "N/A" %%</td>
-            </tr>
-            <template v-if="!!settings.termination_logic">
-                {# New termination settings #}
-                <template v-for="(criteria, logic) in settings.termination_logic">
-                    <tr v-for="(criterion, index) in criteria">
-                        <th v-if="index === 0">Stop criteria (%% logic.toUpperCase() %%):</th>
-                        <th v-else></th>
-                        <td v-if="criterion === 'buyable'" colspan=2>
-                            Chemical found in buyables database
+    </div>
+    <div class="row">
+        <div id="graph" class="col-12" style="height: 600px;"></div>
+    </div>
+
+    <jspanel :visible="showInfoPanel" :options="infoPanelOptions" @close="showInfoPanel = false">
+        <div id="settings">
+            <div id="target" class="my-3">
+                <div class="text-center">
+                    Target: <span class="smiles">%% settings.smiles %%</span>
+                </div>
+                <div class="text-center">
+                    <img v-if="settings.smiles" :src="'/api/v2/draw/?smiles='+encodeURIComponent(settings.smiles)">
+                </div>
+            </div>
+            <table class="table">
+                <tr v-if="settings.template_set">
+                    <th>Template set:</th>
+                    <td>Name: %% settings.template_set %%</td>
+                    <td v-if="settings.template_prioritizer_version">Version: %% settings.template_prioritizer_version %%</td>
+                    <td v-else>Version: N/A</td>
+                </tr>
+                <tr>
+                    <th>Tree builder version:</th>
+                    <td colspan=2>Version %% tbVersion %%</td>
+                </tr>
+                <tr>
+                    <th>Expansion settings:</th>
+                    <td>Max. depth: %% settings.max_depth %%</td>
+                    <td>Max. branching factor: %% settings.max_branching %%</td>
+                </tr>
+                <tr>
+                    <th></th>
+                    <td>Num. templates: %% settings.template_count %%</td>
+                    <td>Max cum. prob: %% settings.max_cum_template_prob %%</td>
+                </tr>
+                <tr>
+                    <th></th>
+                    <td>Expansion time (s): %% settings.expansion_time %%</td>
+                    <td>Max iterations: %% settings.max_iterations || "N/A" %%</td>
+                </tr>
+                <tr>
+                    <th></th>
+                    <td>Max chemicals: %% settings.max_chemicals || "N/A" %%</td>
+                    <td>Max reactions: %% settings.max_reactions || "N/A" %%</td>
+                </tr>
+                <template v-if="!!settings.termination_logic">
+                    {# New termination settings #}
+                    <template v-for="(criteria, logic) in settings.termination_logic">
+                        <tr v-for="(criterion, index) in criteria">
+                            <th v-if="index === 0">Stop criteria (%% logic.toUpperCase() %%):</th>
+                            <th v-else></th>
+                            <td v-if="criterion === 'buyable'" colspan=2>
+                                Chemical found in buyables database
+                            </td>
+                            <td v-if="criterion === 'max_ppg'" colspan=2>
+                                Max. chemical price ($/g): %% settings.max_ppg %%
+                            </td>
+                            <td v-if="criterion === 'max_scscore'" colspan=2>
+                                Max. SCScore: %% settings.max_scscore %%
+                            </td>
+                            <td v-if="criterion === 'max_elements'" colspan=2>
+                                Max. element counts:
+                                <span v-if="'C' in settings.max_elements">C = %% settings.max_elements.C %%;</span>
+                                <span v-if="'N' in settings.max_elements">N = %% settings.max_elements.N %%;</span>
+                                <span v-if="'H' in settings.max_elements">H = %% settings.max_elements.H %%;</span>
+                                <span v-if="'O' in settings.max_elements">O = %% settings.max_elements.O %%;</span>
+                            </td>
+                            <td v-if="criterion === 'min_history'" colspan=2>
+                                Min. popularity:
+                                <span v-if="'as_reactant' in settings.min_history">occurrences as reactant = %% settings.min_history.as_reactant %%;</span>
+                                <span v-if="'as_product' in settings.min_history">occurrences as product = %% settings.min_history.as_product %%;</span>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+                <template v-else>
+                    {# Old termination settings #}
+                    <tr>
+                        <th>Stop criteria:</th>
+                        <td colspan=2>Maximum chemical price ($/g): %% settings.max_ppg %%</td>
+                    </tr>
+                    <tr v-if="!!settings.max_natom_dict && settings.max_natom_dict.logic != 'none'">
+                        <th></th>
+                        <td colspan=2>Chemical property logic: C=%% settings.max_natom_dict.C %% N=%%
+                            settings.max_natom_dict.N %% H=%% settings.max_natom_dict.H %% O=%%
+                            settings.max_natom_dict.O %%
                         </td>
-                        <td v-if="criterion === 'max_ppg'" colspan=2>
-                            Max. chemical price ($/g): %% settings.max_ppg %%
-                        </td>
-                        <td v-if="criterion === 'max_scscore'" colspan=2>
-                            Max. SCScore: %% settings.max_scscore %%
-                        </td>
-                        <td v-if="criterion === 'max_elements'" colspan=2>
-                            Max. element counts:
-                            <span v-if="'C' in settings.max_elements">C = %% settings.max_elements.C %%;</span>
-                            <span v-if="'N' in settings.max_elements">N = %% settings.max_elements.N %%;</span>
-                            <span v-if="'H' in settings.max_elements">H = %% settings.max_elements.H %%;</span>
-                            <span v-if="'O' in settings.max_elements">O = %% settings.max_elements.O %%;</span>
-                        </td>
-                        <td v-if="criterion === 'min_history'" colspan=2>
-                            Min. popularity:
-                            <span v-if="'as_reactant' in settings.min_history">occurrences as reactant = %% settings.min_history.as_reactant %%;</span>
-                            <span v-if="'as_product' in settings.min_history">occurrences as product = %% settings.min_history.as_product %%;</span>
+                    </tr>
+                    <tr v-if="!!settings.min_chemical_history_dict && settings.min_chemical_history_dict.logic != 'none'">
+                        <th></th>
+                        <td colspan=2>Chemical popularity logic: Min. freq. as reactant=%%
+                            settings.min_chemical_history_dict.as_reactant %% Min. freq. as product=%%
+                            settings.min_chemical_history_dict.as_product %%
                         </td>
                     </tr>
                 </template>
-            </template>
-            <template v-else>
-                {# Old termination settings #}
                 <tr>
-                    <th>Stop criteria:</th>
-                    <td colspan=2>Maximum chemical price ($/g): %% settings.max_ppg %%</td>
+                    <th>Evaluation settings:</th>
+                    <td colspan=2>Min. plausibility: %% settings.filter_threshold %%</td>
                 </tr>
-                <tr v-if="!!settings.max_natom_dict && settings.max_natom_dict.logic != 'none'">
-                    <th></th>
-                    <td colspan=2>Chemical property logic: C=%% settings.max_natom_dict.C %% N=%%
-                        settings.max_natom_dict.N %% H=%% settings.max_natom_dict.H %% O=%%
-                        settings.max_natom_dict.O %%
-                    </td>
+                <tr>
+                    <th>Buyables source(s):</th>
+                    <td colspan=2>%% !!settings.buyables_source ? settings.buyables_source.toString() : 'All' %%</td>
                 </tr>
-                <tr v-if="!!settings.min_chemical_history_dict && settings.min_chemical_history_dict.logic != 'none'">
-                    <th></th>
-                    <td colspan=2>Chemical popularity logic: Min. freq. as reactant=%%
-                        settings.min_chemical_history_dict.as_reactant %% Min. freq. as product=%%
-                        settings.min_chemical_history_dict.as_product %%
-                    </td>
+                <tr v-if="!!settings.forbidden_molecules">
+                    <th>Banned chemicals(s):</th>
+                    <td colspan=2>%% settings.forbidden_molecules.length %%</td>
                 </tr>
-            </template>
-            <tr>
-                <th>Evaluation settings:</th>
-                <td colspan=2>Min. plausibility: %% settings.filter_threshold %%</td>
-            </tr>
-            <tr>
-                <th>Buyables source(s):</th>
-                <td colspan=2>%% !!settings.buyables_source ? settings.buyables_source.toString() : 'All' %%</td>
-            </tr>
-        </table>
-    </div>
-    <div class="row my-3">
-        <div class="col-md-12 text-center">
-            <div>Sort trees by:</div>
-            <div class="btn-group btn-group-toggle">
-                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'numReactions' }">
-                    <input type="radio" v-on:change="sortTrees('numReactions', true)" v-model="treeSortOption"
-                           value="numReactions" autocomplete="off"> Fewest Reactions
-                </label>
-                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'firstStepScore' }">
-                    <input type="radio" v-on:change="sortTrees('firstStepScore')" v-model="treeSortOption"
-                           value="firstStepScore" autocomplete="off"> Best first step
-                </label>
-                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'avgScore' }">
-                    <input type="radio" v-on:change="sortTrees('avgScore')" v-model="treeSortOption"
-                           value="avgScore" autocomplete="off"> Average score
-                </label>
-                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'avgPlausibility' }">
-                    <input type="radio" v-on:change="sortTrees('avgPlausibility')" v-model="treeSortOption"
-                           value="avgPlausibility" autocomplete="off"> Average plausibility
-                </label>
-                <label class="btn btn-outline-dark" v-bind:class="{ active: treeSortOption === 'minPlausibility' }">
-                    <input type="radio" v-on:change="sortTrees('minPlausibility')" v-model="treeSortOption"
-                           value="minPlausibility" autocomplete="off"> Best worst step
-                </label>
-            </div>
+                <tr v-if="!!settings.known_bad_reactions">
+                    <th>Banned reactions:</th>
+                    <td colspan=2>%% settings.known_bad_reactions.length %%</td>
+                </tr>
+            </table>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6 text-center">
-            <h3>Synthetic pathway</h3>
-            <div>Tree %% currentTreeId+1 %% of %% trees.length %%</div>
-            <div class="my-2">
-                <button class='btn btn-outline-dark mx-2' @click='firstTree'>&lt;&lt; First</button>
-                <button class='btn btn-outline-dark mx-2' @click='prevTree'>&lt; Previous</button>
-                <button class='btn btn-outline-dark mx-2' @click='nextTree'>Next &gt;</button>
-                <button class='btn btn-outline-dark mx-2' @click='lastTree'>Last &gt;&gt;</button>
-            </div>
-        </div>
-        <div class="col-md-6 text-center">
-            <h3>Pathway details</h3>
-        </div>
-    </div>
-    <div class="row">
-        <div id="left-pane" class="col-md-6 border-right" style="height: 600px;"></div>
-        <div id="right-pane" class="col-md-6 text-center">
-            <template v-if="selected">
-                <template v-if="selected.type=='chemical'">
-                    <div class="text-center">
-                        <div><b>Smiles: </b><span class="smiles">%% selected.smiles %%</span></div>
-                        <div><b>Price ($/g): </b>%% selected.ppg %%</div>
-                        <div v-if="selected.source">
-                            <b>Source: </b>%% selected.source %%
-                        </div>
+    </jspanel>
+
+    <jspanel :visible="!!selected" :options="detailPanelOptions" @close="clearSelection">
+        <div v-if="selected" class="m-3">
+            <div v-if="selected.type=='chemical'">
+                <div class="text-center">
+                    <div><b>Smiles: </b><span class="smiles">%% selected.smiles %%</span></div>
+                    <div><b>Price ($/g): </b>%% selected.ppg %%</div>
+                    <div v-if="selected.source">
+                        <b>Source: </b>%% selected.source %%
                     </div>
                     <div class="my-3">
                         <img v-bind:src="selected.image" style="max-width: 100%"/>
                     </div>
-                    <div><b>As reactant: </b>%% selected.as_reactant %%</div>
-                    <div><b>As product: </b>%% selected.as_product %%</div>
-                    <div><a :href="'/retro/network/?target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with the Interactive Path Planner</a></div>
-                </template>
-                <template v-if="selected.type=='reaction'">
-                    <div class="text-center">
-                        <div><b>Smiles: </b><span class="smiles">%% selected.smiles %%</span></div>
-                        <div class="my-3">
-                            <img :src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.smiles)" style="max-width: 100%"/>
-                        </div>
+                </div>
+                <div><b>As reactant: </b>%% selected.as_reactant %%</div>
+                <div><b>As product: </b>%% selected.as_product %%</div>
+                <div><a :href="'/retro/network/?target='+encodeURIComponent(selected.smiles)" target="_blank">Synthesize this with the Interactive Path Planner</a></div>
+            </div>
+            <div v-if="selected.type=='reaction'">
+                <div class="text-center">
+                    <div><b>Smiles: </b><span class="smiles">%% selected.smiles %%</span></div>
+                    <div class="my-3">
+                        <img :src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.smiles)" style="max-width: 100%"/>
                     </div>
-                    <div class="text-left">
-                        <div>
-                            <b>Plausibility:</b> %% selected.plausibility.toFixed(3) %%
-                        </div>
-                        <div>
-                            <b>Template score:</b> %% selected.template_score.toFixed(3) %%
-                        </div>
-                        <div>
-                            <b>Template examples:</b> %% selected.num_examples %%
-                        </div>
-                        <div>
-                            <b>Necessary reagent:</b> %% selected.necessary_reagent %%
-                        </div>
-                        <div><b>Supporting templates:</b>
-                            <ul>
-                                <li v-for="id in selected.tforms">
-                                    <a v-bind:href="'/template/?id='+id" target="_blank">%% id %%</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div><a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.smiles)" target="_blank">Evaluate reaction</a></div>
+                </div>
+                <div class="text-left">
+                    <div>
+                        <b>Plausibility:</b> %% selected.plausibility.toFixed(3) %%
                     </div>
-                </template>
-            </template>
-            <template v-else>
-                Click on a chemical or reaction on the left to view more details.
+                    <div>
+                        <b>Template score:</b> %% selected.template_score.toFixed(3) %%
+                    </div>
+                    <div>
+                        <b>Template examples:</b> %% selected.num_examples %%
+                    </div>
+                    <div>
+                        <b>Necessary reagent:</b> %% selected.necessary_reagent %%
+                    </div>
+                    <div><b>Supporting templates:</b>
+                        <ul>
+                            <li v-for="id in selected.tforms">
+                                <a v-bind:href="'/template/?id='+id" target="_blank">%% id %%</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div><a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.smiles)" target="_blank">Evaluate reaction</a></div>
+                </div>
+            </div>
+            <div class="btn-toolbar justify-content-end">
+                <button class="btn btn-danger ban-button" @click="banItem">Ban</button>
+            </div>
+        </div>
+    </jspanel>
+
+    <jspanel :visible="showListView" :options="listPanelOptions" @close="showListView = false">
+        <div class="m-3">
+            <template v-for="(tree, index) in trees">
+                <details class="mb-3" open>
+                    <summary>
+                        <span>Tree %% index + 1 %%</span>
+                        <a class="float-right" href="#" role="button" @click="showListView = false; currentTreeId = index; buildTree()">View in main window</a>
+                    </summary>
+                    <div :id="`treeList-${index}`" style="height: 300px;"></div>
+                </details>
             </template>
         </div>
-    </div>
-
-<button class="btn btn-danger ban-button" @click="banItem">Ban</button>
-
+    </jspanel>
 </div>
 
 {% endblock %}
