@@ -49,7 +49,7 @@ class MCTSCelery(MCTS):
             precursor_prioritizer=precursor_prioritizer,
             fast_filter=None
         )
-        retro_transformer.load()
+        retro_transformer.load(load_templates=False)
         return retro_transformer
 
     def reset_workers(self, soft_reset=False):

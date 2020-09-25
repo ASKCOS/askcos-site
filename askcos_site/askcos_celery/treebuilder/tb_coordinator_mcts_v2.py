@@ -68,7 +68,7 @@ def configure_coordinator(options={}, **kwargs):
 
     global retro_transformer
     retro_transformer = RetroTransformerCelery(template_prioritizer=None, fast_filter=None, scscorer=None)
-    retro_transformer.load()
+    retro_transformer.load(load_templates=False)
 
     global chemhistorian
     chemhistorian = ChemHistorian(CHEMICALS_DB=chemical_db, use_db=True)
