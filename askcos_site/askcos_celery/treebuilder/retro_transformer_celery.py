@@ -6,7 +6,7 @@ from askcos.retrosynthetic.transformer import RetroTransformer
 
 # cannot import from askcos_site.globals because RetroTransformerCelery is needed in globals
 # that should be fixed, and this should be imported from globals
-db_client = MongoClient(gc.MONGO['path'], gc.MONGO['id'], connect=gc.MONGO['connect'])
+db_client = MongoClient(**gc.MONGO)
 retro_templates = db_client[gc.RETRO_TEMPLATES['database']][gc.RETRO_TEMPLATES['collection']]
 
 db_comparison_map = {'>': '$gt', '>=': '$gte', '<': '$lt', '<=': '$lte', '==': '$eq'}

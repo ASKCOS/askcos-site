@@ -16,7 +16,7 @@ from askcos_site.celery import app
 
 ################################################################################
 # Database client
-db_client = MongoClient(gc.MONGO['path'], gc.MONGO['id'], connect=gc.MONGO['connect'])
+db_client = MongoClient(**gc.MONGO)
 
 ################################################################################
 # Database collections
