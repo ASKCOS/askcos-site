@@ -35,5 +35,5 @@ def configure_worker(options={}, **kwargs):
 def get_descriptors(smi):
     global desc_pred
     print('descriptor predictor got a request {}'.format(smi))
-    desc_pred = desc_pred.predict(smi.split('.'))
-    return desc_pred
+    res = desc_pred.predict(smi.split('.'))
+    return res
