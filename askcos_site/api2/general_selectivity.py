@@ -7,19 +7,38 @@ from .celery import CeleryTaskAPIView
 
 class GeneralSelectivitySerializer(serializers.Serializer):
     """Serializer for selectivity task parameters."""
-    rxnsmiles = serializers.CharField()
+    reactants = serializers.CharField()
+    reagents = serializers.CharField(default='')
+    solvent = serializers.CharField(default='')
+    product = serializers.CharField()
 
-    def validate_rxnsmiles(self, value):
-        """Verify that the requested reaction smiles is valid."""
-        try:
-            reactants, agents, products = value.split('>')
-        except ValueError:
-            raise serializers.ValidationError('Cannot parse reaction smiles.')
-        if not Chem.MolFromSmiles(reactants):
-            raise serializers.ValidationError('Cannot parse reactants using rdkit.')
-        if not Chem.MolFromSmiles(products):
-            raise serializers.ValidationError('Cannot parse products using rdkit.')
-        return value
+    def validate_reactants(self, value):
+        """Verify that the requested reactants smiles is valid."""
+        mol = Chem.MolFromSmiles(value)
+        if not mol:
+            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+        return Chem.MolToSmiles(mol, isomericSmiles=True)
+
+    def validate_reagents(self, value):
+        """Verify that the requested reagents smiles is valid."""
+        mol = Chem.MolFromSmiles(value)
+        if not mol:
+            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+        return Chem.MolToSmiles(mol, isomericSmiles=True)
+
+    def validate_solvent(self, value):
+        """Verify that the requested solvent smiles is valid."""
+        mol = Chem.MolFromSmiles(value)
+        if not mol:
+            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+        return Chem.MolToSmiles(mol, isomericSmiles=True)
+
+    def validate_product(self, value):
+        """Verify that the requested product smiles is valid."""
+        mol = Chem.MolFromSmiles(value)
+        if not mol:
+            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+        return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 
 class SelectivityAPIView(CeleryTaskAPIView):
@@ -43,7 +62,21 @@ class SelectivityAPIView(CeleryTaskAPIView):
         """
         Execute site selectivity task and return celery result object.
         """
-        result = get_selec.delay(data['rxnsmiles'])
+        reactants = data['reactants']
+        reagents = data['reagents']
+        solvent = data['solvent']
+        product = data['product']
+
+        combined_smiles = reactants
+        if reagents and solvent:
+            combined_smiles += '>{}.{}'.format(reagents, solvent)
+        elif reagents:
+            combined_smiles += '>{}'.format(reagents)
+        elif solvent:
+            combined_smiles += '>{}'.format(solvent)
+        combined_smiles += '>{}'.format(product)
+
+        result = get_selec.delay(combined_smiles)
         return result
 
 

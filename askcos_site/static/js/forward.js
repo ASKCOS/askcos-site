@@ -21,12 +21,14 @@ var app = new Vue({
         forwardResults: [],
         contextResults: [],
         impurityResults: [],
+        selectivityResults: [],
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'wln',
+        regioselectivityModel: 'qm_GNN',
         impurityTopk: 3,
         inspectionThreshold: 0.75,
         impurityCheckMapping: true,
@@ -82,6 +84,9 @@ var app = new Vue({
         clearForward() {
             this.forwardResults = []
         },
+        clearSelectivity() {
+            this.selectivityResults = []
+        },
         clearImpurity() {
             this.impurityResults = []
             this.impurityProgress = {
@@ -131,6 +136,19 @@ var app = new Vue({
                 reactants: this.reactants,
                 products: this.product
             }
+        },
+        constructSelectivityPostData() {
+            var data= {
+                reactants: this.reactants,
+                products: this.product,
+            }
+            if (!!this.reagents) {
+                data.reagents = this.reagents
+            }
+            if (!!this.solvent) {
+                data.solvent = this.solvent
+            }
+            return data
         },
         constructImpurityPostData() {
             var data = {
@@ -226,6 +244,10 @@ var app = new Vue({
                         this.clearImpurity()
                         this.impurityPredict()
                         break;
+                    case 'selectivity':
+                        this.clearSelectivity()
+                        this.selectivityPredict()
+                        break;
                     default:
                         alert('unsupported mode')
                 }
@@ -282,6 +304,15 @@ var app = new Vue({
                 this.contextResults = json.output
             }
             this.celeryTaskAsyncPost('context', postData, callback)
+        },
+        selectivityPredict() {
+            showLoader()
+            this.selectivityResults = []
+            var postData = this.constructSelectivityPostData()
+            var callback = (json) => {
+                this.selectivityResults = json.output
+            }
+            this.celeryTaskAsyncPost('general-selectivity', postData, callback)
         },
         evaluateIndex(index) {
             this.$set(this.contextResults[index], 'evaluating', true)
