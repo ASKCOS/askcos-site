@@ -21,17 +21,21 @@ class GeneralSelectivitySerializer(serializers.Serializer):
 
     def validate_reagents(self, value):
         """Verify that the requested reagents smiles is valid."""
-        mol = Chem.MolFromSmiles(value)
-        if not mol:
-            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
-        return Chem.MolToSmiles(mol, isomericSmiles=True)
+        if value:
+            mol = Chem.MolFromSmiles(value)
+            if not mol:
+                raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+            return Chem.MolToSmiles(mol, isomericSmiles=True)
+        return value
 
     def validate_solvent(self, value):
         """Verify that the requested solvent smiles is valid."""
-        mol = Chem.MolFromSmiles(value)
-        if not mol:
-            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
-        return Chem.MolToSmiles(mol, isomericSmiles=True)
+        if value:
+            mol = Chem.MolFromSmiles(value)
+            if not mol:
+                raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+            return Chem.MolToSmiles(mol, isomericSmiles=True)
+        return value
 
     def validate_product(self, value):
         """Verify that the requested product smiles is valid."""
