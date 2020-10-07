@@ -140,7 +140,7 @@ var app = new Vue({
         constructSelectivityPostData() {
             var data= {
                 reactants: this.reactants,
-                products: this.product,
+                product: this.product,
             }
             if (!!this.reagents) {
                 data.reagents = this.reagents
