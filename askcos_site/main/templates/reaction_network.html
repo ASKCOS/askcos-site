@@ -135,7 +135,7 @@
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showTemplateScore">
                                                                     <td>Template score</td>
-                                                                    <td>%% num2str(res.template_score, 3) %%</td>
+                                                                    <td>%% res.template_score.toExponential(3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showPlausibility">
                                                                     <td>Plausibility</td>
@@ -240,7 +240,7 @@
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showTemplateScore">
                                                                     <td>Template score</td>
-                                                                    <td>%% num2str(res.template_score, 3) %%</td>
+                                                                    <td>%% res.template_score.toExponential(3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showPlausibility">
                                                                     <td>Plausibility</td>
@@ -915,7 +915,7 @@ It is roughly how long it will take for results to be returned, however there is
                                                     <option value="score">Score</option>
                                                     <option value="scscore">Synthetic complexity</option>
                                                     <option value="num_examples"># Examples</option>
-                                                    <option value="template_score">Template score</option>
+                                                    <option value="template_rank">Template rank</option>
                                                     <option value="plausibility">Plausibility</option>
                                                     <option value="rms_molwt">Root mean square molecular weight</option>
                                                     <option value="num_rings">Number of rings</option>
@@ -972,8 +972,12 @@ It is roughly how long it will take for results to be returned, however there is
                                                                                         <td>%% num2str(res.num_examples) %%</td>
                                                                                     </tr>
                                                                                     <tr>
+                                                                                        <td>Template rank</td>
+                                                                                        <td>%% res.template_rank %%</td>
+                                                                                    </tr>
+                                                                                    <tr>
                                                                                         <td>Template score</td>
-                                                                                        <td>%% num2str(res.template_score, 3) %%</td>
+                                                                                        <td>%% res.template_score.toExponential(3) %%</td>
                                                                                     </tr>
                                                                                     <tr>
                                                                                         <td>Plausibility</td>
@@ -1030,8 +1034,12 @@ It is roughly how long it will take for results to be returned, however there is
                                                                         <td>%% num2str(res.num_examples) %%</td>
                                                                     </tr>
                                                                     <tr>
+                                                                        <td>Template rank</td>
+                                                                        <td>%% res.template_rank %%</td>
+                                                                    </tr>
+                                                                    <tr>
                                                                         <td>Template score</td>
-                                                                        <td>%% num2str(res.template_score, 3) %%</td>
+                                                                        <td>%% res.template_score.toExponential(3) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Plausibility</td>
