@@ -77,13 +77,13 @@ class SelectivityAPIView(CeleryTaskAPIView):
         all_outcomes = data['all_outcomes']
         verbose = data['verbose']
 
-        combined_smiles = reactants
+        combined_smiles = reactants + '>'
         if reagents and solvent:
-            combined_smiles += '>{}.{}'.format(reagents, solvent)
+            combined_smiles += '{}.{}'.format(reagents, solvent)
         elif reagents:
-            combined_smiles += '>{}'.format(reagents)
+            combined_smiles += '{}'.format(reagents)
         elif solvent:
-            combined_smiles += '>{}'.format(solvent)
+            combined_smiles += '{}'.format(solvent)
         combined_smiles += '>{}'.format(product)
 
         result = get_selec.delay(combined_smiles, mapped=mapped, all_outcomes=all_outcomes, verbose=verbose)
