@@ -77,7 +77,8 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     if ('outcomes' in reaction) {
         node['outcomes'] = reaction['outcomes'].split('.')
         node['selectivity'] = new Array(node.outcomes.length)
-        node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
+        node['mapped_precursors'] = reaction.mapped_precursors
+        node['mapped_outcomes'] = reaction['mapped_outcomes']
         node['borderWidth'] = 2
         node['color'] = { border: '#ff4444' }
         node['title'] = "Selectivity warning! Select this node to see more details"
@@ -1801,10 +1802,13 @@ var app = new Vue({
             var selected = this.network.getSelectedNodes();
             var rid = selected[0]
             var node = this.data.nodes.get(rid)
-            var smi = node.mappedReactionSmiles;
             var url = '/api/v2/general-selectivity/';
             var body = {
-                rxnsmiles: smi,
+                reactants: node.mapped_precursors,
+                product: node.mapped_outcomes,
+                mapped: true,
+                all_outcomes: true,
+                verbose: false,
             }
             fetch(url, {
                 method: 'POST',

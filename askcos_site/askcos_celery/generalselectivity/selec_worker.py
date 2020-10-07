@@ -28,7 +28,7 @@ def configure_worker(options={}, **kwargs):
 
 
 @shared_task
-def get_selec(reac,  mapped=False, mode='qm-gnn', outcomes_included=False):
+def get_selec(reac,  mapped=False, mode='qm-gnn', all_outcomes=False, verbose=True):
     print('site selectivity got a request {}'.format(reac))
 
     def mapper(rxnsmiles):
@@ -40,5 +40,5 @@ def get_selec(reac,  mapped=False, mode='qm-gnn', outcomes_included=False):
         return result.get(5)
 
     selec_pred = GeneralSelectivityPredictor(atom_mapper=mapper, descriptor_predictor=descriptors)
-    res = selec_pred.predict(reac, mapped=mapped, mode=mode, outcomes_included=outcomes_included)
+    res = selec_pred.predict(reac, mapped=mapped, mode=mode, all_outcomes=all_outcomes, verbose=verbose)
     return res

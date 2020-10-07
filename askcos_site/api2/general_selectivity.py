@@ -11,6 +11,9 @@ class GeneralSelectivitySerializer(serializers.Serializer):
     reagents = serializers.CharField(default='')
     solvent = serializers.CharField(default='')
     product = serializers.CharField()
+    mapped = serializers.BooleanField(default=False)
+    all_outcomes = serializers.BooleanField(default=False)
+    verbose = serializers.BooleanField(default=True)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants smiles is valid."""
@@ -70,6 +73,9 @@ class SelectivityAPIView(CeleryTaskAPIView):
         reagents = data['reagents']
         solvent = data['solvent']
         product = data['product']
+        mapped = data['mapped']
+        all_outcomes = data['all_outcomes']
+        verbose = data['verbose']
 
         combined_smiles = reactants
         if reagents and solvent:
@@ -80,7 +86,7 @@ class SelectivityAPIView(CeleryTaskAPIView):
             combined_smiles += '>{}'.format(solvent)
         combined_smiles += '>{}'.format(product)
 
-        result = get_selec.delay(combined_smiles)
+        result = get_selec.delay(combined_smiles, mapped=mapped, all_outcomes=all_outcomes, verbose=verbose)
         return result
 
 
