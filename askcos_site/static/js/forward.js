@@ -287,6 +287,15 @@ var app = new Vue({
                 this.forwardPredict()
             })
         },
+        goToSelectivity(smiles) {
+            window.history.pushState({mode: 'selectivity'}, 'selectivity', '?mode=selectivity')
+            this.canonicalizeAll()
+                .then(() => {
+                    this.product = smiles
+                    this.mode = 'selectivity'
+                    this.selectivityPredict()
+                })
+        },
         goToImpurity(smiles) {
             window.history.pushState({mode: 'impurity'}, 'impurity', '?mode=impurity')
             this.canonicalizeAll()

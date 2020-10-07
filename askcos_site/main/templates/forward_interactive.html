@@ -263,6 +263,7 @@ Synthesis Predictor
                     <th class="text-center">Max. Score</th>
                     <th class="text-center">Molecular Weight</th>
                     <th class="text-center">Predict impurities</th>
+                    <th class="text-center">Predict regio-selectivities</th>
                 </tr>
             </thead>
             <tbody>
@@ -277,6 +278,9 @@ Synthesis Predictor
                         <td class="text-center">%% (Math.round((res.mol_wt + Number.EPSILON) * 10) / 10).toFixed(1) %%</td>
                         <td class="text-center">
                             <button :id="'predict-impurities-' + index" class="btn btn-dark" @click="goToImpurity(res.smiles)" title="Predict impurities"><i class="fas fa-arrow-right"></i></button>
+                        </td>
+                        <td class="text-center">
+                            <button :id="'predict-regio-selectivities-' + index" class="btn btn-dark" @click="goToSelectivity(res.smiles)" title="Predict regio-selectivities"><i class="fas fa-arrow-right"></i></button>
                         </td>
                     </tr>
                 </template>
