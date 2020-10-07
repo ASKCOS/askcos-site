@@ -303,6 +303,7 @@ Synthesis Predictor
                 <template v-for="(res, index) in selectivityResults">
                     <tr>
                         <td class="text-center">%% res.rank %%</td>
+                        <td class="text-center">
                             <img :src='"/api/v2/draw/?smiles="+encodeURIComponent(res.smiles)' :alt="res.smiles">
                         </td>
                         <td class="text-center">%% (Math.round((res.prob + Number.EPSILON) * 10000) / 10000).toFixed(4) %%</td>
