@@ -58,8 +58,8 @@ Synthesis Predictor
                             </select>
                         </div>
                         <div class="form-inline mb-2">
-                            <label class="mr-2" for="regioselectivityModel">Regio-selectivity model:</label>
-                            <select id="regioselectivityModel" v-model="regioselectivityModel" class="form-control">
+                            <label class="mr-2" for="selectivityModel">Regio-selectivity model:</label>
+                            <select id="selectivityModel" v-model="selectivityModel" class="form-control">
                                     <option value="qm_GNN">QM-WLN</option>
                                     <option value="GNN">WLN</option>
                             </select>
@@ -353,6 +353,7 @@ Synthesis Predictor
     </div>
 
     <a id="downloadForwardAnchorElem" style="display:none"></a>
+    <a id="downloadSelectivityAnchorElem" style="display:none"></a>
     <a id="downloadImpurityAnchorElem" style="display:none"></a>
 
 <!-- drawing box -->

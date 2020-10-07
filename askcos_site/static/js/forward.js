@@ -28,7 +28,7 @@ var app = new Vue({
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'wln',
-        regioselectivityModel: 'qm_GNN',
+        selectivityModel: 'qm_GNN',
         impurityTopk: 3,
         inspectionThreshold: 0.75,
         impurityCheckMapping: true,
@@ -418,6 +418,20 @@ var app = new Vue({
             var dlAnchorElem = document.getElementById('downloadForwardAnchorElem')
             dlAnchorElem.setAttribute("href",     dataStr     )
             dlAnchorElem.setAttribute("download", "askcos_forward_export.csv")
+            dlAnchorElem.click()
+        },
+        downloadSelectivityResults() {
+            if (!!!this.selectivityResults) {
+                alert('There are no regio-selectivity results to download!')
+            }
+            var downloadData = "Rank,SMILES,Probability\n"
+            this.selectivityResults.forEach((res) => {
+                downloadData += `${res.rank},${res.smiles},${res.prob}\n`
+            })
+            var dataStr = "data:text/json;charset=utf-8," + downloadData
+            var dlAnchorElem = document.getElementById('downloadSelectivityAnchorElem')
+            dlAnchorElem.setAttribute("href",     dataStr     )
+            dlAnchorElem.setAttribute("download", "askcos_regioselectivity_export.csv")
             dlAnchorElem.click()
         },
         downloadImpurityResults() {
