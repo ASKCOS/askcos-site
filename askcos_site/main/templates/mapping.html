@@ -81,6 +81,7 @@ $("#start_synth").click(function () {
         <select id="id_atom_mapper" name="atom_mapper" onchange="showFields(this.options[this.selectedIndex].value)">
             <option value="WLN atom mapper" {% if atom_mapper == 'WLN atom mapper' %}selected{% endif %}>WLN atom mapper</option>
             <option disabled value="Heuristic mapper" {% if atom_mapper == 'Heuristic mapper' %}selected{% endif %}>Heuristic mapper</option>
+            <option value="Transformer" {% if atom_mapper == 'Transformer' %}selected{% endif %}>Transformer</option>
         </select>
     </td>
 </tr>
