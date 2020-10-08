@@ -64,7 +64,7 @@ def get_atom_mapping(rxnsmiles, mapper='WLN atom mapper'):
     if mapper == 'Transformer':
         try:
             results = transformer_mapper.predict([rxnsmiles])
-            rxnsmiles_mapped = results['mapped_rxn']
+            rxnsmiles_mapped = results[0]['mapped_rxn']
         except Exception as e:
             print(e)
     if not rxnsmiles_mapped:
