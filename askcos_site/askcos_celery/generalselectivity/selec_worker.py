@@ -31,7 +31,7 @@ def configure_worker(options={}, **kwargs):
 def get_selec(reac,  mapped=False, mode='qm-gnn', all_outcomes=False, verbose=True, mapper='Transformer', no_map_reagents=False):
     print('site selectivity got a request {}'.format(reac))
 
-    def mapper(rxnsmiles):
+    def mapper_func(rxnsmiles):
         result = get_atom_mapping.delay(rxnsmiles, mapper=mapper)
         return result.get(10)
 
@@ -39,6 +39,6 @@ def get_selec(reac,  mapped=False, mode='qm-gnn', all_outcomes=False, verbose=Tr
         result = get_descriptors.delay(smis)
         return result.get(5)
 
-    selec_pred = GeneralSelectivityPredictor(atom_mapper=mapper, descriptor_predictor=descriptors)
+    selec_pred = GeneralSelectivityPredictor(atom_mapper=mapper_func, descriptor_predictor=descriptors)
     res = selec_pred.predict(reac, mapped=mapped, mode=mode, all_outcomes=all_outcomes, verbose=verbose, no_map_reagents=no_map_reagents)
     return res

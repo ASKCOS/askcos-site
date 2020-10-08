@@ -14,8 +14,8 @@ class GeneralSelectivitySerializer(serializers.Serializer):
     mapped = serializers.BooleanField(default=False)
     all_outcomes = serializers.BooleanField(default=False)
     verbose = serializers.BooleanField(default=True)
-    mapper = serializers.Charfield(default='Transformer')
-    no_map_reagents = serializers.Charfield(default=True)
+    mapper = serializers.CharField(default='Transformer')
+    no_map_reagents = serializers.BooleanField(default=True)
 
     def validate_reactants(self, value):
         """Verify that the requested reactants smiles is valid."""
