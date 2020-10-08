@@ -54,7 +54,8 @@ Synthesis Predictor
                         <div class="form-inline mb-2">
                             <label class="mr-2" for="atomMappingModel">Atom-mapping model:</label>
                             <select id="atomMappingModel" v-model="atomMappingModel" class="form-control">
-                                    <option value="wln">WLN</option>
+                                    <option value="WLN atom mapper">WLN</option>
+                                    <option value="Transformer">Transformer</option>
                             </select>
                         </div>
                         <div class="form-inline mb-2">
@@ -80,6 +81,13 @@ Synthesis Predictor
                             <span class="fas fa-info-circle mr-1" title="Whether to use atom mapping to check reaction modes."></span>
                             <label class="form-check-label mr-2" for="impurityCheckMapping">Use atom mapping:</label>
                             <input id="impurityCheckMapping" type="checkbox" step="any" class="form-check-input form-control" v-model="impurityCheckMapping"/>
+                        </div>
+                        <hr>
+                        <h4>Regio-selectivity predictor settings</h4>
+                        <div class="form-inline mb-2">
+                            <span class="fas fa-info-circle mr-1" title="Reagents do not provide any atom to the product."></span>
+                            <label class="form-check-label mr-2" for="absoluteReagents">Do not map Reagents:</label>
+                            <input id="absoluteReagents" type="checkbox" step="any" class="form-check-input form-control" v-model="absoluteReagents"/>
                         </div>
                     </div>
                     <div class="modal-footer">

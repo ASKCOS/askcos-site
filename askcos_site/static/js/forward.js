@@ -35,7 +35,9 @@ var app = new Vue({
         impurityProgress: {
             percent: 0,
             message: ''
-        }
+        },
+        // selectivity settings
+        absoluteReagents: true,
     },
     mounted: function() {
         var urlParams = new URLSearchParams(window.location.search)
@@ -141,6 +143,8 @@ var app = new Vue({
             var data= {
                 reactants: this.reactants,
                 product: this.product,
+                mapper: this.atomMappingModel,
+                no_map_reagents: this.absoluteReagents,
             }
             if (!!this.reagents) {
                 data.reagents = this.reagents

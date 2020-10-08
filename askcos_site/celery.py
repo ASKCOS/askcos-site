@@ -16,7 +16,7 @@ READABLE_NAMES = {
     'tffp_worker': 'Template-free Forward Predictor',
     'selec_worker': 'General Selectivity Worker',
     'path_ranking_worker': 'Pathway Ranking Worker',
-    'descriptors_worker': 'Descriptor predictor worker'
+    'descriptors_worker': 'Descriptor Predictor Worker'
 }
 
 # Note: cannot use guest for authenticating with broker unless on localhost

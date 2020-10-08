@@ -19,7 +19,7 @@ class DescriptorsSerializer(serializers.Serializer):
 
         for a in mol.GetAtoms():
             if a.GetSymbol() not in ALLOWED_ATOMS:
-                raise serializers.ValidationError('invalid element {} found in smiles {}'.format(a.GetSymbol(), value))
+                raise serializers.ValidationError('Unsupported element {} found in smiles {}'.format(a.GetSymbol(), value))
             if a.GetFormalCharge() != 0 or a.GetNumRadicalElectrons() != 0:
                 raise serializers.ValidationError('Charge or radical found in smiles {}'.format(value))
 
