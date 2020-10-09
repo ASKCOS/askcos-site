@@ -40,5 +40,9 @@ def get_selec(reac,  mapped=False, mode='qm-gnn', all_outcomes=False, verbose=Tr
         return result.get(5)
 
     selec_pred = GeneralSelectivityPredictor(atom_mapper=mapper_func, descriptor_predictor=descriptors)
-    res = selec_pred.predict(reac, mapped=mapped, mode=mode, all_outcomes=all_outcomes, verbose=verbose, no_map_reagents=no_map_reagents)
-    return res
+    try:
+        res = selec_pred.predict(reac, mapped=mapped, mode=mode, all_outcomes=all_outcomes, verbose=verbose, no_map_reagents=no_map_reagents)
+    except Exception as e:
+        return str(e)
+    else:
+        return res

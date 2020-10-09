@@ -323,7 +323,13 @@ var app = new Vue({
             this.selectivityResults = []
             var postData = this.constructSelectivityPostData()
             var callback = (json) => {
-                this.selectivityResults = json.output
+                var output = json.output
+                if (typeof output == 'string') {
+                    alert(output)
+                }
+                else {
+                    this.selectivityResults = output
+                }
             }
             this.celeryTaskAsyncPost('general-selectivity', postData, callback)
         },
