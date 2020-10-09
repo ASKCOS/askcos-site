@@ -1273,7 +1273,7 @@ var app = new Vue({
             this.reorderResults()
         },
         selectSortingOrder: function() {
-            if (["rms_molwt", "num_rings", "scscore"].includes(this.sortingCategory) || (this.sortingCategory === 'score' && this.tb.settings.precursorScoring === 'SCScore')) {
+            if (["rms_molwt", "num_rings", "scscore", "template_rank"].includes(this.sortingCategory) || (this.sortingCategory === 'score' && this.tb.settings.precursorScoring === 'SCScore')) {
                 this.sortOrderAscending = true
             }
             else {
