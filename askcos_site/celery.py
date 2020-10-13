@@ -19,14 +19,32 @@ READABLE_NAMES = {
 }
 
 # Note: cannot use guest for authenticating with broker unless on localhost
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
-RABBIT_HOST = os.environ.get('RABBIT_HOST', 'localhost')
-RABBIT_PORT = os.environ.get('RABBITMQ_NODE_PORT', '5672')
+redis_host = os.environ.get('REDIS_HOST', 'localhost')
+redis_port = os.environ.get('REDIS_PORT', '6379')
+redis_password = os.environ.get('REDIS_PASSWORD', '')
+if redis_password:
+    redis_password = ':{0}@'.format(redis_password)
+redis_url = 'redis://{password}{host}:{port}'.format(
+    password=redis_password,
+    host=redis_host,
+    port=redis_port,
+)
+
+rabbit_host = os.environ.get('RABBIT_HOST', 'localhost')
+rabbit_port = os.environ.get('RABBITMQ_NODE_PORT', '5672')
+rabbit_user = os.environ.get('RABBIT_USER', 'guest')
+rabbit_password = os.environ.get('RABBIT_PASSWORD', 'guest')
+rabbit_url = 'amqp://{user}:{password}@{host}:{port}'.format(
+    user=rabbit_user,
+    password=rabbit_password,
+    host=rabbit_host,
+    port=rabbit_port,
+)
+
 app = Celery(
     main='askcos_site',
-    broker='amqp://{}:{}'.format(RABBIT_HOST, RABBIT_PORT),
-    backend='redis://{}:{}'.format(REDIS_HOST, REDIS_PORT),
+    broker=rabbit_url,
+    backend=redis_url,
 )
 
 # Using a string here means the worker don't have to serialize
