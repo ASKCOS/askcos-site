@@ -1,6 +1,6 @@
 ARG KETCHER_VERSION=dev
 ARG CORE_VERSION=dev
-ARG BASE_VERSION=2020.03.4-gh2855-py37-conda
+ARG BASE_VERSION=2020.03.6-gh2855-py37-conda
 
 FROM registry.gitlab.com/mlpds_mit/askcos/ketcher:$KETCHER_VERSION as ketcher
 FROM registry.gitlab.com/mlpds_mit/askcos/askcos-core:$CORE_VERSION as core
