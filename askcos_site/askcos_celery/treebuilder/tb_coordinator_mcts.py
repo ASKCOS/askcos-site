@@ -83,8 +83,6 @@ def get_buyable_paths(*args, **kwargs):
     settings = {'smiles': args[0], 'version': 1}  # Refers to tree builder version
     settings.update(kwargs)
 
-    kwargs['json_format'] = 'nodelink'
-
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
     if template_prioritizer_version:
         tree_builder.template_prioritizer_version = template_prioritizer_version

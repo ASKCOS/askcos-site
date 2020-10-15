@@ -116,7 +116,6 @@ def get_buyable_paths(smiles, **kwargs):
         'retro_transformer': retro_transformer,
         'template_prioritizer': template_prioritizer,
         'fast_filter': fast_filter,
-        'json_format': 'nodelink',
     })
 
     if kwargs.get('score_trees'):

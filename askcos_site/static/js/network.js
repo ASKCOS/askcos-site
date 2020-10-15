@@ -708,6 +708,7 @@ var app = new Vue({
                 chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
                 min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
                 min_chempop_products: this.tb.settings.chemicalPopularityProducts,
+                json_format: 'nodelink',
             }
             if (!this.tb.settings.buyablesSourceAll) {
                 body.buyables_source = this.tb.settings.buyablesSource

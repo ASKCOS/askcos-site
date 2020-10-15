@@ -52,6 +52,8 @@ class TreeBuilderSerializer(serializers.Serializer):
     cluster_min_samples = serializers.IntegerField(default=5)
     cluster_min_size = serializers.IntegerField(default=5)
 
+    json_format = serializers.CharField(default='treedata')
+
     store_results = serializers.BooleanField(default=False)
     description = serializers.CharField(default='')
 
@@ -193,6 +195,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
     - `cluster_method` (bool, optional): method to use for clustering, supports 'hdbscan' or 'kmeans'
     - `cluster_min_samples` (bool, optional): minimum number of samples when using 'hdbscan'
     - `cluster_min_size` (bool, optional): minimum cluster size when using 'hdbscan'
+    - `json_format` (str, optional): return format for trees, either 'treedata' or 'nodelink'
     - `store_results` (bool, optional): whether to permanently save this result
     - `description` (str, optional): description to associate with stored result
     - `banned_reactions` (list[str], optional): list of reactions to not consider
@@ -301,6 +304,7 @@ class TreeBuilderAPIView(CeleryTaskAPIView):
             'cluster_method': data['cluster_method'],
             'cluster_min_samples': data['cluster_min_samples'],
             'cluster_min_size': data['cluster_min_size'],
+            'json_format': data['json_format'],
             'paths_only': True,
         }
 
