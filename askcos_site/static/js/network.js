@@ -884,9 +884,8 @@ var app = new Vue({
         },
         resolveChemName: function(name) {
             if (this.enableResolve && this.allowResolve) {
-                var url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
-                console.log(url)
-                var text = fetch(url)
+                let url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
+                return fetch(url)
                     .then(resp => {
                         if (resp.status == 404) {
                             throw Error(resp.statusText);
@@ -897,15 +896,24 @@ var app = new Vue({
                     .catch(err => {
                         throw Error('Cannot resolve "'+name+'" to smiles: '+err.message);
                     })
-                return text;
             } else {
                 throw Error('Resolving chemical name using external server is not allowed.');
             }
         },
-        validatesmiles: function(s, iswarning) {
-            var url = '/api/validate-chem-name/?smiles='+encodeURIComponent(s)
-            console.log(url)
-            var res = fetch(url)
+        validatesmiles: function(smiles, iswarning) {
+            return fetch(
+                '/api/v2/rdkit/smiles/validate/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        smiles: smiles
+                    })
+                }
+            )
                 .then(resp => {
                     if (!resp.ok) {
                         throw 'Unable to connect to server: error code '+resp.status;
@@ -924,7 +932,6 @@ var app = new Vue({
                         return true
                     }
                 })
-            return res;
         },
         lookupPrice: function(smiles) {
             let url = `/api/v2/buyables/?q=${encodeURIComponent(smiles)}&canonicalize=True`
@@ -1949,7 +1956,7 @@ var app = new Vue({
         },
         canonicalize(smiles, input) {
             return fetch(
-                '/api/rdkit/canonicalize/',
+                '/api/v2/rdkit/smiles/canonicalize/',
                 {
                     method: 'POST',
                     headers: {
@@ -1969,8 +1976,7 @@ var app = new Vue({
             })
         },
         updateSmilesFromKetcher() {
-            var smiles = ketcher.getSmiles();
-            this.target = smiles
+            let smiles = ketcher.getSmiles();
             this.canonicalize(smiles, drawBoxId)
         },
         resetTemplateSetVersion(event) {
