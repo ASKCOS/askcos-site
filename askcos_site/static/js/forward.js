@@ -27,7 +27,7 @@ var app = new Vue({
         contextModel: 'neuralnetwork',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
-        atomMappingModel: 'WLN atom mapper',
+        atomMappingModel: 'Transformer',
         selectivityModel: 'qm_GNN',
         impurityTopk: 3,
         inspectionThreshold: 0.75,
