@@ -969,8 +969,8 @@ var app = new Vue({
                     return this.resolveChemName(this.target)
                 }
             })
-            .then(x => {
-                this.target = x;
+            .then(smiles => this.canonicalize(smiles, 'target'))
+            .then(() => {
                 this.saveTarget()
                 if (this.target != undefined) {
                     const smi = this.target;
