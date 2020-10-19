@@ -989,6 +989,7 @@ M  END
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
             'buyable_logic': 'or',
             'return_first': True,
+            'json_format': 'nodelink',
         }
         response = self.post('/tree-builder/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -1056,6 +1057,7 @@ M  END
             'buyable_logic': 'or',
             'return_first': True,
             'version': 2,
+            'json_format': 'nodelink',
         }
         response = self.post('/tree-builder/', data=data)
         self.assertEqual(response.status_code, 200)
