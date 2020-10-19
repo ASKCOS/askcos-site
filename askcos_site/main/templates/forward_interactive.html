@@ -222,9 +222,7 @@ Synthesis Predictor
                             <span v-else>none</span>
                         </td>
                         <td class="text-center">
-                            <span v-if="result.best"> <p style="color:green"> %% result.solvent_score %% </p>
-                            </span>
-                            <span v-else> %% result.solvent_score %% </span>
+                            <p v-bind:style="{ color: solventScoreColorMap[result.solvent_score] || 'black' }">%% result.solvent_score %%</p>
                         </td>
                         <td class="text-center">
                             %% Math.round(result.temperature) %% &deg;C

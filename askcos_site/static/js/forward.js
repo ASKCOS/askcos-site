@@ -1,3 +1,12 @@
+solventScoreColorMap = {
+    1: '#008000',
+    2: '#3D9900',
+    3: '#8FB300',
+    4: '#CCA300',
+    5: '#E65C00',
+    6: '#FF0000',
+}
+
 var app = new Vue({
     el: '#app',
     data: {
