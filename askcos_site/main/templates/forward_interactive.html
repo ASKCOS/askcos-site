@@ -189,6 +189,7 @@ Synthesis Predictor
                     <th class="text-center">Reagents</th>
                     <th class="text-center">Catalyst</th>
                     <th class="text-center">Solvents</th>
+                    <th class="text-center">Solvent Score <i title="Rates the Environment, Health, and Safety aspects of a solvent from 1 to 6, with 1 being most green and 6 being most hazardous. A score of 7 indicates no EHS information was available." class="fas fa-question-circle ml-1" style="cursor: pointer"></i></th>
                     <th class="text-center">Temperature</th>
                     <th class="text-center">Predict with conditions</th>
                 </tr>
@@ -219,6 +220,9 @@ Synthesis Predictor
                         <td class="text-center">
                             <img v-if="!!result.solvent" :src='"/api/v2/draw/?smiles="+encodeURIComponent(result.solvent)' :alt="result.solvent">
                             <span v-else>none</span>
+                        </td>
+                        <td class="text-center">
+                            <p v-bind:style="{ color: solventScoreColorMap[result.solvent_score] || 'black' }">%% result.solvent_score %%</p>
                         </td>
                         <td class="text-center">
                             %% Math.round(result.temperature) %% &deg;C
