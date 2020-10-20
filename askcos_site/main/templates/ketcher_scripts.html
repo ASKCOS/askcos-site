@@ -151,9 +151,9 @@ function setSmilesDrawingKetcherMin(smi) {
                 ketcherMainApplication.style.height = (baseHeight+60) + "px";
             }
 
-            // Need timeout because the molecule takes a bit of time to finish displaying,
+            // Need callback because the molecule takes a bit of time to finish displaying,
             // and we can't properly get coordinates  / bounding boxes until that finishes.
-            setTimeout(resizeKetcherIframe, 1000);
+            $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile, {callback: resizeKetcherIframe});
             $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
         }
 
