@@ -156,6 +156,14 @@ function setSmilesDrawingKetcherMin(smi) {
             $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile, {callback: resizeKetcherIframe});
             $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
 
+            // Hook a click listener to refresh the filtered results when the atom selection is changes.
+            if (!$('#ketcher-iframe-min')[0].contentWindow.document.onclick) {
+                $('#ketcher-iframe-min')[0].contentWindow.document.onclick = function(e) {
+                    console.log('refreshing filter')
+                    app.refreshFilter += 1;
+                }
+            }
+
             $("#ketcher-iframe-min-spinner").fadeOut();
         }
 
