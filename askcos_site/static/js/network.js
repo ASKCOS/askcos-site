@@ -413,6 +413,7 @@ var app = new Vue({
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
         filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
+        refreshFilter: 1,
         allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
         showLoadModal: false,

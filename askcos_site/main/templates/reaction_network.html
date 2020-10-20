@@ -937,7 +937,7 @@ It is roughly how long it will take for results to be returned, however there is
                                 </div>
                             </div>
                             <div class="scroll-list" style="max-height: calc(100vh - 40rem)">
-                                <div class="text-center">
+                                <div class="text-center" v-if="refreshFilter">
                                     <template v-if="typeof(results[selected.smiles]) == 'undefined'">
                                         <div class="text-center" style="margin-top: 10px">
                                             <h5>Click button below to expand this node and predict precursors for this target.</h5>
