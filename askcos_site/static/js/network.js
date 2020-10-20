@@ -1330,6 +1330,12 @@ var app = new Vue({
         },
         checkFilter: function(result)
         {
+            // If Ketcher is not active, there is no way for user to interact with filter;
+            // the filter should pass
+            if (!$('#ketcher-iframe-min')[0]) {
+                return true;
+            }
+
             var reactingAtoms = result.reacting_atoms.map((el) => el-1);
             var reactingAtomsAray = Array.from(reactingAtoms.values());
             // console.log("reacting atoms", reactingAtomsAray)            
