@@ -145,6 +145,7 @@ var app = new Vue({
                 product: this.product,
                 mapper: this.atomMappingModel,
                 no_map_reagents: this.absoluteReagents,
+                mode: selectivityModel
             }
             if (!!this.reagents) {
                 data.reagents = this.reagents

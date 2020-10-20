@@ -1809,6 +1809,7 @@ var app = new Vue({
                 mapped: true,
                 all_outcomes: true,
                 verbose: false,
+                mode: 'GNN'
             }
             fetch(url, {
                 method: 'POST',
