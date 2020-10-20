@@ -890,9 +890,12 @@ It is roughly how long it will take for results to be returned, however there is
                                     <div v-if="selected.source">
                                         <b>Source: </b>%% selected.source %%
                                     </div>
-                                    <div class="my-2">
+                                    <div class="my-2" style="position: relative">
                                         <!-- <img v-bind:src="selected.image" style="max-width: 100%"/> -->
                                         <iframe id="ketcher-iframe-min" src="{% url 'ketcher_iframe_min' %}" width="160" height="100" scrolling="no" style="border-width: 0"></iframe>
+                                        <div id="ketcher-iframe-min-spinner" class="spinner-border" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>  
                                     </div>
                                     <h3>
                                         Precursors

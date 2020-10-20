@@ -258,7 +258,7 @@ input::-webkit-inner-spin-button {
 }
 
 /* Ketcher extras (not in dist) */
-#ketcher-spinner {
+#ketcher-spinner, #ketcher-iframe-min-spinner {
     position: absolute;
     z-index: 1;
     top: 0;

@@ -117,8 +117,8 @@ function setSmilesDrawingKetcherMin(smi) {
             if (! ($('#ketcher-iframe-min')[0] 
                 && $('#ketcher-iframe-min')[0].contentWindow.ketcher
                 && $('#ketcher-iframe-min')[0].contentWindow.ketcher.ready) ) {
-                // console.log("not ready, will try again in 500 ms...")
-                setTimeout(setMolfileKetcherMin, 500)
+                $("#ketcher-iframe-min-spinner").fadeIn(0);
+                setTimeout(setMolfileKetcherMin, 100)
                 return;
             }
             // console.log("ready!")
@@ -155,6 +155,8 @@ function setSmilesDrawingKetcherMin(smi) {
             // and we can't properly get coordinates  / bounding boxes until that finishes.
             $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile, {callback: resizeKetcherIframe});
             $('#ketcher-iframe-min')[0].contentWindow.scrollTo(0, 0)
+
+            $("#ketcher-iframe-min-spinner").fadeOut();
         }
 
         setMolfileKetcherMin();
