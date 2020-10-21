@@ -6,10 +6,6 @@ from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
 
-from ..atom_mapper.atom_mapping_worker import get_atom_mapping
-from ..descriptors.descriptors_worker import get_descriptors
-from askcos.synthetic.selectivity.general_selectivity import QmGnnGeneralSelectivityPredictor
-
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
