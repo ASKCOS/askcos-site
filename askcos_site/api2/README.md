@@ -222,7 +222,16 @@ Method: POST
 
 Parameters:
 
-- `reaction_smiles` (str): reaction smiles with map atom number
+- `reactants` (str): SMILES string of reactants
+- `product` (str): SMILES string of product
+- `reagents` (str, optional): SMILES string of reagents
+- `solvent` (str, optional): SMILES string of solvent
+- `mapped` (bool, optional): whether input is already atom mapped, default False
+- `all_outcomes` (bool, optional): whether to return all outcomes, default False
+- `verbose` (bool, optional): if True, return a json document, default True
+- `mapper` (str, optional): which atom mapper to use ('Transformer' or 'WLN atom mapper')
+- `no_map_reagents` (bool, optional): do not map reagents, default True
+- `mode` (str, optional): which regioselectivity model to use ('GNN' or 'qm_GNN')
 
 Returns:
 
@@ -269,6 +278,21 @@ Parameters:
 - `banned_reactions` (list[str], optional): list of reactions to not consider
 - `banned_chemicals` (list[str], optional): list of molecules to not consider
 - `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
+
+Returns:
+
+- `task_id`: celery task ID
+
+### Quantum descriptor prediction
+API endpoint for descriptor-predictor prediction task.
+
+URL: `/api/v2/descriptors/`
+
+Method: POST
+
+Parameters:
+
+- `smiles` (str): SMILES string
 
 Returns:
 

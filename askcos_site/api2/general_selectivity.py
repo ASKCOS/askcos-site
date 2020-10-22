@@ -59,7 +59,16 @@ class SelectivityAPIView(CeleryTaskAPIView):
 
     Parameters:
 
-    - `reaction_smiles` (str): reaction smiles with map atom number
+    - `reactants` (str): SMILES string of reactants
+    - `product` (str): SMILES string of product
+    - `reagents` (str, optional): SMILES string of reagents
+    - `solvent` (str, optional): SMILES string of solvent
+    - `mapped` (bool, optional): whether input is already atom mapped, default False
+    - `all_outcomes` (bool, optional): whether to return all outcomes, default False
+    - `verbose` (bool, optional): if True, return a json document, default True
+    - `mapper` (str, optional): which atom mapper to use ('Transformer' or 'WLN atom mapper')
+    - `no_map_reagents` (bool, optional): do not map reagents, default True
+    - `mode` (str, optional): which regioselectivity model to use ('GNN' or 'qm_GNN')
 
     Returns:
 
