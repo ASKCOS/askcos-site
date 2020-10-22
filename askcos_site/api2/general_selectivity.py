@@ -30,7 +30,7 @@ class GeneralSelectivitySerializer(serializers.Serializer):
         if value:
             mol = Chem.MolFromSmiles(value)
             if not mol:
-                raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+                raise serializers.ValidationError('Cannot parse reagents smiles with rdkit.')
             return Chem.MolToSmiles(mol, isomericSmiles=True)
         return value
 
@@ -39,7 +39,7 @@ class GeneralSelectivitySerializer(serializers.Serializer):
         if value:
             mol = Chem.MolFromSmiles(value)
             if not mol:
-                raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+                raise serializers.ValidationError('Cannot parse solvent smiles with rdkit.')
             return Chem.MolToSmiles(mol, isomericSmiles=True)
         return value
 
@@ -47,7 +47,7 @@ class GeneralSelectivitySerializer(serializers.Serializer):
         """Verify that the requested product smiles is valid."""
         mol = Chem.MolFromSmiles(value)
         if not mol:
-            raise serializers.ValidationError('Cannot parse reactants smiles with rdkit.')
+            raise serializers.ValidationError('Cannot parse product smiles with rdkit.')
         return Chem.MolToSmiles(mol, isomericSmiles=True)
 
 
