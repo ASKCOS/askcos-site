@@ -15,7 +15,7 @@ class ImpurityPredictorSerializer(serializers.Serializer):
     threshold = serializers.FloatField(default=0.75)
     predictor = serializers.CharField(default='WLN forward predictor')
     inspector = serializers.CharField(default='Reaxys inspector')
-    mapper = serializers.CharField(default='')
+    mapper = serializers.CharField(default='WLN atom mapper')
     check_mapping = serializers.BooleanField(default=True)
 
     def check_smiles(self, value):
