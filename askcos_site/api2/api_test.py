@@ -392,6 +392,55 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
                                            'products': ['Cannot parse products smiles with rdkit.']})
 
+    def test_descriptors(self):
+        """Test /descriptors endpoint"""
+        data = {
+            'smiles': 'CCCC',
+        }
+        response = self.post('/descriptors/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        output = result['output']
+        self.assertIsInstance(output, dict)
+        self.assertEqual(output['smiles'], data['smiles'])
+        self.assertIsInstance(output['partial_charge'], list)
+        self.assertIsInstance(output['fukui_neu'], list)
+        self.assertIsInstance(output['fukui_elec'], list)
+        self.assertIsInstance(output['NMR'], list)
+        self.assertIsInstance(output['bond_order'], list)
+        self.assertIsInstance(output['bond_length'], list)
+
+        # Test insufficient data
+        response = self.post('/descriptors/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.post('/descriptors/', data={'smiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Cannot parse reactants smiles with rdkit.']})
+
+        # Test unsupported element
+        response = self.post('/descriptors/', data={'smiles': '[Ne]'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Unsupported element Ne found in smiles [Ne]']})
+
+        # Test radical
+        response = self.post('/descriptors/', data={'smiles': '[H]'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Charge or radical found in smiles [H]']})
+
     def test_drawing(self):
         """Test /draw endpoint"""
         expected = {'smiles': ['This field is required.']}
@@ -907,7 +956,13 @@ M  END
     def test_selectivity_gen(self):
         """Test /general-selectivity endpoint"""
         data = {
-            'rxnsmiles': '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12>O>[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2',
+            'reactants': '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12',
+            'reagents': 'O',
+            'product': '[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2',
+            'mapped': True,
+            'all_outcomes': True,
+            'verbose': False,
+            'mode': 'GNN',
         }
         response = self.post('/general-selectivity/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -915,7 +970,13 @@ M  END
         # Confirm that request was interpreted correctly
         result = response.json()
         request = result['request']
-        self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['reagents'], data['reagents'])
+        self.assertEqual(request['product'], data['product'])
+        self.assertEqual(request['mapped'], data['mapped'])
+        self.assertEqual(request['all_outcomes'], data['all_outcomes'])
+        self.assertEqual(request['verbose'], data['verbose'])
+        self.assertEqual(request['mode'], data['mode'])
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -931,12 +992,14 @@ M  END
         # Test insufficient data
         response = self.post('/general-selectivity/', data={})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'rxnsmiles': ['This field is required.']})
+        self.assertEqual(response.json(), {'reactants': ['This field is required.'],
+                                           'product': ['This field is required.']})
 
         # Test unparseable smiles
-        response = self.post('/general-selectivity/', data={'rxnsmiles': 'X'})
+        response = self.post('/general-selectivity/', data={'reactants': 'X', 'product': 'Y'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reaction smiles.']})
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
+                                           'product': ['Cannot parse product smiles with rdkit.']})
 
     def test_template(self):
         """Test /template endpoint"""

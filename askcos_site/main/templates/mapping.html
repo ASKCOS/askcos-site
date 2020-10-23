@@ -69,6 +69,8 @@ $("#start_synth").click(function () {
 <i>(1) WLN atom mapper uses a WLN forward predictor to find the atom mapping. It can only take in one product. </i>
 <br>
 <i>(2) Heuristic mapper uses the algorithm described in the Grzybowski's publication (doi: 10.1038/s41467-019-09440-2). </i>
+<br>
+<i>(3) Transformer mapper uses the language model described in the <a href="http://rxnmapper.ai/">Schwaller's publication</a></i>
 <table class="table table-borderless table-nonfluid">
 
 <!-- Reactants -->
@@ -81,6 +83,7 @@ $("#start_synth").click(function () {
         <select id="id_atom_mapper" name="atom_mapper" onchange="showFields(this.options[this.selectedIndex].value)">
             <option value="WLN atom mapper" {% if atom_mapper == 'WLN atom mapper' %}selected{% endif %}>WLN atom mapper</option>
             <option disabled value="Heuristic mapper" {% if atom_mapper == 'Heuristic mapper' %}selected{% endif %}>Heuristic mapper</option>
+            <option value="Transformer" {% if atom_mapper == 'Transformer' %}selected{% endif %}>Transformer</option>
         </select>
     </td>
 </tr>

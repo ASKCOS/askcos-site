@@ -9,9 +9,13 @@ from rdkit import RDLogger
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
-selec_pred = None
 CORRESPONDING_QUEUE = 'selec_worker'
-
+wln_atom_mapper = None
+transformer_mapper = None
+descriptor_predictor = None
+selec_pred_gnn = None
+selec_pred_qm_gnn = None
+selec_pred_qm_gnn_no_reagent = None
 
 @celeryd_init.connect
 def configure_worker(options={}, **kwargs):
@@ -21,24 +25,68 @@ def configure_worker(options={}, **kwargs):
     if CORRESPONDING_QUEUE not in options['queues'].split(','):
         return
     print('### STARTING UP A GENERAL SELECTIVITY PREDICTOR WORKER ###')
-    global selec_pred
-    # Import as needed
-    from askcos.synthetic.selectivity.general_selectivity import GeneralSelectivityPredictor
-    try:
-        selec_pred = GeneralSelectivityPredictor()
-    except Exception as e:
-        raise (e)
+
+    from askcos_site.askcos_celery.torchserve_api import TorchserveAPI
+    from askcos.synthetic.atom_mapper.wln_mapper import WLN_AtomMapper
+    from ..atom_mapper.atom_mapping_worker import get_atom_mapping
+    from ..descriptors.descriptors_worker import get_descriptors
+    from askcos.synthetic.selectivity.general_selectivity import GnnGeneralSelectivityPredictor, \
+        QmGnnGeneralSelectivityPredictor, QmGnnGeneralSelectivityPredictorNoReagent
+
+    global wln_atom_mapper
+    global transformer_mapper
+    global descriptor_predictor
+    global selec_pred_gnn
+    global selec_pred_qm_gnn
+    global selec_pred_qm_gnn_no_reagent
+
+    wln_atom_mapper = WLN_AtomMapper()
+    transformer_mapper = TorchserveAPI(hostname='ts-rxnmapper', model_name='rxnmapper')
+    descriptor_predictor = TorchserveAPI(hostname='ts-descriptors', model_name='descriptors')
+
+    selec_pred_gnn = GnnGeneralSelectivityPredictor(atom_mapper='mapper', descriptor_predictor='descriptor')
+    selec_pred_qm_gnn = QmGnnGeneralSelectivityPredictor(atom_mapper='mapper', descriptor_predictor='descriptor')
+    selec_pred_qm_gnn_no_reagent = QmGnnGeneralSelectivityPredictorNoReagent(atom_mapper='mapper', descriptor_predictor='descriptor')
+
     print('Initialized')
-    configure_reac = '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12>O>' \
-                     '[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.' \
-                     '[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2'
-    print(selec_pred.predict(configure_reac))
-    print('Finished configuring sites worker')
 
 
 @shared_task
-def get_selec(reac):
-    global selec_pred
+def get_selec(reac,  mapped=False, mode='qm_GNN', all_outcomes=False, verbose=True, mapper='Transformer', no_map_reagents=False):
     print('site selectivity got a request {}'.format(reac))
-    res = selec_pred.predict(reac)
-    return res
+
+    global wln_atom_mapper
+    global transformer_mapper
+    global descriptor_predictor
+    global selec_pred_gnn
+    global selec_pred_qm_gnn
+    global selec_pred_qm_gnn_no_reagent
+
+    if mapper == 'WLN atom mapper':
+        mapper_func = wln_atom_mapper.evaluate
+    else:
+        def transformer_mapper_wrapper(rxnsmiles):
+            return transformer_mapper.predict([rxnsmiles])[0]['mapped_rxn']
+        mapper_func = transformer_mapper_wrapper
+
+    def descriptors_predictor_wrapper(smiles):
+        return descriptor_predictor.predict(smiles.split('.'))
+    descriptors = descriptors_predictor_wrapper
+
+    try:
+        if mode == 'GNN':
+            res = selec_pred_gnn.predict(reac, mapper_func, descriptors, mapped=mapped, all_outcomes=all_outcomes,
+                                         verbose=verbose, no_map_reagents=no_map_reagents)
+        elif mode == 'qm_GNN':
+            _, reagent, _ = reac.split('>')
+
+            if reagent:
+                res = selec_pred_qm_gnn.predict(reac, mapper_func, descriptors, mapped=mapped, all_outcomes=all_outcomes,
+                                                   verbose=verbose, no_map_reagents=no_map_reagents)
+            else:
+                res = selec_pred_qm_gnn_no_reagent.predict(reac, mapper_func, descriptors, mapped=mapped, all_outcomes=all_outcomes,
+                                        verbose=verbose, no_map_reagents=no_map_reagents)
+    except Exception as e:
+        return str(e)
+    else:
+        return res

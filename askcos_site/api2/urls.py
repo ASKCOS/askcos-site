@@ -34,6 +34,7 @@ urlpatterns += [
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
     path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),
     path('tree-builder/', api2.tree_builder.tree_builder, name='tree_builder_api'),
+    path('descriptors/', api2.descriptors.descriptors, name='descriptors_api'),
 
     path('token-auth/', obtain_jwt_token, name='token_auth_api'),
     path('token-refresh/', refresh_jwt_token, name='token_refresh_api'),

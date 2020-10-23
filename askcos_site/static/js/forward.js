@@ -21,19 +21,23 @@ var app = new Vue({
         forwardResults: [],
         contextResults: [],
         impurityResults: [],
+        selectivityResults: [],
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
-        atomMappingModel: 'wln',
+        atomMappingModel: 'Transformer',
+        selectivityModel: 'qm_GNN',
         impurityTopk: 3,
         inspectionThreshold: 0.75,
         impurityCheckMapping: true,
         impurityProgress: {
             percent: 0,
             message: ''
-        }
+        },
+        // selectivity settings
+        absoluteReagents: true,
     },
     mounted: function() {
         var urlParams = new URLSearchParams(window.location.search)
@@ -81,6 +85,9 @@ var app = new Vue({
         },
         clearForward() {
             this.forwardResults = []
+        },
+        clearSelectivity() {
+            this.selectivityResults = []
         },
         clearImpurity() {
             this.impurityResults = []
@@ -131,6 +138,22 @@ var app = new Vue({
                 reactants: this.reactants,
                 products: this.product
             }
+        },
+        constructSelectivityPostData() {
+            var data= {
+                reactants: this.reactants,
+                product: this.product,
+                mapper: this.atomMappingModel,
+                no_map_reagents: this.absoluteReagents,
+                mode: this.selectivityModel
+            }
+            if (!!this.reagents) {
+                data.reagents = this.reagents
+            }
+            if (!!this.solvent) {
+                data.solvent = this.solvent
+            }
+            return data
         },
         constructImpurityPostData() {
             var data = {
@@ -226,6 +249,10 @@ var app = new Vue({
                         this.clearImpurity()
                         this.impurityPredict()
                         break;
+                    case 'selectivity':
+                        this.clearSelectivity()
+                        this.selectivityPredict()
+                        break;
                     default:
                         alert('unsupported mode')
                 }
@@ -265,6 +292,15 @@ var app = new Vue({
                 this.forwardPredict()
             })
         },
+        goToSelectivity(smiles) {
+            window.history.pushState({mode: 'selectivity'}, 'selectivity', '?mode=selectivity')
+            this.canonicalizeAll()
+                .then(() => {
+                    this.product = smiles
+                    this.mode = 'selectivity'
+                    this.selectivityPredict()
+                })
+        },
         goToImpurity(smiles) {
             window.history.pushState({mode: 'impurity'}, 'impurity', '?mode=impurity')
             this.canonicalizeAll()
@@ -282,6 +318,21 @@ var app = new Vue({
                 this.contextResults = json.output
             }
             this.celeryTaskAsyncPost('context', postData, callback)
+        },
+        selectivityPredict() {
+            showLoader()
+            this.selectivityResults = []
+            var postData = this.constructSelectivityPostData()
+            var callback = (json) => {
+                var output = json.output
+                if (typeof output == 'string') {
+                    alert(output)
+                }
+                else {
+                    this.selectivityResults = output
+                }
+            }
+            this.celeryTaskAsyncPost('general-selectivity', postData, callback)
         },
         evaluateIndex(index) {
             this.$set(this.contextResults[index], 'evaluating', true)
@@ -387,6 +438,20 @@ var app = new Vue({
             var dlAnchorElem = document.getElementById('downloadForwardAnchorElem')
             dlAnchorElem.setAttribute("href",     dataStr     )
             dlAnchorElem.setAttribute("download", "askcos_forward_export.csv")
+            dlAnchorElem.click()
+        },
+        downloadSelectivityResults() {
+            if (!!!this.selectivityResults) {
+                alert('There are no regio-selectivity results to download!')
+            }
+            var downloadData = "Rank,SMILES,Probability\n"
+            this.selectivityResults.forEach((res) => {
+                downloadData += `${res.rank},${res.smiles},${res.prob}\n`
+            })
+            var dataStr = "data:text/json;charset=utf-8," + downloadData
+            var dlAnchorElem = document.getElementById('downloadSelectivityAnchorElem')
+            dlAnchorElem.setAttribute("href",     dataStr     )
+            dlAnchorElem.setAttribute("download", "askcos_regioselectivity_export.csv")
             dlAnchorElem.click()
         },
         downloadImpurityResults() {
