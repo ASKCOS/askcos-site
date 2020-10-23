@@ -43,23 +43,21 @@
                     <div class="dropdown-menu" aria-labelledby="modulesDropdown">
                         <a class="dropdown-item" href="{% url 'modules' %}">Overview</a>
                         <div class="dropdown-divider"></div>
-                        <h5 class="dropdown-header"><b>Modules</b></h5>
-                        <a class="dropdown-item" href="{% url 'retro_network' %}">Interactive Path Planning</a>
-                        <a class="dropdown-item" href="{% url 'retro_interactive_mcts' %}">Tree Builder (Path Planning)</a>
-                        <a class="dropdown-item" href="/synth_interactive/">Synthesis Predictor</a>
-                        <a class="dropdown-item" href="{% url 'site_prediction' %}">Site Selectivity</a>
+                        <h5 class="dropdown-header"><b>Retrosynthesis</b></h5>
+                        <a class="dropdown-item" href="{% url 'retro_network' %}">Interactive Path Planning/Tree Builder</a>
+                        <div class="dropdown-divider"></div>
+                        <h5 class="dropdown-header"><b>Forward Synthesis</b></h5>
+                        <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=context">Condition Recommendation</a>
+                        <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=forward">Synthesis Prediction</a>
+                        <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=impurity">Impurity Prediction</a>
+                        <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=selectivity">Regio-selectivity Prediction</a>
+                        <a class="dropdown-item" href="{% url 'site_prediction' %}">Aromatic Site Selectivity</a>
+                        <div class="dropdown-divider"></div>
+                        <h5 class="dropdown-header"><b>Utilities</b></h5>
                         <a class="dropdown-item" href="{% url 'scscoring' %}">SCScore Evaluator</a>
                         <a class="dropdown-item" href="{% url 'buyables' %}">Buyable Look-up</a>
                         <a class="dropdown-item" href="{% url 'atom_mapping' %}">Atom Mapping</a>
                         <a class="dropdown-item" href="{% url 'draw' %}">Drawing</a>
-
-                        <!-- Keep these links around for now, to remove later -->
-                        <div class="dropdown-divider"></div>
-                        <h5 class="dropdown-header"><b>Legacy Modules</b></h5>
-                        <a class="dropdown-item" href="/retro/">One-step Retrosynthesis</a>
-                        <a class="dropdown-item" href="/synth_interactive/?mode=context">Context Recommendation</a>
-                        <a class="dropdown-item" href="/synth_interactive/?mode=forward">Forward Prediction</a>
-                        <a class="dropdown-item" href="/synth_interactive/?mode=impurity">Impurity Prediction</a>
                     </div>
                 </li>
 
@@ -74,15 +72,7 @@
                 </li>
 
                 {% if user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="resultsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <span class="fa fa-cloud mr-1"></span>My Results
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="resultsDropdown">
-                        <a class="dropdown-item" href="#" id="savepage">Save this page</a>
-                        <a class="dropdown-item" href="/my-results/">View results</a>
-                    </div>
-                </li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'my_results' %}"><span class="fa fa-cloud mr-1"></span>My Results</a></li>
 
                 <li class="nav-item"><a class="nav-link" href="{% url 'user_banlist' %}"><span class="fa fa-ban mr-1"></span>My Banlist</a></li>
                 {% endif %}
