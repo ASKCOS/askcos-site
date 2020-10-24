@@ -1350,8 +1350,8 @@ var app = new Vue({
             }
             // console.log("ketcher selection", selectionAtomsArray);
 
-            var filterResult = reactingAtomsArray.every(element => selectionAtomsArray.includes(element));
-            // console.log("are atoms subset of ketcher?", filterResult)
+            var filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
+            // console.log("is there some overlap between selected atoms and reacting atoms?", filterResult)
 
             return filterResult;
         },

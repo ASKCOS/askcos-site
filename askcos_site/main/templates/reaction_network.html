@@ -927,7 +927,7 @@ It is roughly how long it will take for results to be returned, however there is
                                             </div>
                                         </div>
                                         <div class="form-group mb-2">
-                                            <i title="Displays only reactions in which changed atoms are a subset of the selected atoms in Ketcher."
+                                            <i title="Displays only reactions that have overlap between their changed atoms, and the selected atoms in Ketcher."
                                             class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                             <label class="mr-2" for="filterReactingAtoms">Filter for reacting atoms</label>
                                             <input id="filterReactingAtoms" type="checkbox" ref="filterReactingAtoms" v-model="filterReactingAtoms" @change="applyFilterReactingAtoms" {{ filterReactingAtoms }}/>
