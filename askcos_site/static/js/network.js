@@ -1341,9 +1341,12 @@ var app = new Vue({
             // console.log("reacting atoms", reactingAtomsArray)            
 
             var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
-            var selectionAtomsArray = [];
-            if (selection) {
+            if (selection && selection.atoms) {
                 var selectionAtomsArray = Array.from(selection.atoms.values());
+            }
+            else {
+                // No atoms are selected in Ketcher
+                var selectionAtomsArray = []
             }
             // console.log("ketcher selection", selectionAtomsArray);
 
