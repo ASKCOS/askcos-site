@@ -1337,8 +1337,8 @@ var app = new Vue({
             }
 
             var reactingAtoms = result.reacting_atoms.map((el) => el-1);
-            var reactingAtomsAray = Array.from(reactingAtoms.values());
-            // console.log("reacting atoms", reactingAtomsAray)            
+            var reactingAtomsArray = Array.from(reactingAtoms.values());
+            // console.log("reacting atoms", reactingAtomsArray)            
 
             var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
             var selectionAtomsArray = [];
@@ -1347,7 +1347,7 @@ var app = new Vue({
             }
             // console.log("ketcher selection", selectionAtomsArray);
 
-            var filterResult = reactingAtomsAray.every(element => selectionAtomsArray.includes(element));
+            var filterResult = reactingAtomsArray.every(element => selectionAtomsArray.includes(element));
             // console.log("are atoms subset of ketcher?", filterResult)
 
             return filterResult;
