@@ -113,6 +113,7 @@ urlpatterns = [
 
     # Ketcher
     re_path(r'^ketcher/iframe/$', views.ketcher_iframe, name='ketcher_iframe'),
+    re_path(r'^ketcher/iframe/min/$', views.ketcher_iframe_min, name='ketcher_iframe_min'),
 
     # API endpoints
     path('api/', include('askcos_site.api.urls')),

@@ -376,6 +376,7 @@ function getVisjsUserOptions(obj) {
 
 const ippSettingsDefault = {
     allowCluster: true,
+    filterReactingAtoms: false,
     allowResolve: false,
     isHighlightAtom: true,
     reactionLimit: 5,
@@ -411,6 +412,8 @@ var app = new Vue({
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
+        filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
+        refreshFilter: 1,
         allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
         showLoadModal: false,
@@ -576,6 +579,7 @@ var app = new Vue({
             if (!storageAvailable('localStorage')) return
             const obj = {
                 allowCluster: this.allowCluster,
+                filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
                 allowResolve: this.allowResolve,
                 isHighlightAtom: this.isHighlightAtom,
                 reactionLimit: this.reactionLimit,
@@ -995,6 +999,7 @@ var app = new Vue({
                         app.initClusterShowCard(smi); // must be called immediately after adding results
                         addReactions(app.results[smi], app.data.nodes.get(NIL_UUID), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
+                        setSmilesDrawingKetcherMin(smi);
                         app.lookupPrice(smi)
                             .then(result => {
                                 app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
@@ -1318,6 +1323,33 @@ var app = new Vue({
             this.selected = undefined;
             this.selected = prevSelected;
         },
+        applyFilterReactingAtoms: function() {
+            // Not in use right now, but could come in handy later.
+            return 
+        },
+        checkFilter: function(result)
+        {
+            // If Ketcher is not active, there is no way for user to interact with filter;
+            // the filter should pass
+            if (!$('#ketcher-iframe-min')[0]) {
+                return true;
+            }
+
+            var reactingAtoms = result.reacting_atoms.map((el) => el-1);
+            var reactingAtomsArray = Array.from(reactingAtoms.values());
+
+            var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
+            if (selection && selection.atoms) {
+                var selectionAtomsArray = Array.from(selection.atoms.values());
+            }
+            else {
+                // No atoms are selected in Ketcher
+                var selectionAtomsArray = []
+            }
+
+            var filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
+            return filterResult;
+        },
         showInfo: function(obj) {
             var nodeId = obj.nodes[obj.nodes.length-1];
             var node = this.data.nodes.get(nodeId);
@@ -1325,6 +1357,7 @@ var app = new Vue({
                 return
             }
             this.selected = node;
+            setSmilesDrawingKetcherMin(node.smiles);
             this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
                 this.lookupPrice(node.smiles)
