@@ -382,6 +382,7 @@ const ippSettingsDefault = {
     reactionLimit: 5,
     sortingCategory: "score",
     sortOrderAscending: false,
+    selectivityModel: "qm_GNN",
     clusterOptions: {
         allowRemovePrecursor: true,
         feature: 'original',
@@ -489,6 +490,7 @@ var app = new Vue({
         selected: null,
         isHighlightAtom: ippSettingsDefault.isHighlightAtom,
         reactionLimit: ippSettingsDefault.reactionLimit,
+        selectivityModel: ippSettingsDefault.selectivityModel,
         sortingCategory: ippSettingsDefault.sortingCategory,
         sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
@@ -583,7 +585,9 @@ var app = new Vue({
                 allowResolve: this.allowResolve,
                 isHighlightAtom: this.isHighlightAtom,
                 reactionLimit: this.reactionLimit,
+                selectivityModel: this.selectivityModel,
                 sortingCategory: this.sortingCategory,
+                sortOrderAscending: this.sortOrderAscending,
                 clusterOptions: this.clusterOptions,
             }
             localStorage.setItem('ippSettings', encodeURIComponent(JSON.stringify(obj)))
@@ -1842,7 +1846,7 @@ var app = new Vue({
                 mapped: true,
                 all_outcomes: true,
                 verbose: false,
-                mode: 'GNN'
+                mode: this.selectivityModel,
             }
             fetch(url, {
                 method: 'POST',
