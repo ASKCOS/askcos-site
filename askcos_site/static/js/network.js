@@ -973,7 +973,6 @@ var app = new Vue({
             this.saveTbSettings()
             this.saveNetworkOptions()
             this.saveIppSettings()
-            // console.log('changeTarget')
             this.validatesmiles(this.target, !this.allowResolve)
             .then(isvalidsmiles => {
                 if (isvalidsmiles) {
@@ -1006,7 +1005,7 @@ var app = new Vue({
                                 app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
                                 app.network.selectNodes([NIL_UUID]);
                                 app.showInfo({'nodes': [NIL_UUID]});
-                            })
+                        })
                     }
                     this.requestRetro(smi, callback);
                 } else {
@@ -1325,7 +1324,7 @@ var app = new Vue({
             this.selected = prevSelected;
         },
         applyFilterReactingAtoms: function() {
-            // console.log("filterReactingAtoms button pressed");
+            // Not in use right now, but could come in handy later.
             return 
         },
         checkFilter: function(result)
@@ -1338,7 +1337,6 @@ var app = new Vue({
 
             var reactingAtoms = result.reacting_atoms.map((el) => el-1);
             var reactingAtomsArray = Array.from(reactingAtoms.values());
-            // console.log("reacting atoms", reactingAtomsArray)            
 
             var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
             if (selection && selection.atoms) {
@@ -1348,11 +1346,8 @@ var app = new Vue({
                 // No atoms are selected in Ketcher
                 var selectionAtomsArray = []
             }
-            // console.log("ketcher selection", selectionAtomsArray);
 
             var filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
-            // console.log("is there some overlap between selected atoms and reacting atoms?", filterResult)
-
             return filterResult;
         },
         showInfo: function(obj) {

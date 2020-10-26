@@ -121,17 +121,15 @@ function setSmilesDrawingKetcherMin(smi) {
                 setTimeout(setMolfileKetcherMin, 100)
                 return;
             }
-            // console.log("ready!")
 
             $('#ketcher-iframe-min')[0].contentWindow.ketcher.setMolecule(molfile);
             function resizeKetcherIframe () {
                 boundingBox = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.struct().getCoordBoundingBox()
                 boundingBoxWidth = boundingBox.max.x - boundingBox.min.x
                 boundingBoxHeight = boundingBox.max.y - boundingBox.min.y
-                // console.log("bound dims", boundingBoxWidth, boundingBoxHeight)
+                // 40's a bit of a magic number; I think it comes from a scale factor in Ketcher.
                 baseWidth = Math.ceil(boundingBoxWidth * 40)
                 baseHeight  = Math.ceil(boundingBoxHeight * 40)
-                // console.log("width, height", baseWidth, baseHeight)
 
                 // The nodes used to render the Ketcher canvas are like this:
                 // iframe --> div[role=application] --> main[role=application] --> svg
@@ -160,6 +158,8 @@ function setSmilesDrawingKetcherMin(smi) {
             if (!$('#ketcher-iframe-min')[0].contentWindow.document.onclick) {
                 $('#ketcher-iframe-min')[0].contentWindow.document.onclick = function(e) {
                     console.log('refreshing filter')
+                    // The change to refreshFilter forces a recomputation of the v-if's that use it.
+                    // (The result of the filter can change based on the Ketcher selection changing.)
                     app.refreshFilter += 1;
                 }
             }
