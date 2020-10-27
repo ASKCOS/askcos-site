@@ -33,10 +33,10 @@ redis_url = 'redis://{password}{host}:{port}'.format(
 
 rabbit_host = os.environ.get('RABBIT_HOST', 'localhost')
 rabbit_port = os.environ.get('RABBITMQ_NODE_PORT', '5672')
-rabbit_user = os.environ.get('RABBIT_USER', 'guest')
-rabbit_password = os.environ.get('RABBIT_PASSWORD', 'guest')
-rabbit_url = 'amqp://{user}:{password}@{host}:{port}'.format(
-    user=rabbit_user,
+rabbit_username = os.environ.get('RABBITMQ_USERNAME', 'guest')
+rabbit_password = os.environ.get('RABBITMQ_PASSWORD', 'guest')
+rabbit_url = 'amqp://{username}:{password}@{host}:{port}'.format(
+    username=rabbit_username,
     password=rabbit_password,
     host=rabbit_host,
     port=rabbit_port,
