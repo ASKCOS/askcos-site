@@ -17,7 +17,7 @@ class PathRankingSerializer(serializers.Serializer):
 
 class PathRankingAPIView(CeleryTaskAPIView):
     """
-    API endpoint for fast-filter prediction task.
+    API endpoint for retrosynthetic path ranking task.
 
     Method: POST
 
