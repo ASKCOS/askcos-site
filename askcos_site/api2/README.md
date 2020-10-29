@@ -10,7 +10,9 @@
     - [Retrosynthetic prediction](#retrosynthetic-prediction)
     - [Site selectivity prediction](#site-selectivity-prediction)
     - [General selectivity prediction](#general-selectivity-prediction)
+    - [Retrosynthetic path ranking prediction](#retrosynthetic-path-ranking-prediction)
     - [Retrosynthetic tree builder tool](#retrosynthetic-tree-builder-tool)
+    - [Quantum descriptor prediction](#quantum-descriptor-prediction)
 - [SMILES API](#smiles-api)
     - [Canonicalize](#canonicalize)
     - [Validate](#validate)
@@ -29,6 +31,8 @@
     - [Main results endpoint](#main-results-endpoint)
     - [Specific result endpoint](#specific-result-endpoint)
     - [Check result endpoint](#check-result-endpoint)
+    - [IPP result endpoint](#ipp-result-endpoint)
+    - [Tree result endpoint](#tree-result-endpoint)
 - [Banlist API](#banlist-api)
     - [Main banlist endpoints](#main-banlist-endpoints)
     - [Specific banlist entry endpoints](#specific-banlist-entry-endpoints)
@@ -238,6 +242,26 @@ Returns:
 - `task_id`: celery task ID
 
 
+### Retrosynthetic path ranking prediction
+API endpoint for retrosynthetic path ranking task.
+
+URL: `/api/v2/path-ranking/`
+
+Method: POST
+
+Parameters:
+
+- `trees` (str): list of trees to rank as a json string
+- `cluster` (bool, optional): whether or not to cluster pathways
+- `cluster_method` (str, optional): hdbscan or kmeans
+- `min_samples` (int, optional): min samples for hdbscan
+- `min_cluster_size` (int, optional): min cluster size for hdbscan
+
+Returns:
+
+- `task_id`: celery task ID
+
+
 ### Retrosynthetic tree builder tool
 API endpoint for tree builder prediction task.
 
@@ -273,6 +297,12 @@ Parameters:
 - `buyables_source` (list[str], optional): list of source(s) to consider when looking up buyables
 - `return_first` (bool, optional): whether to return upon finding the first pathway
 - `max_trees` (int, optional): maximum number of pathways to return
+- `score_trees` (bool, optional): whether to score trees using pathway ranking model
+- `cluster_trees` (bool, optional): whether to cluster trees
+- `cluster_method` (bool, optional): method to use for clustering, supports 'hdbscan' or 'kmeans'
+- `cluster_min_samples` (bool, optional): minimum number of samples when using 'hdbscan'
+- `cluster_min_size` (bool, optional): minimum cluster size when using 'hdbscan'
+- `json_format` (str, optional): return format for trees, either 'treedata' or 'nodelink'
 - `store_results` (bool, optional): whether to permanently save this result
 - `description` (str, optional): description to associate with stored result
 - `banned_reactions` (list[str], optional): list of reactions to not consider
@@ -505,6 +535,7 @@ Method: GET
 Returns:
 
 - `template_sets`: list of available template sets
+- `attributes`: list of attribute names for each available template set
 
 ## Saved Results API
 The API endpoints in this section are for accessing saved results.
@@ -556,6 +587,36 @@ Method: GET
 Returns:
 
 - `state`: current state of the job
+- `error`: error message if encountered
+
+### IPP result endpoint
+API endpoint which processes results for display in IPP.
+Returns a single tree obtained by merging individual pathways and a dictionary of precursor results.
+The result ID can be obtained from the main results endpoint.
+
+URL: `/api/v2/results/<result id>/ipp/`
+
+Method: GET
+
+Returns:
+
+- `id`: the requested result id
+- `result`: the requested result, containing `settings` and `result`
+- `error`: error message if encountered
+
+### Tree result endpoint
+API endpoint which processes results for display in tree results page.
+Returns list of trees in nodelink format.
+The result ID can be obtained from the main results endpoint.
+
+URL: `/api/v2/results/<result id>/tree/`
+
+Method: GET
+
+Returns:
+
+- `id`: the requested result id
+- `result`: the requested result, containing `settings` and `result`
 - `error`: error message if encountered
 
 
