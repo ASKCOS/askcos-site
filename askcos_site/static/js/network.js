@@ -3,13 +3,15 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+
 function updateObj(dest, src) {
     // take properties of src and overwrite matching properties of dest
     // ignores properties in src if they do not exist in dest
     // modifies dest object in place
     for (let p in src) {
         if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
-            if ( typeof dest[p] === 'object' ) {
+            if ( typeof dest[p] === 'object' && !Array.isArray(dest[p]) ) {
                 updateObj(dest[p], src[p])
             } else {
                 dest[p] = src[p];
@@ -44,43 +46,6 @@ function subSet(s, otherSet) {
     }
 };
 
-function ctaToNode(cta, id) {
-    if (cta.is_reaction) {
-        return {
-            id: id,
-            graphId: cta.id,
-            plausibility: cta.plausibility,
-            numExamples: cta.num_examples,
-            reactionSmiles: cta.smiles,
-            templateIds: cta.tforms,
-            templateScore: cta.template_score,
-            retroscore: cta.template_score,
-            type: 'reaction',
-        }
-    }
-    else {
-        let node = {
-            id: id,
-            graphId: cta.id,
-            asProduct: cta.as_product,
-            asReactant: cta.as_reactant,
-            type: 'chemical',
-            ppg: cta.ppg,
-            smiles: cta.smiles,
-            image: "/api/v2/draw/?smiles="+encodeURIComponent(cta.smiles),
-            shape: 'image',
-            borderWidth: 2
-        }
-        if (node.ppg == 0) {
-            node.color = {border: '#880000'}
-        }
-        else {
-            node.color = {border: '#008800'}
-        }
-        return node
-    }
-}
-
 function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
     var added = 0
     for (r of reactions) {
@@ -95,7 +60,7 @@ function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
 }
 
 function addReaction(reaction, sourceNode, nodes, edges) {
-    var rId = nodes.max('id').id+1;
+    let rId = uuidv4();
     var node = {
         id: rId,
         label: '#'+reaction['rank'],
@@ -112,7 +77,8 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     if ('outcomes' in reaction) {
         node['outcomes'] = reaction['outcomes'].split('.')
         node['selectivity'] = new Array(node.outcomes.length)
-        node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
+        node['mapped_precursors'] = reaction.mapped_precursors
+        node['mapped_outcomes'] = reaction['mapped_outcomes']
         node['borderWidth'] = 2
         node['color'] = { border: '#ff4444' }
         node['title'] = "Selectivity warning! Select this node to see more details"
@@ -123,12 +89,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     }
 
     nodes.add(node)
-    if (edges.max('id')) {
-        var eId = edges.max('id').id+1
-    }
-    else {
-        var eId = 0
-    }
+    let eId = uuidv4()
 
     edges.add({
         id: eId,
@@ -154,27 +115,19 @@ function addReaction(reaction, sourceNode, nodes, edges) {
     })
     for (n in reaction['smiles_split']) {
         var smi = reaction['smiles_split'][n];
-        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
-        .then(resp => resp.json())
-        .then(json => {
-            var mysmi = json['search'];
-            if (json.buyables.length > 0) {
-                var ppg = json.buyables[0].ppg
-                var buyable = true
-                var source = json.buyables[0].source
-            }
-            else {
-                var ppg = "not buyable"
-                var buyable = false
-                var source = ''
-            }
+        app.lookupPrice(smi)
+        .then(result => {
+            const mysmi = result.search;
+            const ppg = result.ppg
+            const buyable = ppg !== 'not buyable'
+            const source = result.source
             if (buyable) {
                 var color = "#008800"
             }
             else {
                 var color = "#880000"
             }
-            var nId = nodes.max('id').id+1;
+            let nId = uuidv4();
             nodes.add({
                 id: nId,
                 smiles: mysmi,
@@ -189,7 +142,7 @@ function addReaction(reaction, sourceNode, nodes, edges) {
                 }
             })
             edges.add({
-                id: edges.max('id').id+1,
+                id: uuidv4(),
                 from: rId,
                 to: nId,
                 scaling: {
@@ -287,10 +240,18 @@ function clusteredit_dragleave_handler(event) {
 
 const tbSettingsDefault = {
     quick: "normal",
+    version: 1,
     maxDepth: 5,
     maxBranching: 20,
     expansionTime: 60,
+    maxChemicals: null,
+    maxReactions: null,
+    maxIterations: null,
+    buyableLogic: 'and',
+    maxPPGLogic: 'none',
     maxPPG: 100,
+    maxScscoreLogic: 'none',
+    maxScscore: 0,
     chemicalPropertyLogic: 'none',
     chemicalPropertyC: 0,
     chemicalPropertyN: 0,
@@ -299,7 +260,10 @@ const tbSettingsDefault = {
     chemicalPopularityLogic: 'none',
     chemicalPopularityReactants: 0,
     chemicalPopularityProducts: 0,
+    buyablesSource: [],
+    buyablesSourceAll: true,
     returnFirst: false,
+    maxTrees: 500,
     templateSet: "reaxys",
     templateSetVersion: 1,
     precursorScoring: "RelevanceHeuristic",
@@ -307,6 +271,7 @@ const tbSettingsDefault = {
     maxCumProb: 0.999,
     minPlausibility: 0.1,
     allowSelec: true,
+    attributeFilter: []
 };
 
 const visjsOptionsDefault = {
@@ -411,10 +376,13 @@ function getVisjsUserOptions(obj) {
 
 const ippSettingsDefault = {
     allowCluster: true,
+    filterReactingAtoms: false,
     allowResolve: false,
     isHighlightAtom: true,
     reactionLimit: 5,
     sortingCategory: "score",
+    sortOrderAscending: false,
+    selectivityModel: "qm_GNN",
     clusterOptions: {
         allowRemovePrecursor: true,
         feature: 'original',
@@ -440,9 +408,13 @@ var app = new Vue({
         },
         results: {},
         templateSets: {},
+        templateAttributes: {},
+        buyablesSources: [],
         templateNumExamples: {},
         nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
+        filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
+        refreshFilter: 1,
         allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
         showLoadModal: false,
@@ -497,6 +469,7 @@ var app = new Vue({
         clusterPopoutModalData: {
             optionsDisplay : {
                 showScore: false,
+                showSCScore: false,
                 showNumExample: true,
                 showTemplateScore: false,
                 showPlausibility: true,
@@ -517,7 +490,9 @@ var app = new Vue({
         selected: null,
         isHighlightAtom: ippSettingsDefault.isHighlightAtom,
         reactionLimit: ippSettingsDefault.reactionLimit,
+        selectivityModel: ippSettingsDefault.selectivityModel,
         sortingCategory: ippSettingsDefault.sortingCategory,
+        sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
     },
     beforeMount: function() {
@@ -527,8 +502,7 @@ var app = new Vue({
     created: function() {
         window.addEventListener('resize', this.handleResize);
         this.handleResize();
-    },
-    mounted: function() {
+
         this.loadNetworkOptions()
         this.loadTarget()
         this.loadTbSettings()
@@ -550,6 +524,7 @@ var app = new Vue({
         fetch('/api/v2/template/sets/')
             .then(resp => resp.json())
             .then(json => {
+                this.templateAttributes = json.attributes
                 for (templateSet of json.template_sets) {
                     this.templateSets[templateSet] = { versions: [] }
                     fetch('/api/v2/retro/models/?template_set='+templateSet)
@@ -561,6 +536,14 @@ var app = new Vue({
                         })
                 }
             })
+        fetch('/api/v2/buyables/sources/')
+            .then(resp => resp.json())
+            .then(json => {this.buyablesSources = json.sources})
+    },
+    mounted: function() {
+        setTimeout(() => {
+            document.querySelector('#splash').classList.replace("d-flex", "d-none")
+        }, 1000)
     },
     destroyed: function() {
         window.removeEventListener('resize', this.handleResize);
@@ -598,10 +581,13 @@ var app = new Vue({
             if (!storageAvailable('localStorage')) return
             const obj = {
                 allowCluster: this.allowCluster,
+                filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
                 allowResolve: this.allowResolve,
                 isHighlightAtom: this.isHighlightAtom,
                 reactionLimit: this.reactionLimit,
+                selectivityModel: this.selectivityModel,
                 sortingCategory: this.sortingCategory,
+                sortOrderAscending: this.sortOrderAscending,
                 clusterOptions: this.clusterOptions,
             }
             localStorage.setItem('ippSettings', encodeURIComponent(JSON.stringify(obj)))
@@ -703,16 +689,25 @@ var app = new Vue({
             var body = {
                 description: description,
                 smiles: this.target,
+                version: this.tb.settings.version,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
                 max_depth: this.tb.settings.maxDepth,
                 max_branching: this.tb.settings.maxBranching,
                 expansion_time: this.tb.settings.expansionTime,
+                max_chemicals: this.tb.settings.maxChemicals,
+                max_reactions: this.tb.settings.maxReactions,
+                max_iterations: this.tb.settings.maxIterations,
+                buyable_logic: this.tb.settings.buyableLogic,
+                max_ppg_logic: this.tb.settings.maxPPGLogic,
                 max_ppg: this.tb.settings.maxPPG,
+                max_scscore_logic: this.tb.settings.maxScscoreLogic,
+                max_scscore: this.tb.settings.maxScscore,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,
                 return_first: this.tb.settings.returnFirst,
+                max_trees: this.tb.settings.maxTrees,
                 store_results: true,
                 chemical_property_logic: this.tb.settings.chemicalPropertyLogic,
                 max_chemprop_c: this.tb.settings.chemicalPropertyC,
@@ -721,7 +716,11 @@ var app = new Vue({
                 max_chemprop_h: this.tb.settings.chemicalPropertyH,
                 chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
                 min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
-                min_chempop_products: this.tb.settings.chemicalPopularityProducts
+                min_chempop_products: this.tb.settings.chemicalPopularityProducts,
+                json_format: 'nodelink',
+            }
+            if (!this.tb.settings.buyablesSourceAll) {
+                body.buyables_source = this.tb.settings.buyablesSource
             }
             fetch(url, {
                 method: 'POST', 
@@ -818,6 +817,13 @@ var app = new Vue({
                     }
                 });
         },
+        addAttributeFilter: function() {
+            this.tb.settings.attributeFilter.push({
+                name: this.templateAttributes[this.tb.settings.templateSet][0],
+                logic: '>',
+                value: 0.5
+            })
+        },
         requestRetro: function(smiles, callback) {
             showLoader()
             const url = '/api/v2/retro/';
@@ -825,7 +831,7 @@ var app = new Vue({
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
-                precursor_prioritization: this.tb.settings.precursorScoring,
+                precursor_prioritizer: this.tb.settings.precursorScoring,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,
@@ -835,6 +841,7 @@ var app = new Vue({
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
                 selec_check: this.tb.settings.allowSelec,
+                attribute_filter: this.tb.settings.attributeFilter,
             };
             fetch(url,{
                 method: 'POST',
@@ -886,9 +893,8 @@ var app = new Vue({
         },
         resolveChemName: function(name) {
             if (this.enableResolve && this.allowResolve) {
-                var url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
-                console.log(url)
-                var text = fetch(url)
+                let url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
+                return fetch(url)
                     .then(resp => {
                         if (resp.status == 404) {
                             throw Error(resp.statusText);
@@ -899,15 +905,24 @@ var app = new Vue({
                     .catch(err => {
                         throw Error('Cannot resolve "'+name+'" to smiles: '+err.message);
                     })
-                return text;
             } else {
                 throw Error('Resolving chemical name using external server is not allowed.');
             }
         },
-        validatesmiles: function(s, iswarning) {
-            var url = '/api/validate-chem-name/?smiles='+encodeURIComponent(s)
-            console.log(url)
-            var res = fetch(url)
+        validatesmiles: function(smiles, iswarning) {
+            return fetch(
+                '/api/v2/rdkit/smiles/validate/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        smiles: smiles
+                    })
+                }
+            )
                 .then(resp => {
                     if (!resp.ok) {
                         throw 'Unable to connect to server: error code '+resp.status;
@@ -926,7 +941,36 @@ var app = new Vue({
                         return true
                     }
                 })
-            return res;
+        },
+        lookupPrice: function(smiles) {
+            let url = `/api/v2/buyables/?q=${encodeURIComponent(smiles)}&canonicalize=True`
+            if (!this.tb.settings.buyablesSourceAll) {
+                if (this.tb.settings.buyablesSource.length) {
+                    this.tb.settings.buyablesSource.forEach(source => {url += '&source=' + source})
+                } else{
+                    url += '&source=[]'
+                }
+            }
+            return fetch(url)
+                .then(resp => resp.json())
+                .then(json => {
+                    let result = {
+                        'search': json.search,
+                        'ppg': 'not buyable',
+                        'source': '',
+                    }
+                    if (json.result.length > 0) {
+                        result.ppg = json.result[0].ppg;
+                        result.source = json.result[0].source;
+                        for (entry of json.result) {
+                            if (entry.ppg < result.ppg) {
+                                result.ppg = entry.ppg;
+                                result.source = entry.source;
+                            }
+                        }
+                    }
+                    return result
+                })
         },
         changeTarget: function() {
             showLoader();
@@ -941,8 +985,8 @@ var app = new Vue({
                     return this.resolveChemName(this.target)
                 }
             })
-            .then(x => {
-                this.target = x;
+            .then(smiles => this.canonicalize(smiles, 'target'))
+            .then(() => {
                 this.saveTarget()
                 if (this.target != undefined) {
                     const smi = this.target;
@@ -957,20 +1001,14 @@ var app = new Vue({
                         app.network.on('deselectNode', app.clearSelection);
                         app.$set(app.results, smi, precursors);
                         app.initClusterShowCard(smi); // must be called immediately after adding results
-                        addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
+                        addReactions(app.results[smi], app.data.nodes.get(NIL_UUID), app.data.nodes, app.data.edges, app.reactionLimit);
                         app.getTemplateNumExamples(app.results[smi]);
-                        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
-                            .then(resp => resp.json())
-                            .then(json => {
-                                if (json.buyables.length > 0) {
-                                    var ppg = json.buyables[0].ppg
-                                }
-                                else {
-                                    var ppg = "not buyable"
-                                }
-                                app.data.nodes.update({id: 0, ppg: ppg});
-                                app.network.selectNodes([0]);
-                                app.selected = app.data.nodes.get(0);
+                        setSmilesDrawingKetcherMin(smi);
+                        app.lookupPrice(smi)
+                            .then(result => {
+                                app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
+                                app.network.selectNodes([NIL_UUID]);
+                                app.showInfo({'nodes': [NIL_UUID]});
                         })
                     }
                     this.requestRetro(smi, callback);
@@ -1044,7 +1082,7 @@ var app = new Vue({
                 addReactions(app.results[smi], app.data.nodes.get(nodeId), app.data.nodes, app.data.edges, app.reactionLimit);
                 app.getTemplateNumExamples(app.results[smi]);
                 app.selected = node;
-                app.reorderResults();
+                app.handleSortingChange();
                 app.network.fit()
             }
             this.requestRetro(smi, callback);
@@ -1204,22 +1242,21 @@ var app = new Vue({
             setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
         },
         collapseNode: function() {
-            var selected = this.network.getSelectedNodes();
-            var type = typeof selected[0];
-            if (type == "string") {
-                this.network.openCluster(selected[0])
-            }
-            else {
-                var forCluster = allChildrenOf(selected[0], app.data.nodes, app.data.edges)
-                var options = {
-                    joinCondition:function(nodeOptions) {
-                        if (forCluster.includes(nodeOptions.id) | nodeOptions.id==selected[0]) {
-                            return true;
-                        }
-                    }
+            let selected = this.network.getSelectedNodes();
+            selected.forEach(node => {
+                if (this.network.clustering.isCluster(node)) {
+                    this.network.openCluster(node)
                 }
-                this.network.clustering.cluster(options);
-            }
+                else {
+                    let forCluster = allChildrenOf(node, app.data.nodes, app.data.edges);
+                    let options = {
+                        joinCondition: (nodeOptions) => {
+                            return forCluster.includes(nodeOptions.id) || nodeOptions.id === node
+                        }
+                    };
+                    this.network.clustering.cluster(options);
+                }
+            })
         },
         addFromResults: function(selected, reaction) {
             if (reaction.inViz) {
@@ -1247,10 +1284,23 @@ var app = new Vue({
         },
         resetSortingCategory: function() {
             this.sortingCategory = 'score'
+            this.handleSortingChange()
+        },
+        handleSortingChange: function() {
+            this.selectSortingOrder()
             this.reorderResults()
+        },
+        selectSortingOrder: function() {
+            if (["rms_molwt", "num_rings", "scscore", "template_rank"].includes(this.sortingCategory) || (this.sortingCategory === 'score' && this.tb.settings.precursorScoring === 'SCScore')) {
+                this.sortOrderAscending = true
+            }
+            else {
+                this.sortOrderAscending = false
+            }
         },
         reorderResults: function() {
             var sortingCategory = this.sortingCategory;
+
             if (this.selected.type != 'chemical') {
                 return
             }
@@ -1259,14 +1309,50 @@ var app = new Vue({
             if (typeof(results) == 'undefined') {
                 return
             }
+            var cmp
+            if (this.sortOrderAscending) {
+                cmp = function(a, b) {return a - b}
+            } else {
+                cmp = function(a, b) {return b - a}
+            }
             results.sort((a, b) => {
                 var a_ = a[sortingCategory] == undefined ? 0 : a[sortingCategory];
                 var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
-                return b_ - a_;
+                if (a_ == b_) {
+                    return a.rank - b.rank
+                }
+                return cmp(a_, b_);
             })
             var prevSelected = this.selected;
             this.selected = undefined;
             this.selected = prevSelected;
+        },
+        applyFilterReactingAtoms: function() {
+            // Not in use right now, but could come in handy later.
+            return 
+        },
+        checkFilter: function(result)
+        {
+            // If Ketcher is not active, there is no way for user to interact with filter;
+            // the filter should pass
+            if (!$('#ketcher-iframe-min')[0]) {
+                return true;
+            }
+
+            var reactingAtoms = result.reacting_atoms.map((el) => el-1);
+            var reactingAtomsArray = Array.from(reactingAtoms.values());
+
+            var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
+            if (selection && selection.atoms) {
+                var selectionAtomsArray = Array.from(selection.atoms.values());
+            }
+            else {
+                // No atoms are selected in Ketcher
+                var selectionAtomsArray = []
+            }
+
+            var filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
+            return filterResult;
         },
         showInfo: function(obj) {
             var nodeId = obj.nodes[obj.nodes.length-1];
@@ -1275,15 +1361,14 @@ var app = new Vue({
                 return
             }
             this.selected = node;
-            this.reorderResults();
+            setSmilesDrawingKetcherMin(node.smiles);
+            this.handleSortingChange();
             if (node.type == 'chemical' && !!!node.source) {
-                fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
-                    .then(resp => resp.json())
-                    .then(json => {
-                        if (json.result.length) {
-                            this.data.nodes.update({id: node.id, source: json.result[0].source})
-                            this.$set(this.selected, 'source', json.result[0].source)
-                        }
+                this.lookupPrice(node.smiles)
+                    .then(result => {
+                        this.data.nodes.update({id: node.id, ppg: result.ppg, source: result.source})
+                        this.$set(this.selected, 'ppg', result.ppg)
+                        this.$set(this.selected, 'source', result.source)
                     })
             }
         },
@@ -1754,10 +1839,14 @@ var app = new Vue({
             var selected = this.network.getSelectedNodes();
             var rid = selected[0]
             var node = this.data.nodes.get(rid)
-            var smi = node.mappedReactionSmiles;
             var url = '/api/v2/general-selectivity/';
             var body = {
-                rxnsmiles: smi,
+                reactants: node.mapped_precursors,
+                product: node.mapped_outcomes,
+                mapped: true,
+                all_outcomes: true,
+                verbose: false,
+                mode: this.selectivityModel,
             }
             fetch(url, {
                 method: 'POST',
@@ -1788,7 +1877,7 @@ var app = new Vue({
         },
         createTargetNode: function(target) {
             return {
-                id: 0,
+                id: NIL_UUID,
                 smiles: target,
                 image: this.getMolDrawEndPoint(target),
                 shape: "image",
@@ -1799,129 +1888,117 @@ var app = new Vue({
                 }
             }
         },
-        alreadyAddedToresults: function(chemical, results) {
-            for (var res of results) {
-              if (chemical.reactant_smiles.join('.') == res.smiles) {
-                  return true
-              }
+        loadFromTreeBuilder: function(objectId, numTrees) {
+            this.allowCluster = false
+            showLoader()
+            let url = `/api/v2/results/${objectId}/ipp/`
+            if (numTrees !== 'all') {
+                url += `?num=${numTrees}`
             }
-            return false
-        },
-        addResultsFromTreeBuilder: function(graph, target) {
-            this.target = target
-            this.data.nodes = new vis.DataSet([])
-            this.data.nodes.add(this.createTargetNode(target))
-            this.data.edges = new vis.DataSet([]);
-            for (smiles in graph) {
-              if (!this.results[smiles]) {
-                this.results[smiles] = new Array()
-              }
-              let rank = 1
-              graph[smiles].sort((a, b) => b.template_score - a.template_score)
-              for (chemical of graph[smiles]) {
-                if (this.alreadyAddedToresults(chemical, this.results[smiles])) {
-                    continue
-                }
-                this.results[smiles].push({
-                  rank: rank,
-                  smiles_split: chemical.reactant_smiles,
-                  smiles: chemical.reactant_smiles.join('.'),
-                  plausibility: chemical.plausibility,
-                  visit_count: chemical.visit_count,
-                  price: chemical.price,
-                  estimate_price: chemical.estimate_price,
-                  template_score: chemical.template_score,
-                  score: chemical.template_score
+            fetch(url)
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp.json()
                 })
-                rank += 1
-              }
-            }
-        },
-        addPathsFromTreeBuilder: function(trees) {
-            for (tree of trees) {
-                this.walkTree(tree, 0)
-              }
-            this.networkOptions.layout.hierarchical.enabled = true
-            this.initializeNetwork(this.data);
-            this.network.on('selectNode', this.showInfo);
-            this.network.on('deselectNode', this.clearSelection);
-        },
-        walkTree: function(obj, parent) {
-            var node = undefined
-            for (graphNode of this.data.nodes.get()) {
-                if (graphNode.graphId == obj.id) {
-                    let graphParent = parentOf(graphNode.id, this.data.nodes, this.data.edges)
-                    if (graphParent == -1) {
-                        node = graphNode
+                .then(json => {
+                    if (json.error) {
+                        alert(json.error)
+                    }
+                    let result = json['result'];
+                    let target = result['settings']['smiles'];
+                    let results = result['result']['results']
+                    let tree = result['result']['tree']
+                    this.results = results
+                    Object.values(results).forEach(this.getTemplateNumExamples)
+                    if (tree) {
+                        this.loadNodeLinkGraph(tree, target)
                     } else {
-                        graphParent = this.data.nodes.get(graphParent)
-                        if ((graphParent.graphId == parent.graphId) && (graphParent.id == parent.id)) {
-                            node = graphNode
-                            break
-                        }
+                        this.data.nodes = new vis.DataSet([
+                            this.createTargetNode(target)
+                        ]);
+                        this.data.edges = new vis.DataSet([]);
                     }
-                }
-                if (graphNode.id == 0 && graphNode.smiles == obj.smiles) {
-                    node = graphNode
-                    continue
-                }
-            }
-            if (!node) {
-                node = ctaToNode(obj, this.data.nodes.length)
-                if (node.type == 'reaction') {
-                    for (templateId of node.templateIds) {
-                        this.apiTemplateCount(templateId)
+                    this.networkOptions.layout.hierarchical.enabled = true
+                    this.initializeNetwork(this.data);
+                    this.network.on('selectNode', this.showInfo);
+                    this.network.on('deselectNode', this.clearSelection);
+                    this.network.on('afterDrawing', hideLoader);
+                })
+                .catch(error => {
+                    hideLoader()
+                    console.error('There was a problem loading tree builder results:', error);
+                });
+        },
+        loadNodeLinkGraph(data, target) {
+            /* Load tree in node link format into visjs and add visualization related attributes. */
+            for (node of data.nodes) {
+                if (node.type === 'chemical') {
+                    node.image = `/api/v2/draw/?smiles=${encodeURIComponent(node.smiles)}`;
+                    node.shape = 'image';
+                    node.borderWidth = 2;
+                    let color
+                    if (node.smiles === target) {
+                        node.borderWidth = 3;
+                        color = '#000088';
+                    } else if (node.ppg !== 0) {
+                        color = '#008800';
+                    } else {
+                        node.ppg = 'not buyable'
+                        color = '#880000';
                     }
-                    smi_split = node.reactionSmiles.split('>>')
-                    for (reaction of this.results[smi_split[1]]) {
-                        if (reaction.smiles == smi_split[0]) {
-                            node.rank = reaction.rank
-                            node.label = '#'+node.rank
+                    node.color = {
+                        border: color
+                    }
+                } else {
+                    node.label = '#' + node.rank;
+                    node.ffScore = num2str(node.plausibility ,3);
+                    node.retroscore = num2str(node.template_score, 3);
+                    node.templateScore = num2str(node.template_score, 3);
+                    node.numExamples = num2str(node.num_examples);
+                    node.templateIds = node.tforms;
+                    node.reactionSmiles = node.smiles;
+                    let smi_split = node.smiles.split('>>')
+                    for (let reaction of this.results[smi_split[1]]) {
+                        if (reaction.smiles === smi_split[0]) {
                             reaction.inViz = true
                             break
                         }
                     }
                 }
-                this.data.nodes.add(node)
-                if (parent != 0) {
-                    this.data.edges.add({
-                        from: parent.id,
-                        to: node.id,
-                        length: 0
-                    })
+            }
+            this.data.nodes = new vis.DataSet(data.nodes);
+            for (edge of data.edges) {
+                edge.scaling = {
+                    min: 1,
+                    max: 5,
+                    customScalingFunction: function(min, max, total, value) {
+                        if (value > 0.25) {
+                            return 1.0
+                        }
+                        else{
+                            return 16*value*value
+                        }
+                    }
+                };
+                let from = this.data.nodes.get(edge.from)
+                let to = this.data.nodes.get(edge.to)
+                if (from.type === 'reaction') {
+                    edge.value = from.template_score
+                } else if (to.type === 'reaction') {
+                    edge.value = to.template_score
+                }
+                edge.color = {
+                    color: '#000000',
+                    inherit: false
                 }
             }
-            for (child of obj.children) {
-                this.walkTree(child, node)
-            }
-        },
-        loadFromTreeBuilder: function(objectId, numTrees) {
-            this.allowCluster = false
-            showLoader()
-            fetch('/api/get-result/?id='+objectId)
-            .then(resp => resp.json())
-            .then(json => {
-              if (json.error) {
-                  alert(json.error)
-              }
-              var result = json['result'];
-              var target = result['settings']['smiles'];
-              var stats = result['result']['status'];
-              var trees = result['result']['paths'];
-              var graph = result['result']['graph'];
-              this.addResultsFromTreeBuilder(graph, target)
-              if (numTrees == 'all') {
-                this.addPathsFromTreeBuilder(trees)
-              }
-              else {
-                this.addPathsFromTreeBuilder(trees.slice(0, Number(numTrees)))
-              }
-            })
-            .finally(() => hideLoader())
+            this.data.edges = new vis.DataSet(data.edges);
         },
         canonicalize(smiles, input) {
             return fetch(
-                '/api/rdkit/canonicalize/',
+                '/api/v2/rdkit/smiles/canonicalize/',
                 {
                     method: 'POST',
                     headers: {
@@ -1935,18 +2012,19 @@ var app = new Vue({
             )
             .then(resp => resp.json())
             .then(json => {
-                this[input] = json.smiles
+                if (json.smiles) {
+                    this[input] = json.smiles
+                }
             })
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
-            this.target = smiles
+        updateSmilesFromKetcher() {
+            let smiles = ketcher.getSmiles();
             this.canonicalize(smiles, drawBoxId)
         },
         resetTemplateSetVersion(event) {
+            this.tb.settings.attributeFilter = []
             this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
         }
-
     },
     computed: {
         // {'target_smiles0':[[{result0}, {result1}, ...], [...]], ...}
@@ -1980,7 +2058,7 @@ var app = new Vue({
                 res[x] = Array.from(ids).sort(function(a, b){return a-b});
             }
             return res;
-        }
+        },
     },
     delimiters: ['%%', '%%'],
 });
@@ -2027,8 +2105,12 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the highest ranked prediction is highlighted.",
             onShown: function () {
-                app.network.selectNodes([1]);
-                app.selected = app.data.nodes.get(1);
+                app.data.nodes.forEach(function(n) {
+                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
+                        app.network.selectNodes([n.id])
+                        app.selected = app.data.nodes.get(n.id);
+                    }
+                })
             },
             placement: 'right',
         },
@@ -2039,7 +2121,7 @@ var tour = new Tour({
             placement: 'right',
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
+                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
@@ -2087,7 +2169,7 @@ var tour = new Tour({
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.reactionSmiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
+                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }
@@ -2101,7 +2183,7 @@ var tour = new Tour({
             placement: "left",
             onNext: function() {
                 app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
+                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
                         app.network.selectNodes([n.id])
                         app.selected = app.data.nodes.get(n.id);
                     }

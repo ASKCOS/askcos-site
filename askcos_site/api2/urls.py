@@ -26,6 +26,7 @@ urlpatterns += [
     path('fast-filter/', api2.fast_filter.fast_filter, name='fast_filter_api'),
     path('forward/', api2.forward.template_free, name='forward_api'),
     path('impurity/', api2.impurity.impurity_predict, name='impurity_api'),
+    path('path-ranking/', api2.path_ranking.path_ranker, name='path_ranking_api'),
     path('reactions/', api2.reactions.reactions, name='reactions_api'),
     path('retro/', api2.retro.singlestep, name='retro_api'),
     path('retro/models/', api2.retro.models, name='retro_models_api'),
@@ -33,6 +34,7 @@ urlpatterns += [
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
     path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),
     path('tree-builder/', api2.tree_builder.tree_builder, name='tree_builder_api'),
+    path('descriptors/', api2.descriptors.descriptors, name='descriptors_api'),
 
     path('token-auth/', obtain_jwt_token, name='token_auth_api'),
     path('token-refresh/', refresh_jwt_token, name='token_refresh_api'),

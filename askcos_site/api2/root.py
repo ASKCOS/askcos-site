@@ -23,11 +23,8 @@ class RootAPIView(GenericAPIView):
 
         for url in self.urlpatterns:
             name = self.namespace + ':' + url.name
-            if (name.endswith('-detail')
-                    or name.endswith('-export')
-                    or name.endswith('-check')
-                    or name.endswith('-activate')
-                    or name.endswith('-deactivate')):
+            to_skip = ['-detail', '-export', '-check', '-activate', '-deactivate', '-ipp', '-tree']
+            if any(name.endswith(suffix) for suffix in to_skip):
                 # Don't include any detail views in the endpoint list
                 continue
 

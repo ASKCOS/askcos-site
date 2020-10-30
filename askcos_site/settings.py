@@ -9,13 +9,10 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-PROJECT_PATH = os.path.dirname(__file__)
 
-# Get settings from separate celeryconfig.py
-from askcos_site.askcos_celery.celeryconfig import *
-# Get settings from askcos
-import askcos.global_config as gc
+
+PROJECT_PATH = os.path.dirname(__file__)
+BASE_DIR = os.path.dirname(PROJECT_PATH)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'notsosecret'
@@ -26,8 +23,10 @@ ALLOWED_HOSTS = ['0.0.0.0']
 if os.environ.get('CURRENT_HOST'):
     ALLOWED_HOSTS.append(os.environ.get('CURRENT_HOST'))
 
-TEMPLATE_LOADERS = ['django.template.loaders.filesystem.Loader',
- 'django.template.loaders.app_directories.Loader']
+TEMPLATE_LOADERS = [
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader'
+]
 
 TEMPLATES = [
     {
@@ -79,24 +78,17 @@ MIDDLEWARE = (
 ROOT_URLCONF = 'askcos_site.urls'
 WSGI_APPLICATION = 'askcos_site.wsgi.application'
 
-# LOGIN
+# Base django auth settings
 LOGIN_URL = '/registration/login'
 LOGIN_REDIRECT_URL = '/'
-REGISTRATION_OPEN = True
-ACCOUNT_ACTIVATION_DAYS=7
-REGISTRATION_SALT='saltystring'
 
-# Registration
-REGISTRATION_SUPPLEMENT_CLASS = None
+# django-registration settings
 ACCOUNT_ACTIVATION_DAYS = 7
-# Uses postfix server running at localhost:25
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#EMAIL_HOST = 'localhost'
-#    EMAIL_PORT = 25
-#EMAIL_HOST_USER = ''
-#EMAIL_HOST_PASSWORD = ''
-#EMAIL_USE_TLS = False
-DEFAULT_FROM_EMAIL = 'no-reply@askcos4.mit.edu'
+REGISTRATION_OPEN = True
+REGISTRATION_SALT = 'saltystring'  # does not need to be secret, for namespace
+
+# Email address for automated correspondence
+DEFAULT_FROM_EMAIL = 'no-reply@askcos.mit.edu'
 
 # Where are user settings / banlists / etc. saved?
 # NOTE: we recommend relocating the db to an ssd for speed
@@ -109,6 +101,7 @@ DATABASES = {'default': {
     'PORT': '3306',
 }}
 
+# django rest framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
@@ -139,3 +132,10 @@ MEDIA_URL = '/media/'  # url from which user uploaded files are served
 ################################################################################
 
 LOCAL_STORAGE = {}
+
+
+# Try importing any custom settings here so they replace the defaults above
+try:
+    from askcos_site.custom_settings import *
+except ImportError:
+    pass

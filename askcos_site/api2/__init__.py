@@ -8,6 +8,7 @@ from . import draw
 from . import fast_filter
 from . import forward
 from . import impurity
+from . import path_ranking
 from . import rdkit
 from . import reactions
 from . import results
@@ -18,3 +19,4 @@ from . import selectivity
 from . import template
 from . import tree_builder
 from . import general_selectivity
+from . import descriptors

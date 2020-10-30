@@ -13,16 +13,22 @@ from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
 
-from askcos_site.globals import db_client
+from askcos_site.globals import db_client, pricer, scscorer, chemical_db
 from askcos_site.main.models import SavedResults
+from askcos.retrosynthetic.mcts.v2.tree_builder import MCTS
+from askcos.utilities.historian.chemicals import ChemHistorian
+from .tfx_relevance_template_prioritizer import TFXRelevanceTemplatePrioritizer
+from .tfx_fast_filter import TFXFastFilter
 
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
-CORRESPONDING_QUEUE = 'tb_coordinator_mcts'
+CORRESPONDING_QUEUE = 'tb_coordinator_mcts_v2'
 
 results_collection = db_client['results']['results']
-tree_builder = None
+
+retro_transformer = None
+chemhistorian = None
 pathway_ranker = None
 
 
@@ -57,11 +63,15 @@ def configure_coordinator(options={}, **kwargs):
         return
     print('### STARTING UP A TREE BUILDER MCTS COORDINATOR ###')
 
-    from .tree_builder_celery import MCTSCelery
+    from askcos_site.askcos_celery.treebuilder.retro_transformer_celery import RetroTransformerCelery
     from .path_ranking_worker import TSPathwayRanker
 
-    global tree_builder
-    tree_builder = MCTSCelery(celery=True, nproc=8)  # 8 active pathways
+    global retro_transformer
+    retro_transformer = RetroTransformerCelery(template_prioritizer=None, fast_filter=None, scscorer=None)
+    retro_transformer.load(load_templates=False)
+
+    global chemhistorian
+    chemhistorian = ChemHistorian(CHEMICALS_DB=chemical_db, use_db=True)
 
     global pathway_ranker
     pathway_ranker = TSPathwayRanker(hostname='ts-pathway-ranker', model_name='pathway-ranker').scorer
@@ -69,7 +79,7 @@ def configure_coordinator(options={}, **kwargs):
 
 
 @shared_task(trail=False)
-def get_buyable_paths(*args, **kwargs):
+def get_buyable_paths(smiles, **kwargs):
     """Wrapper for ``MCTSTreeBuilder.get_buyable_paths`` function.
 
     Returns:
@@ -80,20 +90,41 @@ def get_buyable_paths(*args, **kwargs):
     run_async = kwargs.pop('run_async', False)
     paths_only = kwargs.pop('paths_only', False)
 
-    settings = {'smiles': args[0], 'version': 1}  # Refers to tree builder version
+    settings = {'smiles': smiles, 'version': 2}  # Refers to tree builder version
     settings.update(kwargs)
 
-    template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
-    if template_prioritizer_version:
-        tree_builder.template_prioritizer_version = template_prioritizer_version
+    print('Treebuilder MCTS coordinator was asked to expand {}'.format(smiles))
+    _id = get_buyable_paths.request.id
+
+    template_set = kwargs.get('template_set', 'reaxys')
+    template_prioritizer_version = kwargs.get('template_prioritizer_version')
+
+    template_relevance_hostname = 'template-relevance-{}'.format(template_set)
+    template_prioritizer = TFXRelevanceTemplatePrioritizer(
+        hostname=template_relevance_hostname,
+        model_name='template_relevance',
+        version=template_prioritizer_version,
+    )
+
+    fast_filter_hostname = 'fast-filter'
+    fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter').predict
+
+    kwargs.update({
+        'pricer': pricer,
+        'scscorer': scscorer,
+        'chemhistorian': chemhistorian,
+        'retro_transformer': retro_transformer,
+        'template_prioritizer': template_prioritizer,
+        'fast_filter': fast_filter,
+    })
 
     if kwargs.get('score_trees'):
         kwargs['pathway_ranker'] = pathway_ranker
 
-    print('Treebuilder MCTS coordinator was asked to expand {}'.format(args[0]))
-    _id = get_buyable_paths.request.id
+    tree_builder = MCTS(**kwargs)
+
     try:
-        paths, status, graph = tree_builder.get_buyable_paths(*args, **kwargs)
+        paths, status, graph = tree_builder.get_buyable_paths(smiles, **kwargs)
         result_doc = {
             'status': status,
             'paths': paths,
