@@ -4,8 +4,33 @@
 
 class RetroGraph {
     constructor(nodes, edges, options) {
-        this.nodes = new vis.DataSet(nodes, options);
-        this.edges = new vis.DataSet(edges, options);
+        this.nodes = new vis.DataSet(options);
+        this.edges = new vis.DataSet(options);
+        this.edges.on('*', this.addEdgeCallback);
+
+        this.succ = {};  // Precomputed successors for fast retrieval
+        this.nodes.add(nodes)
+        this.edges.add(edges)
+    }
+    addEdgeCallback(event, properties, senderId) {
+        // Update the successors object when a new edge is added
+        switch (event) {
+            case 'add':
+                for (let id of properties.items) {
+                    let edge = this.edges.get(id)
+                    this.succ[edge.from] = this.succ[edge.from] || {}
+                    this.succ[edge.from][edge.to] = edge.id
+                }
+                break;
+            case 'remove':
+                for (let id of properties.items) {
+                    let edge = this.edges.get(id)
+                    delete this.succ[edge.from][edge.to]
+                }
+                break;
+            default:
+                throw `Cannot handle ${event} event!`;
+        }
     }
     getPredecessors(node) {
         // Retrieve immediate predecessors of the specified node
@@ -19,23 +44,14 @@ class RetroGraph {
     }
     getSuccessors(node) {
         // Retrieve immediate successors of the specified node
-        let successors = [];
-        this.edges.forEach(edge => {
-            if (edge != null && edge.from === node) {
-                successors.push(edge.to)
-            }
-        })
-        return successors
+        return Object.keys(this.succ[node])
     }
     getAllSuccessors(node) {
         // Retrieve all successors of the specified node
-        let successors = [];
-        this.edges.forEach(edge => {
-            if (edge != null && edge.from === node) {
-                successors.push(edge.to)
-                successors.push(...this.getAllSuccessors(edge.to))
-            }
-        })
+        let successors = this.getSuccessors(node);
+        for (let succ of this.getSuccessors(node)) {
+            successors.push(...this.getSuccessors(succ))
+        }
         return successors
     }
     removeAllSuccessors(node) {
