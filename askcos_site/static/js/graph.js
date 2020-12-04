@@ -67,40 +67,85 @@ class RetroGraph {
         });
         this.edges.remove(dangling)
     }
-    *getChemPaths(node, chemPath, maxDepth) {
+    getChemPaths(node, chemPath, maxDepth) {
         let successors = this.getSuccessors(node)
+        let paths = [];
         if (successors.length === 0 || maxDepth !== undefined && chemPath.length >= maxDepth) {
-            yield [node]
+            paths.push({nodes: [node], edges: [], depth: chemPath.length})
         } else {
             for (let rxn of successors) {
-                for (let subPath of this.getRxnPaths(rxn, chemPath.concat([node]))) {
-                    subPath.push(rxn);
-                    yield subPath
+                for (let subPath of this.getRxnPaths(rxn, [...chemPath, node], maxDepth)) {
+                    subPath.nodes.push(node);
+                    subPath.edges.push(this.succ[node][rxn])
+                    paths.push(subPath);
                 }
             }
         }
+        return paths
     }
     *getRxnPaths(node, chemPath, maxDepth) {
         let successors = this.getSuccessors(node)
+        let paths = [];
         if (chemPath.some(item => successors.includes(item))) {
-            return
+            return paths
         }
-        for (let pathCombo of product(this.getChemPaths(c))) {
-            let subPath = concat(pathCombo)
-            subPath.push(node)
-            yield subPath
+        let subPaths = successors.map(c => this.getChemPaths(c, chemPath, maxDepth))
+        for (let pathCombo of product(subPaths)) {
+            let subPath = mergePaths(pathCombo)
+            subPath.nodes.push(node)
+            successors.forEach(c => subPath.edges.push(this.succ[node][c]))
+            paths.push(subPath)
         }
+        return paths
     }
-    *getPaths(maxDepth, maxTrees, validatePaths, isTerminal) {
-        let numPaths = 0;
+    getPaths(maxDepth, maxTrees, validatePaths, isTerminal) {
+        let paths = [];
         for (let path of this.getChemPaths(NIL_UUID, [], maxDepth)) {
-            if (maxTrees !== undefined && numPaths >= maxTrees) {
+            if (maxTrees !== undefined && paths.length >= maxTrees) {
                 break
             }
-            if (validatePaths && isTerminal instanceof Function && isTerminal(path)) {
-                numPaths += 1
-                yield path
+            if (!validatePaths || validatePaths && isTerminal instanceof Function && isTerminal(path)) {
+                paths.push(path)
             }
         }
+        return paths
     }
+}
+
+function product(sets) {
+    // Cartesian product generator, similar to itertools.product in Python
+    // Performance tested to be faster than most alternatives
+    let max = sets.length - 1;
+    let lens = sets.map(set => set.length);
+    let results = [];
+    let combo = [];
+    function build(n) {
+        let set = sets[n];
+        let len = lens[n];
+        if (n === max) {
+            for (let i = 0; i < len; ++i) {
+                combo[n] = set[i];
+                results.push([...combo]);
+            }
+        } else {
+            for (let i = 0; i < len; ++i) {
+                combo[n] = set[i];
+                build(n + 1);
+            }
+        }
+        combo.pop()
+    }
+    build(0)
+    return results
+}
+
+function mergePaths(paths) {
+    // Combine multiple path objects
+    let result = {'nodes': [], 'edges': [], 'depth': 0}
+    for (let path of paths) {
+        result.nodes.push(...path.nodes)
+        result.edges.push(...path.edges)
+        result.depth = Math.max(result.depth, path.depth)
+    }
+    return result
 }
