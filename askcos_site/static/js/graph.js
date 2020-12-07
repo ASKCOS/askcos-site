@@ -91,7 +91,7 @@ class RetroGraph {
         }
         return paths
     }
-    *getRxnPaths(node, chemPath, maxDepth) {
+    getRxnPaths(node, chemPath, maxDepth) {
         let successors = this.getSuccessors(node)
         let paths = [];
         if (chemPath.some(item => successors.includes(item))) {
@@ -106,17 +106,25 @@ class RetroGraph {
         }
         return paths
     }
-    getPaths(maxDepth, maxTrees, validatePaths, isTerminal) {
+    getPaths(root, maxDepth, maxTrees, validatePaths = false) {
         let paths = [];
-        for (let path of this.getChemPaths(NIL_UUID, [], maxDepth)) {
+        for (let path of this.getChemPaths(root, [], maxDepth)) {
             if (maxTrees !== undefined && paths.length >= maxTrees) {
                 break
             }
-            if (!validatePaths || validatePaths && isTerminal instanceof Function && isTerminal(path)) {
+            if (!validatePaths || validatePaths && this.isValid(path)) {
                 paths.push(path)
             }
         }
         return paths
+    }
+    isValid(path) {
+        for (let node of path.nodes) {
+            if (!this.succ[node] && !this.nodes.get(node).terminal) {
+                return false
+            }
+        }
+        return true
     }
 }
 
