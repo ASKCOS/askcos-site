@@ -47,7 +47,12 @@ class RetroGraph {
     }
     getSuccessors(node) {
         // Retrieve immediate successors of the specified node
-        return Object.keys(this.succ[node])
+        let successors = this.succ[node]
+        if (!!successors) {
+            return Object.keys(successors)
+        } else {
+            return []
+        }
     }
     getAllSuccessors(node) {
         // Retrieve all successors of the specified node
