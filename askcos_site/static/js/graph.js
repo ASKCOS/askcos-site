@@ -1,43 +1,46 @@
 /*
  * Graph utility functions
  */
+const SOURCE = 'source'
+const TARGET = 'target'
 
 class RetroGraph {
-    constructor(nodes, edges, options) {
-        this.nodes = new vis.DataSet(options);
-        this.edges = new vis.DataSet(options);
-        this.edges.on('*', this.addEdgeCallback);
-
+    constructor(nodes, edges, visOptions) {
+        this.nodes = new vis.DataSet(visOptions);
+        this.edges = new vis.DataSet(visOptions);
         this.succ = {};  // Precomputed successors for fast retrieval
-        this.nodes.add(nodes)
-        this.edges.add(edges)
-    }
-    addEdgeCallback(event, properties, senderId) {
-        // Update the successors object when a new edge is added
-        switch (event) {
-            case 'add':
-                for (let id of properties.items) {
-                    let edge = this.edges.get(id)
-                    this.succ[edge.from] = this.succ[edge.from] || {}
-                    this.succ[edge.from][edge.to] = edge.id
-                }
-                break;
-            case 'remove':
-                for (let id of properties.items) {
-                    let edge = this.edges.get(id)
-                    delete this.succ[edge.from][edge.to]
-                }
-                break;
-            default:
-                throw `Cannot handle ${event} event!`;
-        }
+
+        let graph = this
+        this.edges.on('*', function(event, properties, senderId) {
+            // Update the successors object when a new edge is added
+            switch (event) {
+                case 'add':
+                    for (let id of properties.items) {
+                        let edge = graph.edges.get(id)
+                        graph.succ[edge[SOURCE]] = graph.succ[edge[SOURCE]] || {}
+                        graph.succ[edge[SOURCE]][edge[TARGET]] = edge.id
+                    }
+                    break;
+                case 'remove':
+                    for (let id of properties.items) {
+                        let edge = graph.edges.get(id)
+                        delete graph.succ[edge[SOURCE]][edge[TARGET]]
+                    }
+                    break;
+                default:
+                    throw `Cannot handle ${event} event!`;
+            }
+        });
+
+        if (nodes !== undefined) this.nodes.add(nodes);
+        if (edges !== undefined) this.edges.add(edges);
     }
     getPredecessors(node) {
         // Retrieve immediate predecessors of the specified node
         let predecessors = [];
         this.edges.forEach(edge => {
-            if (edge != null && edge.to === node) {
-                predecessors.push(edge.from)
+            if (edge != null && edge[TARGET] === node) {
+                predecessors.push(edge[SOURCE])
             }
         })
         return predecessors
@@ -63,7 +66,7 @@ class RetroGraph {
         // Remove any edges which are only connected on one end
         let nodeIds = this.nodes.getIds();
         let dangling = this.edges.get({
-            filter: edge => !nodeIds.includes(edge.from) || !nodeIds.includes(edge.to)
+            filter: edge => !nodeIds.includes(edge[SOURCE]) || !nodeIds.includes(edge[TARGET])
         });
         this.edges.remove(dangling)
     }
