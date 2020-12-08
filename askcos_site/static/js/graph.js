@@ -1,14 +1,14 @@
 /*
  * Graph utility functions
  */
-const SOURCE = 'source'
-const TARGET = 'target'
 
 class RetroGraph {
-    constructor(nodes, edges, visOptions) {
+    constructor(nodes, edges, source, target, visOptions) {
         this.nodes = new vis.DataSet(visOptions);
         this.edges = new vis.DataSet(visOptions);
-        this.succ = {};  // Precomputed successors for fast retrieval
+        this._source = source || 'from'
+        this._target = target || 'to'
+        this._succ = {};  // Precomputed successors for fast retrieval
 
         let graph = this
         this.edges.on('*', function(event, properties, senderId) {
@@ -17,14 +17,14 @@ class RetroGraph {
                 case 'add':
                     for (let id of properties.items) {
                         let edge = graph.edges.get(id)
-                        graph.succ[edge[SOURCE]] = graph.succ[edge[SOURCE]] || {}
-                        graph.succ[edge[SOURCE]][edge[TARGET]] = edge.id
+                        graph._succ[edge[graph._source]] = graph._succ[edge[graph._source]] || {}
+                        graph._succ[edge[graph._source]][edge[graph._target]] = edge.id
                     }
                     break;
                 case 'remove':
                     for (let id of properties.items) {
                         let edge = graph.edges.get(id)
-                        delete graph.succ[edge[SOURCE]][edge[TARGET]]
+                        delete graph._succ[edge[graph._source]][edge[graph._target]]
                     }
                     break;
                 default:
@@ -39,15 +39,15 @@ class RetroGraph {
         // Retrieve immediate predecessors of the specified node
         let predecessors = [];
         this.edges.forEach(edge => {
-            if (edge != null && edge[TARGET] === node) {
-                predecessors.push(edge[SOURCE])
+            if (edge != null && edge[this._target] === node) {
+                predecessors.push(edge[this._source])
             }
         })
         return predecessors
     }
     getSuccessors(node) {
         // Retrieve immediate successors of the specified node
-        let successors = this.succ[node]
+        let successors = this._succ[node]
         if (!!successors) {
             return Object.keys(successors)
         } else {
@@ -71,7 +71,7 @@ class RetroGraph {
         // Remove any edges which are only connected on one end
         let nodeIds = this.nodes.getIds();
         let dangling = this.edges.get({
-            filter: edge => !nodeIds.includes(edge[SOURCE]) || !nodeIds.includes(edge[TARGET])
+            filter: edge => !nodeIds.includes(edge[this._source]) || !nodeIds.includes(edge[this._target])
         });
         this.edges.remove(dangling)
     }
@@ -84,7 +84,7 @@ class RetroGraph {
             for (let rxn of successors) {
                 for (let subPath of this.getRxnPaths(rxn, [...chemPath, node], maxDepth)) {
                     subPath.nodes.push(node);
-                    subPath.edges.push(this.succ[node][rxn])
+                    subPath.edges.push(this._succ[node][rxn])
                     paths.push(subPath);
                 }
             }
@@ -101,7 +101,7 @@ class RetroGraph {
         for (let pathCombo of product(subPaths)) {
             let subPath = mergePaths(pathCombo)
             subPath.nodes.push(node)
-            successors.forEach(c => subPath.edges.push(this.succ[node][c]))
+            successors.forEach(c => subPath.edges.push(this._succ[node][c]))
             paths.push(subPath)
         }
         return paths
@@ -120,7 +120,7 @@ class RetroGraph {
     }
     isValid(path) {
         for (let node of path.nodes) {
-            if (!this.succ[node] && !this.nodes.get(node).terminal) {
+            if (!this._succ[node] && !this.nodes.get(node).terminal) {
                 return false
             }
         }
