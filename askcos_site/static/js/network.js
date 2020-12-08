@@ -46,6 +46,14 @@ function subSet(s, otherSet) {
     }
 };
 
+function edgeScaling(min, max, total, value) {
+    if (value >= 0.25) {
+        return 1.0
+    } else {
+        return 16 * value * value
+    }
+}
+
 function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
     var added = 0
     for (r of reactions) {
@@ -407,6 +415,8 @@ var app = new Vue({
             edges: {}
         },
         results: {},
+        dataGraph: new RetroGraph(),
+        dispGraph: new RetroGraph(),
         templateSets: {},
         templateAttributes: {},
         buyablesSources: [],
@@ -1026,6 +1036,232 @@ var app = new Vue({
                 }
                 alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
             })
+        },
+        addRetroResultToDataGraph(data, parentSmiles) {
+            // Add results as reaction and chemical nodes under the specified parent chemical
+            // Arguments should be list of outcome objects and the SMILES of the parent node
+            let clusterTracker = new Set();
+            for (let reaction of data) {
+                let reactionSmiles = reaction['smiles'] + '>>' + parentSmiles
+                let node = {
+                    id: reactionSmiles,
+                    rank: reaction['rank'],
+                    ffScore: reaction['plausibility'],
+                    retroScore: reaction['score'],
+                    templateScore: reaction['template_score'],
+                    templateRank: reaction['template_rank'],
+                    templateIds: reaction['templates'],
+                    clusterId: reaction['group_id'],
+                    clusterRep: !clusterTracker.has(reaction['group_id']),  // Tag first result in each cluster as the representative
+                    precursors: reaction['smiles_split'],
+                    precursorSmiles: reaction['smiles'],
+                    numExamples: reaction['num_examples'],
+                    necessaryReagent: reaction['necessary_reagent'],
+                    mappedSmiles: reaction['mapped_smiles'],
+                    reactingAtoms: reaction['reacting_atoms'],
+                    numRings: reaction['num_rings'],
+                    rmsMolwt: reaction['rms_molwt'],
+                    scscore: reaction['scscore'],
+                    type: 'reaction',
+                    inVis: [],  // Tracks list of parent nodes in the display graph which include this result
+                }
+
+                clusterTracker.add(reaction['group_id'])
+
+                if ('outcomes' in reaction) {
+                    node['outcomes'] = reaction['outcomes'].split('.')
+                    node['selectivity'] = new Array(node.outcomes.length)
+                    node['mappedPrecursors'] = reaction['mapped_precursors']
+                    node['mappedOutcomes'] = reaction['mapped_outcomes']
+                } else if ('selec_error' in reaction) {
+                    node['selecError'] = reaction['selec_error']
+                }
+
+                this.dataGraph.nodes.add(node)
+                this.dataGraph.edges.add({
+                    id: uuidv4(),
+                    from: parentSmiles,
+                    to: reactionSmiles,
+                })
+
+                for (let precursorSmiles of node.precursors) {
+                    if (!this.dataGraph.nodes.get(precursorSmiles)) {
+                        this.dataGraph.nodes.add({
+                            id: precursorSmiles,
+                            type: 'chemical',
+                        })
+                        this.lookupPrice(precursorSmiles)
+                            .then(result => {
+                                let node = this.dataGraph.nodes.get(precursorSmiles);
+                                node.ppg = result.ppg;
+                                node.source = result.source;
+                            })
+                    }
+                    this.dataGraph.edges.add({
+                        id: uuidv4(),
+                        from: reactionSmiles,
+                        to: precursorSmiles,
+                    })
+                }
+            }
+        },
+        addRetroResultToDispGraph(data, parentId) {
+            // Add reaction and chemical nodes with display properties under the specified parent chemical
+            // Arguments should be list of reaction smiles to add and the ID of the parent node
+            for (let reactionSmiles of data) {
+                let reactionObj = this.dataGraph.nodes.get(reactionSmiles)
+                let reactionId = uuidv4()
+                reactionObj['inVis'].push(reactionId)
+
+                let node = {
+                    id: reactionId,
+                    smiles: reactionSmiles,
+                    label: '#' + reactionObj['rank'],
+                    type: 'reaction',
+                }
+
+                if ('outcomes' in reactionObj) {
+                    node['borderWidth'] = 2
+                    node['color'] = { border: '#ff4444' }
+                    node['title'] = "Selectivity warning! Select this node to see more details"
+                } else if ('selecError' in reactionObj) {
+                    node['borderWidth'] = 2
+                    node['color'] = { border: '#ffbb00' }
+                }
+
+                this.dispGraph.nodes.add(node)
+                this.dispGraph.edges.add({
+                    id: uuidv4(),
+                    from: parentId,
+                    to: reactionId,
+                    scaling: {
+                        min: 1,
+                        max: 5,
+                        customScalingFunction: edgeScaling,
+                    },
+                    color: {
+                        color: '#000000',
+                        inherit: false,
+                    },
+                    value: reactionObj['templateScore'],
+                })
+
+                for (let precursorSmiles of reactionObj.precursors) {
+                    let precursorObj = this.dataGraph.nodes.get(precursorSmiles)
+                    let precursorId = uuidv4()
+                    this.dispGraph.nodes.add({
+                        id: precursorId,
+                        smiles: precursorSmiles,
+                        borderWidth: 2,
+                        color: {
+                            border: (precursorObj.ppg === 'not buyable') ? '#880000' : '#008800'
+                        },
+                        shape: 'image',
+                        image: this.getMolDrawEndPoint(precursorSmiles),
+                        type: 'chemical',
+                    })
+                    this.dispGraph.edges.add({
+                        id: uuidv4(),
+                        from: reactionId,
+                        to: precursorId,
+                        scaling: {
+                            min: 1,
+                            max: 5,
+                            customScalingFunction: edgeScaling,
+                        },
+                        color: {
+                            color: '#000000',
+                            inherit: false,
+                        },
+                        value: reactionObj['templateScore'],
+                    })
+                }
+            }
+        },
+        addTreeBuilderResultToDataGraph(data) {
+            this.dataGraph.nodes.add(data.nodes.map(node => {
+                if (node.type === 'chemical') {
+                    return {
+                        id: node['id'],
+                        asReactant: node['as_reactant'],
+                        asProduct: node['as_product'],
+                        ppg: (node['purchase_price'] === 0) ? 'not buyable' : node['purchase_price'],
+                        terminal: node['terminal'],
+                        type: node['type'],
+                    }
+                } else {
+                    return {
+                        id: node['id'],
+                        rank: node['rank'],
+                        ffScore: node['plausibility'],
+                        retroScore: node['template_score'],
+                        templateScore: node['template_score'],
+                        templateIds: node['tforms'],
+                        precursors: node['precursor_smiles'].split('.'),
+                        precursorSmiles: node['precursor_smiles'],
+                        numExamples: node['num_examples'],
+                        necessaryReagent: node['necessary_reagent'],
+                        numRings: node['num_rings'],
+                        rmsMolwt: node['rms_molwt'],
+                        scscore: node['scscore'],
+                        type: node['type'],
+                        inVis: [],
+                    }
+                }
+            }))
+            this.dataGraph.edges.add(data.links.map(edge => {
+                return {
+                    id: edge['id'],
+                    from: edge['source'],
+                    to: edge['target'],
+                }
+            }))
+        },
+        addTreeBuilderResultToDispGraph(data) {
+            this.dispGraph.nodes.add(data.nodes.map(node => {
+                let dataObj = this.dataGraph.nodes.get(node['smiles'])
+                if (node.type === 'chemical') {
+                    return {
+                        id: node['id'],
+                        smiles: node['smiles'],
+                        borderWidth: (node['smiles'] === this.target) ? 3 : 2,
+                        color: {
+                            border: (node['smiles'] === this.target) ? '#000088' : (dataObj['ppg'] === 'not buyable') ? '#880000' : '#008800'
+                        },
+                        shape: 'image',
+                        image: this.getMolDrawEndPoint(node['smiles']),
+                        type: 'chemical',
+                    }
+                } else {
+                    return {
+                        id: node['id'],
+                        smiles: node['smiles'],
+                        label: '#' + node['rank'],
+                        type: 'reaction',
+                    }
+                }
+            }))
+            this.dispGraph.edges.add(data.edges.map(edge => {
+                let from = this.dispGraph.nodes.get(edge['from'])
+                let to = this.dispGraph.nodes.get(edge['to'])
+                let reactionSmiles = (from['type'] === 'reaction') ? from['smiles'] : to['smiles']
+                let reactionObj = this.dataGraph.nodes.get(reactionSmiles)
+                return {
+                    id: edge['id'],
+                    from: edge['from'],
+                    to: edge['to'],
+                    scaling: {
+                        min: 1,
+                        max: 5,
+                        customScalingFunction: edgeScaling,
+                    },
+                    color: {
+                        color: '#000000',
+                        inherit: false,
+                    },
+                    value: reactionObj['templateScore'],
+                }
+            }))
         },
         updateNetworkOptions() {
             if (typeof(this.network) != 'undefined') {
