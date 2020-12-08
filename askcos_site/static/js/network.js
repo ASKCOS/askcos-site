@@ -998,28 +998,22 @@ var app = new Vue({
             .then(smiles => this.canonicalize(smiles, 'target'))
             .then(() => {
                 this.saveTarget()
-                if (this.target != undefined) {
+                if (this.target !== undefined) {
                     const smi = this.target;
                     const app = this;
                     function callback(precursors) {
-                        app.data.nodes = new vis.DataSet([
-                            app.createTargetNode(smi)
-                        ]);
-                        app.data.edges = new vis.DataSet([]);
-                        app.initializeNetwork(app.data);
-                        app.network.on('selectNode', app.showInfo);
-                        app.network.on('deselectNode', app.clearSelection);
-                        app.$set(app.results, smi, precursors);
-                        app.initClusterShowCard(smi); // must be called immediately after adding results
-                        addReactions(app.results[smi], app.data.nodes.get(NIL_UUID), app.data.nodes, app.data.edges, app.reactionLimit);
-                        app.getTemplateNumExamples(app.results[smi]);
-                        setSmilesDrawingKetcherMin(smi);
-                        app.lookupPrice(smi)
-                            .then(result => {
-                                app.data.nodes.update({id: NIL_UUID, ppg: result.ppg, source: result.source});
-                                app.network.selectNodes([NIL_UUID]);
-                                app.showInfo({'nodes': [NIL_UUID]});
-                        })
+                        app.initTargetDataNode()
+                        app.initTargetDispNode()
+                        app.initializeNetwork(app.dispGraph)
+                        app.network.on('selectNode', app.showInfo)
+                        app.network.on('deselectNode', app.clearSelection)
+                        let addedReactions = app.addRetroResultToDataGraph(precursors, smi)
+                        let reactionsToAdd = addedReactions.filter(reactionSmiles => {
+                            return !app.allowCluster || app.dataGraph.nodes.get(reactionSmiles).clusterRep
+                        }).slice(0, app.reactionLimit)
+                        app.addRetroResultToDispGraph(reactionsToAdd, NIL_UUID)
+                        app.network.selectNodes([NIL_UUID])
+                        app.showInfo({'nodes': [NIL_UUID]})
                     }
                     this.requestRetro(smi, callback);
                 } else {
@@ -1037,12 +1031,41 @@ var app = new Vue({
                 alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
             })
         },
+        initTargetDataNode() {
+            console.log('initTargetDataNode called')
+            this.dataGraph.nodes.add({
+                id: this.target,
+                type: 'chemical',
+            })
+            this.lookupPrice(this.target)
+                .then(result => {
+                    let node = this.dataGraph.nodes.get(this.target);
+                    node.ppg = result.ppg;
+                    node.source = result.source;
+                })
+        },
+        initTargetDispNode() {
+            console.log('initTargetDispNode called')
+            this.dispGraph.nodes.add({
+                id: NIL_UUID,
+                smiles: this.target,
+                borderWidth: 3,
+                color: {
+                    border: '#000088'
+                },
+                shape: 'image',
+                image: this.getMolDrawEndPoint(this.target),
+                type: 'chemical',
+            })
+        },
         addRetroResultToDataGraph(data, parentSmiles) {
             // Add results as reaction and chemical nodes under the specified parent chemical
             // Arguments should be list of outcome objects and the SMILES of the parent node
             let clusterTracker = new Set();
+            let addedReactions = [];
             for (let reaction of data) {
                 let reactionSmiles = reaction['smiles'] + '>>' + parentSmiles
+                addedReactions.push(reactionSmiles)
                 let node = {
                     id: reactionSmiles,
                     rank: reaction['rank'],
@@ -1067,6 +1090,7 @@ var app = new Vue({
                 }
 
                 clusterTracker.add(reaction['group_id'])
+                node.templateIds.forEach(template => this.apiTemplateCount(template))
 
                 if ('outcomes' in reaction) {
                     node['outcomes'] = reaction['outcomes'].split('.')
@@ -1104,6 +1128,7 @@ var app = new Vue({
                     })
                 }
             }
+            return addedReactions
         },
         addRetroResultToDispGraph(data, parentId) {
             // Add reaction and chemical nodes with display properties under the specified parent chemical
@@ -1190,6 +1215,7 @@ var app = new Vue({
                         type: node['type'],
                     }
                 } else {
+                    node['tforms'].forEach(template => this.apiTemplateCount(template))
                     return {
                         id: node['id'],
                         rank: node['rank'],
@@ -1279,9 +1305,9 @@ var app = new Vue({
             }
             showLoader();
             var selected = this.network.getSelectedNodes();
-            if (selected.length != 1) {
+            if (selected.length !== 1) {
               hideLoader();
-              if (selected.length == 0) {
+              if (selected.length === 0) {
                   alert('Please select a terminal chemical node to expand')
               }
               else {
@@ -1295,14 +1321,14 @@ var app = new Vue({
                 hideLoader();
                 return
             }
-            var node = this.data.nodes.get(nodeId)
-            if (node.type != 'chemical') {
+            var node = this.dispGraph.nodes.get(nodeId)
+            if (node.type !== 'chemical') {
                 alert('Cannot expand reaction; try expanding with a chemical node selected');
                 hideLoader();
                 return
             }
-            var childrenOfSelected = childrenOf(nodeId, this.data.nodes, this.data.edges);
-            if (childrenOfSelected.length != 0) {
+            var childrenOfSelected = this.dispGraph.getSuccessors(nodeId)
+            if (childrenOfSelected.length !== 0) {
                 alert("You've already expanded this node. If you would like to re-expand, please use the 'Remove children nodes' button to clear results in the visualization for this chemical. Please note that this will replace the previously predicted results for this chemical (for example, if you've changed any settings)")
                 hideLoader();
                 return
@@ -1310,16 +1336,17 @@ var app = new Vue({
             const smi = node.smiles;
             const app = this;
             function callback(precursors) {
-                app.$set(app.results, smi, precursors);
                 if (precursors.length === 0) {
                     alert('No precursors found!')
+                } else {
+                    let addedReactions = app.addRetroResultToDataGraph(precursors, smi)
+                    let reactionsToAdd = addedReactions.filter(reactionSmiles => {
+                        return !app.allowCluster || app.dataGraph.nodes.get(reactionSmiles).clusterRep
+                    }).slice(0, app.reactionLimit)
+                    app.addRetroResultToDispGraph(reactionsToAdd, nodeId)
+                    app.showInfo({'nodes': [nodeId]})
+                    app.network.fit()
                 }
-                app.initClusterShowCard(smi); // must be called immediately after adding results
-                addReactions(app.results[smi], app.data.nodes.get(nodeId), app.data.nodes, app.data.edges, app.reactionLimit);
-                app.getTemplateNumExamples(app.results[smi]);
-                app.selected = node;
-                app.handleSortingChange();
-                app.network.fit()
             }
             this.requestRetro(smi, callback);
         },
