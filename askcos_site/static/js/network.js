@@ -2559,5 +2559,5 @@ function closeAll() {
 }
 
 /* key binding */
-var keys = vis.keycharm();
+var keys = keycharm();
 keys.bind("esc", closeAll, 'keyup');
