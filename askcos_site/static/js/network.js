@@ -1002,6 +1002,8 @@ var app = new Vue({
                     const smi = this.target;
                     const app = this;
                     function callback(precursors) {
+                        app.dataGraph.clear()
+                        app.dispGraph.clear()
                         app.initTargetDataNode()
                         app.initTargetDispNode()
                         app.initializeNetwork(app.dispGraph)

@@ -13,6 +13,9 @@ class RetroGraph {
         let graph = this
         this.edges.on('*', function(event, properties, senderId) {
             // Update the successors object when a new edge is added
+            if (senderId === 'clear') {
+                return  // _succ property will be manually reset
+            }
             switch (event) {
                 case 'add':
                     for (let id of properties.items) {
@@ -34,6 +37,11 @@ class RetroGraph {
 
         if (nodes !== undefined) this.nodes.add(nodes);
         if (edges !== undefined) this.edges.add(edges);
+    }
+    clear() {
+        this.nodes.clear('clear')
+        this.edges.clear('clear')
+        this._succ = {};
     }
     getPredecessors(node) {
         // Retrieve immediate predecessors of the specified node
