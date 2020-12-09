@@ -1946,47 +1946,51 @@ var app = new Vue({
         getMolDrawEndPoint: function(precursor, isHighlight, isTransparent) {
             //  precursor can be
             //      1) a smiles string,
-            //      2) a dict has properties "reacting_atoms" and "mapped_smiles"
-            //      3) a dict has property "smiles"
+            //      2) a object with properties "reactingAtoms" and "mappedSmiles"
+            //      3) a object with property "smiles"
+            //      4) an object with property "precursorSmiles"
             //  isTransparent is false by default
             //  isHighlight is set to this.isHighlight by default, but can be overidden
-            if (isHighlight == undefined) {
+            if (isHighlight === undefined) {
                 isHighlight = this.isHighlightAtom;
             }
-            if (isTransparent == undefined) {
+            if (isTransparent === undefined) {
                 isTransparent = false;
             }
-            var smiles;
-            var mapped_smiles;
-            var reacting_atoms;
+            let smiles;
+            let mappedSmiles;
+            let reactingAtoms;
+            let url;
             if (typeof(precursor) == "string") {
                 smiles = precursor;
                 isHighlight = false;
             } else if (typeof(precursor) == "object") {
-                if (precursor.mapped_smiles != undefined && precursor.reacting_atoms != undefined) {
-                    mapped_smiles = precursor.mapped_smiles;
-                    reacting_atoms = precursor.reacting_atoms;
+                if (precursor.mappedSmiles !== undefined && precursor.reactingAtoms !== undefined) {
+                    mappedSmiles = precursor.mappedSmiles;
+                    reactingAtoms = precursor.reactingAtoms;
                 }
-                if (precursor.smiles != undefined) {
+                if (precursor.smiles !== undefined) {
                     smiles = precursor.smiles;
+                } else if (precursor.precursorSmiles !== undefined) {
+                    smiles = precursor.precursorSmiles
                 }
             }
-            if (isHighlight && mapped_smiles != undefined && reacting_atoms != undefined) {
-                var res = `/api/v2/draw/?smiles=${encodeURIComponent(mapped_smiles)}&highlight=true`
-                for (ra of reacting_atoms) {
-                    res += `&reacting_atoms=${ra}`
+            if (isHighlight && mappedSmiles !== undefined && reactingAtoms !== undefined) {
+                url = `/api/v2/draw/?smiles=${encodeURIComponent(mappedSmiles)}&highlight=true`
+                for (let ra of reactingAtoms) {
+                    url += `&reacting_atoms=${ra}`
                 }
             } else {
-                if (smiles == undefined) {
-                    console.log('Error: cannot plot precursor='+precursor)
+                if (smiles === undefined) {
+                    console.log('Error: cannot plot precursor=' + precursor)
                     return ''
                 }
-                var res = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
+                url = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
             }
             if (isTransparent) {
-                res += '&transparent=true';
+                url += '&transparent=true';
             }
-            return res;
+            return url;
         },
         isModalOpen: function() {
             var res = false;
