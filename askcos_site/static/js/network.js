@@ -1138,7 +1138,7 @@ var app = new Vue({
             for (let reactionSmiles of data) {
                 let reactionObj = this.dataGraph.nodes.get(reactionSmiles)
                 let reactionId = uuidv4()
-                reactionObj['inVis'].push(reactionId)
+                reactionObj['inVis'].push(parentId)
 
                 let node = {
                     id: reactionId,
@@ -1272,8 +1272,13 @@ var app = new Vue({
             this.dispGraph.edges.add(data.edges.map(edge => {
                 let from = this.dispGraph.nodes.get(edge['from'])
                 let to = this.dispGraph.nodes.get(edge['to'])
-                let reactionSmiles = (from['type'] === 'reaction') ? from['smiles'] : to['smiles']
-                let reactionObj = this.dataGraph.nodes.get(reactionSmiles)
+                let reactionObj
+                if (from['type'] === 'reaction') {
+                    reactionObj = this.dataGraph.nodes.get(from['smiles'])
+                } else {
+                    reactionObj = this.dataGraph.nodes.get(to['smiles'])
+                    reactionObj.inVis.push(from['id'])
+                }
                 return {
                     id: edge['id'],
                     from: edge['from'],
