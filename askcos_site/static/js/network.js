@@ -1625,21 +1625,30 @@ var app = new Vue({
             return filterResult;
         },
         showInfo: function(obj) {
-            var nodeId = obj.nodes[obj.nodes.length-1];
-            var node = this.data.nodes.get(nodeId);
-            if (node == null) {
-                return
-            }
-            this.selected = node;
-            setSmilesDrawingKetcherMin(node.smiles);
-            this.handleSortingChange();
-            if (node.type == 'chemical' && !!!node.source) {
-                this.lookupPrice(node.smiles)
-                    .then(result => {
-                        this.data.nodes.update({id: node.id, ppg: result.ppg, source: result.source})
-                        this.$set(this.selected, 'ppg', result.ppg)
-                        this.$set(this.selected, 'source', result.source)
-                    })
+            let nodeId = obj.nodes[obj.nodes.length-1];
+            let dispObj = this.dispGraph.nodes.get(nodeId);
+            if (!dispObj) return
+            let dataObj = this.dataGraph.nodes.get(dispObj.smiles);
+            if (!dataObj) return
+
+            this.selected = {
+                'id': dispObj.id,
+                'smiles': dispObj.smiles,
+                'type': dispObj.type,
+                'data': dataObj,
+                'disp': dispObj,
+            };
+
+            if (dispObj.type === 'chemical') {
+                setSmilesDrawingKetcherMin(dataObj.id);
+                this.handleSortingChange();
+                if (!dataObj.source) {
+                    this.lookupPrice(dataObj.id)
+                        .then(result => {
+                            dataObj.ppg = result.ppg;
+                            dataObj.source = result.source;
+                        })
+                }
             }
         },
         openModal: function(modalName) {
