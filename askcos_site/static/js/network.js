@@ -2342,6 +2342,43 @@ var app = new Vue({
             }
             return res;
         },
+        resultsAvailable: function() {
+            // Boolean of whether the selected chemical has been expanded
+            // Returns false if a reaction node is selected
+            if (this.selected.type !== 'chemical') {
+                return false
+            } else {
+                return this.dataGraph.getSuccessors(this.selected.smiles).length !== 0
+            }
+        },
+        currentPrecursors: function() {
+            // Array of precursors corresponding to the selected chemical
+            if (this.selected.type !== 'chemical') {
+                return []
+            }
+            let precursorSmiles = this.dataGraph.getSuccessors(this.selected.smiles)
+            let cmp = (this.sortOrderAscending) ? (a, b) => {return a - b} : (a, b) => {return b - a};
+            let options = {
+                filter: (item) => {
+                    if (this.allowCluster && !item.clusterRep) {
+                        return false
+                    }
+                    if (this.filterReactingAtoms && !this.checkFilter(item)) {
+                        return false
+                    }
+                    return true
+                },
+                order: (a, b) => {
+                    let a_ = a[this.sortingCategory] === undefined ? 0 : a[this.sortingCategory];
+                    let b_ = b[this.sortingCategory] === undefined ? 0 : b[this.sortingCategory];
+                    if (a_ === b_) {
+                        return a.rank - b.rank
+                    }
+                    return cmp(a_, b_);
+                }
+            }
+            return this.dataGraph.nodes.get(precursorSmiles, options)
+        }
     },
     delimiters: ['%%', '%%'],
 });
