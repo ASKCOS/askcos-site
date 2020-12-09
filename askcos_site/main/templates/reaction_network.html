@@ -896,10 +896,10 @@ It is roughly how long it will take for results to be returned, however there is
                                         </span>
                                     </div>
                                     <div>
-                                        <b>Price ($/g): </b>%% selected.ppg %%
+                                        <b>Price ($/g): </b>%% selected.data.ppg %%
                                     </div>
                                     <div v-if="selected.source">
-                                        <b>Source: </b>%% selected.source %%
+                                        <b>Source: </b>%% selected.data.source %%
                                     </div>
                                     <div class="my-2" style="position: relative">
                                         <iframe id="ketcher-iframe-min" src="{% url 'ketcher_iframe_min' %}" width="160" height="100" scrolling="no" style="border-width: 0"></iframe>
@@ -947,7 +947,7 @@ It is roughly how long it will take for results to be returned, however there is
                             </div>
                             <div class="scroll-list" style="max-height: calc(100vh - 40rem)">
                                 <div class="text-center" v-if="refreshFilter">
-                                    <template v-if="typeof(results[selected.smiles]) == 'undefined'">
+                                    <template v-if="!resultsAvailable">
                                         <div class="text-center" style="margin-top: 10px">
                                             <h5>Click button below to expand this node and predict precursors for this target.</h5>
                                             <button id="expand-btn-side" class="btn btn-success" v-on:click="expandNode">Expand node</button>
@@ -960,130 +960,62 @@ It is roughly how long it will take for results to be returned, however there is
                                             </div>
                                         </div>
                                     </template>
-                                    <template v-if="allowCluster">
-                                        <ul v-bind:class="{'card-list-alternating':clusterOptions.isAlternatingColor, 'ul-card':true}">
-                                            <template v-for="cluster in clusteredResults[selected.smiles]">
-                                                <li>
-                                                    <template v-for="(res, index) in cluster">
-                                                        <template v-if="res.show && (!filterReactingAtoms || checkFilter(res))">
-                                                            <div v-bind:class="{'card-first': index==0, 'card-rest': index!=0}">
-                                                                <div class="container-fluid">
-                                                                    <div class="row no-gutters">
-                                                                        <div class="col-sm">
-                                                                            <img v-bind:src="getMolDrawEndPoint(res, undefined, true)" style="max-width: 100%"/>
-                                                                        </div>
-                                                                        <div class="col-sm">
-                                                                            <table class="table table-sm table-bordered m-0">
-                                                                                <tbody>
-                                                                                    <tr>
-                                                                                        <td>Rank</td>
-                                                                                        <td>#%% res.rank %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Score</td>
-                                                                                        <td>%% num2str(res.score, 3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Synthetic complexity</td>
-                                                                                        <td>%% num2str(res.scscore, 3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td># Examples</td>
-                                                                                        <td>%% num2str(res.num_examples) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Template rank</td>
-                                                                                        <td>%% res.template_rank %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Template score</td>
-                                                                                        <td>%% res.template_score.toExponential(3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Plausibility</td>
-                                                                                        <td>%% num2str(res.plausibility, 3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Reaction cluster</td>
-                                                                                        <td>%% num2str(res.group_id+1) %%</td>
-                                                                                    </tr>
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <div class="col text-center my-2">
-                                                                            <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
-                                                                            <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                                            <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </template>
-                                                    </template>
-                                                </li>
-                                            </template>
-                                        </ul>
-                                    </template>
                                     <template v-else>
-                                        <template v-for="res in results[selected.smiles]">
-                                            <template v-if="(!filterReactingAtoms || checkFilter(res))">
-                                                <div class="card">
-                                                    <div class="container-fluid">
-                                                        <div class="row no-gutters">
-                                                            <div class="col-sm">
-                                                                <img v-bind:src="getMolDrawEndPoint(res)" style="max-width: 100%"/>
-                                                            </div>
-                                                            <div class="col-sm">
-                                                                <table class="table table-sm table-bordered m-0">
-                                                                    <tbody>
-                                                                        <tr>
-                                                                            <td>Rank</td>
-                                                                            <td>#%% res.rank %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>Score</td>
-                                                                            <td>%% num2str(res.score, 3) %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>Synthetic complexity</td>
-                                                                            <td>%% num2str(res.scscore, 3) %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td># Examples</td>
-                                                                            <td>%% num2str(res.num_examples) %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>Template rank</td>
-                                                                            <td>%% res.template_rank %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>Template score</td>
-                                                                            <td>%% res.template_score.toExponential(3) %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>Plausibility</td>
-                                                                            <td>%% num2str(res.plausibility, 3) %%</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td>Reaction cluster</td>
-                                                                            <td>%% num2str(res.group_id+1) %%</td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
+                                        <template v-for="res in currentPrecursors">
+                                            <div class="card">
+                                                <div class="container-fluid">
+                                                    <div class="row no-gutters">
+                                                        <div class="col-sm">
+                                                            <img v-bind:src="getMolDrawEndPoint(res, undefined, true)" style="max-width: 100%"/>
                                                         </div>
-                                                        <div class="row">
-                                                            <div class="col text-center my-2">
-                                                                <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
-                                                                <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                                <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
-                                                            </div>
+                                                        <div class="col-sm">
+                                                            <table class="table table-sm table-bordered m-0">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td>Rank</td>
+                                                                        <td>#%% res.rank %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Score</td>
+                                                                        <td>%% num2str(res.retroScore, 3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Synthetic complexity</td>
+                                                                        <td>%% num2str(res.scscore, 3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td># Examples</td>
+                                                                        <td>%% num2str(res.numExamples) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Template rank</td>
+                                                                        <td>%% res.templateRank %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Template score</td>
+                                                                        <td>%% res.templateScore.toExponential(3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Plausibility</td>
+                                                                        <td>%% num2str(res.ffScore, 3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Reaction cluster</td>
+                                                                        <td>%% num2str(res.clusterId+1) %%</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col text-center my-2">
+                                                            <button v-show="!res.inVis.includes(selected.disp.id)" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
+                                                            <button v-show="res.inVis.includes(selected.disp.id)" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
+                                                            <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </template>
+                                            </div>
                                         </template>
                                     </template>
                                 </div>
@@ -1096,35 +1028,35 @@ It is roughly how long it will take for results to be returned, however there is
                                         <div id="selected-smiles" class="customtooltip" @click="copySelectedSmiles">
                                             <i class="far fa-copy"></i>
                                             <b>Smiles: </b>
-                                            %% selected.reactionSmiles %%
+                                            %% selected.smiles %%
                                             <span id="copy-tooltip" class="customtooltiptext">
                                                 Click to copy!
                                             </span>
                                         </div>
-                                        <img v-bind:src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.reactionSmiles)" style="max-width: 100%"/>
+                                        <img v-bind:src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.smiles)" style="max-width: 100%"/>
                                     </div>
                                     <div class="text-center my-2">
-                                        <a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.reactionSmiles)" target="_blank">
+                                        <a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.smiles)" target="_blank">
                                             Evaluate reaction in new tab
                                         </a>
                                     </div>
-                                    <div><b>Retroscore: </b>%% selected.retroscore %%</div>
-                                    <div><b>Template score: </b>%% selected.templateScore %%</div>
-                                    <div><b>Plausibility: </b>%% selected.ffScore %%</div>
-                                    <div><b>Num. Examples: </b>%% selected.numExamples %%</div>
+                                    <div><b>Retroscore: </b>%% selected.data.retroScore %%</div>
+                                    <div><b>Template score: </b>%% selected.data.templateScore %%</div>
+                                    <div><b>Plausibility: </b>%% selected.data.ffScore %%</div>
+                                    <div><b>Num. Examples: </b>%% selected.data.numExamples %%</div>
                                     <div><b>Supporting templates:</b>
                                         <ul>
-                                            <li v-for="id in selected.templateIds">
+                                            <li v-for="id in selected.data.templateIds">
                                                 <a v-bind:href="'/template/?id='+id" target="_blank">%% id %% (%% templateNumExamples[id] %% examples)</a>
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
-                            <div class="alert alert-warning" v-if="selected['selec_error']">
+                            <div class="alert alert-warning" v-if="selected.data.selecError">
                                 Could not check regio-selectivity for this reaction, possibly due to stereochemistry in the product.
                             </div>
-                            <template v-if="'outcomes' in selected">
+                            <template v-if="'outcomes' in selected.data">
                                 <hr class="my-2">
                                 <div class="text-center mb-2">
                                     <h3>Regio-selective Products</h3>
@@ -1132,18 +1064,18 @@ It is roughly how long it will take for results to be returned, however there is
                                 </div>
                                 <div class="scroll-list" style="max-height: calc(100vh - 50rem)">
                                     <div class="grid-wrapper">
-                                        <template v-for="(res, index) in selected.outcomes">
+                                        <template v-for="(res, index) in selected.data.outcomes">
                                             <div class="card">
                                                 <div class="container-fluid d-flex flex-column h-100 justify-content-between">
                                                     <div class="row">
                                                         <div class="col-sm">
-                                                            <img v-bind:src="getMolDrawEndPoint(res)" class="m-1" :class="res === selected.reactionSmiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
+                                                            <img v-bind:src="getMolDrawEndPoint(res)" class="m-1" :class="res === selected.smiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
                                                         </div>
                                                     </div>
                                                     <div class="row">
-                                                        <div class="col-sm" v-if="selected.selectivity[index]">
-                                                            Score %% num2str(selected.selectivity[index], 3) %%
-                                                            <span v-if="selected.selectivity[index] === Math.max(...selected.selectivity)">
+                                                        <div class="col-sm" v-if="selected.data.selectivity[index]">
+                                                            Score %% num2str(selected.data.selectivity[index], 3) %%
+                                                            <span v-if="selected.data.selectivity[index] === Math.max(...selected.data.selectivity)">
                                                                 <i class="fas fa-check"></i>
                                                             </span>
                                                             <span v-else>
