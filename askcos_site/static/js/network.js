@@ -1527,28 +1527,18 @@ var app = new Vue({
             })
         },
         addFromResults: function(selected, reaction) {
-            if (reaction.inViz) {
+            if (selected.id in reaction.inVis) {
                 return
             }
-            addReaction(reaction, selected, this.data.nodes, this.data.edges);
-            reaction.inViz = true;
+            this.addRetroResultToDispGraph([reaction.id], selected.id)
             document.querySelector('.addRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
             document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='';
         },
         remFromResults: function(selected, reaction) {
-            var rsmi = reaction.smiles+'>>'+selected.smiles;
-            var selectedChildren = this.data.nodes.get(childrenOf(selected.id, this.data.nodes, this.data.edges));
-            for (var child of selectedChildren) {
-                if (child.reactionSmiles == rsmi) {
-                    removeChildrenFrom(child.id, this.data.nodes, this.data.edges);
-                    this.data.nodes.remove(child.id);
-                    cleanUpEdges(this.data.nodes, this.data.edges);
-                    document.querySelector('.addRes[data-rank="'+Number(reaction.rank)+'"]').style.display='';
-                    document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
-                    reaction.inViz = false;
-                    break;
-                }
-            }
+            let node = this.dispGraph.nodes.get(reaction.inVis[selected.id])
+            this.deleteNode(node)
+            document.querySelector('.addRes[data-rank="'+Number(reaction.rank)+'"]').style.display='';
+            document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
         },
         resetSortingCategory: function() {
             this.sortingCategory = 'score'
