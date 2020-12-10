@@ -2107,13 +2107,11 @@ var app = new Vue({
         },
         predictSelectivity: function(){
             showLoader();
-            var selected = this.network.getSelectedNodes();
-            var rid = selected[0]
-            var node = this.data.nodes.get(rid)
-            var url = '/api/v2/general-selectivity/';
-            var body = {
-                reactants: node.mapped_precursors,
-                product: node.mapped_outcomes,
+            let data = this.selected.data
+            let url = '/api/v2/general-selectivity/';
+            let body = {
+                reactants: data.mappedPrecursors,
+                product: data.mappedOutcomes,
                 mapped: true,
                 all_outcomes: true,
                 verbose: false,
@@ -2136,8 +2134,11 @@ var app = new Vue({
                 .then(resp => resp.json())
                 .then(json => {
                     function callback(result) {
-                        app.data.nodes.update({id:rid, selectivity: result});
-                        app.selected = app.data.nodes.get(rid)
+                        if (Array.isArray(result)) {
+                            data.selectivity = result;
+                        } else {
+                            alert('Could not predict selectivity for this reaction.')
+                        }
                     }
                     setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
                 })
