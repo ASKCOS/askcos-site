@@ -311,6 +311,7 @@ const visjsOptionsDefault = {
             parentCentralization: true,
             direction: 'UD',
             sortMethod: 'directed',
+            shakeTowards: 'roots',
         }
     },
     interaction:{
