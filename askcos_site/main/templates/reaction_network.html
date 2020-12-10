@@ -1009,8 +1009,8 @@ It is roughly how long it will take for results to be returned, however there is
                                                     </div>
                                                     <div class="row">
                                                         <div class="col text-center my-2">
-                                                            <button v-show="!res.inVis.includes(selected.disp.id)" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
-                                                            <button v-show="res.inVis.includes(selected.disp.id)" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
+                                                            <button v-show="!(selected.id in res.inVis)" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
+                                                            <button v-show="selected.id in res.inVis" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
                                                             <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                         </div>
                                                     </div>

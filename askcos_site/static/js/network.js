@@ -1088,7 +1088,7 @@ var app = new Vue({
                     rmsMolwt: reaction['rms_molwt'],
                     scscore: reaction['scscore'],
                     type: 'reaction',
-                    inVis: [],  // Tracks list of parent nodes in the display graph which include this result
+                    inVis: {},  // Tracks associated nodes in display graph (key: parent ID, value: node ID)
                 }
 
                 clusterTracker.add(reaction['group_id'])
@@ -1138,7 +1138,7 @@ var app = new Vue({
             for (let reactionSmiles of data) {
                 let reactionObj = this.dataGraph.nodes.get(reactionSmiles)
                 let reactionId = uuidv4()
-                reactionObj['inVis'].push(parentId)
+                reactionObj['inVis'][parentId] = reactionId
 
                 let node = {
                     id: reactionId,
@@ -1233,7 +1233,7 @@ var app = new Vue({
                         rmsMolwt: node['rms_molwt'],
                         scscore: node['scscore'],
                         type: node['type'],
-                        inVis: [],
+                        inVis: {},
                     }
                 }
             }))
@@ -1277,7 +1277,7 @@ var app = new Vue({
                     reactionObj = this.dataGraph.nodes.get(from['smiles'])
                 } else {
                     reactionObj = this.dataGraph.nodes.get(to['smiles'])
-                    reactionObj.inVis.push(from['id'])
+                    reactionObj.inVis[from['id']] = to['id']
                 }
                 return {
                     id: edge['id'],
