@@ -25,9 +25,8 @@ class RetroGraph {
                     }
                     break;
                 case 'remove':
-                    for (let id of properties.items) {
-                        let edge = graph.edges.get(id)
-                        delete graph._succ[edge[graph._source]][edge[graph._target]]
+                    for (let obj of properties.oldData) {
+                        delete graph._succ[obj[graph._source]][obj[graph._target]]
                     }
                     break;
                 default:
@@ -78,7 +77,7 @@ class RetroGraph {
     trimDanglingEdges() {
         // Remove any edges which are only connected on one end
         let nodeIds = this.nodes.getIds();
-        let dangling = this.edges.get({
+        let dangling = this.edges.getIds({
             filter: edge => !nodeIds.includes(edge[this._source]) || !nodeIds.includes(edge[this._target])
         });
         this.edges.remove(dangling)
