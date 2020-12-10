@@ -1383,12 +1383,11 @@ var app = new Vue({
                 return
             }
             let selected = this.network.getSelectedNodes();
-            for (let n in selected) {
-                const nodeId = selected[n];
-                const node = this.data.nodes.get(nodeId);
+            for (let nodeId of selected) {
+                let node = this.dispGraph.nodes.get(nodeId)
                 if (node === null) {
                     // the node does not exist, it may have already been deleted
-                    return
+                    continue
                 }
                 if (node.type === 'chemical') {
                     this.deleteChildren(node)
@@ -1396,33 +1395,39 @@ var app = new Vue({
                     this.deleteNode(node)
                 }
             }
-        },
-        deleteNode: function(node) {
-            // delete the specified node and its children from the graph
-            const nodeId = node.id
-            const parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
-            const parentNode = this.data.nodes.get(parentNodeId);
-            for (result of this.results[parentNode.smiles]) {
-                if (result.rank === node.rank) {
-                    result.inViz = false;
-                    break;
-                }
-            }
-            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-            this.data.nodes.remove(nodeId);
-            cleanUpEdges(this.data.nodes, this.data.edges);
-            this.selected = null;
-        },
-        deleteChildren: function(node) {
-            // delete the children for the specified node from the graph
-            const nodeId = node.id
-            for (result of this.results[node.smiles]) {
-                result.inViz = false;
-            }
-            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-            cleanUpEdges(this.data.nodes, this.data.edges);
             this.selected = null;
             this.network.unselectAll();
+        },
+        deleteNode: function(node) {
+            // Delete the specified node and its children from the graph
+            if (node.type !== 'reaction') {
+                console.warn('Attempted to delete chemical node. Use deleteChildren instead.')
+                return
+            }
+            // Delete children of children
+            const childrenIds = this.dispGraph.getSuccessors(node.id)
+            const children = this.dispGraph.nodes.get(childrenIds)
+            children.forEach(this.deleteChildren)
+            // Delete children
+            this.dispGraph.nodes.remove(childrenIds)
+            // Update inVis property of corresponding node in dataGraph
+            const dataObj = this.dataGraph.nodes.get(node.smiles)
+            const parentNodeId = this.dispGraph.getPredecessors(node.id)[0]
+            delete dataObj.inVis[parentNodeId]
+            // Delete selected node
+            this.dispGraph.nodes.remove(node.id)
+            this.dispGraph.trimDanglingEdges()
+        },
+        deleteChildren: function(node) {
+            // Delete children of the specified node from the graph
+            if (node.type !== 'chemical') {
+                console.warn('Attempted to delete children of reaction node. Use deleteNode instead.')
+                return
+            }
+            const childrenIds = this.dispGraph.getSuccessors(node.id)
+            const children = this.dispGraph.nodes.get(childrenIds)
+            children.forEach(this.deleteNode)
+            this.dispGraph.trimDanglingEdges()
         },
         toggleResolver: function() {
             if (this.allowResolve) {
