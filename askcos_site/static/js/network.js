@@ -1497,23 +1497,16 @@ var app = new Vue({
             if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
                 this.target = '';
                 this.selected = null;
-                if (this.network) {
-                    this.data.nodes.remove(this.data.nodes.getIds());
-                    this.data.edges.remove(this.data.edges.getIds());
-                }
+                this.dataGraph.clear();
+                this.dispGraph.clear();
             }
         },
         clearSelection: function() {
             this.selected = null;
         },
         copySelectedSmiles: function() {
-            var copyTooltip = document.querySelector('#copy-tooltip')
-            if (this.selected.type == 'chemical') {
-                copyToClipboard(this.selected.smiles)
-            }
-            else {
-                copyToClipboard(this.selected.reactionSmiles)
-            }
+            let copyTooltip = document.querySelector('#copy-tooltip')
+            copyToClipboard(this.selected.smiles)
             copyTooltip.innerHTML = 'Copied!'
             setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
         },
@@ -1522,9 +1515,8 @@ var app = new Vue({
             selected.forEach(node => {
                 if (this.network.clustering.isCluster(node)) {
                     this.network.openCluster(node)
-                }
-                else {
-                    let forCluster = allChildrenOf(node, app.data.nodes, app.data.edges);
+                } else {
+                    let forCluster = this.dispGraph.getAllSuccessors(node);
                     let options = {
                         joinCondition: (nodeOptions) => {
                             return forCluster.includes(nodeOptions.id) || nodeOptions.id === node
