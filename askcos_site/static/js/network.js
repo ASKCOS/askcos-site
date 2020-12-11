@@ -2250,21 +2250,17 @@ var app = new Vue({
                         alert(json.error)
                     }
                     let result = json['result'];
-                    let target = result['settings']['smiles'];
-                    let results = result['result']['results']
+                    this.target = result['settings']['smiles'];
+                    let graph = result['result']['graph']
                     let tree = result['result']['tree']
-                    this.results = results
-                    Object.values(results).forEach(this.getTemplateNumExamples)
-                    if (tree) {
-                        this.loadNodeLinkGraph(tree, target)
+                    this.addTreeBuilderResultToDataGraph(graph)
+                    if (!!tree) {
+                        this.addTreeBuilderResultToDispGraph(tree)
                     } else {
-                        this.data.nodes = new vis.DataSet([
-                            this.createTargetNode(target)
-                        ]);
-                        this.data.edges = new vis.DataSet([]);
+                        this.initTargetDispNode()
                     }
                     this.networkOptions.layout.hierarchical.enabled = true
-                    this.initializeNetwork(this.data);
+                    this.initializeNetwork(this.dispGraph);
                     this.network.on('selectNode', this.showInfo);
                     this.network.on('deselectNode', this.clearSelection);
                     this.network.on('afterDrawing', hideLoader);

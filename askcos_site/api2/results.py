@@ -145,7 +145,6 @@ class ResultsViewSet(ViewSet):
                     tb_results['results'] = chem_to_results(tb_results['graph'], tree=tb_results['tree'],
                                                             template_set=result_doc['settings'].get('template_set'))
                 # Remove unnecessary data to reduce response size
-                del tb_results['graph']
                 del tb_results['paths']
                 resp['result'] = result_doc
             else:
