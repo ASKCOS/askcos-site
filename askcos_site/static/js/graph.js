@@ -42,6 +42,12 @@ class RetroGraph {
         this.edges.clear('clear')
         this._succ = {};
     }
+    toJSON() {
+        return {
+            nodes: this.nodes.get(),
+            edges: this.edges.get(),
+        }
+    }
     getPredecessors(node) {
         // Retrieve immediate predecessors of the specified node
         let predecessors = [];

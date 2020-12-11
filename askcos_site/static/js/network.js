@@ -1438,29 +1438,22 @@ var app = new Vue({
             }
         },
         download: function() {
-            if (this.data.nodes.length == null) {
-                alert("There's no network to download!")
-                return
+            let data = {
+                dataGraph: this.dataGraph,
+                dispGraph: this.dispGraph,
+                version: 1.0,
             }
-            var downloadData = {nodes: [], edges: [], results: this.results}
-            this.data.nodes.forEach(function(e) {
-                downloadData.nodes.push(e)
-            })
-            this.data.edges.forEach(function(e) {
-                downloadData.edges.push(e)
-            })
-            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(downloadData));
-            var dlAnchorElem = document.getElementById('downloadAnchorElem');
-            dlAnchorElem.setAttribute("href",     dataStr     );
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+            let dlAnchorElem = document.getElementById('downloadAnchorElem');
+            dlAnchorElem.setAttribute("href", dataStr);
             dlAnchorElem.setAttribute("download", this.downloadName);
             dlAnchorElem.click();
         },
-        hasUndefinedGroupid: function() {
+        hasUndefinedGroupId: function(results) {
             // check if this.results has group_id
-            for (s in this.results) {
-                var precursors = this.results[s];
-                for (i of precursors) {
-                    if (i.group_id == undefined) {
+            for (let precursors of Object.values(results)) {
+                for (let item of precursors) {
+                    if (item.group_id === undefined) {
                         return true;
                     }
                 }
@@ -1468,30 +1461,108 @@ var app = new Vue({
             return false;
         },
         load: function() {
-            var file = document.getElementById("loadNetwork").files[0];
-            var reader = new FileReader();
-            var app = this;
-            reader.onload = (function(theFile) {return function(e) {
-                var data = JSON.parse(e.target.result);
-                app.target = data.nodes[0].smiles;
-                app.data.nodes = new vis.DataSet(data.nodes);
-                app.data.edges = new vis.DataSet(data.edges);
-                app.results = data.results;
-                if (app.hasUndefinedGroupid()) {
-                    let res = confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "OK" to re-cluster all of them. This will erase existing reaction cluster information. Select "Cancel" to skip, however, reaction cluster function may not work correctly until you re-cluster manually.');
-                    if (res) {
-                        for (s in app.results) {
-                            app.requestClusterId(s);
-                        }
-                    } else {
-                        app.allowCluster = false;
-                    }
-                }
-                app.initializeNetwork(app.data)
-                app.network.on('selectNode', app.showInfo);
-                app.network.on('deselectNode', app.clearSelection);
-            }})(file);
+            let file = document.getElementById("loadNetwork").files[0];
+            let reader = new FileReader();
             reader.readAsText(file)
+            reader.onload = function(e) {
+                let data = JSON.parse(e.target.result)
+                if (data.version === 1.0) {
+                    app.importDataV1(data)
+                } else {
+                    app.importDataV0(data)
+                }
+            }
+        },
+        importDataV0: function(data) {
+            // Parse old data download format, before version numbers were introduced
+            // Top level properties should be nodes, edges, and results
+            // This converts the data to the current format for subsequent downloads
+            this.target = data.nodes[0].smiles
+            this.initTargetDataNode()
+            for (let [chem, precursors] of Object.entries(data.results)) {
+                this.addRetroResultToDataGraph(precursors, chem)
+            }
+            if (this.hasUndefinedGroupId(data.results)) {
+                let res = confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "OK" to re-cluster all of them. This will erase existing reaction cluster information. Select "Cancel" to skip, however, reaction cluster function may not work correctly until you re-cluster manually.');
+                if (res) {
+                    for (let chem of Object.keys(data.results)) {
+                        this.requestClusterId(chem);
+                    }
+                } else {
+                    this.allowCluster = false;
+                }
+            }
+            this.dispGraph.nodes.add(data.nodes.map(node => {
+                if (node.type === 'chemical') {
+                    let dataObj = this.dataGraph.nodes.get(node['smiles'])
+                    // Transfer properties which were not in the results object
+                    dataObj.ppg = node['ppg']
+                    dataObj.source = node['source']
+                    return {
+                        id: node['id'],
+                        smiles: node['smiles'],
+                        borderWidth: node['borderWidth'],
+                        color: node['color'],
+                        shape: 'image',
+                        image: this.getMolDrawEndPoint(node['smiles']),
+                        type: 'chemical',
+                    }
+                } else {
+                    let dataObj = this.dataGraph.nodes.get(node['reactionSmiles'])
+                    // Transfer properties which were not in the results object
+                    dataObj.selectivity = node['selectivity']
+                    let newNode = {
+                        id: node['id'],
+                        smiles: node['reactionSmiles'],
+                        label: node['label'],
+                        type: 'reaction',
+                    }
+                    for (let key of ['borderWidth', 'color', 'title']) {
+                        if (key in node) {
+                            newNode[key] = node[key]
+                        }
+                    }
+                    return newNode
+                }
+            }))
+            this.dispGraph.edges.add(data.edges.map(edge => {
+                let from = this.dispGraph.nodes.get(edge['from'])
+                let to = this.dispGraph.nodes.get(edge['to'])
+                let reactionObj
+                if (from['type'] === 'reaction') {
+                    reactionObj = this.dataGraph.nodes.get(from['smiles'])
+                } else {
+                    reactionObj = this.dataGraph.nodes.get(to['smiles'])
+                    reactionObj.inVis[from['id']] = to['id']
+                }
+                return {
+                    id: edge['id'],
+                    from: edge['from'],
+                    to: edge['to'],
+                    scaling: {
+                        min: 1,
+                        max: 5,
+                        customScalingFunction: edgeScaling,
+                    },
+                    color: edge['color'],
+                    value: edge['value'],
+                }
+            }))
+            this.initializeNetwork(this.dispGraph)
+            this.network.on('selectNode', this.showInfo)
+            this.network.on('deselectNode', this.clearSelection)
+        },
+        importDataV1: function(data) {
+            // Parse data format version 1.0
+            // Top level properties should be dataGraph, dispGraph, and version
+            this.dataGraph.nodes.add(data.dataGraph.nodes)
+            this.dataGraph.edges.add(data.dataGraph.edges)
+            this.dispGraph.nodes.add(data.dispGraph.nodes)
+            this.dispGraph.edges.add(data.dispGraph.edges)
+            this.target = this.dispGraph.nodes.get(NIL_UUID).smiles
+            this.initializeNetwork(this.dispGraph)
+            this.network.on('selectNode', this.showInfo)
+            this.network.on('deselectNode', this.clearSelection)
         },
         clear: function(skipConfirm = false) {
             if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
