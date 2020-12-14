@@ -30,201 +30,12 @@ function num2str(n, len, exp = false) {
     }
 }
 
-// check whether the set on which the  
-// method is invoked is the subset of  
-// otherset or not 
-function subSet(s, otherSet) {
-    if(s.size > otherSet.size) {
-        return false;
-    } else {
-        for(var elem of s) {
-            // if any of the element of
-            // this is not present in the
-            // otherset then return false
-            if(!otherSet.has(elem))
-                return false;
-        }
-        return true;
-    }
-};
-
 function edgeScaling(min, max, total, value) {
     if (value >= 0.25) {
         return 1.0
     } else {
         return 16 * value * value
     }
-}
-
-function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
-    var added = 0
-    for (r of reactions) {
-        if (added >= reactionLimit) {
-            break;
-        }
-        if (r.show) {
-            addReaction(r, sourceNode, nodes, edges);
-            added += 1;
-        }
-    }
-}
-
-function addReaction(reaction, sourceNode, nodes, edges) {
-    let rId = uuidv4();
-    var node = {
-        id: rId,
-        label: '#'+reaction['rank'],
-        rank: reaction['rank'],
-        ffScore: num2str(reaction['plausibility'] ,3),
-        retroscore: num2str(reaction['score'], 3),
-        templateScore: num2str(reaction['template_score'], 3),
-        numExamples: num2str(reaction['num_examples']),
-        templateIds: reaction['templates'],
-        reactionSmiles: reaction.smiles+'>>'+sourceNode.smiles,
-        type: 'reaction'
-    }
-
-    if ('outcomes' in reaction) {
-        node['outcomes'] = reaction['outcomes'].split('.')
-        node['selectivity'] = new Array(node.outcomes.length)
-        node['mapped_precursors'] = reaction.mapped_precursors
-        node['mapped_outcomes'] = reaction['mapped_outcomes']
-        node['borderWidth'] = 2
-        node['color'] = { border: '#ff4444' }
-        node['title'] = "Selectivity warning! Select this node to see more details"
-    } else if ('selec_error' in reaction) {
-        node['selec_error'] = reaction['selec_error']
-        node['borderWidth'] = 2
-        node['color'] = { border: '#ffbb00' }
-    }
-
-    nodes.add(node)
-    let eId = uuidv4()
-
-    edges.add({
-        id: eId,
-        from: sourceNode.id,
-        to: rId,
-        scaling: {
-            min: 1,
-            max: 5,
-            customScalingFunction: function(min, max, total, value) {
-                if (value > 0.25) {
-                    return 1.0
-                }
-                else{
-                    return 16*value*value
-                }
-            }
-        },
-        color: {
-            color: '#000000',
-            inherit: false
-        },
-        value: Number(reaction['template_score'])
-    })
-    for (n in reaction['smiles_split']) {
-        var smi = reaction['smiles_split'][n];
-        app.lookupPrice(smi)
-        .then(result => {
-            const mysmi = result.search;
-            const ppg = result.ppg
-            const buyable = ppg !== 'not buyable'
-            const source = result.source
-            if (buyable) {
-                var color = "#008800"
-            }
-            else {
-                var color = "#880000"
-            }
-            let nId = uuidv4();
-            nodes.add({
-                id: nId,
-                smiles: mysmi,
-                image: app.getMolDrawEndPoint(mysmi),
-                shape: "image",
-                borderWidth: 2,
-                type: 'chemical',
-                ppg: ppg,
-                source: source,
-                color: {
-                    border: color
-                }
-            })
-            edges.add({
-                id: uuidv4(),
-                from: rId,
-                to: nId,
-                scaling: {
-                    min: 1,
-                    max: 5,
-                    customScalingFunction: function(min, max, total, value) {
-                        if (value > 0.25) {
-                            return 1.0
-                        }
-                        else{
-                            return 16*value*value
-                        }
-                    }
-                },
-                color: {
-                    color: '#000000',
-                    inherit: false
-                },
-                value: Number(reaction['template_score'])
-            })
-        })
-        reaction.inViz = true;
-    }
-}
-
-function parentOf(id, nodes, edges) {
-    var parentId = -1;
-    edges.forEach(function(e) {
-        if (e!=null && e.to==id) {
-            parentId = e.from
-        }
-    })
-    return parentId
-}
-
-function childrenOf(id, nodes, edges) {
-    var children = [];
-    edges.forEach(function(e) {
-        if (e!=null && e.from==id) {
-            children.push(e.to)
-        }
-    })
-    return children
-}
-
-function allChildrenOf(id, nodes, edges) {
-    var children = [];
-    edges.forEach(function(e) {
-        if (e!=null && e.from==id) {
-            children.push(e.to);
-            var tmpChildren = allChildrenOf(e.to, nodes, edges);
-            for (n in tmpChildren) {
-                var child = tmpChildren[n];
-                children.push(child);
-            }
-        }
-    })
-    return children
-}
-
-function removeChildrenFrom(id, nodes, edges) {
-    var children = allChildrenOf(id, nodes, edges);
-    nodes.remove(children);
-}
-
-function cleanUpEdges(nodes, edges) {
-    var nodeIds = nodes.getIds();
-    edges.forEach(function(edge) {
-        if (!nodeIds.includes(edge.from) | !nodeIds.includes(edge.to)) {
-            edges.remove(edge.id)
-        }
-    })
 }
 
 /* DnD */
@@ -412,18 +223,12 @@ var app = new Vue({
             height: 0,
         },
         target: '',
-        data: {
-            nodes: {},
-            edges: {}
-        },
-        results: {},
         dataGraph: new RetroGraph(),
         dispGraph: new RetroGraph(),
         templateSets: {},
         templateAttributes: {},
         buyablesSources: [],
         templateNumExamples: {},
-        nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
         filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
         refreshFilter: 1,
@@ -435,7 +240,6 @@ var app = new Vue({
         showClusterEditModal: false,
         showAddNewPrecursorModal: false,
         downloadName: "network.json",
-        modalData: {},
         tb: {
             settings: JSON.parse(JSON.stringify(tbSettingsDefault)),
             modes: {
@@ -1037,7 +841,6 @@ var app = new Vue({
             })
         },
         initTargetDataNode() {
-            console.log('initTargetDataNode called')
             this.dataGraph.nodes.add({
                 id: this.target,
                 type: 'chemical',
@@ -1050,7 +853,6 @@ var app = new Vue({
                 })
         },
         initTargetDispNode() {
-            console.log('initTargetDispNode called')
             this.dispGraph.nodes.add({
                 id: NIL_UUID,
                 smiles: this.target,
@@ -1366,13 +1168,6 @@ var app = new Vue({
             }
             this.requestRetro(smi, callback);
         },
-        getTemplateNumExamples: function(reactions) {
-            for (reaction of reactions) {
-                for (templateId of reaction['templates']) {
-                    this.apiTemplateCount(templateId);
-                }
-            }
-        },
         apiTemplateCount: function(templateId) {
             if (typeof(this.templateNumExamples[templateId]) == 'undefined') {
                 fetch('/api/template/?id='+templateId)
@@ -1638,41 +1433,8 @@ var app = new Vue({
             this.sortingCategory = 'retroScore'
             this.selectSortingOrder()
         },
-        handleSortingChange: function() {
-            this.selectSortingOrder()
-            this.reorderResults()
-        },
         selectSortingOrder: function() {
             this.sortOrderAscending = ["rmsMolwt", "numRings", "scscore", "templateRank"].includes(this.sortingCategory) || (this.sortingCategory === 'retroScore' && this.tb.settings.precursorScoring === 'SCScore');
-        },
-        reorderResults: function() {
-            var sortingCategory = this.sortingCategory;
-
-            if (this.selected.type != 'chemical') {
-                return
-            }
-            var smiles = this.selected.smiles;
-            var results = this.results[smiles];
-            if (typeof(results) == 'undefined') {
-                return
-            }
-            var cmp
-            if (this.sortOrderAscending) {
-                cmp = function(a, b) {return a - b}
-            } else {
-                cmp = function(a, b) {return b - a}
-            }
-            results.sort((a, b) => {
-                var a_ = a[sortingCategory] == undefined ? 0 : a[sortingCategory];
-                var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
-                if (a_ == b_) {
-                    return a.rank - b.rank
-                }
-                return cmp(a_, b_);
-            })
-            var prevSelected = this.selected;
-            this.selected = undefined;
-            this.selected = prevSelected;
         },
         applyFilterReactingAtoms: function() {
             // Not in use right now, but could come in handy later.
@@ -1718,7 +1480,6 @@ var app = new Vue({
 
             if (dispObj.type === 'chemical') {
                 setSmilesDrawingKetcherMin(dataObj.id);
-                this.handleSortingChange();
                 if (!dataObj.source) {
                     this.lookupPrice(dataObj.id)
                         .then(result => {
@@ -1844,21 +1605,6 @@ var app = new Vue({
                 precursors.forEach((item, index) => item.clusterRep = index === 0)  // Set first item as cluster rep
             }
             this.recompute += 1
-        },
-        detectClusterDeletion: function(selected, oldId) {
-            let allIds = this.clusteredResultsIndex[selected];
-            if (allIds.indexOf(oldId) === -1) {
-                if (allIds.length > 0) {
-                    let idx = allIds.findIndex(e => e > oldId);
-                    if (idx === -1) {
-                        idx = allIds.length - 1;
-                    }
-                    this.clusterEditModalData['allIds'] = allIds[idx];
-                } else {
-                    this.clusterEditModalData['allIds'] = 0;
-                }
-                this.$forceUpdate();
-            }
         },
         clusterEditModalIncGroupID: function() {
             let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
@@ -2009,45 +1755,6 @@ var app = new Vue({
                 tour.restart();
             }
         },
-        initClusterShowCard: function(selected) {
-            // always sort first
-            var reactionSorting = this.sortingCategory;
-            // this.results[selected].sort(function(a, b) {
-            //     var a_ = a[reactionSorting] == undefined ? 0 : a[reactionSorting];
-            //     var b_ = b[reactionSorting] == undefined ? 0 : b[reactionSorting];
-            //     return b_ - a_;
-            // })
-            // init show to false
-            // init first reactionLimit clusters/precursors to true
-            var numShow = 0;
-            var visited_groups = new Set();
-            for (precursor of this.results[selected]) {
-                if (this.allowCluster) {
-                    if (visited_groups.has(precursor.group_id)) {
-                        this.$set(precursor, 'show', false);
-                    } else {
-                        this.$set(precursor, 'show', true);
-                        visited_groups.add(precursor.group_id);
-                    }
-                } else { // !allowCluster
-                    this.$set(precursor, 'show', true);
-                }
-            }
-        },
-        groupPrecursors: function(precursors) {
-            // Takes an array of precursors and groups them into multiple arrays by groupId
-            let grouped = {};
-            for (let i = 0; i < precursors.length; i++) {
-                let precursor = precursors[i];
-                if (grouped[precursor.groupId]) {
-                    grouped[precursor.groupId].push(precursor);
-                }
-                else {
-                    grouped[precursor.groupId] = new Array(precursor);
-                }
-            }
-            return Object.values(grouped);
-        },
         requestClusterId: function(smiles) {
             showLoader();
             let rxns = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(smiles))
@@ -2137,19 +1844,6 @@ var app = new Vue({
                     alert('There was an error predicting selectivity for this reaction: '+error)
                 })
         },
-        createTargetNode: function(target) {
-            return {
-                id: NIL_UUID,
-                smiles: target,
-                image: this.getMolDrawEndPoint(target),
-                shape: "image",
-                borderWidth: 3,
-                type: 'chemical',
-                color: {
-                    border: '#000088'
-                }
-            }
-        },
         loadFromTreeBuilder: function(objectId, numTrees) {
             this.allowCluster = false
             showLoader()
@@ -2188,71 +1882,6 @@ var app = new Vue({
                     hideLoader()
                     console.error('There was a problem loading tree builder results:', error);
                 });
-        },
-        loadNodeLinkGraph(data, target) {
-            /* Load tree in node link format into visjs and add visualization related attributes. */
-            for (node of data.nodes) {
-                if (node.type === 'chemical') {
-                    node.image = `/api/v2/draw/?smiles=${encodeURIComponent(node.smiles)}`;
-                    node.shape = 'image';
-                    node.borderWidth = 2;
-                    let color
-                    if (node.smiles === target) {
-                        node.borderWidth = 3;
-                        color = '#000088';
-                    } else if (node.ppg !== 0) {
-                        color = '#008800';
-                    } else {
-                        node.ppg = 'not buyable'
-                        color = '#880000';
-                    }
-                    node.color = {
-                        border: color
-                    }
-                } else {
-                    node.label = '#' + node.rank;
-                    node.ffScore = num2str(node.plausibility ,3);
-                    node.retroscore = num2str(node.template_score, 3);
-                    node.templateScore = num2str(node.template_score, 3);
-                    node.numExamples = num2str(node.num_examples);
-                    node.templateIds = node.tforms;
-                    node.reactionSmiles = node.smiles;
-                    let smi_split = node.smiles.split('>>')
-                    for (let reaction of this.results[smi_split[1]]) {
-                        if (reaction.smiles === smi_split[0]) {
-                            reaction.inViz = true
-                            break
-                        }
-                    }
-                }
-            }
-            this.data.nodes = new vis.DataSet(data.nodes);
-            for (edge of data.edges) {
-                edge.scaling = {
-                    min: 1,
-                    max: 5,
-                    customScalingFunction: function(min, max, total, value) {
-                        if (value > 0.25) {
-                            return 1.0
-                        }
-                        else{
-                            return 16*value*value
-                        }
-                    }
-                };
-                let from = this.data.nodes.get(edge.from)
-                let to = this.data.nodes.get(edge.to)
-                if (from.type === 'reaction') {
-                    edge.value = from.template_score
-                } else if (to.type === 'reaction') {
-                    edge.value = to.template_score
-                }
-                edge.color = {
-                    color: '#000000',
-                    inherit: false
-                }
-            }
-            this.data.edges = new vis.DataSet(data.edges);
         },
         canonicalize(smiles, input) {
             return fetch(
