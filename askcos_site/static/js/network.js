@@ -1457,16 +1457,13 @@ var app = new Vue({
             dlAnchorElem.setAttribute("download", this.downloadName);
             dlAnchorElem.click();
         },
-        hasUndefinedGroupId: function(results) {
-            // check if this.results has group_id
-            for (let precursors of Object.values(results)) {
-                for (let item of precursors) {
-                    if (item.group_id === undefined) {
-                        return true;
-                    }
+        hasUndefinedClusterId: function() {
+            for (let rxn of this.dataGraph.nodes.get({filter: node => node.type === 'reaction'})) {
+                if (rxn.clusterId === undefined) {
+                    return true
                 }
             }
-            return false;
+            return false
         },
         load: function() {
             let file = document.getElementById("loadNetwork").files[0];
@@ -1489,16 +1486,6 @@ var app = new Vue({
             this.initTargetDataNode()
             for (let [chem, precursors] of Object.entries(data.results)) {
                 this.addRetroResultToDataGraph(precursors, chem)
-            }
-            if (this.hasUndefinedGroupId(data.results)) {
-                let res = confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "OK" to re-cluster all of them. This will erase existing reaction cluster information. Select "Cancel" to skip, however, reaction cluster function may not work correctly until you re-cluster manually.');
-                if (res) {
-                    for (let chem of Object.keys(data.results)) {
-                        this.requestClusterId(chem);
-                    }
-                } else {
-                    this.allowCluster = false;
-                }
             }
             this.dispGraph.nodes.add(data.nodes.map(node => {
                 if (node.type === 'chemical') {
@@ -1556,6 +1543,13 @@ var app = new Vue({
                     value: edge['value'],
                 }
             }))
+            if (this.hasUndefinedClusterId()) {
+                if (confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "Ok" to re-cluster all of them. Select "Cancel" to disable clustering.')) {
+                    this.updateAllClusters()
+                } else {
+                    this.allowCluster = false;
+                }
+            }
             this.initializeNetwork(this.dispGraph)
             this.network.on('selectNode', this.showInfo)
             this.network.on('deselectNode', this.clearSelection)
@@ -1568,9 +1562,24 @@ var app = new Vue({
             this.dispGraph.nodes.add(data.dispGraph.nodes)
             this.dispGraph.edges.add(data.dispGraph.edges)
             this.target = this.dispGraph.nodes.get(NIL_UUID).smiles
+            if (this.hasUndefinedClusterId()) {
+                if (confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "Ok" to re-cluster all of them. Select "Cancel" to disable clustering.')) {
+                    this.updateAllClusters()
+                } else {
+                    this.allowCluster = false;
+                }
+            }
             this.initializeNetwork(this.dispGraph)
             this.network.on('selectNode', this.showInfo)
             this.network.on('deselectNode', this.clearSelection)
+        },
+        updateAllClusters: function () {
+            // Recompute cluster IDs for all results
+            for (let target of this.dataGraph.nodes.getIds({filter: node => node.type === 'chemical'})) {
+                if (this.dataGraph.getSuccessors(target).length > 0) {
+                    this.requestClusterId(target)
+                }
+            }
         },
         clear: function(skipConfirm = false) {
             if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
@@ -2066,7 +2075,13 @@ var app = new Vue({
                 })
                 .then(resp => resp.json())
                 .then(json => {
-                    rxns.forEach((rxn, i) => rxn.clusterId = json.output[i])
+                    let clusterTracker = new Set()
+                    rxns.forEach((rxn, i) => {
+                        let cid = json.output[i]
+                        rxn.clusterId = cid
+                        rxn.clusterRep = !clusterTracker.has(cid)
+                        clusterTracker.add(cid)
+                    })
                     hideLoader()
                 })
                 .catch(error => {
