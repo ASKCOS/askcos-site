@@ -1672,7 +1672,7 @@ var app = new Vue({
                 return true;
             }
 
-            var reactingAtoms = result.reacting_atoms.map((el) => el-1);
+            var reactingAtoms = result.reactingAtoms.map((el) => el-1);
             var reactingAtomsArray = Array.from(reactingAtoms.values());
 
             var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
@@ -2339,6 +2339,7 @@ var app = new Vue({
         currentPrecursors: function() {
             // Array of precursors corresponding to the selected chemical
             let recompute = this.recompute
+            let refreshFilter = this.refreshFilter
             if (this.selected.type !== 'chemical') {
                 return []
             }
