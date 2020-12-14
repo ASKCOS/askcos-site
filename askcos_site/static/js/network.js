@@ -507,6 +507,7 @@ var app = new Vue({
         sortingCategory: ippSettingsDefault.sortingCategory,
         sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
+        recompute: 0,  // Dummy property to trigger computed properties depending on dataGraph or dispGraph
     },
     beforeMount: function() {
         this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
@@ -1133,6 +1134,7 @@ var app = new Vue({
                     })
                 }
             }
+            this.recompute += 1  // Force recompute of properties
             return addedReactions
         },
         addRetroResultToDispGraph(data, parentId) {
@@ -1207,6 +1209,7 @@ var app = new Vue({
                     })
                 }
             }
+            this.recompute += 1  // Force recompute of properties
         },
         addTreeBuilderResultToDataGraph(data) {
             this.dataGraph.nodes.add(data.nodes.map(node => {
@@ -1247,6 +1250,7 @@ var app = new Vue({
                     to: edge['target'],
                 }
             }))
+            this.recompute += 1  // Force recompute of properties
         },
         addTreeBuilderResultToDispGraph(data) {
             this.dispGraph.nodes.add(data.nodes.map(node => {
@@ -1298,6 +1302,7 @@ var app = new Vue({
                     value: reactionObj['templateScore'],
                 }
             }))
+            this.recompute += 1  // Force recompute of properties
         },
         updateNetworkOptions() {
             if (typeof(this.network) != 'undefined') {
@@ -2398,6 +2403,7 @@ var app = new Vue({
         resultsAvailable: function() {
             // Boolean of whether the selected chemical has been expanded
             // Returns false if a reaction node is selected
+            let recompute = this.recompute
             if (this.selected.type !== 'chemical') {
                 return false
             } else {
@@ -2406,6 +2412,7 @@ var app = new Vue({
         },
         currentPrecursors: function() {
             // Array of precursors corresponding to the selected chemical
+            let recompute = this.recompute
             if (this.selected.type !== 'chemical') {
                 return []
             }
