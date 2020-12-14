@@ -20,11 +20,13 @@ function updateObj(dest, src) {
     }
 }
 
-function num2str(n, len) {
-    if (len == undefined) {
-        return n == undefined || isNaN(n) ? 'N/A' : n.toString();
+function num2str(n, len, exp = false) {
+    if (len === undefined) {
+        return n === undefined || isNaN(n) ? 'N/A' : n.toString();
+    } else if (exp) {
+        return n === undefined || isNaN(n) ? 'N/A' : n.toExponential(len);
     } else {
-        return n == undefined || isNaN(n) ? 'N/A' : n.toFixed(len);
+        return n === undefined || isNaN(n) ? 'N/A' : n.toFixed(len);
     }
 }
 

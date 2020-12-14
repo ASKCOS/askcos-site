@@ -125,7 +125,7 @@
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showScore">
                                                                     <td>Score</td>
-                                                                    <td>%% num2str(res.score, 3) %%</td>
+                                                                    <td>%% num2str(res.retroScore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showSCScore">
                                                                     <td>Synthetic complexity</td>
@@ -133,19 +133,19 @@
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
-                                                                    <td>%% num2str(res.num_examples)%%</td>
+                                                                    <td>%% num2str(res.numExamples)%%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showTemplateScore">
                                                                     <td>Template score</td>
-                                                                    <td>%% res.template_score.toExponential(3) %%</td>
+                                                                    <td>%% num2str(res.templateScore, 3, true) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showPlausibility">
                                                                     <td>Plausibility</td>
-                                                                    <td>%% num2str(res.plausibility, 3) %%</td>
+                                                                    <td>%% num2str(res.ffScore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showClusterId">
                                                                     <td>Reaction cluster</td>
-                                                                    <td>%% num2str(res.group_id+1) %%</td>
+                                                                    <td>%% num2str(res.clusterId+1) %%</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -230,7 +230,7 @@
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showScore">
                                                                     <td>Score</td>
-                                                                    <td>%% num2str(res.score, 3) %%</td>
+                                                                    <td>%% num2str(res.retroScore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showSCScore">
                                                                     <td>Synthetic complexity</td>
@@ -238,19 +238,19 @@
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
-                                                                    <td>%% num2str(res.num_examples)%%</td>
+                                                                    <td>%% num2str(res.numExamples)%%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showTemplateScore">
                                                                     <td>Template score</td>
-                                                                    <td>%% res.template_score.toExponential(3) %%</td>
+                                                                    <td>%% num2str(res.templateScore, 3, true) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showPlausibility">
                                                                     <td>Plausibility</td>
-                                                                    <td>%% num2str(res.plausibility, 3) %%</td>
+                                                                    <td>%% num2str(res.ffScore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showClusterId">
                                                                     <td>Reaction cluster</td>
-                                                                    <td>%% num2str(res.group_id+1) %%</td>
+                                                                    <td>%% num2str(res.clusterId+1) %%</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -989,11 +989,11 @@ It is roughly how long it will take for results to be returned, however there is
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Template rank</td>
-                                                                        <td>%% res.templateRank %%</td>
+                                                                        <td>%% num2str(res.templateRank) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Template score</td>
-                                                                        <td>%% res.templateScore.toExponential(3) %%</td>
+                                                                        <td>%% num2str(res.templateScore, 3, true) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Plausibility</td>
