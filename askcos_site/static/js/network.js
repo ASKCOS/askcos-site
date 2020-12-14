@@ -1466,15 +1466,17 @@ var app = new Vue({
             return false
         },
         load: function() {
-            let file = document.getElementById("loadNetwork").files[0];
-            let reader = new FileReader();
-            reader.readAsText(file)
-            reader.onload = function(e) {
-                let data = JSON.parse(e.target.result)
-                if (data.version === 1.0) {
-                    app.importDataV1(data)
-                } else {
-                    app.importDataV0(data)
+            if (this.clear()) {
+                let file = document.getElementById("loadNetwork").files[0];
+                let reader = new FileReader();
+                reader.readAsText(file)
+                reader.onload = function(e) {
+                    let data = JSON.parse(e.target.result)
+                    if (data.version === 1.0) {
+                        app.importDataV1(data)
+                    } else {
+                        app.importDataV0(data)
+                    }
                 }
             }
         },
@@ -1582,11 +1584,15 @@ var app = new Vue({
             }
         },
         clear: function(skipConfirm = false) {
+            // Returns true or false depending on whether results were cleared
             if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
                 this.target = '';
                 this.selected = null;
                 this.dataGraph.clear();
                 this.dispGraph.clear();
+                return true
+            } else {
+                return false
             }
         },
         clearSelection: function() {
