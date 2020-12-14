@@ -1027,16 +1027,41 @@ It is roughly how long it will take for results to be returned, however there is
                                             Evaluate reaction in new tab
                                         </a>
                                     </div>
-                                    <div><b>Retroscore: </b>%% selected.data.retroScore %%</div>
-                                    <div><b>Template score: </b>%% selected.data.templateScore %%</div>
-                                    <div><b>Plausibility: </b>%% selected.data.ffScore %%</div>
-                                    <div><b>Num. Examples: </b>%% selected.data.numExamples %%</div>
-                                    <div><b>Supporting templates:</b>
-                                        <ul>
-                                            <li v-for="id in selected.data.templateIds">
-                                                <a v-bind:href="'/template/?id='+id" target="_blank">%% id %% (%% templateNumExamples[id] %% examples)</a>
-                                            </li>
-                                        </ul>
+                                    <div>
+                                        <table class="table table-sm table-bordered m-0">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Score</th>
+                                                    <td>%% num2str(selected.data.retroScore, 3) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Template rank</th>
+                                                    <td>%% num2str(selected.data.templateRank) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Template score</th>
+                                                    <td>%% num2str(selected.data.templateScore, 3, true) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Plausibility</th>
+                                                    <td>%% num2str(selected.data.ffScore, 3) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th># Examples</th>
+                                                    <td>%% num2str(selected.data.numExamples) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Supporting templates</th>
+                                                    <td>
+                                                        <ul>
+                                                            <li v-for="id in selected.data.templateIds">
+                                                                <a v-bind:href="'/template/?id='+id" target="_blank">%% id %% (%% templateNumExamples[id] %% examples)</a>
+                                                            </li>
+                                                        </ul>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
