@@ -314,7 +314,6 @@ var app = new Vue({
     },
     beforeMount: function() {
         this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
-        this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
     },
     created: function() {
         window.addEventListener('resize', this.handleResize);
