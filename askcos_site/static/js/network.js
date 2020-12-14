@@ -389,7 +389,7 @@ const ippSettingsDefault = {
     allowResolve: false,
     isHighlightAtom: true,
     reactionLimit: 5,
-    sortingCategory: "score",
+    sortingCategory: "retroScore",
     sortOrderAscending: false,
     selectivityModel: "qm_GNN",
     clusterOptions: {
@@ -1612,20 +1612,15 @@ var app = new Vue({
             document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
         },
         resetSortingCategory: function() {
-            this.sortingCategory = 'score'
-            this.handleSortingChange()
+            this.sortingCategory = 'retroScore'
+            this.selectSortingOrder()
         },
         handleSortingChange: function() {
             this.selectSortingOrder()
             this.reorderResults()
         },
         selectSortingOrder: function() {
-            if (["rms_molwt", "num_rings", "scscore", "template_rank"].includes(this.sortingCategory) || (this.sortingCategory === 'score' && this.tb.settings.precursorScoring === 'SCScore')) {
-                this.sortOrderAscending = true
-            }
-            else {
-                this.sortOrderAscending = false
-            }
+            this.sortOrderAscending = ["rmsMolwt", "numRings", "scscore", "templateRank"].includes(this.sortingCategory) || (this.sortingCategory === 'retroScore' && this.tb.settings.precursorScoring === 'SCScore');
         },
         reorderResults: function() {
             var sortingCategory = this.sortingCategory;
