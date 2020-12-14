@@ -436,6 +436,9 @@ var app = new Vue({
             const settings = localStorage.getItem('ippSettings')
             if (!settings) return
             const obj = JSON.parse(decodeURIComponent(settings))
+            if (obj.sortingCategory === 'score') {
+                obj.sortingCategory = 'retroScore'
+            }
             updateObj(this, obj)
         },
         handleResize: function() {
