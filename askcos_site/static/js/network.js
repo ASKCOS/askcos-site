@@ -1067,7 +1067,7 @@ var app = new Vue({
         addRetroResultToDataGraph(data, parentSmiles) {
             // Add results as reaction and chemical nodes under the specified parent chemical
             // Arguments should be list of outcome objects and the SMILES of the parent node
-            let clusterTracker = new Set();
+            let clusterTracker = new Set(this.clusteredResultsIndex[parentSmiles]);
             let addedReactions = [];
             for (let reaction of data) {
                 let reactionSmiles = reaction['smiles'] + '>>' + parentSmiles
@@ -1096,7 +1096,9 @@ var app = new Vue({
                 }
 
                 clusterTracker.add(reaction['group_id'])
-                node.templateIds.forEach(template => this.apiTemplateCount(template))
+                if (node.templateIds) {
+                    node.templateIds.forEach(template => this.apiTemplateCount(template))
+                }
 
                 if ('outcomes' in reaction) {
                     node['outcomes'] = reaction['outcomes'].split('.')
@@ -1730,21 +1732,14 @@ var app = new Vue({
             }
         },
         openClusterPopoutModal: function(selected, res) {
-            if(selected == undefined) {
+            if(selected === undefined) {
                 alert('No target molecule selected. Please select a molecule in the tree.')
                 return
             }
-            /*
-             * cannot deselect
-            this.clearSelection();
-            if (network) {
-                network.unselectAll();
-            }
-            */
             this.$set(this.clusterPopoutModalData, 'selected', selected);
             this.$set(this.clusterPopoutModalData, 'selectedSmiles', selected.smiles);
             this.$set(this.clusterPopoutModalData, 'res', res);
-            this.$set(this.clusterPopoutModalData, 'group_id', res.group_id);
+            this.$set(this.clusterPopoutModalData, 'clusterId', res.clusterId);
             this.showClusterPopoutModal = true;
         },
         closeClusterPopoutModal: function() {
@@ -1752,57 +1747,46 @@ var app = new Vue({
             this.clusterPopoutModalData['selected'] = undefined;
             this.clusterPopoutModalData['selectedSmiles'] = undefined;
             this.clusterPopoutModalData['res'] = undefined;
-            this.clusterPopoutModalData['group_id'] = undefined;
+            this.clusterPopoutModalData['clusterId'] = undefined;
         },
         clusterPopoutModalIncGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterPopoutModalData['group_id']);
-            if (idx == all_ids.length-1) {
-            } else {
-                this.clusterPopoutModalData['group_id'] = all_ids[idx+1];
+            let allIds = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterPopoutModalData['clusterId']);
+            if (idx !== allIds.length-1) {
+                this.$set(this.clusterPopoutModalData, 'clusterId', allIds[idx+1]);
             }
-            this.$forceUpdate();
         },
         clusterPopoutModalDecGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterPopoutModalData['group_id']);
-            if (idx == 0) {
-            } else {
-                this.clusterPopoutModalData['group_id'] = all_ids[idx-1];
+            let allIds = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterPopoutModalData['clusterId']);
+            if (idx !== 0) {
+                this.$set(this.clusterPopoutModalData, 'clusterId', allIds[idx-1]);
             }
-            this.$forceUpdate();
         },
-        openClusterEditModal: function(selected, group_id) {
-            if(selected == undefined) {
+        openClusterEditModal: function(selected, clusterId) {
+            if(selected === undefined) {
                 alert('No target molecule selected. Please select a molecule in the tree.')
                 return
             }
-            /*
-             * cannot deselect
-            this.clearSelection();
-            if (network) {
-                network.unselectAll();
-            }
-            */
-            if(group_id == undefined) {
-                group_id = 0
+            if(clusterId === undefined) {
+                clusterId = 0
             }
             this.$set(this.clusterEditModalData, 'selected', selected);
             this.$set(this.clusterEditModalData, 'selectedSmiles', selected.smiles);
-            this.$set(this.clusterEditModalData, 'group_id', group_id);
+            this.$set(this.clusterEditModalData, 'clusterId', clusterId);
             this.showClusterEditModal = true;
         },
         closeClusterEditModal: function() {
             this.showClusterEditModal = false;
             this.clusterEditModalData['selected'] = undefined;
             this.clusterEditModalData['selectedSmiles'] = undefined;
-            this.clusterEditModalData['group_id'] = undefined;
+            this.clusterEditModalData['clusterId'] = undefined;
         },
         clusteredit_dragstart_handler: function(precursor, event) {
             event.target.style.opacity = '0.4';
-            event.dataTransfer.setData('text/plain', precursor.smiles);
+            event.dataTransfer.setData('text/plain', precursor.id);
             var img = new Image();
-            img.src = this.getMolDrawEndPoint(precursor.smiles);
+            img.src = this.getMolDrawEndPoint(precursor.precursorSmiles);
             // set opacity does not work..
             event.dataTransfer.setDragImage(img, 10, 10);
             event.dataTransfer.effectAllowed = 'all';
@@ -1818,72 +1802,66 @@ var app = new Vue({
         },
         clusteredit_drop_handler: function(target, event) {
             event.preventDefault(); // important
-            var s = event.dataTransfer.getData('text/plain'); // precursor.simles
-            var r = this.results[this.clusterEditModalData['selectedSmiles']];
-            // find precursor
-            var old_gid;
-            for (let x of r) {
-                if (x.smiles == s) {
-                    old_gid = x.group_id;
-                    x.group_id = target.group_id;
-                    break
-                }
-            }
+            let smi = event.dataTransfer.getData('text/plain')  // precursor.id
+            let obj = this.dataGraph.nodes.get(smi)
+            let oldId = obj.clusterId
+            obj.clusterId = target.clusterId
             this.clusteredit_dragend_handler(event);
             clusteredit_dragleave_handler(event);
-            this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
+            this.updateClusterReps(this.clusterEditModalData['selectedSmiles'], [oldId, obj.clusterId])
         },
         clusteredit_drop_handler_newcluster: function(event) {
             event.preventDefault(); // important
-            var s = event.dataTransfer.getData('text/plain'); // precursor.simles
-            var r = this.results[this.clusterEditModalData['selectedSmiles']];
-            var all_ids = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
-            var new_gid = all_ids[all_ids.length-1]+1;
-            var old_gid;
-            for (let x of r) {
-                if (x.smiles == s) {
-                    old_gid = x.group_id;
-                    x.group_id = new_gid;
-                    break
-                }
-            }
-            
+            let smi = event.dataTransfer.getData('text/plain');  // precursor.id
+            let obj = this.dataGraph.nodes.get(smi)
+            let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']]
+            let oldId = obj.clusterId
+            obj.clusterId = allIds[allIds.length - 1] + 1;
             this.clusteredit_dragend_handler(event);
             clusteredit_dragleave_handler(event);
-            this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
+            this.updateClusterReps(this.clusterEditModalData['selectedSmiles'], [oldId, obj.clusterId])
         },
-        detectClusterDeletion: function(selected, old_gid) {
-            var all_ids = this.clusteredResultsIndex[selected];
-            if (all_ids.indexOf(old_gid) == -1) {
-                if (all_ids.length > 0) {
-                    var idx = all_ids.findIndex(function(e){return e>old_gid});
-                    if (idx == -1) idx = all_ids.length-1;
-                    this.clusterEditModalData['group_id'] = all_ids[idx];
+        updateClusterReps(target, clusterIds) {
+            // Update the cluster representatives for the specified clusterIds
+            for (let clusterId of clusterIds) {
+                let options = {filter: item => item.clusterId === clusterId}
+                let precursorSmiles = this.dataGraph.getSuccessors(target)
+                let precursors = this.dataGraph.nodes.get(precursorSmiles, options)
+                precursors.forEach((item, index) => item.clusterRep = index === 0)  // Set first item as cluster rep
+            }
+            this.recompute += 1
+        },
+        detectClusterDeletion: function(selected, oldId) {
+            let allIds = this.clusteredResultsIndex[selected];
+            if (allIds.indexOf(oldId) === -1) {
+                if (allIds.length > 0) {
+                    let idx = allIds.findIndex(e => e > oldId);
+                    if (idx === -1) {
+                        idx = allIds.length - 1;
+                    }
+                    this.clusterEditModalData['allIds'] = allIds[idx];
                 } else {
-                    this.clusterEditModalData['group_id'] = 0;
+                    this.clusterEditModalData['allIds'] = 0;
                 }
                 this.$forceUpdate();
             }
         },
         clusterEditModalIncGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterEditModalData['group_id']);
-            if (idx == all_ids.length-1) {
-            } else {
-                this.clusterEditModalData['group_id'] = all_ids[idx+1];
+            let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterEditModalData['clusterId']);
+            if (idx !== allIds.length-1) {
+                this.$set(this.clusterEditModalData, 'clusterId', allIds[idx+1]);
             }
-            this.$forceUpdate();
         },
         clusterEditModalDecGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterEditModalData['group_id']);
-            if (idx == 0) {
-            } else {
-                this.clusterEditModalData['group_id'] = all_ids[idx-1];
+            let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterEditModalData['clusterId']);
+            if (idx !== 0) {
+                this.$set(this.clusterEditModalData, 'clusterId', allIds[idx-1]);
             }
-            this.$forceUpdate();
         },
         clusterEditModalDeletePrecursor: function(selected, smiles) {
+            throw 'not implemented yet'
             let res = confirm('This will remove the precursor completely and cannot be undone! Continue?')
             if (res) {
                 var r = this.results[selected];
@@ -1893,116 +1871,75 @@ var app = new Vue({
                 this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
             }
         },
-        // gid == undefined is to add a new cluster
-        clusterEditModalAddPrecursor: function(selectedSmiles, smiles, gid) {
-            var isshow = false;
-            if (this.results[selectedSmiles] == undefined) {
-                this.results[selectedSmiles] = [];
-                gid = 0;
-                isshow = true;
-            }
-            var all_ids = this.clusteredResultsIndex[selectedSmiles];
-            if (gid == undefined) {
-                isshow = true;
-                if (all_ids.length == 0) {
-                    gid = 0;
+        clusterEditModalAddPrecursor: function(selectedSmiles, smiles, clusterId) {
+            // clusterId == undefined is to add a new cluster
+            let successors = this.dataGraph.getSuccessors(selectedSmiles)
+            let allIds = this.clusteredResultsIndex[selectedSmiles]
+            if (clusterId === undefined) {
+                if (successors.length === 0 || allIds.length === 0) {
+                    clusterId = 0
                 } else {
-                    gid = all_ids[all_ids.length-1]+1;
+                    clusterId = allIds[allIds.length - 1] + 1
                 }
             }
-            var rank = 0;
-            for (let i of this.results[selectedSmiles]) {
-                rank = Math.max(rank, i.rank);
+            let rank = Math.max(...this.dataGraph.nodes.get(successors).map(s => s.rank)) + 1;
+            let res = {
+                smiles: smiles,
+                smiles_split: smiles.split('.'),
+                rank: rank,
+                group_id: clusterId,
             }
-            rank += 1;
-            var r = {
-                'show': isshow,
-                'smiles': smiles,
-                'smiles_split': smiles.split('.'),
-                'group_id': gid,
-                'score': undefined,
-                'plausibility': undefined,
-                'rank': rank,
-                'num_examples': undefined,
-                'necessary_reagent': undefined,
-                'template_score': undefined,
-                'templates': undefined,
-            };
-            this.results[selectedSmiles].push(r);
+            this.addRetroResultToDataGraph([res], selectedSmiles)
         },
-        // if group_id == undefined, add to a new group
-        openAddNewPrecursorModal: function(selectedSmiles, group_id) {
+        openAddNewPrecursorModal: function(selectedSmiles, clusterId) {
+            // if clusterId == undefined, add to a new group
             this.showAddNewPrecursorModal = true;
-            this.$set(this.addNewPrecursorModal, 'selectedSmiles', selectedSmiles == undefined ? this.selected.smiles : selectedSmiles);
-            this.$set(this.addNewPrecursorModal, 'group_id', group_id == undefined ? 'undefined' : group_id.toString());
-            this.$set(this.addNewPrecursorModal, 'newprecursorsmiles', '');
-            this.$set(this.addNewPrecursorModal, 'nodupcheck', false);
+            this.$set(this.addNewPrecursorModal, 'selectedSmiles', selectedSmiles === undefined ? this.selected.smiles : selectedSmiles);
+            this.$set(this.addNewPrecursorModal, 'clusterId', clusterId);
+            this.$set(this.addNewPrecursorModal, 'newPrecursorSmiles', '');
+            this.$set(this.addNewPrecursorModal, 'noDupCheck', false);
         },
         closeAddNewPrecursorModal: function() {
             this.showAddNewPrecursorModal = false;
             this.addNewPrecursorModal['selectedSmiles'] = '';
-            this.addNewPrecursorModal['group_id'] = '';
-            this.addNewPrecursorModal['newprecursorsmiles'] = '';
-            this.addNewPrecursorModal['nodupcheck'] = false;
+            this.addNewPrecursorModal['clusterId'] = '';
+            this.addNewPrecursorModal['newPrecursorSmiles'] = '';
+            this.addNewPrecursorModal['noDupCheck'] = false;
         },
         checkDuplicatePrecursor: function(selectedSmiles, p) {
-            var p_splited = new Set(p.split("."));
-            for (s of this.results[selectedSmiles]) {
-                var s_set = new Set(s['smiles_split']);
-                if (subSet(s_set, p_splited) || subSet(p_splited, s_set)) {
-                    return s;
-                }
-            }
-            return undefined;
+            let existing = this.dataGraph.getSuccessors(selectedSmiles)
+            return (existing.includes(p)) ? this.dataGraph.nodes.get(p) : undefined
         },
-        addNewPrecursorModalSubmit: async function() {
-            var gid;
-            if (this.addNewPrecursorModal['group_id'] == "undefined") {
-                gid = undefined;
-            } else {
-                gid = Number(this.addNewPrecursorModal['group_id']);
-            }
-            try {
-                isvalid = await this.validatesmiles(
-                    this.addNewPrecursorModal['newprecursorsmiles'],
-                    !this.allowResolve
-                );
-                if (!isvalid) {
-                    this.addNewPrecursorModal['newprecursorsmiles'] =
-                        await this.resolveChemName(
-                            this.addNewPrecursorModal['newprecursorsmiles']
-                        );
-                }
-            } catch(error) {
-                var error_msg = 'unknown error';
-                if ('message' in error) {
-                    error_msg = error.name+':'+error.message;
-                } else if (typeof(error) == 'string') {
-                    error_msg = error;
-                }
-                alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg);
-                return
-            }
-            if (this.addNewPrecursorModal['newprecursorsmiles'] == undefined) {
-                alert('There was an error during adding the precursor.');
-            } else {
-                if (!this.addNewPrecursorModal['nodupcheck']) {
-                    var s = this.checkDuplicatePrecursor(
-                        this.addNewPrecursorModal['selectedSmiles'],
-                        this.addNewPrecursorModal['newprecursorsmiles']
-                    );
-                    if (s != undefined) {
-                        alert('There may be a duplicated precursor: rank: '+s.rank+' cluster: '+s.group_id+'. If you still want to proceed, please select "No duplicate check" option.');
-                        return
+        addNewPrecursorModalSubmit: function() {
+            let gid = this.addNewPrecursorModal['clusterId']
+            let smi = this.addNewPrecursorModal['newPrecursorSmiles']
+            this.validatesmiles(smi, !this.allowResolve)
+                .then(isValid => {
+                    return isValid ? smi : this.resolveChemName(smi)
+                })
+                .then(smi => this.canonicalize(smi, (res) => this.addNewPrecursorModal['newPrecursorSmiles'] = res))
+                .then(() => {
+                    if (this.addNewPrecursorModal['newPrecursorSmiles'] !== undefined) {
+                        if (!this.addNewPrecursorModal['noDupCheck']) {
+                            let s = this.checkDuplicatePrecursor(this.addNewPrecursorModal['selectedSmiles'], this.addNewPrecursorModal['newPrecursorSmiles'])
+                            if (s !== undefined) {
+                                alert('There may be a duplicated precursor: rank: '+s.rank+' cluster: '+s.clusterId+'. If you still want to proceed, please select "No duplicate check" option.')
+                                return
+                            }
+                        }
+                        this.clusterEditModalAddPrecursor(this.addNewPrecursorModal['selectedSmiles'], this.addNewPrecursorModal['newPrecursorSmiles'], gid)
+                        this.closeAddNewPrecursorModal();
                     }
-                }
-                this.clusterEditModalAddPrecursor(
-                    this.addNewPrecursorModal['selectedSmiles'],
-                    this.addNewPrecursorModal['newprecursorsmiles'],
-                    gid);
-                this.$forceUpdate();
-                this.closeAddNewPrecursorModal();
-            }
+                })
+                .catch(error => {
+                    var error_msg = 'unknown error'
+                    if ('message' in error) {
+                        error_msg = error.name+':'+error.message
+                    } else if (typeof(error) == 'string') {
+                        error_msg = error
+                    }
+                    alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
+                })
         },
         getMolDrawEndPoint: function(precursor, isHighlight, isTransparent) {
             //  precursor can be
@@ -2095,88 +2032,59 @@ var app = new Vue({
             }
         },
         groupPrecursors: function(precursors) {
-            var grouped = {};
+            // Takes an array of precursors and groups them into multiple arrays by groupId
+            let grouped = {};
             for (let i = 0; i < precursors.length; i++) {
-                var precursor = precursors[i];
-                if (grouped[precursor.group_id]) {
-                    grouped[precursor.group_id].push(precursor);
+                let precursor = precursors[i];
+                if (grouped[precursor.groupId]) {
+                    grouped[precursor.groupId].push(precursor);
                 }
                 else {
-                    grouped[precursor.group_id] = new Array(precursor);
+                    grouped[precursor.groupId] = new Array(precursor);
                 }
             }
             return Object.values(grouped);
         },
-        requestClusterId: function(selected) {
+        requestClusterId: function(smiles) {
             showLoader();
-            var all_smiles = [];
-            var all_scores = [];
-            var i;
-            for (i = 0; i < this.results[selected].length; i++) {
-                all_smiles.push(this.results[selected][i].smiles);
-                var s = this.results[selected][i].score;
-                if (s == undefined) {
-                    s = 0;
-                }
-                all_scores.push(s);
-            }
-            var url = '/api/cluster/?';
-            var params = {
-                original:       selected,
-                outcomes:       all_smiles,
-                feature:        this.clusterOptions.feature,
-                fp_name:        this.clusterOptions.fingerprint,
-                fpradius:       this.clusterOptions.fpRadius,
-                fpnbits:        this.clusterOptions.fpBits,
+            let rxns = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(smiles))
+            let outcomes = rxns.map(rxn => rxn.precursorSmiles)
+            let scores = rxns.map(rxn => rxn.score || 0)
+            let url = '/api/v2/cluster/'
+            let body = {
+                original: smiles,
+                outcomes: outcomes,
+                feature: this.clusterOptions.feature,
+                fp_name: this.clusterOptions.fingerprint,
+                fpradius: this.clusterOptions.fpRadius,
+                fpnbits: this.clusterOptions.fpBits,
                 cluster_method: this.clusterOptions.cluster_method,
-                scores:          all_scores,
-            };
-            var queryString = Object.keys(params).map((key) => {
-                return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
-            }).join('&');
-            
-            fetch_param = {
+                scores: scores,
+            }
+
+            fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: queryString,
-            };
-            
-            fetch(url, fetch_param)
-            .then(resp => {
-                if (!resp.ok) {
-                    throw resp.status;
-                }
-                return resp;
+                body: JSON.stringify(body),
             })
-            .then(resp => resp.json())
-            .then(resp_json => {
-                if ('error' in resp_json) {
-                    hideLoader()
-                    throw resp_json['error'];
-                } else {
-                    var group_ids = resp_json['group_id'];
-                    var i;
-                    for (i = 0; i < this.results[selected].length; i++) {
-                        this.$set(this.results[selected][i], 'group_id', group_ids[i]);
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw resp.statusText;
                     }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    rxns.forEach((rxn, i) => rxn.clusterId = json.output[i])
                     hideLoader()
-                }
-            })
-            .catch((error) => {
-                hideLoader()
-                var error_msg = 'unknown error'
-                if (typeof(error) == 'number') {
-                    error_msg = 'Error code: ' + error;
-                } else if (typeof(error) == 'string') {
-                    error_msg = error;
-                } else if ('message' in error) {
-                    error_msg = error.name+':'+error.message;
-                }
-                alert('There was an error fetching cluster results for this target with the supplied settings: '+error_msg)
-            })
+                })
+                .catch(error => {
+                    hideLoader()
+                    alert('There was an error fetching cluster results for this target with the supplied settings: '+error)
+                })
         },
         predictSelectivity: function(){
             showLoader();
@@ -2354,7 +2262,11 @@ var app = new Vue({
             .then(resp => resp.json())
             .then(json => {
                 if (json.smiles) {
-                    this[input] = json.smiles
+                    if (typeof input === 'string') {
+                        this[input] = json.smiles
+                    } else if (input instanceof Function) {
+                        input(json.smiles)
+                    }
                 }
             })
         },
@@ -2368,37 +2280,51 @@ var app = new Vue({
         }
     },
     computed: {
-        // {'target_smiles0':[[{result0}, {result1}, ...], [...]], ...}
         clusteredResults: function() {
-            var res = {};
-            var x;
-            for (x in this.results) {
-                res[x] = this.groupPrecursors(this.results[x]);
-                vueApp = this
-                res[x].sort(function(a, b) {
-                    let maxPropA = Math.max.apply(Math, a.map(function(obj) {
-                        return obj[vueApp.sortingCategory]
-                    }))
-                    let maxPropB = Math.max.apply(Math, b.map(function(obj) {
-                        return obj[vueApp.sortingCategory]
-                    }))
-                    return maxPropB - maxPropA
-                })
+            // Mapping of target smiles to list of cluster representatives
+            // {'targetSmiles0':[{cluster0_rep}, {cluster1_rep},...], ...}
+            let recompute = this.recompute
+            let res = {}
+            let options = {
+                filter: (item) => item.clusterRep,
+                order: (a, b) => a.clusterId - b.clusterId,
             }
-            return res;
+            for (let target of this.dataGraph.nodes.getIds({filter: node => node.type === 'chemical'})) {
+                res[target] = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(target), options)
+            }
+            return res
         },
-        // {'target_smiles0':[all possible unique group_ids sorted in accending order], ...}
         clusteredResultsIndex: function() {
-            var res = {};
-            var x;
-            for (x in this.results) {
-                var ids = new Set();
-                for (let i of this.results[x]) {
-                    ids.add(i.group_id);
-                }
-                res[x] = Array.from(ids).sort(function(a, b){return a-b});
+            // Mapping of target smiles to list of cluster IDs in ascending order
+            // {'targetSmiles0':[unique cluster Ids in ascending order], ...}
+            let recompute = this.recompute
+            let res = {}
+            for (let target of this.dataGraph.nodes.getIds({filter: node => node.type === 'chemical'})) {
+                let precursors = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(target))
+                res[target] = [...new Set(precursors.map(rxn => rxn.clusterId))]
+                res[target].sort((a, b) => a - b)
             }
-            return res;
+            return res
+        },
+        currentClusterViewPrecursors: function() {
+            let recompute = this.recompute
+            let smi = this.clusterPopoutModalData.selectedSmiles
+            let cid = this.clusterPopoutModalData.clusterId
+            let precursorSmiles = this.dataGraph.getSuccessors(smi)
+            let options = {
+                filter: (item) => item.clusterId === cid
+            }
+            return this.dataGraph.nodes.get(precursorSmiles, options)
+        },
+        currentClusterEditPrecursors: function () {
+            let recompute = this.recompute
+            let smi = this.clusterEditModalData.selectedSmiles
+            let cid = this.clusterEditModalData.clusterId
+            let precursorSmiles = this.dataGraph.getSuccessors(smi)
+            let options = {
+                filter: (item) => item.clusterId === cid
+            }
+            return this.dataGraph.nodes.get(precursorSmiles, options)
         },
         resultsAvailable: function() {
             // Boolean of whether the selected chemical has been expanded
