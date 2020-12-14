@@ -395,7 +395,6 @@ const ippSettingsDefault = {
     sortOrderAscending: false,
     selectivityModel: "qm_GNN",
     clusterOptions: {
-        allowRemovePrecursor: true,
         feature: 'original',
         fingerprint:'morgan',
         fpRadius: 1, fpBits: 512,
@@ -1858,17 +1857,6 @@ var app = new Vue({
             let idx = allIds.indexOf(this.clusterEditModalData['clusterId']);
             if (idx !== 0) {
                 this.$set(this.clusterEditModalData, 'clusterId', allIds[idx-1]);
-            }
-        },
-        clusterEditModalDeletePrecursor: function(selected, smiles) {
-            throw 'not implemented yet'
-            let res = confirm('This will remove the precursor completely and cannot be undone! Continue?')
-            if (res) {
-                var r = this.results[selected];
-                var idx = r.findIndex(function(e){return e.smiles==smiles;});
-                var old_gid = r[idx].group_id;
-                r.splice(idx, 1);
-                this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
             }
         },
         clusterEditModalAddPrecursor: function(selectedSmiles, smiles, clusterId) {
