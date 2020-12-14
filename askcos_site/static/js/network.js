@@ -2024,7 +2024,7 @@ var tour = new Tour({
             content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (server icon to the left is green) you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). If you wish to turn the name resolving feature off, click the server icon and it will turn red. For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
             placement: "bottom",
             onNext: function() {
-                app.target = 'OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F'
+                app.target = 'OC(Cn1cncn1)(Cn1cncn1)c1ccc(F)cc1F'
             }
         },
         {
@@ -2033,7 +2033,7 @@ var tour = new Tour({
             content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, click on the edit icon to open the drawing tool or try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click 'Next to continue!",
             placement: "bottom",
             onNext: function() {
-                if (app.data.nodes.length == null | app.data.nodes.length == 0) {
+                if (app.dataGraph.nodes.length === 0) {
                     app.changeTarget();
                 }
             }
@@ -2050,12 +2050,10 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the highest ranked prediction is highlighted.",
             onShown: function () {
-                app.data.nodes.forEach(function(n) {
-                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn1cncn1)c1ccc(F)cc1F'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             },
             placement: 'right',
         },
@@ -2065,12 +2063,10 @@ var tour = new Tour({
             content: "The children node(s) of <b>reactions</b> represent <b>chemicals</b>, and are the predicted reactants for this reaction. Chemicals in a <span class='red-text'>red</span> box were not found in the buyables database. <b>Chemicals</b> in a <span class='green-text'>green</span> box were found in the database and are buyable.",
             placement: 'right',
             onNext: function() {
-                app.data.nodes.forEach(function(n) {
-                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             }
         },
         {
@@ -2113,12 +2109,10 @@ var tour = new Tour({
             content: "You may also notice there are many more precursor results shown on the right side here than were added into the network visualization (it's a scrolling list) - this is to keep things tidy in the visualization. By default, only the top 5 results (scored by retro 'score') are added to the visualization (this can be changed in the settings menu). The plus (+) and minus (-) buttons, when shown below the reaction, can be used to add or remove that reaction to or from the visualization. Go ahead and give it a try if you'd like. Click 'Next' to continue.",
             placement: "left",
             onNext: function() {
-                app.data.nodes.forEach(function(n) {
-                    if (n.reactionSmiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn1cncn1)c1ccc(F)cc1F'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             }
         },
         {
@@ -2127,12 +2121,10 @@ var tour = new Tour({
             content: "If you have a reaction node selected, Rank number 1 in this example, the right side of your screen will show you details for that reaction. At the top you can see the reaction SMILES, a 2d rendering, and similar reaction scores that you have seen before. You will also see a list of links to templates that support the reaction. Clicking one will open a new tab with more details about each template. There is also a link to 'Evaluate reaction in new tab', which will let you predict reaction conditions and evaluate the reaction in the forward direction.",
             placement: "left",
             onNext: function() {
-                app.data.nodes.forEach(function(n) {
-                    if (n.smiles === 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             }
         },
         /*  Start of cluster section */
@@ -2160,7 +2152,7 @@ var tour = new Tour({
             content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another button with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
             placement: "left",
             onNext: function() {
-		        app.openClusterPopoutModal(app.selected, app.results[app.selected.smiles][0]);
+                app.openClusterPopoutModal(app.selected, app.currentPrecursors[0]);
             }
         },
         {
@@ -2171,7 +2163,7 @@ var tour = new Tour({
                 app.closeClusterPopoutModal()
             }
         },
-	/* End of cluster section */
+        /* End of cluster section */
         {
             element: "#network",
             title: "Understanding the network",
