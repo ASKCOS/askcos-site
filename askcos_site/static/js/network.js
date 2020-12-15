@@ -1060,6 +1060,10 @@ var app = new Vue({
         addTreeBuilderResultToDispGraph(data) {
             this.dispGraph.nodes.add(data.nodes.map(node => {
                 let dataObj = this.dataGraph.nodes.get(node['smiles'])
+                if ('ppg' in node && !('ppg' in dataObj)) {
+                    // When loading old tree builder results, ppg needs to be transferred from tree
+                    dataObj.ppg = (node['ppg'] === 0) ? 'not buyable' : node['ppg']
+                }
                 if (node.type === 'chemical') {
                     return {
                         id: node['id'],
@@ -1864,11 +1868,19 @@ var app = new Vue({
                     if (json.error) {
                         alert(json.error)
                     }
-                    let result = json['result'];
-                    this.target = result['settings']['smiles'];
-                    let graph = result['result']['graph']
-                    let tree = result['result']['tree']
-                    this.addTreeBuilderResultToDataGraph(graph)
+                    let resultObj = json['result'];
+                    this.target = resultObj['settings']['smiles'];
+                    let graph = resultObj['result']['graph']
+                    let results = resultObj['result']['results']
+                    let tree = resultObj['result']['tree']
+                    if (!!graph) {
+                        this.addTreeBuilderResultToDataGraph(graph)
+                    } else if (!!results) {
+                        this.initTargetDataNode()
+                        for (let [chem, precursors] of Object.entries(results)) {
+                            this.addRetroResultToDataGraph(precursors, chem)
+                        }
+                    }
                     if (!!tree) {
                         this.addTreeBuilderResultToDispGraph(tree)
                     } else {
