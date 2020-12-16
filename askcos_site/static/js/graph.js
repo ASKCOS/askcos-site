@@ -29,6 +29,9 @@ class RetroGraph {
                         delete graph._succ[obj[graph._source]][obj[graph._target]]
                     }
                     break;
+                case 'update':
+                    console.debug('Not updating graph successors on update event.')
+                    break;
                 default:
                     throw `Cannot handle ${event} event!`;
             }
