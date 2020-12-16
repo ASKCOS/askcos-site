@@ -4,6 +4,7 @@ container.classList.add('container-fluid')
 container.style.width=null;
 
 const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+const BG_OPACITY = 0.2 // Background opacity
 
 function updateObj(dest, src) {
     // take properties of src and overwrite matching properties of dest
@@ -225,6 +226,10 @@ var app = new Vue({
         target: '',
         dataGraph: new RetroGraph(),
         dispGraph: new RetroGraph(),
+        treeView: null,
+        treeViewEnabled: false,
+        trees: [],
+        currentTreeIndex: 0,
         templateSets: {},
         templateAttributes: {},
         buyablesSources: [],
@@ -1929,6 +1934,73 @@ var app = new Vue({
         resetTemplateSetVersion(event) {
             this.tb.settings.attributeFilter = []
             this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
+        },
+        enableTreeView() {
+            this.treeViewEnabled = true
+            this.trees = this.dispGraph.getPaths(NIL_UUID, this.tb.settings.maxDepth, this.tb.settings.maxTrees)
+            this.updateTreeOpacity()
+        },
+        disableTreeView() {
+            this.treeViewEnabled = false
+            this.resetOpacity()
+        },
+        updateTreeOpacity() {
+            this.resetOpacity()
+            let tree = this.trees[this.currentTreeIndex]
+            let nodes = this.dispGraph.nodes.getIds().map(node => ({
+                id: node,
+                opacity: tree.nodes.includes(node) ? undefined : BG_OPACITY
+            }))
+            let edges = this.dispGraph.edges.getIds().map(edge => ({
+                id: edge,
+                color: {
+                    color: '#000000',
+                    inherit: false,
+                    opacity: tree.edges.includes(edge) ? undefined : BG_OPACITY
+                }
+            }))
+            this.dispGraph.nodes.update(nodes)
+            this.dispGraph.edges.update(edges)
+        },
+        resetOpacity() {
+            let nodes = this.dispGraph.nodes.getIds().map(node => ({
+                id: node,
+                opacity: undefined
+            }))
+            let edges = this.dispGraph.edges.getIds().map(edge => ({
+                id: edge,
+                color: {
+                    color: '#000000',
+                    inherit: false,
+                    opacity: undefined
+                }
+            }))
+            this.dispGraph.nodes.update(nodes)
+            this.dispGraph.edges.update(edges)
+        },
+        changeTreeIndex(op) {
+            let max = this.trees.length - 1
+            switch (op) {
+                case 'next':
+                    if (this.currentTreeIndex < max) {
+                        this.currentTreeIndex += 1
+                    }
+                    break;
+                case 'prev':
+                    if (this.currentTreeIndex > 0) {
+                        this.currentTreeIndex -= 1
+                    }
+                    break;
+                case 'first':
+                    this.currentTreeIndex = 0
+                    break;
+                case 'last':
+                    this.currentTreeIndex = max
+                    break;
+                default:
+                    console.error(`Unexpected operation '${op}' for changeTreeIndex.`);
+            }
+            this.updateTreeOpacity()
         }
     },
     computed: {
@@ -2018,6 +2090,15 @@ var app = new Vue({
             }
             return this.dataGraph.nodes.get(precursorSmiles, options)
         }
+    },
+    watch: {
+        treeViewEnabled: function (newVal) {
+            if (newVal) {
+                this.enableTreeView()
+            } else {
+                this.disableTreeView()
+            }
+        },
     },
     delimiters: ['%%', '%%'],
 });
