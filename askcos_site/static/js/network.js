@@ -1895,7 +1895,7 @@ var app = new Vue({
                     this.initializeNetwork(this.dispGraph);
                     this.network.on('selectNode', this.showInfo);
                     this.network.on('deselectNode', this.clearSelection);
-                    this.network.on('afterDrawing', hideLoader);
+                    this.network.once('afterDrawing', hideLoader);
                 })
                 .catch(error => {
                     hideLoader()
