@@ -315,6 +315,7 @@ var app = new Vue({
         sortingCategory: ippSettingsDefault.sortingCategory,
         sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
+        pendingTasks: 0,  // Counter for displaying loading spinner
         recompute: 0,  // Dummy property to trigger computed properties depending on dataGraph or dispGraph
     },
     beforeMount: function() {
@@ -371,15 +372,12 @@ var app = new Vue({
     },
     methods: {
         initializeNetwork(data) {
-            var container = document.getElementById('network');
-            this.network = new vis.Network(container, data, this.networkOptions);
-            this.network.on("beforeDrawing",  function(ctx) {
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-                ctx.restore();
-            })
+            this.pendingTasks += 1
+            let container = document.getElementById('network')
+            this.network = new vis.Network(container, data, this.networkOptions)
+            this.network.on('selectNode', this.showInfo)
+            this.network.on('deselectNode', this.clearSelection)
+            this.network.once('afterDrawing', () => {this.pendingTasks -= 1})
         },
         centerGraph() {
             if (!!this.network) {
@@ -649,7 +647,7 @@ var app = new Vue({
             })
         },
         requestRetro: function(smiles, callback) {
-            showLoader()
+            this.pendingTasks += 1;
             const url = '/api/v2/retro/';
             const body = {
                 target: smiles,
@@ -686,20 +684,21 @@ var app = new Vue({
                     setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
                 })
                 .catch(error => {
-                    hideLoader();
+                    this.pendingTasks -= 1;
                     alert('There was an error predicting precursors for this target: '+error)
                 })
         },
         pollCeleryResult: function(taskId, callback) {
+            // Check celery task status in 1s intervals
+            // Results in -1 pendingTasks upon completion or failure
             fetch(`/api/v2/celery/task/${taskId}/`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.complete) {
                     callback(json.output);
-                    hideLoader();
+                    this.pendingTasks -= 1;
                 }
                 else if (json.failed) {
-                    hideLoader();
                     throw Error('Celery task failed.');
                 }
                 else {
@@ -711,6 +710,7 @@ var app = new Vue({
                     console.log('Unable to fetch celery results due to connection error. Will keep trying.')
                     setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 2000)
                 } else {
+                    this.pendingTasks -= 1;
                     console.error('There was a problem fetching results:', error);
                 }
             });
@@ -820,7 +820,7 @@ var app = new Vue({
             return obj
         },
         changeTarget: function() {
-            showLoader();
+            this.pendingTasks += 1;
             this.saveTbSettings()
             this.saveNetworkOptions()
             this.saveIppSettings()
@@ -843,24 +843,21 @@ var app = new Vue({
                         app.dispGraph.clear()
                         app.initTargetDataNode()
                         app.initTargetDispNode()
-                        app.initializeNetwork(app.dispGraph)
-                        app.network.on('selectNode', app.showInfo)
-                        app.network.on('deselectNode', app.clearSelection)
                         let addedReactions = app.addRetroResultToDataGraph(precursors, smi)
                         let reactionsToAdd = addedReactions.filter(reactionSmiles => {
                             return !app.allowCluster || app.dataGraph.nodes.get(reactionSmiles).clusterRep
                         }).slice(0, app.reactionLimit)
                         app.addRetroResultToDispGraph(reactionsToAdd, NIL_UUID)
+                        app.initializeNetwork(app.dispGraph)
                         app.network.selectNodes([NIL_UUID])
                         app.showInfo({'nodes': [NIL_UUID]})
                     }
                     this.requestRetro(smi, callback);
-                } else {
-                    hideLoader();
                 }
+                this.pendingTasks -= 1;
             })
             .catch(error => {
-                hideLoader();
+                this.pendingTasks -= 1;
                 var error_msg = 'unknown error'
                 if ('message' in error) {
                     error_msg = error.name+':'+error.message
@@ -1142,10 +1139,8 @@ var app = new Vue({
             if (this.isModalOpen() || typeof(this.network) == "undefined") {
                 return
             }
-            showLoader();
             var selected = this.network.getSelectedNodes();
             if (selected.length !== 1) {
-              hideLoader();
               if (selected.length === 0) {
                   alert('Please select a terminal chemical node to expand')
               }
@@ -1157,19 +1152,16 @@ var app = new Vue({
             var nodeId = selected[0];
             if (typeof(nodeId) == 'string' && nodeId.startsWith('cluster')) {
                 alert('Cannot expand collpased node! To toggle collpased state, click collapse toggle button again with collapsed cluster selected.')
-                hideLoader();
                 return
             }
             var node = this.dispGraph.nodes.get(nodeId)
             if (node.type !== 'chemical') {
                 alert('Cannot expand reaction; try expanding with a chemical node selected');
-                hideLoader();
                 return
             }
             var childrenOfSelected = this.dispGraph.getSuccessors(nodeId)
             if (childrenOfSelected.length !== 0) {
                 alert("You've already expanded this node. If you would like to re-expand, please use the 'Remove children nodes' button to clear results in the visualization for this chemical. Please note that this will replace the previously predicted results for this chemical (for example, if you've changed any settings)")
-                hideLoader();
                 return
             }
             const smi = node.smiles;
@@ -1283,6 +1275,7 @@ var app = new Vue({
         },
         load: function() {
             if (this.clear()) {
+                this.pendingTasks += 1;
                 let file = document.getElementById("loadNetwork").files[0];
                 let reader = new FileReader();
                 reader.readAsText(file)
@@ -1293,6 +1286,7 @@ var app = new Vue({
                     } else {
                         app.importDataV0(data)
                     }
+                    app.pendingTasks -= 1;
                 }
             }
         },
@@ -1369,8 +1363,6 @@ var app = new Vue({
                 }
             }
             this.initializeNetwork(this.dispGraph)
-            this.network.on('selectNode', this.showInfo)
-            this.network.on('deselectNode', this.clearSelection)
         },
         importDataV1: function(data) {
             // Parse data format version 1.0
@@ -1388,8 +1380,6 @@ var app = new Vue({
                 }
             }
             this.initializeNetwork(this.dispGraph)
-            this.network.on('selectNode', this.showInfo)
-            this.network.on('deselectNode', this.clearSelection)
         },
         updateAllClusters: function () {
             // Recompute cluster IDs for all results
@@ -1773,7 +1763,7 @@ var app = new Vue({
             }
         },
         requestClusterId: function(smiles) {
-            showLoader();
+            this.pendingTasks += 1;
             let rxns = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(smiles))
             let outcomes = rxns.map(rxn => rxn.precursorSmiles)
             let scores = rxns.map(rxn => rxn.score || 0)
@@ -1812,15 +1802,15 @@ var app = new Vue({
                         rxn.clusterRep = !clusterTracker.has(cid)
                         clusterTracker.add(cid)
                     })
-                    hideLoader()
+                    this.pendingTasks -= 1;
                 })
                 .catch(error => {
-                    hideLoader()
+                    this.pendingTasks -= 1;
                     alert('There was an error fetching cluster results for this target with the supplied settings: '+error)
                 })
         },
         predictSelectivity: function(){
-            showLoader();
+            this.pendingTasks += 1;
             let data = this.selected.data
             let url = '/api/v2/general-selectivity/';
             let body = {
@@ -1857,13 +1847,13 @@ var app = new Vue({
                     setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
                 })
                 .catch(error => {
-                    hideLoader();
+                    this.pendingTasks -= 1;
                     alert('There was an error predicting selectivity for this reaction: '+error)
                 })
         },
         loadFromTreeBuilder: function(objectId, numTrees) {
             this.allowCluster = false
-            showLoader()
+            this.pendingTasks += 1;
             let url = `/api/v2/results/${objectId}/ipp/`
             if (numTrees !== 'all') {
                 url += `?num=${numTrees}`
@@ -1899,12 +1889,10 @@ var app = new Vue({
                     }
                     this.networkOptions.layout.hierarchical.enabled = true
                     this.initializeNetwork(this.dispGraph);
-                    this.network.on('selectNode', this.showInfo);
-                    this.network.on('deselectNode', this.clearSelection);
-                    this.network.once('afterDrawing', hideLoader);
+                    this.pendingTasks -= 1;
                 })
                 .catch(error => {
-                    hideLoader()
+                    this.pendingTasks -= 1;
                     console.error('There was a problem loading tree builder results:', error);
                 });
         },
@@ -2098,6 +2086,15 @@ var app = new Vue({
         }
     },
     watch: {
+        pendingTasks: function(newVal) {
+            if (newVal > 0) {
+                showLoader()
+            } else if (newVal === 0) {
+                hideLoader()
+            } else {
+                throw 'Encountered negative pendingTasks!'
+            }
+        },
         treeViewEnabled: function (newVal) {
             if (newVal) {
                 this.enableTreeView()
