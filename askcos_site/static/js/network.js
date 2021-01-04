@@ -796,6 +796,29 @@ var app = new Vue({
                     return result
                 })
         },
+        updatePrice: function(smiles) {
+            // Lookup price and then update corresponding nodes in dataGraph and dispGraph
+            this.lookupPrice(smiles)
+                .then(result => {
+                    this.dataGraph.nodes.update({id: smiles, ppg: result.ppg, source: result.source})
+                    let nodeIds = this.dispGraph.nodes.getIds({filter: item => item.smiles === smiles})
+                    this.dispGraph.nodes.update(nodeIds.map(nodeId => ({
+                        id: nodeId,
+                        color: this.getNodeColor(smiles, result.ppg),
+                    })))
+                })
+        },
+        getNodeColor: function(smiles, ppg) {
+            let obj = {}
+            if (smiles === this.target) {
+                obj.border = '#000088'
+            } else if (ppg === 'not buyable') {
+                obj.border = '#880000'
+            } else if (ppg !== undefined) {
+                obj.border = '#008800'
+            }
+            return obj
+        },
         changeTarget: function() {
             showLoader();
             this.saveTbSettings()
@@ -854,9 +877,7 @@ var app = new Vue({
             })
             this.lookupPrice(this.target)
                 .then(result => {
-                    let node = this.dataGraph.nodes.get(this.target);
-                    node.ppg = result.ppg;
-                    node.source = result.source;
+                    this.dataGraph.nodes.update({id: this.target, ppg: result.ppg, source: result.source})
                 })
         },
         initTargetDispNode() {
@@ -864,9 +885,7 @@ var app = new Vue({
                 id: NIL_UUID,
                 smiles: this.target,
                 borderWidth: 3,
-                color: {
-                    border: '#000088'
-                },
+                color: this.getNodeColor(this.target),
                 shape: 'image',
                 image: this.getMolDrawEndPoint(this.target),
                 type: 'chemical',
@@ -930,12 +949,7 @@ var app = new Vue({
                             id: precursorSmiles,
                             type: 'chemical',
                         })
-                        this.lookupPrice(precursorSmiles)
-                            .then(result => {
-                                let node = this.dataGraph.nodes.get(precursorSmiles);
-                                node.ppg = result.ppg;
-                                node.source = result.source;
-                            })
+                        this.updatePrice(precursorSmiles)
                     }
                     this.dataGraph.edges.add({
                         id: uuidv4(),
@@ -995,9 +1009,7 @@ var app = new Vue({
                         id: precursorId,
                         smiles: precursorSmiles,
                         borderWidth: 2,
-                        color: {
-                            border: (precursorObj.ppg === 'not buyable') ? '#880000' : '#008800'
-                        },
+                        color: this.getNodeColor(precursorSmiles, precursorObj.ppg),
                         shape: 'image',
                         image: this.getMolDrawEndPoint(precursorSmiles),
                         type: 'chemical',
@@ -1074,9 +1086,7 @@ var app = new Vue({
                         id: node['id'],
                         smiles: node['smiles'],
                         borderWidth: (node['smiles'] === this.target) ? 3 : 2,
-                        color: {
-                            border: (node['smiles'] === this.target) ? '#000088' : (dataObj['ppg'] === 'not buyable') ? '#880000' : '#008800'
-                        },
+                        color: this.getNodeColor(node['smiles'], dataObj['ppg']),
                         shape: 'image',
                         image: this.getMolDrawEndPoint(node['smiles']),
                         type: 'chemical',
@@ -1492,11 +1502,7 @@ var app = new Vue({
             if (dispObj.type === 'chemical') {
                 setSmilesDrawingKetcherMin(dataObj.id);
                 if (!dataObj.source) {
-                    this.lookupPrice(dataObj.id)
-                        .then(result => {
-                            dataObj.ppg = result.ppg;
-                            dataObj.source = result.source;
-                        })
+                    this.updatePrice(dataObj.id)
                 }
             }
         },
