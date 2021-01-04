@@ -427,11 +427,11 @@
                                     <option v-for="attribute in templateAttributes[tb.settings.templateSet]" :value="attribute">%% attribute %%</option>
                                 </select>
                                 <select class="form-control form-control-sm mr-2" v-model="filter.logic">
-                                    <option value="&gt;">&gt;</option>
-                                    <option value="&ge;">&ge;</option>
-                                    <option value="&lt;">&lt;</option>
-                                    <option value="&le;">&le;</option>
-                                    <option value="==">==</option>
+                                    <option value=">">&gt;</option>
+                                    <option value=">=">&ge;</option>
+                                    <option value="<">&lt;</option>
+                                    <option value="<=">&le;</option>
+                                    <option value="==">=</option>
                                 </select>
                                 <input class="form-control form-control-sm mr-2" type="number" v-model="filter.value">
                             </div>
