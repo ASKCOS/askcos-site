@@ -6,8 +6,9 @@ var app = new Vue({
         highlight: false,
     },
     methods: {
-        updateSmilesFromJSME() {
-            this.canonicalize(jsmeApplet.smiles(), drawBoxId)
+        updateSmilesFromKetcher() {
+            let smiles = ketcher.getSmiles();
+            this.canonicalize(smiles, drawBoxId)
         },
         canonicalize(smiles, field) {
             fetch(
