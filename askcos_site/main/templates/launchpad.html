@@ -51,17 +51,81 @@
         </div>
     </div>
 
-    <div v-if="!!smiles && type === 'mol'" class="row text-center my-5">
-        <div class="col-12">
-            This is a molecule!
+    <template v-if="!!smiles && type === 'mol'">
+        <div class="card-deck my-5">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">SCScore</h4>
+                    <p class="card-text lead">1.0</p>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Synthesize with Interactive Path Planner</h4>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Forward Synthesis Products</h4>
+                </div>
+            </div>
         </div>
-    </div>
+        <div class="card-deck my-5">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Search Buyables Database</h4>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Impurities</h4>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Aromatic Site Selectivity</h4>
+                </div>
+            </div>
+        </div>
+    </template>
 
-    <div v-if="!!smiles && type === 'rxn'" class="row text-center my-5">
-        <div class="col-12">
-            This is a reaction!
+    <template v-if="!!smiles && type === 'rxn'">
+        <div class="card-deck my-5">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Fast Filter Score</h4>
+                    <p class="card-text lead">1.0</p>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Generate Atom Mapping</h4>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Forward Synthesis Products</h4>
+                </div>
+            </div>
         </div>
-    </div>
+        <div class="card-deck my-5">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Condition Recommendation</h4>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Impurities</h4>
+                </div>
+            </div>
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Predict Regioselectivity</h4>
+                </div>
+            </div>
+        </div>
+    </template>
 
 </div>
 
