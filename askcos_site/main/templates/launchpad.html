@@ -61,12 +61,16 @@
             </div>
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Synthesize with Interactive Path Planner</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/retro/network/?target=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Synthesize with Interactive Path Planner</h4>
+                    </a>
                 </div>
             </div>
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Predict Forward Synthesis Products</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&reactants=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Predict Forward Synthesis</h4>
+                    </a>
                 </div>
             </div>
         </div>
@@ -78,7 +82,9 @@
             </div>
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Predict Impurities</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=impurity&reactants=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Predict Impurities</h4>
+                    </a>
                 </div>
             </div>
             <div class="card bg-light">
@@ -104,24 +110,32 @@
             </div>
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Predict Forward Synthesis Products</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&rxnsmiles=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Predict Forward Synthesis</h4>
+                    </a>
                 </div>
             </div>
         </div>
         <div class="card-deck my-5">
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Predict Condition Recommendation</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=context&rxnsmiles=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Predict Conditions</h4>
+                    </a>
                 </div>
             </div>
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Predict Impurities</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=impurity&rxnsmiles=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Predict Impurities</h4>
+                    </a>
                 </div>
             </div>
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Predict Regioselectivity</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=selectivity&rxnsmiles=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Predict Regioselectivity</h4>
+                    </a>
                 </div>
             </div>
         </div>
