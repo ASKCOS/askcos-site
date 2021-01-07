@@ -85,7 +85,9 @@
         <div class="card-deck my-5">
             <div class="card bg-light">
                 <div class="card-body text-center">
-                    <h4 class="card-title">Search Buyables Database</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/buyables/?q=${encodeURIComponent(smiles)}`">
+                        <h4 class="card-title">Search Buyables Database</h4>
+                    </a>
                 </div>
             </div>
             <div class="card bg-light">
