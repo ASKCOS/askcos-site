@@ -56,7 +56,15 @@
             <div class="card bg-light">
                 <div class="card-body text-center">
                     <h4 class="card-title">SCScore</h4>
-                    <p class="card-text lead">1.0</p>
+                    <template v-if="scscore === undefined">
+                        <button class="btn btn-primary" @click="getScscore(smiles)">Evaluate</button>
+                    </template>
+                    <template v-else-if="scscore === 'evaluating'">
+                        <div class="spinner-border text-secondary" role="status"></div>
+                    </template>
+                    <template v-else>
+                        <p class="card-text lead">%% scscore %%</p>
+                    </template>
                 </div>
             </div>
             <div class="card bg-light">
@@ -100,7 +108,15 @@
             <div class="card bg-light">
                 <div class="card-body text-center">
                     <h4 class="card-title">Fast Filter Score</h4>
-                    <p class="card-text lead">1.0</p>
+                    <template v-if="reactionScore === undefined">
+                        <button class="btn btn-primary" @click="getReactionScore(smiles)">Evaluate</button>
+                    </template>
+                    <template v-else-if="reactionScore === 'evaluating'">
+                        <div class="spinner-border text-secondary" role="status"></div>
+                    </template>
+                    <template v-else>
+                        <p class="card-text lead">%% reactionScore %%</p>
+                    </template>
                 </div>
             </div>
             <div class="card bg-light">
