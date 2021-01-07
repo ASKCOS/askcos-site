@@ -16,6 +16,14 @@ var app = new Vue({
         addBuyableSource: '',
         uploadFileFormat: 'json'
     },
+    mounted: function() {
+        var urlParams = new URLSearchParams(window.location.search)
+        let query = urlParams.get('q')
+        if (!!query) {
+            this.searchSmilesQuery = query
+            this.search()
+        }
+    },
     methods: {
         search: function() {
             showLoader()
