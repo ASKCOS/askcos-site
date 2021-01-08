@@ -12,6 +12,9 @@ var app = new Vue({
         smiles: '',
         scscore: undefined,
         reactionScore: undefined,
+        mappedSmiles: undefined,
+        mapper: 'WLN atom mapper',
+        showMappedSmiles: true,
     },
     methods: {
         updateSmilesFromKetcher() {
@@ -105,6 +108,37 @@ var app = new Vue({
                     console.error('Could not evaluate reaction score:', error)
                 })
         },
+        getMappedSmiles(smiles) {
+            this.mappedSmiles = 'evaluating'
+            this.showMappedSmiles = true
+            const url = '/api/v2/atom-mapper/'
+            const body = {
+                rxnsmiles: smiles,
+                mapper: this.mapper,
+            }
+            fetch(url,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw resp.statusText
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    let callback = (res) => {this.mappedSmiles = res}
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    console.error('Could not generate atom mapping:', error)
+                })
+        },
         pollCeleryResult(taskId, callback) {
             fetch(`/api/v2/celery/task/${taskId}/`)
             .then(resp => resp.json())
@@ -134,6 +168,7 @@ var app = new Vue({
             if (newVal !== oldVal) {
                 this.scscore = undefined
                 this.reactionScore = undefined
+                this.mappedSmiles = undefined
             }
         },
     },
