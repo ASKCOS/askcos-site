@@ -124,14 +124,32 @@
             <div class="card bg-light">
                 <div class="card-body text-center">
                     <h4 class="card-title">Generate Atom Mapping</h4>
-                    <template v-if="mappedSmiles === undefined">
-                        <button class="btn btn-primary" @click="getMappedSmiles(smiles)">Evaluate</button>
-                    </template>
-                    <template v-else-if="mappedSmiles === 'evaluating'">
+                    <template v-if="mappedSmiles === 'evaluating'">
                         <div class="spinner-border text-secondary" role="status"></div>
                     </template>
                     <template v-else>
-                        <button class="btn btn-primary" @click="showMappedSmiles = !showMappedSmiles">%% showMappedSmiles ? 'Hide' : 'Show' %%</button>
+                        <div class="btn-group" role="group">
+                            <template v-if="mappedSmiles === undefined">
+                                <button class="btn btn-primary" @click="getMappedSmiles(smiles)">Evaluate</button>
+                            </template>
+                            <template v-else>
+                                <button class="btn btn-primary" @click="showMappedSmiles = !showMappedSmiles">%% showMappedSmiles ? 'Hide' : 'Show' %%</button>
+                            </template>
+                            <button id="atomMapSettings" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i></button>
+                            <div class="dropdown-menu" aria-labelledby="atomMapSettings">
+                                <h5 class="dropdown-header"><b>Model</b></h5>
+                                <div class="px-4 py-2 text-nowrap">
+                                    <div v-for="(opt, index) in mapperOptions" class="form-check">
+                                        <input class="form-check-input" :id="`mapperOpt${index}`" type="radio" :value="opt" v-model="mapper">
+                                        <label class="form-check-label" :for="`mapperOpt${index}`">%% opt %%</label>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <div class="px-4 py-2 text-nowrap">
+                                    <button type="button" class="btn btn-outline-dark btn-block" @click="getMappedSmiles(smiles)" :disabled="mappedSmiles === undefined">Re-evaluate</button>
+                                </div>
+                            </div>
+                        </div>
                     </template>
                 </div>
             </div>

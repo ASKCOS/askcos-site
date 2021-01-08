@@ -15,6 +15,7 @@ var app = new Vue({
         reactionScore: undefined,
         mappedSmiles: undefined,
         mapper: 'WLN atom mapper',
+        mapperOptions: ['WLN atom mapper', 'Transformer'],
         showMappedSmiles: true,
     },
     methods: {
