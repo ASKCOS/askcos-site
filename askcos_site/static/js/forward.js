@@ -23,6 +23,7 @@ var app = new Vue({
         impurityResults: [],
         selectivityResults: [],
         siteResults: [],
+        siteResultsQuery: '',
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
@@ -549,6 +550,17 @@ var app = new Vue({
                 this.clear()
                 this.mode = 'context'
                 tour.restart()
+            }
+        }
+    },
+    computed: {
+        siteResultsFilter: function() {
+            // Returns site results where reactant matches siteResultsQuery
+            if (!!this.siteResultsQuery) {
+                let query = new RegExp(this.siteResultsQuery)
+                return this.siteResults.filter((res) => query.test(res.task))
+            } else {
+                return this.siteResults
             }
         }
     },

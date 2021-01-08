@@ -433,6 +433,12 @@ Forward Synthesis Planner
     </div>
 
     <div id="site-results" v-show="mode === 'sites'">
+        <div v-show="!!siteResults.length" class="form-inline my-3">
+            <i title="Filter reactants based on substring match to SMILES. Supports regular expressions."
+                class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+            <label class="mr-2" for="sitesQuery">Filter Reactants:</label>
+            <input class='form-control' type="text" v-model="siteResultsQuery" id="sitesQuery" style="width: 20rem"/>
+        </div>
         <table v-show="!!siteResults.length" class="table table-hover my-3">
             <thead>
                 <tr>
@@ -441,7 +447,7 @@ Forward Synthesis Planner
                 </tr>
             </thead>
             <tbody>
-                <template v-for="res in siteResults">
+                <template v-for="res in siteResultsFilter">
                     <tr>
                         <td class="text-center">
                             <img :src="getMolImgUrl(res.task, true)" :alt="res.task" loading="lazy">
