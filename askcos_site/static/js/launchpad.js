@@ -10,6 +10,7 @@ var app = new Vue({
     el: "#app",
     data: {
         smiles: '',
+        validSmiles: false,
         scscore: undefined,
         reactionScore: undefined,
         mappedSmiles: undefined,
@@ -166,6 +167,7 @@ var app = new Vue({
     watch: {
         smiles: function(newVal, oldVal) {
             if (newVal !== oldVal) {
+                this.validSmiles = false
                 this.scscore = undefined
                 this.reactionScore = undefined
                 this.mappedSmiles = undefined
