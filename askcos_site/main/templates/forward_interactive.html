@@ -127,6 +127,10 @@ Forward Synthesis Planner
                     <div id="regioselectivityArrowStep" class="step" :class="{current: mode=='selectivity'}" for="selectivityMode" @click="changeMode('selectivity')">
                         <span> Regio-selectivity prediction </span>
                     </div>
+
+                    <div id="siteSelectivityArrowStep" class="step" :class="{current: mode=='sites'}" for="sitesMode" @click="changeMode('sites')">
+                        <span> Site selectivity prediction </span>
+                    </div>
                     <div style="display:inline-block;margin: 10px 20px; float: right;">
                         <button id="settings-btn" class="btn btn-outline-dark" @click="showSettings = !showSettings" title="Settings" style="margin-left: 5px"><i class="fas fa-cog"></i></button>
                         <button class="btn btn-outline-dark" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
@@ -155,9 +159,9 @@ Forward Synthesis Planner
             <div class="col-md-3">
                 <label for="product">Product:</label>
                 <div class="input-group">
-                    <input class='form-control' type="text" v-model="product" :disabled="mode=='forward'" id="product"/>
+                    <input class='form-control' type="text" v-model="product" :disabled="mode === 'forward' || mode === 'sites'" id="product"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode === 'forward' || mode === 'sites'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -169,7 +173,7 @@ Forward Synthesis Planner
             <img class ="hide-broken" :src='"/api/v2/draw/?smiles="+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
         </div>
 
-        <div class="row my-3 justify-content-center" v-show="mode!='context'">
+        <div class="row my-3 justify-content-center" v-show="mode !== 'context' && mode !== 'sites' ">
             <div class="col-md-3">
                 <label for="reagents">Reagents:</label>
                 <div class="input-group">
@@ -422,6 +426,29 @@ Forward Synthesis Planner
                         <td class="text-center">%% outcome.modes_name %%</td>
                         <td class="text-center">%% outcome.avg_insp_score.toFixed(3) %%</td>
                         <td class="text-center">%% outcome.similarity_to_major.toFixed(3) %%</td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="site-results" v-show="mode === 'sites'">
+        <table v-show="!!siteResults.length" class="table table-hover my-3">
+            <thead>
+                <tr>
+                    <th class="text-center">Reactant</th>
+                    <th class="text-center">Sites</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="res in siteResults">
+                    <tr>
+                        <td class="text-center">
+                            <img :src="getMolImgUrl(res.task, true)" :alt="res.task" loading="lazy">
+                        </td>
+                        <td class="text-center">
+                            <img :src="getMolImgUrl(res.smiles, true, res.atom_scores)" :alt="res.smiles" loading="lazy">
+                        </td>
                     </tr>
                 </template>
             </tbody>

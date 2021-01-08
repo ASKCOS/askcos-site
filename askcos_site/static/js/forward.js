@@ -22,6 +22,7 @@ var app = new Vue({
         contextResults: [],
         impurityResults: [],
         selectivityResults: [],
+        siteResults: [],
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
@@ -90,6 +91,9 @@ var app = new Vue({
         clearSelectivity() {
             this.selectivityResults = []
         },
+        clearSites() {
+            this.siteResults = []
+        },
         clearImpurity() {
             this.impurityResults = []
             this.impurityProgress = {
@@ -108,10 +112,24 @@ var app = new Vue({
             this.clearContext()
             this.clearForward()
             this.clearImpurity()
+            this.clearSelectivity()
+            this.clearSites()
         },
         changeMode(mode) {
             this.mode = mode
             window.history.pushState({mode: mode}, mode, '?mode='+mode)
+        },
+        getMolImgUrl: function(smiles, highlight, reacting_atoms) {
+            let url = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
+            if (highlight !== undefined) {
+                url += '&highlight=true'
+            }
+            if (reacting_atoms !== undefined) {
+                for (let ra of reacting_atoms) {
+                    url += `&reacting_atoms=${encodeURIComponent(ra)}`
+                }
+            }
+            return url;
         },
         constructForwardPostData(reagents, solvent) {
             var data = {
@@ -165,6 +183,11 @@ var app = new Vue({
                 data.solvent = this.solvent
             }
             return data
+        },
+        constructSiteSelectivityPostData() {
+            return {
+                smiles: this.reactants,
+            }
         },
         constructImpurityPostData() {
             var data = {
@@ -275,6 +298,10 @@ var app = new Vue({
                         this.clearSelectivity()
                         this.selectivityPredict()
                         break;
+                    case 'sites':
+                        this.clearSites()
+                        this.sitesPredict()
+                        break;
                     default:
                         alert('unsupported mode')
                 }
@@ -373,6 +400,14 @@ var app = new Vue({
                 }
             }
             this.celeryTaskAsyncPost('general-selectivity', postData, callback)
+        },
+        sitesPredict() {
+            showLoader()
+            let postData = this.constructSiteSelectivityPostData()
+            let callback = (json) => {
+                this.siteResults = json.output
+            }
+            this.celeryTaskAsyncPost('selectivity', postData, callback)
         },
         evaluateIndex(index) {
             this.$set(this.contextResults[index], 'evaluating', true)
