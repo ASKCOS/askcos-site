@@ -108,7 +108,7 @@ Forward Synthesis Planner
         </div>
     </transition>
 
-    <div class="row mb-5">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="arrow-step-wrapper">
                 <div class="arrow-steps clearfix">
@@ -137,6 +137,46 @@ Forward Synthesis Planner
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div v-show="mode === 'context'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict reagents, catalysts, solvents and temperature for a desired transformation using a neural network model.
+                <a href="https://doi.org/10.1021/acscentsci.8b00357">(ACS Cent. Sci., 2018, 4, 1465-1476)</a>
+            </em></p>
+        </div>
+    </div>
+    <div v-show="mode === 'forward'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict most likely outcomes of a chemical reaction using a template-free WLN model for predicting likely bond changes.
+                <a href="https://doi.org/10.1039/C8SC04228D">(Chem. Sci., 2019, 10, 370-377)</a>
+            </em></p>
+        </div>
+   </div>
+    <div v-show="mode === 'impurity'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict likely impurities for a chemical reaction. Considers minor products, over-reaction, dimerization, solvent adducts, and subsets of reactants.
+            </em></p>
+        </div>
+    </div>
+    <div v-show="mode === 'selectivity'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict selectivity of regio-selective reactions. The QM-GNN model combines a WLN graph encoding with predicted quantum descriptors as input to a multitask neural network.
+                <a href="https://chemrxiv.org/s/a59c768f5b60d4ad19f9">(ChemRxiv 2020)</a>
+            </em></p>
+        </div>
+    </div>
+    <div v-show="mode === 'sites'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict site selectivity of aromatic C-H functionalization reactions with a multitask neural network that uses a WLN graph encoding.
+                <a href="https://doi.org/10.1039/D0RE00071J">(React. Chem. Eng., 2020, 5, 896-902)</a>
+            </em></p>
         </div>
     </div>
 
