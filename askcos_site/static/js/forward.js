@@ -74,6 +74,9 @@ var app = new Vue({
         if (!!this.reactants) {
             this.predict()
         }
+        setTimeout(() => {
+            document.querySelector('#splash').classList.replace("d-flex", "d-none")
+        }, 1000)
     },
     methods: {
         clearContext() {
