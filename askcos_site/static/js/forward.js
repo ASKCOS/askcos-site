@@ -498,8 +498,8 @@ var app = new Vue({
             }
             this.apiAsyncPost('/api/v2/impurity/', postData, callback)
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
+        updateSmilesFromKetcher() {
+            let smiles = ketcher.getSmiles();
             this.canonicalize(smiles, drawBoxId)
         },
         downloadForwardResults() {

@@ -20,6 +20,9 @@ Forward Synthesis Planner
 
 <div id="app">
 
+<!-- drawing box -->
+{% include "ketcher_modal.html" with vue=True %}
+
     <!-- settings modal -->
     <transition name="modal">
         <div class="modal-mask" v-if="showSettings" @click.self="showSettings = false">
@@ -190,7 +193,7 @@ Forward Synthesis Planner
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reactants" id="reactants"/>
                     <div class='input-group-append'>
-                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')" type="button">
+                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('reactants')" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -201,7 +204,7 @@ Forward Synthesis Planner
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="product" :disabled="mode === 'forward' || mode === 'sites'" id="product"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode === 'forward' || mode === 'sites'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('product')" :disabled="mode === 'forward' || mode === 'sites'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -219,7 +222,7 @@ Forward Synthesis Planner
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'" id="reagents"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('reagents')" :disabled="mode=='context'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -234,7 +237,7 @@ Forward Synthesis Planner
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'" id="solvent"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('solvent')" :disabled="mode=='context'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -504,9 +507,6 @@ Forward Synthesis Planner
     <a id="downloadForwardAnchorElem" style="display:none"></a>
     <a id="downloadSelectivityAnchorElem" style="display:none"></a>
     <a id="downloadImpurityAnchorElem" style="display:none"></a>
-
-<!-- drawing box -->
-{% include "drawing_modal.html" with vue=True %}
 
 </div>
 
