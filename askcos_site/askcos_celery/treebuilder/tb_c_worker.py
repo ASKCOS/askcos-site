@@ -14,7 +14,7 @@ from celery.signals import celeryd_init
 from rdkit import RDLogger
 
 from askcos.prioritization.precursors.relevanceheuristic import RelevanceHeuristicPrecursorPrioritizer
-from askcos_site.globals import scscorer
+from askcos_site.globals import scscorer, retro_templates
 from .tfx_relevance_template_prioritizer import TFXRelevanceTemplatePrioritizer
 from .tfx_fast_filter import TFXFastFilter
 
@@ -135,6 +135,7 @@ def get_top_precursors(
 def template_relevance(
     smiles, max_num_templates, max_cum_prob, 
     template_set='reaxys', template_prioritizer_version=None,
+    return_templates=False,
     ):
     global retroTransformer
     hostname = 'template-relevance-{}'.format(template_set)
@@ -148,6 +149,19 @@ def template_relevance(
         scores = scores.tolist()
     if not isinstance(indices, list):
         indices = indices.tolist()
+
+    if return_templates:
+        # Retrieve templates from mongodb
+        cursor = retro_templates.find({
+            'index': {'$in': indices},
+            'template_set': template_set
+        })
+
+        # Reorder results based on original order
+        template_map = {x['index']: x for x in cursor}
+        templates = [template_map[i] for i in indices]
+
+        return scores, indices, templates
 
     return scores, indices
 
