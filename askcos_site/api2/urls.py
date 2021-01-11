@@ -18,6 +18,7 @@ router.register(r'banlist/reactions', api2.banlist.BannedReactionsViewSet, basen
 urlpatterns = router.urls
 
 urlpatterns += [
+    path('apply-one-template', api2.retro.apply_one_template, name='apply_one_template_api'),
     path('atom-mapper/', api2.atom_mapper.atom_mapper, name='atom_mapper_api'),
     path('celery/', api2.celery.celery_status, name='celery_api'),
     path('cluster/', api2.cluster.cluster, name='cluster_api'),
@@ -33,6 +34,7 @@ urlpatterns += [
     path('scscore/', api2.scscore.scscore, name='scscore_api'),
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
     path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),
+    path('template-relevance/', api2.retro.temprel, name='template_relevance_api'),
     path('tree-builder/', api2.tree_builder.tree_builder, name='tree_builder_api'),
     path('descriptors/', api2.descriptors.descriptors, name='descriptors_api'),
 

@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
+from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors, template_relevance, apply_one_template_by_idx
 from .celery import CeleryTaskAPIView
 
 
@@ -53,6 +53,34 @@ class RetroSerializer(serializers.Serializer):
 class TFXRetroModelsSerializer(serializers.Serializer):
     """Serializer for available retro models parameters."""
     template_set = serializers.CharField()
+
+
+class TemplateRelevanceSerializer(serializers.Serializer):
+    """Serializer for template relevance prediction parameters"""
+    smiles = serializers.CharField()
+    num_templates = serializers.IntegerField(default=100)
+    max_cum_prob = serializers.FloatField(min_value=0.0, max_value=1.0, default=0.995)
+    template_set = serializers.CharField(default='reaxys')
+    template_prioritizer_version = serializers.IntegerField(default=0)
+
+    def validate_smiles(self, value):
+        """Verify that the requested target is valid."""
+        if not Chem.MolFromSmiles(value):
+            raise serializers.ValidationError('Cannot parse target smiles with rdkit.')
+        return value
+
+
+class ApplyOneTemplateByIdxSerializer(serializers.Serializer):
+    """Serializer for applying one template by index"""
+    smiles = serializers.CharField()
+    template_idx = serializers.IntegerField()
+    template_set = serializers.CharField(default='reaxys')
+
+    def validate_smiles(self, value):
+        """Verify that the requested target is valid."""
+        if not Chem.MolFromSmiles(value):
+            raise serializers.ValidationError('Cannot parse target smiles with rdkit.')
+        return value
 
 
 class RetroAPIView(CeleryTaskAPIView):
@@ -166,5 +194,87 @@ class TFXRetroModels(GenericAPIView):
         return Response(resp)
 
 
+class TemplateRelevanceAPIView(CeleryTaskAPIView):
+    """
+    API endpoint for a template relevance prediction.
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): target smiles
+    - `num_templates` (int): number of templates for which to return predicted scores
+    - `max_cum_prob` (float): maximum cumulative probability of templates to return
+    - `template_set` (str): template set name
+    - `template_prioritizer_version` (int): template relevance model version number
+
+    Returns:
+
+    - `task_id`: celery task ID
+    """
+
+    serializer_class = TemplateRelevanceSerializer
+
+    def execute(self, request, data):
+        """
+        Execute template relevance prediction via celery.
+        """
+        args = (data['smiles'], data['num_templates'], data['max_cum_prob'])
+        kwargs = {
+            'template_set': data['template_set'],
+            'template_prioritizer_version': data['template_prioritizer_version'],
+        }
+
+        result = template_relevance.apply_async(args, kwargs)
+
+        return result
+
+
+class ApplyOneTemplateByIdxAPIView(CeleryTaskAPIView):
+    """
+    API endpoint for applying one template by index (and template set).
+
+    Method: POST
+
+    Parameters:
+
+    - `smiles` (str): target smiles
+    - `template_idx` (int): template index
+    - `template_set` (str): name of template set
+
+    Returns:
+
+    - `task_id`: celery task ID
+    """
+
+    serializer_class = ApplyOneTemplateByIdxSerializer
+
+    def execute(self, request, data):
+        """
+        Execute template relevance prediction via celery.
+        """
+        # First arg is tree builder path ID which is not needed
+        args = (0, data['smiles'], data['template_idx'])
+        kwargs = {
+            'calculate_next_probs': False,
+            'template_set': data['template_set'],
+        }
+
+        result = apply_one_template_by_idx.apply_async(args, kwargs)
+
+        # Unpack result into dict
+        # First item is the tree builder path ID which is not needed
+        result = {
+            'smiles': result[1],
+            'template_idx': result[2],
+            'precursors': result[3],
+            'ffscore': result[4],
+        }
+
+        return result
+
+
 models = TFXRetroModels.as_view()
 singlestep = RetroAPIView.as_view()
+temprel = TemplateRelevanceAPIView.as_view()
+apply_one_template = ApplyOneTemplateByIdxAPIView.as_view()
