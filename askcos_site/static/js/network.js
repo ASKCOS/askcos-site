@@ -244,6 +244,7 @@ var app = new Vue({
         showClusterPopoutModal: false,
         showClusterEditModal: false,
         showAddNewPrecursorModal: false,
+        showRecTemplatesModal: false,
         downloadName: "network.json",
         tb: {
             settings: JSON.parse(JSON.stringify(tbSettingsDefault)),
@@ -315,6 +316,7 @@ var app = new Vue({
         sortingCategory: ippSettingsDefault.sortingCategory,
         sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
+        recommendedTemplates: {},
         pendingTasks: 0,  // Counter for displaying loading spinner
         recompute: 0,  // Dummy property to trigger computed properties depending on dataGraph or dispGraph
     },
@@ -1995,7 +1997,86 @@ var app = new Vue({
                     console.error(`Unexpected operation '${op}' for changeTreeIndex.`);
             }
             this.updateTreeOpacity()
-        }
+        },
+        openRecTemplatesModal: function(smiles) {
+            if (!this.recommendedTemplates[smiles]) {
+                this.templateRelevance(smiles)
+            } else {
+                this.showRecTemplatesModal = true
+            }
+        },
+        templateRelevance: function(smiles) {
+            this.pendingTasks += 1
+            const url = '/api/v2/template-relevance/'
+            const body = {
+                smiles: smiles,
+                template_set: this.tb.settings.templateSet,
+                template_prioritizer_version: this.tb.settings.templateSetVersion,
+                num_templates: this.tb.settings.numTemplates,
+                max_cum_prob: this.tb.settings.maxCumProb,
+                return_templates: true
+            }
+            const app = this
+            const callback = function(output) {
+                app.$set(app.recommendedTemplates, smiles, Object.fromEntries(output.map(item => [item._id, item])))
+                // Update templates with existing results
+                let precursorSmiles = app.dataGraph.getSuccessors(smiles)
+                let precursors = app.dataGraph.nodes.get(precursorSmiles)
+                for (let p of precursors) {
+                    for (let t of p.templateIds) {
+                        if (app.recommendedTemplates[smiles][t].results === undefined) {
+                            app.recommendedTemplates[smiles][t].results = [p.precursorSmiles]
+                        } else {
+                            app.recommendedTemplates[smiles][t].results.push(p.precursorSmiles)
+                        }
+                    }
+                }
+                app.showRecTemplatesModal = true
+            }
+            fetch(url,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    this.pendingTasks -= 1;
+                    console.error('Could not retrieve template relevance prediction:', error)
+                })
+        },
+        applyTemplate: function(smiles, template) {
+            this.pendingTasks += 1
+            const app = this
+            const callback = function(output) {
+                app.recommendedTemplates[smiles][template._id].results = output.map(item => item.precursors.join('.'))
+                app.$forceUpdate()
+            }
+            fetch('/api/v2/apply-one-template', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    smiles: smiles,
+                    template_idx: template.index,
+                    template_set: template.template_set,
+                })
+            })
+            .then(resp => resp.json())
+            .then(json => {
+                setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+            })
+            .catch(error => {
+                this.pendingTasks -= 1
+            })
+        },
     },
     computed: {
         clusteredResults: function() {
