@@ -169,7 +169,8 @@ def template_relevance(smiles, max_num_templates, max_cum_prob,
         templates = [template_map[i] for i in indices]
 
         # Add score to template document
-        for score, template in zip(scores, templates):
+        for i, (score, template) in enumerate(zip(scores, templates)):
+            template['rank'] = i + 1
             template['score'] = score
 
         return templates
