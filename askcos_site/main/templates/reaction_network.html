@@ -107,6 +107,19 @@
                                 <h3>Current Target</h3>
                                 <img :src=`/api/v2/draw/?&smiles=${encodeURIComponent(selected.smiles)}`>
                             </div>
+                            <div class="btn-toolbar justify-content-center mb-3">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('first')">&lt;&lt;</button>
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('prev')">&lt;</button>
+                                    </div>
+                                    <div class="input-group-text justify-content-center" style="width: 8rem">Page %% rtmCurrentPage %% of %% rtmMaxPage %%</div>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('next')">&gt;</button>
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('last')">&gt;&gt;</button>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="table-responsive">
                                 <table id="recommendedTemplates" class="table">
                                     <thead>
@@ -118,8 +131,8 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="(template, _id, index) in recommendedTemplates[selected.smiles]">
-                                            <td class="text-center">%% index+1 %%</td>
+                                        <tr v-for="template in rtmItems">
+                                            <td class="text-center">%% template.rank %%</td>
                                             <td class="text-center">
                                                 %% num2str(template.score, 5, true) %%
                                             </td>

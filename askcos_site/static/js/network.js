@@ -317,6 +317,8 @@ var app = new Vue({
         sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
         recommendedTemplates: {},
+        rtmItemsPerPage: 20,  // For recommended templates modal
+        rtmCurrentPage: 1,  // For recommended templates modal
         pendingTasks: 0,  // Counter for displaying loading spinner
         recompute: 0,  // Dummy property to trigger computed properties depending on dataGraph or dispGraph
     },
@@ -2077,6 +2079,28 @@ var app = new Vue({
                 this.pendingTasks -= 1
             })
         },
+        changeTemplatePage(op) {
+            switch (op) {
+                case 'next':
+                    if (this.rtmCurrentPage < this.rtmMaxPage) {
+                        this.rtmCurrentPage += 1
+                    }
+                    break;
+                case 'prev':
+                    if (this.rtmCurrentPage > 1) {
+                        this.rtmCurrentPage -= 1
+                    }
+                    break;
+                case 'first':
+                    this.rtmCurrentPage = 1
+                    break;
+                case 'last':
+                    this.rtmCurrentPage = this.rtmMaxPage
+                    break;
+                default:
+                    console.error(`Unexpected operation '${op}' for changeTemplatePage.`);
+            }
+        },
     },
     computed: {
         clusteredResults: function() {
@@ -2164,7 +2188,23 @@ var app = new Vue({
                 }
             }
             return this.dataGraph.nodes.get(precursorSmiles, options)
-        }
+        },
+        rtmItems: function() {
+            if (!!this.recommendedTemplates[this.selected.smiles]) {
+                const start = (this.rtmCurrentPage - 1) * this.rtmItemsPerPage
+                const end = start + this.rtmItemsPerPage
+                return Object.values(this.recommendedTemplates[this.selected.smiles]).slice(start, end)
+            } else {
+                return []
+            }
+        },
+        rtmMaxPage: function() {
+            if (!!this.recommendedTemplates[this.selected.smiles]) {
+                return Math.ceil(Object.keys(this.recommendedTemplates[this.selected.smiles]).length / this.rtmItemsPerPage)
+            } else {
+                return 1
+            }
+        },
     },
     watch: {
         pendingTasks: function(newVal) {
