@@ -132,15 +132,22 @@ def get_top_precursors(
         return smiles, result
 
 @shared_task
-def template_relevance(
-    smiles, max_num_templates, max_cum_prob, 
-    template_set='reaxys', template_prioritizer_version=None,
-    return_templates=False,
-    ):
+def template_relevance(smiles, max_num_templates, max_cum_prob,
+                       template_set='reaxys', template_prioritizer_version=None,
+                       return_templates=False):
+    """
+    Celery task for template_relevance prediction.
+
+    If return_templates = True, return as list of dictionaries containing
+    template information.
+    """
     global retroTransformer
+
     hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TFXRelevanceTemplatePrioritizer(
-        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
+        hostname=hostname,
+        model_name='template_relevance',
+        version=template_prioritizer_version,
     )
 
     scores, indices = template_prioritizer.predict(smiles, max_num_templates, max_cum_prob)
@@ -161,9 +168,13 @@ def template_relevance(
         template_map = {x['index']: x for x in cursor}
         templates = [template_map[i] for i in indices]
 
-        return scores, indices, templates
+        # Add score to template document
+        for score, template in zip(scores, templates):
+            template['score'] = score
 
-    return scores, indices
+        return templates
+    else:
+        return scores, indices
 
 @shared_task
 def apply_one_template_by_idx(*args, **kwargs):
@@ -174,6 +185,8 @@ def apply_one_template_by_idx(*args, **kwargs):
             applying given template to the molecule.
     """
     global retroTransformer
+
+    postprocess = kwargs.pop('postprocess')
 
     template_set = kwargs.get('template_set', 'reaxys')
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
@@ -191,7 +204,19 @@ def apply_one_template_by_idx(*args, **kwargs):
         'fast_filter': fast_filter
     })
 
-    return retroTransformer.apply_one_template_by_idx(*args, **kwargs)
+    result = retroTransformer.apply_one_template_by_idx(*args, **kwargs)
+
+    if postprocess:
+        # Unpack result into list of dicts
+        # First item is the tree builder path ID which is not needed
+        result = [{
+            'smiles': r[1],
+            'template_idx': r[2],
+            'precursors': r[3],
+            'ffscore': r[4],
+        } for r in result]
+
+    return result
 
 @shared_task
 def fast_filter_check(*args, **kwargs):

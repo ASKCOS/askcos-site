@@ -260,18 +260,10 @@ class ApplyOneTemplateByIdxAPIView(CeleryTaskAPIView):
         kwargs = {
             'calculate_next_probs': False,
             'template_set': data['template_set'],
+            'postprocess': True,
         }
 
         result = apply_one_template_by_idx.apply_async(args, kwargs)
-
-        # Unpack result into dict
-        # First item is the tree builder path ID which is not needed
-        result = {
-            'smiles': result[1],
-            'template_idx': result[2],
-            'precursors': result[3],
-            'ffscore': result[4],
-        }
 
         return result
 
