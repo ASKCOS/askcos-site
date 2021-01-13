@@ -27,6 +27,8 @@ CORRESPONDING_QUEUE = 'tb_c_worker'
 CORRESPONDING_RESERVABLE_QUEUE = 'tb_c_worker_reservable'
 retroTransformer = None
 
+db_comparison_map = {'>': '$gt', '>=': '$gte', '<': '$lt', '<=': '$lte', '==': '$eq'}
+
 
 @celeryd_init.connect
 def configure_worker(options={}, **kwargs):
@@ -134,7 +136,7 @@ def get_top_precursors(
 @shared_task
 def template_relevance(smiles, max_num_templates, max_cum_prob,
                        template_set='reaxys', template_prioritizer_version=None,
-                       return_templates=False):
+                       return_templates=False, attribute_filter=None):
     """
     Celery task for template_relevance prediction.
 
@@ -150,7 +152,38 @@ def template_relevance(smiles, max_num_templates, max_cum_prob,
         version=template_prioritizer_version,
     )
 
-    scores, indices = template_prioritizer.predict(smiles, max_num_templates, max_cum_prob)
+    scores, indices = template_prioritizer.predict(smiles, max_num_templates=None, max_cum_prob=None)
+
+    # Filter results by template attributes if needed
+    if attribute_filter:
+        query = {
+            'index': {'$in': indices.tolist()},
+            'template_set': template_set
+        }
+        for item in attribute_filter:
+            query['attributes.{}'.format(item['name'])] = {
+                db_comparison_map[item['logic']]: item['value']
+            }
+
+        result_proj = ['_id', 'index', 'reaction_smarts'] if return_templates else ['index']
+        cursor = retro_templates.find(query, result_proj)
+
+        template_map = {x['index']: x for x in cursor}
+        bool_mask = np.array([i in template_map for i in indices.tolist()])
+        scores = scores[bool_mask]
+        indices = indices[bool_mask]
+    else:
+        template_map = None
+
+    # Then trim results based on max_num_templates and max_cum_prob
+    if max_num_templates is not None:
+        scores = scores[:max_num_templates]
+        indices = indices[:max_num_templates]
+
+    if max_cum_prob is not None:
+        bool_mask = np.cumsum(scores) <= max_cum_prob
+        scores = scores[bool_mask]
+        indices = indices[bool_mask]
 
     if not isinstance(scores, list):
         scores = scores.tolist()
@@ -158,14 +191,14 @@ def template_relevance(smiles, max_num_templates, max_cum_prob,
         indices = indices.tolist()
 
     if return_templates:
-        # Retrieve templates from mongodb
-        cursor = retro_templates.find({
-            'index': {'$in': indices},
-            'template_set': template_set
-        })
+        if template_map is None:
+            cursor = retro_templates.find({
+                    'index': {'$in': indices},
+                    'template_set': template_set
+                }, ['_id', 'index', 'reaction_smarts'])
 
-        # Reorder results based on original order
-        template_map = {x['index']: x for x in cursor}
+            template_map = {x['index']: x for x in cursor}
+
         templates = [template_map[i] for i in indices]
 
         # Add score to template document

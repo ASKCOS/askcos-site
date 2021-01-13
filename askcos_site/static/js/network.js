@@ -2016,6 +2016,7 @@ var app = new Vue({
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
+                attribute_filter: this.tb.settings.attributeFilter,
                 return_templates: true
             }
             const app = this

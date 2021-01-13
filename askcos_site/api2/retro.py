@@ -63,6 +63,7 @@ class TemplateRelevanceSerializer(serializers.Serializer):
     template_set = serializers.CharField(default='reaxys')
     template_prioritizer_version = serializers.IntegerField(default=0)
     return_templates = serializers.BooleanField(default=True)
+    attribute_filter = AttributeFilterSerializer(default=[], many=True)
 
     def validate_smiles(self, value):
         """Verify that the requested target is valid."""
@@ -208,6 +209,7 @@ class TemplateRelevanceAPIView(CeleryTaskAPIView):
     - `max_cum_prob` (float): maximum cumulative probability of templates to return
     - `template_set` (str): template set name
     - `template_prioritizer_version` (int): template relevance model version number
+    - `attribute_filter` (list[dict], optional): template attribute filter to apply before template application
 
     Returns:
 
@@ -225,6 +227,7 @@ class TemplateRelevanceAPIView(CeleryTaskAPIView):
             'template_set': data['template_set'],
             'template_prioritizer_version': data['template_prioritizer_version'],
             'return_templates': data['return_templates'],
+            'attribute_filter': data['attribute_filter'],
         }
 
         result = template_relevance.apply_async(args, kwargs)
