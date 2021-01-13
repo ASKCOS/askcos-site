@@ -36,7 +36,7 @@
 }
 
 .popover[class*="tour-"] {
-    z-index: 9999 !important;
+    z-index: 9000 !important;
 }
 
 .popover[class*="tour-"].orphan {
