@@ -196,10 +196,12 @@ var app = new Vue({
         constructImpurityPostData() {
             var data = {
                 reactants: this.reactants,
-                products: this.product,
                 top_k: this.impurityTopk,
                 threshold: this.inspectionThreshold,
                 check_mapping: this.impurityCheckMapping
+            }
+            if (!!this.product) {
+                data.products = this.product
             }
             if (!!this.reagents) {
                 data.reagents = this.reagents
