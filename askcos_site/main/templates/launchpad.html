@@ -1,41 +1,18 @@
-{% extends "base.html" %}
-{% load staticfiles %}
-
-{% block title %}Launchpad{% endblock %}
-{% block page_title %}Launchpad{% endblock %}
-
-{% block extrahead %}
-<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
-<script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/drawing.css' %}?v{{ static_version }}" type="text/css">
-<link rel="stylesheet" href="{% static 'css/tooltip.css' %}?v{{ static_version }}" type="text/css">
-{% endblock %}
-
-{% block page_body %}
-
-<div id="app">
+<div id="app" class="my-5">
 
 <!-- drawing box -->
 {% include "ketcher_modal.html" with vue=True %}
-
-    <div class="row">
-        <div class="col-12">
-            <p class="lead">
-                Start by entering the SMILES string of a molecule or reaction of interest to explore available features.
-            </p>
-        </div>
-    </div>
 
     <div class="row text-center">
         <div class="col-12">
             <div class="input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">SMILES</span>
+                    <span class="input-group-text"><i class="fa fa-search"></i></span>
                 </div>
-                <input class='form-control text-center' type="text" v-model="smiles" id="smiles"/>
+                <input class='form-control text-center' type="text" v-model="smiles" id="smiles"
+                    placeholder="Enter a molecule or reaction SMILES to explore available tasks"/>
                 <div class='input-group-append'>
                     <button type="button" class="input-group-text" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('smiles')"><i class="fas fa-edit"></i></button>
-                    <button type="button" class="input-group-text" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
                     <button type="button" class="input-group-text" title="Canonicalize" @click="canonicalize(smiles, 'smiles')">Canonicalize</button>
                 </div>
             </div>
@@ -54,7 +31,7 @@
     <template v-if="validSmiles && type === 'mol'">
         <div class="card-deck my-5">
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <h4 class="card-title">SCScore</h4>
                     <template v-if="scscore === undefined">
                         <button class="btn btn-primary" @click="getScscore(smiles)">Evaluate</button>
@@ -68,39 +45,39 @@
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/retro/network/?target=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Synthesize with Interactive Path Planner</h4>
+                        <h4 class="m-0">Synthesize with Interactive Path Planner</h4>
                     </a>
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&reactants=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Forward Synthesis</h4>
+                        <h4 class="m-0">Predict Forward Synthesis</h4>
                     </a>
                 </div>
             </div>
         </div>
         <div class="card-deck my-5">
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/buyables/?q=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Search Buyables Database</h4>
+                        <h4 class="m-0">Search Buyables Database</h4>
                     </a>
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=impurity&reactants=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Impurities</h4>
+                        <h4 class="m-0">Predict Impurities</h4>
                     </a>
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=sites&reactants=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Aromatic Site Selectivity</h4>
+                        <h4 class="m-0">Predict Aromatic Site Selectivity</h4>
                     </a>
                 </div>
             </div>
@@ -110,7 +87,7 @@
     <template v-if="validSmiles && type === 'rxn'">
         <div class="card-deck my-5">
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <h4 class="card-title">Fast Filter Score</h4>
                     <template v-if="reactionScore === undefined">
                         <button class="btn btn-primary" @click="getReactionScore(smiles)">Evaluate</button>
@@ -124,7 +101,7 @@
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <h4 class="card-title">Generate Atom Mapping</h4>
                     <template v-if="mappedSmiles === 'evaluating'">
                         <div class="spinner-border text-secondary" role="status"></div>
@@ -156,65 +133,67 @@
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&rxnsmiles=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Forward Synthesis</h4>
+                        <h4 class="m-0">Predict Forward Synthesis</h4>
                     </a>
                 </div>
             </div>
         </div>
 
         <div class="card" v-if="mappedSmiles !== undefined && mappedSmiles !== 'evaluating'" v-show="showMappedSmiles">
-            <template v-if="!!mappedSmiles">
-                <div class="row text-center my-5">
-                    <div class="col-12">
-                        <div class="customtooltip" @click="copyToClipboard(mappedSmiles)" >
-                            <span class="customtooltiptext">Copy SMILES</span>
-                            <i class="far fa-copy"></i>
-                            <b>Smiles: </b>
-                            <span class="smiles">%% mappedSmiles %%</span>
+            <div class="card-body">
+                <template v-if="!!mappedSmiles">
+                    <div class="row text-center mb-5">
+                        <div class="col-12">
+                            <div class="customtooltip" @click="copyToClipboard(mappedSmiles)" >
+                                <span class="customtooltiptext">Copy SMILES</span>
+                                <i class="far fa-copy"></i>
+                                <b>Smiles: </b>
+                                <span class="smiles">%% mappedSmiles %%</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="row text-center my-5">
-                    <div class="col-12">
-                        <img class="hide-broken" :src="`/api/v2/draw/?smiles=${encodeURIComponent(mappedSmiles)}&draw_map=true`" :alt="mappedSmiles"/>
+                    <div class="row text-center my-5">
+                        <div class="col-12">
+                            <img class="hide-broken" :src="`/api/v2/draw/?smiles=${encodeURIComponent(mappedSmiles)}&draw_map=true`" :alt="mappedSmiles"/>
+                        </div>
                     </div>
-                </div>
-                <div class="row text-center my-5">
-                    <div class="col-12">
-                        <img class="hide-broken" :src="`/api/v2/draw/?smiles=${encodeURIComponent(mappedSmiles)}&highlight=true`" :alt="mappedSmiles"/>
+                    <div class="row text-center mt-5">
+                        <div class="col-12">
+                            <img class="hide-broken" :src="`/api/v2/draw/?smiles=${encodeURIComponent(mappedSmiles)}&highlight=true`" :alt="mappedSmiles"/>
+                        </div>
                     </div>
-                </div>
-            </template>
-            <template v-else>
-                <div class="row text-center my-5">
-                    <div class="col-12">
-                        <span class="lead">Unable to generate atom mapping for this reaction.</span>
+                </template>
+                <template v-else>
+                    <div class="row text-center my-3">
+                        <div class="col-12">
+                            <span class="lead">Unable to generate atom mapping for this reaction.</span>
+                        </div>
                     </div>
-                </div>
-            </template>
+                </template>
+            </div>
         </div>
 
         <div class="card-deck my-5">
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=context&rxnsmiles=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Conditions</h4>
+                        <h4 class="m-0">Predict Conditions</h4>
                     </a>
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=impurity&rxnsmiles=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Impurities</h4>
+                        <h4 class="m-0">Predict Impurities</h4>
                     </a>
                 </div>
             </div>
             <div class="card bg-light">
-                <div class="card-body text-center">
+                <div class="card-body launchcard-body">
                     <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=selectivity&rxnsmiles=${encodeURIComponent(smiles)}`">
-                        <h4 class="card-title">Predict Regioselectivity</h4>
+                        <h4 class="m-0">Predict Regioselectivity</h4>
                     </a>
                 </div>
             </div>
@@ -222,9 +201,3 @@
     </template>
 
 </div>
-
-{% endblock %}
-
-{% block javascript %}
-<script src="{% static 'js/launchpad.js' %}?v{{ static_version }}"></script>
-{% endblock %}
