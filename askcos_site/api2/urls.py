@@ -23,6 +23,7 @@ urlpatterns += [
     path('celery/', api2.celery.celery_status, name='celery_api'),
     path('cluster/', api2.cluster.cluster, name='cluster_api'),
     path('context/', api2.context.neural_network, name='context_api'),
+    path('context_v2/', api2.context_v2.context, name='context_v2_api'),
     path('draw/', api2.draw.drawer, name='draw_api'),
     path('fast-filter/', api2.fast_filter.fast_filter, name='fast_filter_api'),
     path('forward/', api2.forward.template_free, name='forward_api'),
