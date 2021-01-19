@@ -2,7 +2,7 @@ from rdkit import Chem
 from rest_framework import serializers
 
 import askcos.global_config as gc
-from askcos_site.askcos_celery.contextrecommender.cr_neural_v2_worker import get_n_conditions
+from askcos_site.askcos_celery.contextrecommender.cr_network_v2_worker import get_n_conditions
 from .celery import CeleryTaskAPIView
 
 
@@ -28,6 +28,22 @@ def validate_smiles_list(smiles_list):
     return True
 
 
+def has_atom_map(smiles):
+    '''Only perform basic check, i.e. mapno exists
+    '''
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+    except:
+        return False
+    if mol is None:
+        return False
+    
+    for atom in mol.GetAtoms():
+        if atom.GetAtomMapNum() != 0:
+            return True
+    return False
+
+
 class ContextRecommenderSerializer(serializers.Serializer):
     """Serializer for context recommendation task parameters."""
     reactants = serializers.CharField()
@@ -35,6 +51,15 @@ class ContextRecommenderSerializer(serializers.Serializer):
     reagents = StringListField(default=None)
     num_results = serializers.IntegerField(default=10)
     model = serializers.CharField(default='graph')
+
+    def validate(self, data):
+        """Verify that the requested reaction is atom-mapped for graph models."""
+        if data['model'].startswith('graph'):
+            if not has_atom_map(data['reactants']):
+                raise serializers.ValidationError('Reactants smiles does not contains atom mapping.')
+            if not has_atom_map(data['products']):
+                raise serializers.ValidationError('Products smiles does not contains atom mapping.')
+        return data
 
     def validate_reactants(self, value):
         """Verify that the requested reactants are valid."""
@@ -86,7 +111,7 @@ class ContextRecommenderAPIView(CeleryTaskAPIView):
     - `task_id`: celery task ID
 
     Test:
-    - curl -k https://localhost/api/v2/context_v2/ -X POST -d 'reactants=[N:1]#[C:2][CH:3]([C:4](=O)[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1)[c:11]1[cH:12][cH:13][cH:14][cH:15][cH:16]1.[NH2:17][NH2:18]&products=[NH2:1][c:2]1[nH:18][n:17][c:4]([c:3]1-[c:11]1[cH:16][cH:15][cH:14][cH:13][cH:12]1)-[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1'
+    - curl -k https://localhost/api/v2/context-v2/ -X POST -d 'reactants=[N:1]#[C:2][CH:3]([C:4](=O)[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1)[c:11]1[cH:12][cH:13][cH:14][cH:15][cH:16]1.[NH2:17][NH2:18]&products=[NH2:1][c:2]1[nH:18][n:17][c:4]([c:3]1-[c:11]1[cH:16][cH:15][cH:14][cH:13][cH:12]1)-[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1'
 
     - curl -k https://localhost/api/v2/celery/task/{task_id}/
     """

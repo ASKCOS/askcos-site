@@ -25,6 +25,7 @@ var app = new Vue({
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
+        contextV2Model: 'fp',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'Transformer',
@@ -125,11 +126,21 @@ var app = new Vue({
             }
             return data
         },
-        constructContextPostData() {
+        constructContextV1PostData() {
             return {
                 reactants: this.reactants,
                 products: this.product,
                 return_scores: true,
+                num_results: this.numContextResults
+            }
+        },
+        constructContextV2PostData() {
+            var _reagents = [] // a list of string, each of them is a reagent
+            return {
+                reactants: this.reactants,
+                products: this.product,
+                reagents: _reagents,
+                model: this.contextV2Model,
                 num_results: this.numContextResults
             }
         },
@@ -170,6 +181,17 @@ var app = new Vue({
                 data.solvent = this.solvent
             }
             return data
+        },
+        postprocessContextV2(data) {
+            // format data to the display format
+            // data is the return of celery API
+            this.contextResults = data.output
+            for(const [idx, val] of this.contextResults.entries()) {
+                this.contextResults[idx]['temperature'] -= 273.15
+                this.contextResults[idx]['reagent'] = Object.keys(val.reagents).join('.')
+                this.contextResults[idx]['catalyst'] = ''
+                this.contextResults[idx]['solvent'] = ''
+            }
         },
         apiAsyncPost(endpoint, postData, callback) {
             return fetch(endpoint, {
@@ -310,14 +332,32 @@ var app = new Vue({
                 this.impurityPredict()
             })
         },
-        contextPredict() {
+        contextV1Predict() {
             showLoader()
             this.contextResults = []
-            var postData = this.constructContextPostData()
+            var postData = this.constructContextV1PostData()
             var callback = (json) => {
                 this.contextResults = json.output
             }
             this.celeryTaskAsyncPost('context', postData, callback)
+        },
+        contextV2Predict() {
+            showLoader()
+            this.contextResults = []
+            var postData = this.constructContextV2PostData()
+            this.celeryTaskAsyncPost('context-v2', postData, this.postprocessContextV2)
+        },
+        contextPredict() {
+            switch(this.contextModel) {
+                case 'neuralnetwork':
+                    this.contextV1Predict()
+                    break
+                case 'neuralnetworkv2':
+                    this.contextV2Predict()
+                    break
+                default:
+                    alert('unsupported context model')
+            }
         },
         selectivityPredict() {
             showLoader()

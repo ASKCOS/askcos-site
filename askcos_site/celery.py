@@ -7,7 +7,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'askcos_site.settings')
 # Define readable names for celery workers for status reporting
 READABLE_NAMES = {
     'cr_network_worker': 'Context Recommender Worker',
-    'cr_neural_v2_worker': 'Context Recommender V2 Worker',
+    'cr_network_v2_worker': 'Context Recommender V2 Worker',
     'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
     'tb_coordinator_mcts': 'Tree Builder Coordinator',
     'tb_coordinator_mcts_v2': 'Tree Builder v2 Coordinator',

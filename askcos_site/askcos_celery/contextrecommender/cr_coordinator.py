@@ -5,7 +5,7 @@ from celery.signals import celeryd_init
 import askcos.global_config as gc
 from askcos_site.askcos_celery.contextrecommender.cr_network_worker import get_n_conditions as network_get_n_conditions
 from askcos_site.askcos_celery.contextrecommender.cr_nn_worker import get_n_conditions as neighbor_get_n_conditions
-from askcos_site.askcos_celery.contextrecommender.cr_neural_v2_worker import get_n_conditions as neural_v2_get_n_conditions
+from askcos_site.askcos_celery.contextrecommender.cr_network_v2_worker import get_n_conditions as network_v2_get_n_conditions
 
 CORRESPONDING_QUEUE = 'cr_coordinator'
 
@@ -38,12 +38,12 @@ def get_context_recommendations(*args, **kwargs):
         elif context_recommender == gc.neural_network:
             res = network_get_n_conditions.delay(*args, **kwargs)
             return res.get()
-        elif context_recommender == gc.context_neural_v2:
-            res = neural_v2_get_n_conditions.delay(*args, **kwargs)
+        elif context_recommender == gc.context_neural_network_v2:
+            res = network_v2_get_n_conditions.delay(*args, **kwargs)
             return res.get()
         else:
             raise NotImplementedError
 
 @shared_task
 def get_recommender_types():
-    return [gc.nearest_neighbor,gc.neural_network,gc.context_neural_v2]
+    return [gc.nearest_neighbor,gc.neural_network,gc.context_neural_network_v2]
