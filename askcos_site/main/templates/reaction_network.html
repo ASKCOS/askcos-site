@@ -91,6 +91,79 @@
             </div>
         </transition>
 
+        <!-- recommended templates modal -->
+        <transition name="modal">
+            <div class="modal-mask" v-if="showRecTemplatesModal" @click.self="showRecTemplatesModal = false">
+                <div class="modal-dialog modal-dialog-scrollable modal-xl fade-d" style="max-width: 90%; max-height:90%">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Recommended Templates</h5>
+                            <button type="button" class="close" aria-label="Close" @click="showRecTemplatesModal = false">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <h3>Current Target</h3>
+                                <img :src=`/api/v2/draw/?&smiles=${encodeURIComponent(selected.smiles)}`>
+                            </div>
+                            <div class="btn-toolbar justify-content-center mb-3">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('first')">&lt;&lt;</button>
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('prev')">&lt;</button>
+                                    </div>
+                                    <div class="input-group-text justify-content-center" style="width: 8rem">Page %% rtmCurrentPage %% of %% rtmMaxPage %%</div>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('next')">&gt;</button>
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('last')">&gt;&gt;</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="recommendedTemplates" class="table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">Rank</th>
+                                            <th class="text-center">Score</th>
+                                            <th class="text-center">Template</th>
+                                            <th class="text-center">Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="template in rtmItems">
+                                            <td class="text-center">%% template.rank %%</td>
+                                            <td class="text-center">
+                                                %% num2str(template.score, 5, true) %%
+                                            </td>
+                                            <td class="text-center">
+                                                <img :src=`/api/v2/draw/?input_type=template&smiles=${encodeURIComponent(template.reaction_smarts)}` :alt="template.reaction_smarts" loading="lazy">
+                                            </td>
+                                            <td class="text-center" v-if="template.results !== undefined">
+                                                <div v-if="!!template.results[0]">
+                                                    <img :src=`/api/v2/draw/?&smiles=${encodeURIComponent(template.results[0])}` loading="lazy">
+                                                </div>
+                                                <div v-else>
+                                                    No Precursors
+                                                </div>
+                                            </td>
+                                            <td class="text-center" v-else>
+                                                <button class="btn btn-primary" @click="applyTemplate(selected.smiles, template)">Apply Template</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-between">
+                            <button type="button" class="btn btn-info" @click="templateRelevance(selected.smiles)">Re-evaluate</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="showRecTemplatesModal = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
         <!-- cluster view modal -->
         <transition name="modal">
             <div class="modal-mask" v-if="showClusterPopoutModal" @click.self="closeClusterPopoutModal()">
@@ -929,6 +1002,7 @@ It is roughly how long it will take for results to be returned, however there is
                                             <label class="mr-2" for="filterReactingAtoms">Filter for reacting atoms</label>
                                             <input id="filterReactingAtoms" type="checkbox" ref="filterReactingAtoms" v-model="filterReactingAtoms" @change="applyFilterReactingAtoms" {{ filterReactingAtoms }}/>
                                         </div>
+                                        <a href="#" @click="openRecTemplatesModal(selected.smiles)">View Recommended Templates</a>
                                     </div>
                                 </div>
                             </div>

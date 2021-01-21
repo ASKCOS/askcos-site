@@ -255,6 +255,7 @@ input::-webkit-inner-spin-button {
     width: 10rem;
     height: 10rem;
     border-width: 0.5rem;
+    z-index: 3000;
 }
 
 /* Ketcher extras (not in dist) */
