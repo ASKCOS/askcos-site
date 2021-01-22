@@ -321,6 +321,13 @@ var app = new Vue({
         rtmCurrentPage: 1,  // For recommended templates modal
         pendingTasks: 0,  // Counter for displaying loading spinner
         recompute: 0,  // Dummy property to trigger computed properties depending on dataGraph or dispGraph
+        infoPanelOptions: {
+            id: 'infoPanel',
+            headerTitle: 'Tree Info',
+            headerControls: {size: 'sm', close: 'remove', maximize: 'remove', normalize: 'remove', minimize: 'remove'},
+            position: {my: 'left-top', at: 'left-top', of: '#network'},
+            panelSize: {width: 250, height: 280},
+        },
     },
     beforeMount: function() {
         this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
@@ -2206,6 +2213,26 @@ var app = new Vue({
                 return 1
             }
         },
+        currentTreeProps: function() {
+            // Calculates various properties of the current tree
+            if (!this.trees.length) {
+                return {}
+            }
+            let tree = this.trees[this.currentTreeIndex]
+            let rxns = tree.nodes.map(node => this.dispGraph.nodes.get(node)).filter(node => node.type === 'reaction')
+            let data = rxns.map(node => this.dataGraph.nodes.get(node.smiles))
+            let ffscores = data.map(node => node.ffScore)
+            let tscores = data.map(node => node.templateScore)
+            return {
+                index: this.currentTreeIndex + 1,
+                depth: tree.depth,
+                numReactions: rxns.length,
+                avgPlausibility: num2str(ffscores.reduce((a, b) => a + b, 0) / ffscores.length, 4),
+                minPlausibility: num2str(Math.min(...ffscores), 4),
+                avgTempScore: num2str(tscores.reduce((a, b) => a + b, 0) / tscores.length, 4, true),
+                minTempScore: num2str(Math.min(...tscores), 4, true),
+            }
+        }
     },
     watch: {
         pendingTasks: function(newVal) {

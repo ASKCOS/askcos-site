@@ -8,6 +8,7 @@
 
 <script src="{% static 'js/vue.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/vis-network-8.5.3.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/jspanel.min.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/network.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/splash.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/bootstrap-tourist.css' %}?v{{ static_version }}" type="text/css">
@@ -16,6 +17,8 @@
 <script src="{% static 'js/keycharm-0.4.0.js' %}"></script>
 <script src="{% static 'js/vis-data-7.1.1.min.js' %}"></script>
 <script src="{% static 'js/vis-network-8.5.3.min.js' %}"></script>
+<script src="{% static 'js/jspanel.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/jspanel-vue.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/bootstrap-tourist.min.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/uuidv4-8.3.0.min.js' %}"></script>
 {% endblock %}
@@ -926,6 +929,13 @@ It is roughly how long it will take for results to be returned, however there is
                     <button id="download-btn" class="btn btn-outline-dark mx-1" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
                     <button id="load-btn" class="btn btn-outline-dark mx-1" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
                     <button class="btn btn-outline-dark mx-1" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
+                    <span class="mx-2">|</span>
+                    <div class="custom-control custom-switch d-flex align-items-center">
+                        <input type="checkbox" class="custom-control-input" id="treeViewSwitch" v-model="treeViewEnabled">
+                        <label class="custom-control-label" for="treeViewSwitch">Tree View (Beta)</label>
+                        <i title="Highlight individual retrosynthetic pathways and display statistics."
+                            class="fas fa-question-circle ml-1" style="cursor: pointer"></i>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-center align-items-center my-2">
@@ -1183,6 +1193,53 @@ It is roughly how long it will take for results to be returned, however there is
                 </div>
             </div>
         </div>
+        <jspanel :visible="treeViewEnabled" :options="infoPanelOptions">
+            <div>
+                <div class="btn-toolbar justify-content-center my-2">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('first')" :disabled="!treeViewEnabled">&lt;&lt;</button>
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('prev')" :disabled="!treeViewEnabled">&lt;</button>
+                        </div>
+                        <div class="input-group-text justify-content-center" style="width: 8rem">Tree %% treeViewEnabled ? `${currentTreeIndex+1} of ${trees.length}` : 'N/A' %%</div>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('next')" :disabled="!treeViewEnabled">&gt;</button>
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('last')" :disabled="!treeViewEnabled">&gt;&gt;</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Index:</th>
+                        <td>%% currentTreeProps.index %%</td>
+                    </tr>
+                    <tr>
+                        <th>Depth:</th>
+                        <td>%% currentTreeProps.depth %%</td>
+                    </tr>
+                    <tr>
+                        <th># Reactions:</th>
+                        <td>%% currentTreeProps.numReactions %%</td>
+                    </tr>
+                    <tr>
+                        <th>Avg. Plausibility:</th>
+                        <td>%% currentTreeProps.avgPlausibility %%</td>
+                    </tr>
+                    <tr>
+                        <th>Min. Plausibility:</th>
+                        <td>%% currentTreeProps.minPlausibility %%</td>
+                    </tr>
+                    <tr>
+                        <th>Avg. Template Score:</th>
+                        <td>%% currentTreeProps.avgTempScore %%</td>
+                    </tr>
+                    <tr>
+                        <th>Min. Template Score:</th>
+                        <td>%% currentTreeProps.minTempScore %%</td>
+                    </tr>
+                </table>
+            </div>
+        </jspanel>
     </main>
 </div>
 
