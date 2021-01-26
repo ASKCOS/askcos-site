@@ -161,6 +161,16 @@ Forward Synthesis Planner
                 Predict reagents, catalysts, solvents and temperature for a desired transformation using a neural network model.
                 <a href="https://doi.org/10.1021/acscentsci.8b00357">(ACS Cent. Sci., 2018, 4, 1465-1476)</a>
             </em></p>
+            <p class="card-text">
+                <b>New in 2021.01:</b> Quantitative condition predictions now available using neural network v2 model. Select in settings menu.
+            </p>
+        </div>
+    </div>
+    <div v-show="mode === 'context' && contextModel === 'neuralnetworkv2' && contextV2Model.startsWith('graph')" class="card border-warning mb-3">
+        <div class="card-body">
+            <p class="card-text">
+                Graph models require atom-mapped reactions. If atom-mapping is not available, please try the fingerprint models instead.
+            </p>
         </div>
     </div>
     <div v-show="mode === 'forward'" class="card border-info mb-3">
@@ -196,9 +206,6 @@ Forward Synthesis Planner
     </div>
 
     <form v-on:submit.prevent="predict" autocomplete="off">
-        <div class="row my-3 justify-content-center" v-show="mode=='context' && contextModel == 'neuralnetworkv2' && contextV2Model.startsWith('graph')">
-            <p>Graph models require atom-mapped reactions. If atom-mapping is not available, please try the fingerprint models instead.</p>
-        </div>
         <div class="row my-3 justify-content-center">
             <div class="col-md-3">
                 <label for="reactants">Reactants:</label>
