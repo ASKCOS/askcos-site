@@ -144,7 +144,7 @@ function initializeNetwork(data, container, showDetail = true) {
 
 function buildTreeList() {
     /* Callback used by list view panel for drawing trees after panel creation */
-    app.trees.forEach((tree, index) => {
+    app.treeListItems.forEach((tree, index) => {
         let elem = document.getElementById(`treeList-${index}`);
         let networkData = loadNodeLinkGraph(tree, false)
         let network = initializeNetwork(networkData, elem, false);
@@ -242,6 +242,8 @@ var app = new Vue({
         currentClusterId: 0,
         sortOrderAscending: false,
         treeSortOption: 'numReactions',
+        treeListCurrentPage: 1,
+        treeListItemsPerPage: 20,
         infoPanelOptions: {
             id: 'infoPanel',
             headerTitle: 'Info',
@@ -436,6 +438,29 @@ var app = new Vue({
         clearSelection: function () {
             this.selected = null
         },
+        changeTreeListPage(op) {
+            switch (op) {
+                case 'next':
+                    if (this.treeListCurrentPage < this.treeListMaxPage) {
+                        this.treeListCurrentPage += 1
+                    }
+                    break;
+                case 'prev':
+                    if (this.treeListCurrentPage > 1) {
+                        this.treeListCurrentPage -= 1
+                    }
+                    break;
+                case 'first':
+                    this.treeListCurrentPage = 1
+                    break;
+                case 'last':
+                    this.treeListCurrentPage = this.treeListMaxPage
+                    break;
+                default:
+                    console.error(`Unexpected operation '${op}' for changeTreeListPage.`);
+            }
+            buildTreeList()
+        },
     },
     computed: {
         trees: function () {
@@ -457,6 +482,22 @@ var app = new Vue({
                 return Math.min(...this.alltrees.map(tree => tree.cluster_id))
             } else {
                 return 0
+            }
+        },
+        treeListItems: function() {
+            if (this.trees.length > 0) {
+                const start = (this.treeListCurrentPage - 1) * this.treeListItemsPerPage
+                const end = start + this.treeListItemsPerPage
+                return this.trees.slice(start, end)
+            } else {
+                return []
+            }
+        },
+        treeListMaxPage: function() {
+            if (this.trees.length > 0) {
+                return Math.ceil(this.trees.length / this.treeListItemsPerPage)
+            } else {
+                return 1
             }
         },
     },
