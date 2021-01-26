@@ -180,6 +180,7 @@ const defaultVisOptions = {
             levelSeparation: 250,
             nodeSpacing: 175,
             sortMethod: 'directed',
+            shakeTowards: 'roots',
         }
     },
     physics: false,
@@ -214,6 +215,7 @@ const condensedVisOptions = {
             levelSeparation: 200,
             nodeSpacing: 175,
             sortMethod: 'directed',
+            shakeTowards: 'roots',
         }
     },
     clickToUse: true,
