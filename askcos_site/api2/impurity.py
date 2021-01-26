@@ -12,9 +12,9 @@ class ImpurityPredictorSerializer(serializers.Serializer):
     products = serializers.CharField(default='')
     solvent = serializers.CharField(default='')
     top_k = serializers.IntegerField(default=3)
-    threshold = serializers.FloatField(default=0.75)
+    threshold = serializers.FloatField(default=0.2)
     predictor = serializers.CharField(default='WLN forward predictor')
-    inspector = serializers.CharField(default='Reaxys inspector')
+    inspector = serializers.CharField(default='WLN forward inspector')
     mapper = serializers.CharField(default='WLN atom mapper')
     check_mapping = serializers.BooleanField(default=True)
 
