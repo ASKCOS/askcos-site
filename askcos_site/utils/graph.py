@@ -206,7 +206,14 @@ def tree_data_to_node_link(tree):
     Returns:
         tree (dict): tree in networkx node link json format
     """
+    # Extract attributes if they exist
+    attributes = tree.pop('attributes', {})
+
+    # Create graph from json
     tree = nx.tree_graph(tree)
+
+    # Assign attributes to graph
+    tree.graph.update(attributes)
 
     for node, node_data in tree.nodes.items():
         if node_data.get('is_chemical'):
