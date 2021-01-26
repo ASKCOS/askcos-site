@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{% static 'css/bootstrap-tourist.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/forward.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/vue-modal.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/splash.css' %}?v{{ static_version }}" type="text/css">
 <script src="{% static 'js/bootstrap-tourist.min.js' %}?v{{ static_version }}"></script>
 {% endblock %}
 
@@ -19,6 +20,20 @@ Forward Synthesis Planner
 {% block page_body %}
 
 <div id="app">
+
+    <div id="splash" class="splash-container d-flex flex-column align-items-center justify-content-center">
+        <h3>
+            ASKCOS Forward Synthesis Planner
+        </h3>
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="spinner-grow spinner-grow-sm bounce-early"></div>
+            <div class="spinner-grow spinner-grow-sm mx-1"></div>
+            <div class="spinner-grow spinner-grow-sm bounce-late"></div>
+        </div>
+    </div>
+
+<!-- drawing box -->
+{% include "ketcher_modal.html" with vue=True %}
 
     <!-- settings modal -->
     <transition name="modal">
@@ -108,7 +123,7 @@ Forward Synthesis Planner
         </div>
     </transition>
 
-    <div class="row mb-5">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="arrow-step-wrapper">
                 <div class="arrow-steps clearfix">
@@ -127,6 +142,10 @@ Forward Synthesis Planner
                     <div id="regioselectivityArrowStep" class="step" :class="{current: mode=='selectivity'}" for="selectivityMode" @click="changeMode('selectivity')">
                         <span> Regio-selectivity prediction </span>
                     </div>
+
+                    <div id="siteSelectivityArrowStep" class="step" :class="{current: mode=='sites'}" for="sitesMode" @click="changeMode('sites')">
+                        <span> Site selectivity prediction </span>
+                    </div>
                     <div style="display:inline-block;margin: 10px 20px; float: right;">
                         <button id="settings-btn" class="btn btn-outline-dark" @click="showSettings = !showSettings" title="Settings" style="margin-left: 5px"><i class="fas fa-cog"></i></button>
                         <button class="btn btn-outline-dark" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
@@ -136,17 +155,64 @@ Forward Synthesis Planner
         </div>
     </div>
 
-    <form v-on:submit.prevent="predict" autocomplete="off">
-        <div class="row my-3 justify-content-center" v-show="mode=='context' && contextModel == 'neuralnetworkv2' && contextV2Model.startsWith('graph')">
-            <p>Graph models require atom-mapped reactions. If atom-mapping is not available, please try the fingerprint models instead.</p>
+    <div v-show="mode === 'context'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict reagents, catalysts, solvents and temperature for a desired transformation using a neural network model.
+                <a href="https://doi.org/10.1021/acscentsci.8b00357">(ACS Cent. Sci., 2018, 4, 1465-1476)</a>
+            </em></p>
+            <p class="card-text">
+                <b>New in 2021.01:</b> Quantitative condition predictions now available using neural network v2 model. Select in settings menu.
+            </p>
         </div>
+    </div>
+    <div v-show="mode === 'context' && contextModel === 'neuralnetworkv2' && contextV2Model.startsWith('graph')" class="card border-warning mb-3">
+        <div class="card-body">
+            <p class="card-text">
+                Graph models require atom-mapped reactions. If atom-mapping is not available, please try the fingerprint models instead.
+            </p>
+        </div>
+    </div>
+    <div v-show="mode === 'forward'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict most likely outcomes of a chemical reaction using a template-free WLN model for predicting likely bond changes.
+                <a href="https://doi.org/10.1039/C8SC04228D">(Chem. Sci., 2019, 10, 370-377)</a>
+            </em></p>
+        </div>
+   </div>
+    <div v-show="mode === 'impurity'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict likely impurities for a chemical reaction. Considers minor products, over-reaction, dimerization, solvent adducts, and subsets of reactants.
+            </em></p>
+        </div>
+    </div>
+    <div v-show="mode === 'selectivity'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict selectivity of regio-selective reactions. The QM-GNN model combines a WLN graph encoding with predicted quantum descriptors as input to a multitask neural network.
+                <a href="https://chemrxiv.org/s/a59c768f5b60d4ad19f9">(ChemRxiv 2020)</a>
+            </em></p>
+        </div>
+    </div>
+    <div v-show="mode === 'sites'" class="card border-info mb-3">
+        <div class="card-body">
+            <p class="card-text"><em>
+                Predict site selectivity of aromatic C-H functionalization reactions with a multitask neural network that uses a WLN graph encoding.
+                <a href="https://doi.org/10.1039/D0RE00071J">(React. Chem. Eng., 2020, 5, 896-902)</a>
+            </em></p>
+        </div>
+    </div>
+
+    <form v-on:submit.prevent="predict" autocomplete="off">
         <div class="row my-3 justify-content-center">
             <div class="col-md-3">
                 <label for="reactants">Reactants:</label>
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reactants" id="reactants"/>
                     <div class='input-group-append'>
-                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reactants')" type="button">
+                        <button id="reactants-edit-icon" class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('reactants')" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -155,9 +221,9 @@ Forward Synthesis Planner
             <div class="col-md-3">
                 <label for="product">Product:</label>
                 <div class="input-group">
-                    <input class='form-control' type="text" v-model="product" :disabled="mode=='forward'" id="product"/>
+                    <input class='form-control' type="text" v-model="product" :disabled="mode === 'forward' || mode === 'sites'" id="product"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('product')" :disabled="mode=='forward'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('product')" :disabled="mode === 'forward' || mode === 'sites'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -169,13 +235,13 @@ Forward Synthesis Planner
             <img class ="hide-broken" :src='"/api/v2/draw/?smiles="+encodeURIComponent(reactants)+"%3E%3E"+encodeURIComponent(product)'/>
         </div>
 
-        <div class="row my-3 justify-content-center" v-show="mode!='context'">
+        <div class="row my-3 justify-content-center" v-show="mode !== 'context' && mode !== 'sites' ">
             <div class="col-md-3">
                 <label for="reagents">Reagents:</label>
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="reagents" :disabled="mode=='context'" id="reagents"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('reagents')" :disabled="mode=='context'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('reagents')" :disabled="mode=='context'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -190,7 +256,7 @@ Forward Synthesis Planner
                 <div class="input-group">
                     <input class='form-control' type="text" v-model="solvent" :disabled="mode=='context'" id="solvent"/>
                     <div class='input-group-append'>
-                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBox('solvent')" :disabled="mode=='context'" type="button">
+                        <button class='input-group-text' data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('solvent')" :disabled="mode=='context'" type="button">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -428,12 +494,38 @@ Forward Synthesis Planner
         </table>
     </div>
 
+    <div id="site-results" v-show="mode === 'sites'">
+        <div v-show="!!siteResults.length" class="form-inline my-3">
+            <i title="Filter reactants based on substring match to SMILES. Supports regular expressions."
+                class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+            <label class="mr-2" for="sitesQuery">Filter Reactants:</label>
+            <input class='form-control' type="text" v-model="siteResultsQuery" id="sitesQuery" style="width: 20rem"/>
+        </div>
+        <table v-show="!!siteResults.length" class="table table-hover my-3">
+            <thead>
+                <tr>
+                    <th class="text-center">Reactant</th>
+                    <th class="text-center">Sites</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="res in siteResultsFilter">
+                    <tr>
+                        <td class="text-center">
+                            <img :src="getMolImgUrl(res.task, true)" :alt="res.task" loading="lazy">
+                        </td>
+                        <td class="text-center">
+                            <img :src="getMolImgUrl(res.smiles, true, res.atom_scores)" :alt="res.smiles" loading="lazy">
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
     <a id="downloadForwardAnchorElem" style="display:none"></a>
     <a id="downloadSelectivityAnchorElem" style="display:none"></a>
     <a id="downloadImpurityAnchorElem" style="display:none"></a>
-
-<!-- drawing box -->
-{% include "drawing_modal.html" with vue=True %}
 
 </div>
 

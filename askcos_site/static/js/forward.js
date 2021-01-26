@@ -22,6 +22,8 @@ var app = new Vue({
         contextResults: [],
         impurityResults: [],
         selectivityResults: [],
+        siteResults: [],
+        siteResultsQuery: '',
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
@@ -72,6 +74,9 @@ var app = new Vue({
         if (!!this.reactants) {
             this.predict()
         }
+        setTimeout(() => {
+            document.querySelector('#splash').classList.replace("d-flex", "d-none")
+        }, 1000)
     },
     methods: {
         clearContext() {
@@ -89,6 +94,9 @@ var app = new Vue({
         },
         clearSelectivity() {
             this.selectivityResults = []
+        },
+        clearSites() {
+            this.siteResults = []
         },
         clearImpurity() {
             this.impurityResults = []
@@ -108,10 +116,24 @@ var app = new Vue({
             this.clearContext()
             this.clearForward()
             this.clearImpurity()
+            this.clearSelectivity()
+            this.clearSites()
         },
         changeMode(mode) {
             this.mode = mode
             window.history.pushState({mode: mode}, mode, '?mode='+mode)
+        },
+        getMolImgUrl: function(smiles, highlight, reacting_atoms) {
+            let url = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
+            if (highlight !== undefined) {
+                url += '&highlight=true'
+            }
+            if (reacting_atoms !== undefined) {
+                for (let ra of reacting_atoms) {
+                    url += `&reacting_atoms=${encodeURIComponent(ra)}`
+                }
+            }
+            return url;
         },
         constructForwardPostData(reagents, solvent) {
             var data = {
@@ -166,13 +188,20 @@ var app = new Vue({
             }
             return data
         },
+        constructSiteSelectivityPostData() {
+            return {
+                smiles: this.reactants,
+            }
+        },
         constructImpurityPostData() {
             var data = {
                 reactants: this.reactants,
-                products: this.product,
                 top_k: this.impurityTopk,
                 threshold: this.inspectionThreshold,
                 check_mapping: this.impurityCheckMapping
+            }
+            if (!!this.product) {
+                data.products = this.product
             }
             if (!!this.reagents) {
                 data.reagents = this.reagents
@@ -275,6 +304,10 @@ var app = new Vue({
                         this.clearSelectivity()
                         this.selectivityPredict()
                         break;
+                    case 'sites':
+                        this.clearSites()
+                        this.sitesPredict()
+                        break;
                     default:
                         alert('unsupported mode')
                 }
@@ -374,6 +407,14 @@ var app = new Vue({
             }
             this.celeryTaskAsyncPost('general-selectivity', postData, callback)
         },
+        sitesPredict() {
+            showLoader()
+            let postData = this.constructSiteSelectivityPostData()
+            let callback = (json) => {
+                this.siteResults = json.output
+            }
+            this.celeryTaskAsyncPost('selectivity', postData, callback)
+        },
         evaluateIndex(index) {
             this.$set(this.contextResults[index], 'evaluating', true)
             var reagents = this.contextResults[index]['reagent']
@@ -462,8 +503,8 @@ var app = new Vue({
             }
             this.apiAsyncPost('/api/v2/impurity/', postData, callback)
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
+        updateSmilesFromKetcher() {
+            let smiles = ketcher.getSmiles();
             this.canonicalize(smiles, drawBoxId)
         },
         downloadForwardResults() {
@@ -514,6 +555,17 @@ var app = new Vue({
                 this.clear()
                 this.mode = 'context'
                 tour.restart()
+            }
+        }
+    },
+    computed: {
+        siteResultsFilter: function() {
+            // Returns site results where reactant matches siteResultsQuery
+            if (!!this.siteResultsQuery) {
+                let query = new RegExp(this.siteResultsQuery)
+                return this.siteResults.filter((res) => query.test(res.task))
+            } else {
+                return this.siteResults
             }
         }
     },

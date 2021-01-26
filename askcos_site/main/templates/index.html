@@ -1,10 +1,16 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 
 {% block title %}ASKCOS Homepage{% endblock %}
 
 {% block page_title %}ASKCOS: Software tools for organic synthesis{% endblock %}
 
-{% block extrahead %}{% endblock %}
+{% block extrahead %}
+<script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/vue.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/drawing.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/tooltip.css' %}?v{{ static_version }}" type="text/css">
+{% endblock %}
 
 {% block navbar_items %}{% endblock %}
 
@@ -19,7 +25,7 @@
     performing computationally-expensive requests.
 </p>
 
-<div class="my-4 text-center"><a class="btn btn-primary btn-lg" href="{% url 'modules' %}">Get Started</a></div>
+{% include "launchpad.html" %}
 
 <p>
     This work began under the DARPA Make-It program (ARO W911NF-16-2-0023) and continues to be supported by the
@@ -43,4 +49,8 @@
     NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
     OF SUCH DAMAGE.
 </small></p>
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/launchpad.js' %}?v{{ static_version }}"></script>
 {% endblock %}
