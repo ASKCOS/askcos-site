@@ -178,7 +178,7 @@ class ResultsViewSet(ViewSet):
             if result.result_state == 'completed':
                 result_doc = results_collection.find_one({'_id': pk})
                 tb_results = result_doc['result']
-                if tb_results.get('version') != 2:
+                if tb_results.get('version') != 2 or (tb_results['paths'] and 'nodes' not in tb_results['paths'][0]):
                     # Convert paths to node link format
                     tb_results['paths'] = [tree_data_to_node_link(tree) for tree in tb_results['paths']]
                 # Remove unnecessary data to reduce response size
