@@ -37,6 +37,16 @@ Forward Synthesis Planner
                             <label class="mr-2" for="contextModel">Condition recommendation model:</label>
                             <select id="contextModel" v-model="contextModel" class="form-control">
                                 <option value="neuralnetwork">Neural Network</option>
+                                <option value="neuralnetworkv2">Neural Network v2 (Quantity Prediction)</option>
+                            </select>
+                        </div>
+                        <div class="form-inline mb-2" v-show="contextModel == 'neuralnetworkv2'">
+                            <label class="mr-2" for="contextModel">Condition recommendation v2 model name:</label>
+                            <select id="contextV2Model" v-model="contextV2Model" class="form-control">
+                                <option value="graph">Graph</option>
+                                <option value="fp">Fingerprint</option>
+                                <option value="graph-20191118">Graph (20191118)</option>
+                                <option value="fp-20191118">Fingerprint (20191118)</option>
                             </select>
                         </div>
                         <div class="form-inline mb-2">
@@ -127,6 +137,9 @@ Forward Synthesis Planner
     </div>
 
     <form v-on:submit.prevent="predict" autocomplete="off">
+        <div class="row my-3 justify-content-center" v-show="mode=='context' && contextModel == 'neuralnetworkv2' && contextV2Model.startsWith('graph')">
+            <p>Graph models require atom-mapped reactions. If atom-mapping is not available, please try the fingerprint models instead.</p>
+        </div>
         <div class="row my-3 justify-content-center">
             <div class="col-md-3">
                 <label for="reactants">Reactants:</label>
@@ -200,7 +213,57 @@ Forward Synthesis Planner
             <b>Reaction score: %% reactionScore.toFixed(3) %%</b>
             <i class="fas fa-info-circle" title="The reaction score is determined by the reaction scoring prediction model specified by the user (currently only the fast filter model is supported)"></i>
         </div>
-        <table class="table table-hover my-3">
+        <table class="table table-hover my-3" v-show="contextModel == 'neuralnetworkv2'">
+            <thead>
+                <tr>
+                    <th class="text-center">#</th>
+                    <th class="text-center">Rank</th>
+                    <th class="text-center">Reactants (Amount)</th>
+                    <th class="text-center">Reagents (Amount)</th>
+                    <th class="text-center">Temperature</th>
+                    <th class="text-center">Predict with conditions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="(result, index) in contextResults">
+                    <tr>
+                        <td class="text-center">%% index+1 %%</td>
+                        <td class="text-center">
+                            <span v-if="result.evaluating && result.evaluation === undefined">
+                                <div class="spinner-border text-secondary" role="status"></div>
+                            </span>
+                            <span v-else-if="result.evaluation">
+                                ✔ (rank: %% result.evaluation %%)
+                            </span>
+                            <span v-else-if="result.evaluation != undefined && !result.evaluation">
+                                <i class="fas fa-times"></i> (rank: N/A)
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <template v-for="(amount, rct) in result.reactants">
+                                <p><img :src='"/api/v2/draw/?smiles="+encodeURIComponent(rct)' :alt="rct"> (%% amount.toFixed(2) %%) </p>
+                            </template>
+                        </td>
+                        <td class="text-center">
+                            <template v-if="!!result.reagents">
+                                <template v-for="(amount, rgt) in result.reagents">
+                                    <p><img :src='"/api/v2/draw/?smiles="+encodeURIComponent(rgt)' :alt="rgt"> (%% (amount > 0.01) ? amount.toFixed(2) : amount.toExponential(2) %%) </p>
+                                </template>
+                            </template>
+                            <span v-else>none</span>
+                        </td>
+                        <td class="text-center">
+                            %% Math.round(result.temperature) %% &deg;C
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-dark" @click="goToForward(index)" :id="'predict-conditions-'+index" title="Predict products"><i class="fas fa-arrow-right"></i></button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+        <table class="table table-hover my-3" v-show="contextModel == 'neuralnetwork'">
             <thead>
                 <tr>
                     <th class="text-center">#</th>
