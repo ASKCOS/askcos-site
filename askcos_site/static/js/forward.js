@@ -33,7 +33,7 @@ var app = new Vue({
         atomMappingModel: 'Transformer',
         selectivityModel: 'qm_GNN',
         impurityTopk: 3,
-        inspectionThreshold: 0.75,
+        inspectionThreshold: 0.2,
         impurityCheckMapping: true,
         impurityProgress: {
             percent: 0,
