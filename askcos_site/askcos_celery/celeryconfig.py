@@ -41,7 +41,6 @@ imports = [
     'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker',
     'askcos_site.askcos_celery.siteselectivity.sites_worker',
     'askcos_site.askcos_celery.impurity.impurity_worker',
-    'askcos_site.askcos_celery.impurity.impurity_predictor_worker',
     'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker',
     'askcos_site.askcos_celery.generalselectivity.selec_worker',
     'askcos_site.askcos_celery.descriptors.descriptors_worker'
@@ -59,7 +58,6 @@ task_routes = {
     'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker.*': {'queue': 'tffp_worker'},
     'askcos_site.askcos_celery.siteselectivity.sites_worker.*': {'queue': 'sites_worker'},
     'askcos_site.askcos_celery.impurity.impurity_worker.*': {'queue': 'impurity_worker'},
-    'askcos_site.askcos_celery.impurity.impurity_predictor_worker.*': {'queue': 'atom_mapping_worker'},
     'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker.*': {'queue': 'atom_mapping_worker'},
     'askcos_site.askcos_celery.generalselectivity.selec_worker.*': {'queue': 'selec_worker'},
     'askcos_site.askcos_celery.descriptors.descriptors_worker.*': {'queue': 'descriptors_worker'},
