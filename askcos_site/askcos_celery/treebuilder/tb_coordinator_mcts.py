@@ -80,10 +80,6 @@ def get_buyable_paths(*args, **kwargs):
     run_async = kwargs.pop('run_async', False)
     paths_only = kwargs.pop('paths_only', False)
     
-    template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
-    if template_prioritizer_version:
-        treeBuilder.template_prioritizer_version = template_prioritizer_version
-
     settings = {'smiles': args[0], 'version': 1}  # Refers to tree builder version
     settings.update(kwargs)
 

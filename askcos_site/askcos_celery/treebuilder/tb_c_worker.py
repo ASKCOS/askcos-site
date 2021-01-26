@@ -220,7 +220,7 @@ def apply_one_template_by_idx(*args, **kwargs):
     """
     global retroTransformer
 
-    postprocess = kwargs.pop('postprocess')
+    postprocess = kwargs.pop('postprocess', False)
 
     template_set = kwargs.get('template_set', 'reaxys')
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
