@@ -53,17 +53,29 @@
             </div>
             <div class="card bg-light">
                 <div class="card-body launchcard-body">
-                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&reactants=${encodeURIComponent(smiles)}`" target="_blank">
-                        <h4 class="m-0">Predict Forward Synthesis</h4>
-                    </a>
+                    <h4 class="card-title">Start Tree Builder Job</h4>
+                    <template v-if="tbStatus === undefined">
+                        <button type="button" class="btn btn-primary" @click="sendTreeBuilderJob(smiles)" :disabled="!isAuth" :title="isAuth ? 'Submit tree builder job' : 'Must be logged in!'">
+                            Submit Job
+                        </button>
+                    </template>
+                    <template v-else-if="tbStatus === 'pending'">
+                        <div class="spinner-border text-secondary" role="status"></div>
+                    </template>
+                    <template v-else-if="tbStatus === 'error'">
+                        <p class="card-text lead">Submission Error</p>
+                    </template>
+                    <template v-else>
+                        <p class="card-text lead"><a href="{% url 'my_results' %}" target="_blank">Go to My Results</a></p>
+                    </template>
                 </div>
             </div>
         </div>
         <div class="card-deck my-5">
             <div class="card bg-light">
                 <div class="card-body launchcard-body">
-                    <a class="stretched-link text-decoration-none" :href="`/buyables/?q=${encodeURIComponent(smiles)}`" target="_blank">
-                        <h4 class="m-0">Search Buyables Database</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&reactants=${encodeURIComponent(smiles)}`" target="_blank">
+                        <h4 class="m-0">Predict Forward Synthesis</h4>
                     </a>
                 </div>
             </div>
@@ -81,6 +93,17 @@
                     </a>
                 </div>
             </div>
+        </div>
+        <div class="card-deck my-5">
+            <div class="card bg-light invisible"></div>
+            <div class="card bg-light">
+                <div class="card-body launchcard-body">
+                    <a class="stretched-link text-decoration-none" :href="`/buyables/?q=${encodeURIComponent(smiles)}`" target="_blank">
+                        <h4 class="m-0">Search Buyables Database</h4>
+                    </a>
+                </div>
+            </div>
+            <div class="card bg-light invisible"></div>
         </div>
     </template>
 
