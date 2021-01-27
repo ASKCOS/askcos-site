@@ -34,7 +34,7 @@
                 <div class="card-body launchcard-body">
                     <h4 class="card-title">SCScore</h4>
                     <template v-if="scscore === undefined">
-                        <button class="btn btn-primary" @click="getScscore(smiles)">Evaluate</button>
+                        <button type="button" class="btn btn-primary" @click="getScscore(smiles)">Evaluate</button>
                     </template>
                     <template v-else-if="scscore === 'evaluating'">
                         <div class="spinner-border text-secondary" role="status"></div>
@@ -90,7 +90,7 @@
                 <div class="card-body launchcard-body">
                     <h4 class="card-title">Fast Filter Score</h4>
                     <template v-if="reactionScore === undefined">
-                        <button class="btn btn-primary" @click="getReactionScore(smiles)">Evaluate</button>
+                        <button type="button" class="btn btn-primary" @click="getReactionScore(smiles)">Evaluate</button>
                     </template>
                     <template v-else-if="reactionScore === 'evaluating'">
                         <div class="spinner-border text-secondary" role="status"></div>
@@ -109,10 +109,10 @@
                     <template v-else>
                         <div class="btn-group" role="group">
                             <template v-if="mappedSmiles === undefined">
-                                <button class="btn btn-primary" @click="getMappedSmiles(smiles)">Evaluate</button>
+                                <button type="button" class="btn btn-primary" @click="getMappedSmiles(smiles)">Evaluate</button>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary" @click="showMappedSmiles = !showMappedSmiles">%% showMappedSmiles ? 'Hide' : 'Show' %%</button>
+                                <button type="button" class="btn btn-primary" @click="showMappedSmiles = !showMappedSmiles">%% showMappedSmiles ? 'Hide' : 'Show' %%</button>
                             </template>
                             <button id="atomMapSettings" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i></button>
                             <div class="dropdown-menu" aria-labelledby="atomMapSettings">
