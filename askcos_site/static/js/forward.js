@@ -27,7 +27,8 @@ var app = new Vue({
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
-        contextV2Model: 'fp',
+        contextV2ModelType: 'fp',
+        contextV2ModelVersion: '20191118',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'Transformer',
@@ -162,7 +163,7 @@ var app = new Vue({
                 reactants: this.reactants,
                 products: this.product,
                 reagents: _reagents,
-                model: this.contextV2Model,
+                model: `${this.contextV2ModelType}-${this.contextV2ModelVersion}`,
                 num_results: this.numContextResults
             }
         },

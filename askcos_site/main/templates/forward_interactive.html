@@ -55,13 +55,17 @@ Forward Synthesis Planner
                                 <option value="neuralnetworkv2">Neural Network v2 (Quantity Prediction)</option>
                             </select>
                         </div>
-                        <div class="form-inline mb-2" v-show="contextModel == 'neuralnetworkv2'">
-                            <label class="mr-2" for="contextModel">Condition recommendation v2 model name:</label>
-                            <select id="contextV2Model" v-model="contextV2Model" class="form-control">
+                        <div class="form-inline mb-2 ml-3" v-show="contextModel == 'neuralnetworkv2'">
+                            <label class="mr-2" for="contextV2ModelType">Neural Network v2 model type:</label>
+                            <select id="contextV2ModelType" v-model="contextV2ModelType" class="form-control">
                                 <option value="graph">Graph</option>
                                 <option value="fp">Fingerprint</option>
-                                <option value="graph-20191118">Graph (20191118)</option>
-                                <option value="fp-20191118">Fingerprint (20191118)</option>
+                            </select>
+                        </div>
+                        <div class="form-inline mb-2 ml-3" v-show="contextModel == 'neuralnetworkv2'">
+                            <label class="mr-2" for="contextV2ModelVersion">Neural Network v2 dataset version:</label>
+                            <select id="contextV2ModelVersion" v-model="contextV2ModelVersion" class="form-control">
+                                <option value="20191118">Pistachio 2019-11-18</option>
                             </select>
                         </div>
                         <div class="form-inline mb-2">
@@ -166,7 +170,7 @@ Forward Synthesis Planner
             </p>
         </div>
     </div>
-    <div v-show="mode === 'context' && contextModel === 'neuralnetworkv2' && contextV2Model.startsWith('graph')" class="card border-warning mb-3">
+    <div v-show="mode === 'context' && contextModel === 'neuralnetworkv2' && contextV2ModelType === 'graph'" class="card border-warning mb-3">
         <div class="card-body">
             <p class="card-text">
                 Graph models require atom-mapped reactions. If atom-mapping is not available, please try the fingerprint models instead.
