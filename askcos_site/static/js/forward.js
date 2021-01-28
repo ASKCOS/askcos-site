@@ -215,6 +215,9 @@ var app = new Vue({
         postprocessContextV2(data) {
             // format data to the display format
             // data is the return of celery API
+            if (!data.output.length) {
+                alert('Could not generate condition recommendations for this reaction. Please try a different model.')
+            }
             this.contextResults = data.output
             for(const [idx, val] of this.contextResults.entries()) {
                 this.contextResults[idx]['temperature'] -= 273.15
@@ -234,11 +237,14 @@ var app = new Vue({
             })
                 .then(resp => {
                     if (!resp.ok) {
-                        throw Error(resp.statusText)
+                        try {
+                            resp.json().then(json => {throw json.error})
+                        } catch {
+                            throw resp.statusText
+                        }
                     }
-                    return resp
+                    return resp.json()
                 })
-                .then(resp => resp.json())
                 .then(json => {
                     callback(json)
                 })
@@ -266,7 +272,7 @@ var app = new Vue({
                         failed(json)
                     }
                     hideLoader();
-                    throw Error('Celery task failed.');
+                    throw 'Celery task failed'
                 }
                 else {
                     if (!!progress) {
