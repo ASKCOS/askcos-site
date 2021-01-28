@@ -642,7 +642,7 @@ var app = new Vue({
                     }
                 })
                 .catch(error => {
-                    if (error instanceof TypeError) {
+                    if (error instanceof TypeError && error.message === 'Failed to fetch') {
                         console.log('Unable to fetch tree builder results due to connection error. Will keep trying.')
                         setTimeout(() => this.pollForTbResult(), 2000)
                     } else {
