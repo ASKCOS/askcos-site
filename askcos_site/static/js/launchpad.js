@@ -17,6 +17,7 @@ var app = new Vue({
         mapper: 'WLN atom mapper',
         mapperOptions: ['WLN atom mapper', 'Transformer'],
         showMappedSmiles: true,
+        tbStatus: undefined,
     },
     methods: {
         updateSmilesFromKetcher() {
@@ -141,6 +142,48 @@ var app = new Vue({
                     console.error('Could not generate atom mapping:', error)
                 })
         },
+        sendTreeBuilderJob(smiles) {
+            this.tbStatus = 'pending'
+            const url = '/api/v2/tree-builder/'
+            const body = {
+                description: smiles,
+                smiles: smiles,
+                template_set: 'reaxys',
+                template_prioritizer_version: 1,
+                max_depth: 5,
+                max_branching: 20,
+                expansion_time: 60,
+                num_templates: 1000,
+                max_cum_prob: 0.999,
+                filter_threshold: 0.1,
+                max_trees: 500,
+                store_results: true,
+                return_first: false,
+                json_format: 'nodelink',
+            }
+            fetch(url,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw resp.statusText
+                    }
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    this.tbStatus = json.task_id
+                })
+                .catch(error => {
+                    this.tbStatus = 'error'
+                    console.error('Failed to submit tree builder job:', error)
+                })
+        },
         pollCeleryResult(taskId, callback) {
             fetch(`/api/v2/celery/task/${taskId}/`)
             .then(resp => resp.json())
@@ -172,6 +215,7 @@ var app = new Vue({
                 this.scscore = undefined
                 this.reactionScore = undefined
                 this.mappedSmiles = undefined
+                this.tbStatus = undefined
             }
         },
     },

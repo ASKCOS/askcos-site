@@ -236,6 +236,7 @@ var app = new Vue({
         templateNumExamples: {},
         allowCluster: ippSettingsDefault.allowCluster,
         filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
+        invertAtomFilter: false,
         refreshFilter: 1,
         allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
@@ -642,7 +643,7 @@ var app = new Vue({
                     }
                 })
                 .catch(error => {
-                    if (error instanceof TypeError) {
+                    if (error instanceof TypeError && error.message === 'Failed to fetch') {
                         console.log('Unable to fetch tree builder results due to connection error. Will keep trying.')
                         setTimeout(() => this.pollForTbResult(), 2000)
                     } else {
@@ -1466,24 +1467,25 @@ var app = new Vue({
         {
             // If Ketcher is not active, there is no way for user to interact with filter;
             // the filter should pass
-            if (!$('#ketcher-iframe-min')[0]) {
-                return true;
-            }
+            const ketcher = $('#ketcher-iframe-min')[0]
+            if (!ketcher) { return true }
 
-            var reactingAtoms = result.reactingAtoms.map((el) => el-1);
-            var reactingAtomsArray = Array.from(reactingAtoms.values());
+            let reactingAtoms = result.reactingAtoms.map((el) => el-1);
+            let reactingAtomsArray = Array.from(reactingAtoms.values());
 
-            var selection = $('#ketcher-iframe-min')[0].contentWindow.ketcher.editor.selection();
+            let selection = ketcher.contentWindow.ketcher.editor.selection();
+            let selectionAtomsArray = []
             if (selection && selection.atoms) {
-                var selectionAtomsArray = Array.from(selection.atoms.values());
-            }
-            else {
-                // No atoms are selected in Ketcher
-                var selectionAtomsArray = []
+                selectionAtomsArray = Array.from(selection.atoms.values());
             }
 
-            var filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
-            return filterResult;
+            let filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
+
+            if (this.invertAtomFilter) {
+                filterResult = !filterResult
+            }
+
+            return filterResult
         },
         showInfo: function(obj) {
             let nodeId = obj.nodes[obj.nodes.length-1];

@@ -1012,6 +1012,12 @@ It is roughly how long it will take for results to be returned, however there is
                                             <label class="mr-2" for="filterReactingAtoms">Filter for reacting atoms</label>
                                             <input id="filterReactingAtoms" type="checkbox" ref="filterReactingAtoms" v-model="filterReactingAtoms" @change="applyFilterReactingAtoms" {{ filterReactingAtoms }}/>
                                         </div>
+                                        <div class="form-group mb-2" v-show="filterReactingAtoms">
+                                            <i title="Invert the filter so that the displayed reactions do not affect the selected atoms."
+                                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                            <label class="mr-2" for="invertAtomFilter">Invert atom filter</label>
+                                            <input id="invertAtomFilter" type="checkbox" v-model="invertAtomFilter"/>
+                                        </div>
                                         <a href="#" @click="openRecTemplatesModal(selected.smiles)">View Recommended Templates</a>
                                     </div>
                                 </div>
@@ -1248,10 +1254,6 @@ It is roughly how long it will take for results to be returned, however there is
 {% endblock %}
 
 {% block javascript %}
-<script>
-var isAuth = '{{ user.is_authenticated }}' == 'True'
-</script>
-
 <script src="{% static 'js/graph.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/network.js' %}?v{{ static_version }}"></script>
 

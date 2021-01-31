@@ -214,6 +214,8 @@
 </div>
 
 <script>
+var isAuth = {{ user.is_authenticated|yesno:"true,false" }}
+
 function submitSupport() {
   var mailtoString = "mailto:{{ support_emails }}"
   mailtoString += "?subject="+document.querySelector('#support-module').value

@@ -34,7 +34,7 @@
                 <div class="card-body launchcard-body">
                     <h4 class="card-title">SCScore</h4>
                     <template v-if="scscore === undefined">
-                        <button class="btn btn-primary" @click="getScscore(smiles)">Evaluate</button>
+                        <button type="button" class="btn btn-primary" @click="getScscore(smiles)">Evaluate</button>
                     </template>
                     <template v-else-if="scscore === 'evaluating'">
                         <div class="spinner-border text-secondary" role="status"></div>
@@ -53,17 +53,29 @@
             </div>
             <div class="card bg-light">
                 <div class="card-body launchcard-body">
-                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&reactants=${encodeURIComponent(smiles)}`" target="_blank">
-                        <h4 class="m-0">Predict Forward Synthesis</h4>
-                    </a>
+                    <h4 class="card-title">Start Tree Builder Job</h4>
+                    <template v-if="tbStatus === undefined">
+                        <button type="button" class="btn btn-primary" @click="sendTreeBuilderJob(smiles)" :disabled="!isAuth" :title="isAuth ? 'Submit tree builder job' : 'Must be logged in!'">
+                            Submit Job
+                        </button>
+                    </template>
+                    <template v-else-if="tbStatus === 'pending'">
+                        <div class="spinner-border text-secondary" role="status"></div>
+                    </template>
+                    <template v-else-if="tbStatus === 'error'">
+                        <p class="card-text lead">Submission Error</p>
+                    </template>
+                    <template v-else>
+                        <p class="card-text lead"><a href="{% url 'my_results' %}" target="_blank">Go to My Results</a></p>
+                    </template>
                 </div>
             </div>
         </div>
         <div class="card-deck my-5">
             <div class="card bg-light">
                 <div class="card-body launchcard-body">
-                    <a class="stretched-link text-decoration-none" :href="`/buyables/?q=${encodeURIComponent(smiles)}`" target="_blank">
-                        <h4 class="m-0">Search Buyables Database</h4>
+                    <a class="stretched-link text-decoration-none" :href="`/synth_interactive/?mode=forward&reactants=${encodeURIComponent(smiles)}`" target="_blank">
+                        <h4 class="m-0">Predict Forward Synthesis</h4>
                     </a>
                 </div>
             </div>
@@ -82,6 +94,17 @@
                 </div>
             </div>
         </div>
+        <div class="card-deck my-5">
+            <div class="card bg-light invisible"></div>
+            <div class="card bg-light">
+                <div class="card-body launchcard-body">
+                    <a class="stretched-link text-decoration-none" :href="`/buyables/?q=${encodeURIComponent(smiles)}`" target="_blank">
+                        <h4 class="m-0">Search Buyables Database</h4>
+                    </a>
+                </div>
+            </div>
+            <div class="card bg-light invisible"></div>
+        </div>
     </template>
 
     <template v-if="validSmiles && type === 'rxn'">
@@ -90,7 +113,7 @@
                 <div class="card-body launchcard-body">
                     <h4 class="card-title">Fast Filter Score</h4>
                     <template v-if="reactionScore === undefined">
-                        <button class="btn btn-primary" @click="getReactionScore(smiles)">Evaluate</button>
+                        <button type="button" class="btn btn-primary" @click="getReactionScore(smiles)">Evaluate</button>
                     </template>
                     <template v-else-if="reactionScore === 'evaluating'">
                         <div class="spinner-border text-secondary" role="status"></div>
@@ -109,10 +132,10 @@
                     <template v-else>
                         <div class="btn-group" role="group">
                             <template v-if="mappedSmiles === undefined">
-                                <button class="btn btn-primary" @click="getMappedSmiles(smiles)">Evaluate</button>
+                                <button type="button" class="btn btn-primary" @click="getMappedSmiles(smiles)">Evaluate</button>
                             </template>
                             <template v-else>
-                                <button class="btn btn-primary" @click="showMappedSmiles = !showMappedSmiles">%% showMappedSmiles ? 'Hide' : 'Show' %%</button>
+                                <button type="button" class="btn btn-primary" @click="showMappedSmiles = !showMappedSmiles">%% showMappedSmiles ? 'Hide' : 'Show' %%</button>
                             </template>
                             <button id="atomMapSettings" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i></button>
                             <div class="dropdown-menu" aria-labelledby="atomMapSettings">

@@ -27,7 +27,8 @@ var app = new Vue({
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
-        contextV2Model: 'fp',
+        contextV2ModelType: 'fp',
+        contextV2ModelVersion: '20191118',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'Transformer',
@@ -162,7 +163,7 @@ var app = new Vue({
                 reactants: this.reactants,
                 products: this.product,
                 reagents: _reagents,
-                model: this.contextV2Model,
+                model: `${this.contextV2ModelType}-${this.contextV2ModelVersion}`,
                 num_results: this.numContextResults
             }
         },
@@ -214,6 +215,9 @@ var app = new Vue({
         postprocessContextV2(data) {
             // format data to the display format
             // data is the return of celery API
+            if (!data.output.length) {
+                alert('Could not generate condition recommendations for this reaction. Please try a different model.')
+            }
             this.contextResults = data.output
             for(const [idx, val] of this.contextResults.entries()) {
                 this.contextResults[idx]['temperature'] -= 273.15
@@ -233,11 +237,14 @@ var app = new Vue({
             })
                 .then(resp => {
                     if (!resp.ok) {
-                        throw Error(resp.statusText)
+                        try {
+                            resp.json().then(json => {throw json.error})
+                        } catch {
+                            throw resp.statusText
+                        }
                     }
-                    return resp
+                    return resp.json()
                 })
-                .then(resp => resp.json())
                 .then(json => {
                     callback(json)
                 })
@@ -265,7 +272,7 @@ var app = new Vue({
                         failed(json)
                     }
                     hideLoader();
-                    throw Error('Celery task failed.');
+                    throw 'Celery task failed'
                 }
                 else {
                     if (!!progress) {
@@ -275,7 +282,7 @@ var app = new Vue({
                 }
             })
             .catch(error => {
-                if (error instanceof TypeError) {
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
                     console.log('Unable to fetch celery results due to connection error. Will keep trying.')
                     setTimeout(() => {this.pollCeleryResult(taskId, complete, progress, failed)}, 2000)
                 } else {
@@ -628,7 +635,7 @@ Give it a try now if you'd like.
 For this tutorial, let's take a look at an example suzuki coupling reaction. 
 Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click next and we'll pretend you clicked submit).
 `,
-            relfex: true,
+            reflex: true,
             onNext: () => {
                 if (app.contextResults.length == 0) {
                     app.predict()
