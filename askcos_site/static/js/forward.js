@@ -635,7 +635,7 @@ Give it a try now if you'd like.
 For this tutorial, let's take a look at an example suzuki coupling reaction. 
 Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click next and we'll pretend you clicked submit).
 `,
-            relfex: true,
+            reflex: true,
             onNext: () => {
                 if (app.contextResults.length == 0) {
                     app.predict()
