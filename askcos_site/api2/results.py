@@ -133,7 +133,8 @@ class ResultsViewSet(ViewSet):
                     else:
                         trees = tb_results['paths'][:num]
                     tb_results['tree'] = combine_trees(trees)
-                    tb_results['results'] = graph_to_results(tb_results['graph'])
+                    # Remove unnecessary data to reduce response size
+                    del tb_results['paths']
                 else:
                     try:
                         num = int(request.query_params['num'])
@@ -144,9 +145,9 @@ class ResultsViewSet(ViewSet):
                     tb_results['tree'] = combine_old_trees(trees)
                     tb_results['results'] = chem_to_results(tb_results['graph'], tree=tb_results['tree'],
                                                             template_set=result_doc['settings'].get('template_set'))
-                # Remove unnecessary data to reduce response size
-                del tb_results['graph']
-                del tb_results['paths']
+                    # Remove unnecessary data to reduce response size
+                    del tb_results['graph']
+                    del tb_results['paths']
                 resp['result'] = result_doc
             else:
                 resp['error'] = 'Job not yet complete.'
@@ -177,7 +178,7 @@ class ResultsViewSet(ViewSet):
             if result.result_state == 'completed':
                 result_doc = results_collection.find_one({'_id': pk})
                 tb_results = result_doc['result']
-                if tb_results.get('version') != 2:
+                if tb_results.get('version') != 2 or (tb_results['paths'] and 'nodes' not in tb_results['paths'][0]):
                     # Convert paths to node link format
                     tb_results['paths'] = [tree_data_to_node_link(tree) for tree in tb_results['paths']]
                 # Remove unnecessary data to reduce response size

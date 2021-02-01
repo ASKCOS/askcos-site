@@ -255,6 +255,16 @@ input::-webkit-inner-spin-button {
     width: 10rem;
     height: 10rem;
     border-width: 0.5rem;
+    z-index: 3000;
+}
+
+.launchcard-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 100px;
 }
 
 /* Ketcher extras (not in dist) */

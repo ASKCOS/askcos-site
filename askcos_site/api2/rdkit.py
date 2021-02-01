@@ -43,21 +43,28 @@ class SmilesViewSet(ViewSet):
         smiles = serializer.validated_data['smiles']
         isomericSmiles = serializer.validated_data['isomericSmiles']
 
+        def _canonicalize(_smi):
+            if _smi:
+                _mol = Chem.MolFromSmiles(_smi)
+                if not _mol:
+                    raise ValueError('Cannot parse smiles with rdkit.')
+                _smi = Chem.MolToSmiles(_mol, isomericSmiles=isomericSmiles)
+                if not _smi:
+                    raise ValueError('Cannot canonicalize smiles with rdkit.')
+            return _smi
+
         resp = {}
-
-        mol = Chem.MolFromSmiles(smiles)
-        if not mol:
-            resp['error'] = 'Cannot parse smiles with rdkit.'
-            return Response(resp, status=400)
-
-        smiles = Chem.MolToSmiles(mol, isomericSmiles=isomericSmiles)
-        if not smiles:
-            resp['error'] = 'Cannot canonicalize smiles with rdkit.'
-            return Response(resp, status=400)
-
-        resp['smiles'] = smiles
-
-        return Response(resp)
+        try:
+            if '>' in smiles:
+                resp['type'] = 'rxn'
+                resp['smiles'] = '>'.join(_canonicalize(part) for part in smiles.split('>'))
+            else:
+                resp['type'] = 'mol'
+                resp['smiles'] = _canonicalize(smiles)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
+        else:
+            return Response(resp)
 
     @action(detail=False, methods=['POST'])
     def validate(self, request):

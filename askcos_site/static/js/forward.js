@@ -22,15 +22,19 @@ var app = new Vue({
         contextResults: [],
         impurityResults: [],
         selectivityResults: [],
+        siteResults: [],
+        siteResultsQuery: '',
         reactionScore: null,
         mode: 'context',
         contextModel: 'neuralnetwork',
+        contextV2ModelType: 'fp',
+        contextV2ModelVersion: '20191118',
         forwardModel: 'wln',
         inspectionModel: 'fastFilter',
         atomMappingModel: 'Transformer',
         selectivityModel: 'qm_GNN',
         impurityTopk: 3,
-        inspectionThreshold: 0.75,
+        inspectionThreshold: 0.2,
         impurityCheckMapping: true,
         impurityProgress: {
             percent: 0,
@@ -71,6 +75,9 @@ var app = new Vue({
         if (!!this.reactants) {
             this.predict()
         }
+        setTimeout(() => {
+            document.querySelector('#splash').classList.replace("d-flex", "d-none")
+        }, 1000)
     },
     methods: {
         clearContext() {
@@ -88,6 +95,9 @@ var app = new Vue({
         },
         clearSelectivity() {
             this.selectivityResults = []
+        },
+        clearSites() {
+            this.siteResults = []
         },
         clearImpurity() {
             this.impurityResults = []
@@ -107,10 +117,24 @@ var app = new Vue({
             this.clearContext()
             this.clearForward()
             this.clearImpurity()
+            this.clearSelectivity()
+            this.clearSites()
         },
         changeMode(mode) {
             this.mode = mode
             window.history.pushState({mode: mode}, mode, '?mode='+mode)
+        },
+        getMolImgUrl: function(smiles, highlight, reacting_atoms) {
+            let url = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
+            if (highlight !== undefined) {
+                url += '&highlight=true'
+            }
+            if (reacting_atoms !== undefined) {
+                for (let ra of reacting_atoms) {
+                    url += `&reacting_atoms=${encodeURIComponent(ra)}`
+                }
+            }
+            return url;
         },
         constructForwardPostData(reagents, solvent) {
             var data = {
@@ -125,11 +149,21 @@ var app = new Vue({
             }
             return data
         },
-        constructContextPostData() {
+        constructContextV1PostData() {
             return {
                 reactants: this.reactants,
                 products: this.product,
                 return_scores: true,
+                num_results: this.numContextResults
+            }
+        },
+        constructContextV2PostData() {
+            var _reagents = [] // a list of string, each of them is a reagent
+            return {
+                reactants: this.reactants,
+                products: this.product,
+                reagents: _reagents,
+                model: `${this.contextV2ModelType}-${this.contextV2ModelVersion}`,
                 num_results: this.numContextResults
             }
         },
@@ -155,13 +189,20 @@ var app = new Vue({
             }
             return data
         },
+        constructSiteSelectivityPostData() {
+            return {
+                smiles: this.reactants,
+            }
+        },
         constructImpurityPostData() {
             var data = {
                 reactants: this.reactants,
-                products: this.product,
                 top_k: this.impurityTopk,
                 threshold: this.inspectionThreshold,
                 check_mapping: this.impurityCheckMapping
+            }
+            if (!!this.product) {
+                data.products = this.product
             }
             if (!!this.reagents) {
                 data.reagents = this.reagents
@@ -170,6 +211,20 @@ var app = new Vue({
                 data.solvent = this.solvent
             }
             return data
+        },
+        postprocessContextV2(data) {
+            // format data to the display format
+            // data is the return of celery API
+            if (!data.output.length) {
+                alert('Could not generate condition recommendations for this reaction. Please try a different model.')
+            }
+            this.contextResults = data.output
+            for(const [idx, val] of this.contextResults.entries()) {
+                this.contextResults[idx]['temperature'] -= 273.15
+                this.contextResults[idx]['reagent'] = Object.keys(val.reagents).join('.')
+                this.contextResults[idx]['catalyst'] = ''
+                this.contextResults[idx]['solvent'] = ''
+            }
         },
         apiAsyncPost(endpoint, postData, callback) {
             return fetch(endpoint, {
@@ -182,11 +237,14 @@ var app = new Vue({
             })
                 .then(resp => {
                     if (!resp.ok) {
-                        throw Error(resp.statusText)
+                        try {
+                            resp.json().then(json => {throw json.error})
+                        } catch {
+                            throw resp.statusText
+                        }
                     }
-                    return resp
+                    return resp.json()
                 })
-                .then(resp => resp.json())
                 .then(json => {
                     callback(json)
                 })
@@ -214,7 +272,7 @@ var app = new Vue({
                         failed(json)
                     }
                     hideLoader();
-                    throw Error('Celery task failed.');
+                    throw 'Celery task failed'
                 }
                 else {
                     if (!!progress) {
@@ -224,7 +282,7 @@ var app = new Vue({
                 }
             })
             .catch(error => {
-                if (error instanceof TypeError) {
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
                     console.log('Unable to fetch celery results due to connection error. Will keep trying.')
                     setTimeout(() => {this.pollCeleryResult(taskId, complete, progress, failed)}, 2000)
                 } else {
@@ -252,6 +310,10 @@ var app = new Vue({
                     case 'selectivity':
                         this.clearSelectivity()
                         this.selectivityPredict()
+                        break;
+                    case 'sites':
+                        this.clearSites()
+                        this.sitesPredict()
                         break;
                     default:
                         alert('unsupported mode')
@@ -310,14 +372,32 @@ var app = new Vue({
                 this.impurityPredict()
             })
         },
-        contextPredict() {
+        contextV1Predict() {
             showLoader()
             this.contextResults = []
-            var postData = this.constructContextPostData()
+            var postData = this.constructContextV1PostData()
             var callback = (json) => {
                 this.contextResults = json.output
             }
             this.celeryTaskAsyncPost('context', postData, callback)
+        },
+        contextV2Predict() {
+            showLoader()
+            this.contextResults = []
+            var postData = this.constructContextV2PostData()
+            this.celeryTaskAsyncPost('context-v2', postData, this.postprocessContextV2)
+        },
+        contextPredict() {
+            switch(this.contextModel) {
+                case 'neuralnetwork':
+                    this.contextV1Predict()
+                    break
+                case 'neuralnetworkv2':
+                    this.contextV2Predict()
+                    break
+                default:
+                    alert('unsupported context model')
+            }
         },
         selectivityPredict() {
             showLoader()
@@ -333,6 +413,14 @@ var app = new Vue({
                 }
             }
             this.celeryTaskAsyncPost('general-selectivity', postData, callback)
+        },
+        sitesPredict() {
+            showLoader()
+            let postData = this.constructSiteSelectivityPostData()
+            let callback = (json) => {
+                this.siteResults = json.output
+            }
+            this.celeryTaskAsyncPost('selectivity', postData, callback)
         },
         evaluateIndex(index) {
             this.$set(this.contextResults[index], 'evaluating', true)
@@ -422,8 +510,8 @@ var app = new Vue({
             }
             this.apiAsyncPost('/api/v2/impurity/', postData, callback)
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
+        updateSmilesFromKetcher() {
+            let smiles = ketcher.getSmiles();
             this.canonicalize(smiles, drawBoxId)
         },
         downloadForwardResults() {
@@ -474,6 +562,17 @@ var app = new Vue({
                 this.clear()
                 this.mode = 'context'
                 tour.restart()
+            }
+        }
+    },
+    computed: {
+        siteResultsFilter: function() {
+            // Returns site results where reactant matches siteResultsQuery
+            if (!!this.siteResultsQuery) {
+                let query = new RegExp(this.siteResultsQuery)
+                return this.siteResults.filter((res) => query.test(res.task))
+            } else {
+                return this.siteResults
             }
         }
     },
@@ -536,7 +635,7 @@ Give it a try now if you'd like.
 For this tutorial, let's take a look at an example suzuki coupling reaction. 
 Reactants and products have been prepopulated for you, and you can run the prediction by clicking submit (or click next and we'll pretend you clicked submit).
 `,
-            relfex: true,
+            reflex: true,
             onNext: () => {
                 if (app.contextResults.length == 0) {
                     app.predict()

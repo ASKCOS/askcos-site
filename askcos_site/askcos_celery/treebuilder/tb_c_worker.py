@@ -14,7 +14,7 @@ from celery.signals import celeryd_init
 from rdkit import RDLogger
 
 from askcos.prioritization.precursors.relevanceheuristic import RelevanceHeuristicPrecursorPrioritizer
-from askcos_site.globals import scscorer
+from askcos_site.globals import scscorer, retro_templates
 from .tfx_relevance_template_prioritizer import TFXRelevanceTemplatePrioritizer
 from .tfx_fast_filter import TFXFastFilter
 
@@ -26,6 +26,8 @@ lg.setLevel(RDLogger.CRITICAL)
 CORRESPONDING_QUEUE = 'tb_c_worker'
 CORRESPONDING_RESERVABLE_QUEUE = 'tb_c_worker_reservable'
 retroTransformer = None
+
+db_comparison_map = {'>': '$gt', '>=': '$gte', '<': '$lt', '<=': '$lte', '==': '$eq'}
 
 
 @celeryd_init.connect
@@ -132,24 +134,81 @@ def get_top_precursors(
         return smiles, result
 
 @shared_task
-def template_relevance(
-    smiles, max_num_templates, max_cum_prob, 
-    template_set='reaxys', template_prioritizer_version=None,
-    ):
+def template_relevance(smiles, max_num_templates, max_cum_prob,
+                       template_set='reaxys', template_prioritizer_version=None,
+                       return_templates=False, attribute_filter=None):
+    """
+    Celery task for template_relevance prediction.
+
+    If return_templates = True, return as list of dictionaries containing
+    template information.
+    """
     global retroTransformer
+
     hostname = 'template-relevance-{}'.format(template_set)
     template_prioritizer = TFXRelevanceTemplatePrioritizer(
-        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
+        hostname=hostname,
+        model_name='template_relevance',
+        version=template_prioritizer_version,
     )
 
-    scores, indices = template_prioritizer.predict(smiles, max_num_templates, max_cum_prob)
+    scores, indices = template_prioritizer.predict(smiles, max_num_templates=None, max_cum_prob=None)
+
+    # Filter results by template attributes if needed
+    if attribute_filter:
+        query = {
+            'index': {'$in': indices.tolist()},
+            'template_set': template_set
+        }
+        for item in attribute_filter:
+            query['attributes.{}'.format(item['name'])] = {
+                db_comparison_map[item['logic']]: item['value']
+            }
+
+        result_proj = ['_id', 'index', 'reaction_smarts'] if return_templates else ['index']
+        cursor = retro_templates.find(query, result_proj)
+
+        template_map = {x['index']: x for x in cursor}
+        bool_mask = np.array([i in template_map for i in indices.tolist()])
+        scores = scores[bool_mask]
+        indices = indices[bool_mask]
+    else:
+        template_map = None
+
+    # Then trim results based on max_num_templates and max_cum_prob
+    if max_num_templates is not None:
+        scores = scores[:max_num_templates]
+        indices = indices[:max_num_templates]
+
+    if max_cum_prob is not None:
+        bool_mask = np.cumsum(scores) <= max_cum_prob
+        scores = scores[bool_mask]
+        indices = indices[bool_mask]
 
     if not isinstance(scores, list):
         scores = scores.tolist()
     if not isinstance(indices, list):
         indices = indices.tolist()
 
-    return scores, indices
+    if return_templates:
+        if template_map is None:
+            cursor = retro_templates.find({
+                    'index': {'$in': indices},
+                    'template_set': template_set
+                }, ['_id', 'index', 'reaction_smarts'])
+
+            template_map = {x['index']: x for x in cursor}
+
+        templates = [template_map[i] for i in indices]
+
+        # Add score to template document
+        for i, (score, template) in enumerate(zip(scores, templates)):
+            template['rank'] = i + 1
+            template['score'] = score
+
+        return templates
+    else:
+        return scores, indices
 
 @shared_task
 def apply_one_template_by_idx(*args, **kwargs):
@@ -160,6 +219,8 @@ def apply_one_template_by_idx(*args, **kwargs):
             applying given template to the molecule.
     """
     global retroTransformer
+
+    postprocess = kwargs.pop('postprocess', False)
 
     template_set = kwargs.get('template_set', 'reaxys')
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
@@ -177,7 +238,19 @@ def apply_one_template_by_idx(*args, **kwargs):
         'fast_filter': fast_filter
     })
 
-    return retroTransformer.apply_one_template_by_idx(*args, **kwargs)
+    result = retroTransformer.apply_one_template_by_idx(*args, **kwargs)
+
+    if postprocess:
+        # Unpack result into list of dicts
+        # First item is the tree builder path ID which is not needed
+        result = [{
+            'smiles': r[1],
+            'template_idx': r[2],
+            'precursors': r[3],
+            'ffscore': r[4],
+        } for r in result]
+
+    return result
 
 @shared_task
 def fast_filter_check(*args, **kwargs):

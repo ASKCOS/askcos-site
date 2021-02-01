@@ -33,6 +33,8 @@ urlpatterns = [
     re_path(r'^help/tutorial$', views.tutorial, name='tutorial'),
     re_path(r'^help/faq$', views.faq, name='faq'),
 
+    re_path(r'^launchpad/$', views.launchpad, name='launchpad'),
+
     # Retrosynthesis
     re_path(r'^retro/$', views.retro, name='retro_home'),
     re_path(r'^retro/target=(?P<smiles>.+)$', views.retro_target, name='retro_target'),

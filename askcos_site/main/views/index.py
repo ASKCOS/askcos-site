@@ -22,3 +22,7 @@ def faq(request, err=None):
 #@login_required
 def tutorial(request, err=None):
     return render(request, 'tutorial.html', {'err': err})
+
+
+def launchpad(request):
+    return render(request, 'launchpad.html')

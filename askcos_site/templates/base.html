@@ -51,12 +51,10 @@
                         <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=forward">Synthesis Prediction</a>
                         <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=impurity">Impurity Prediction</a>
                         <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=selectivity">Regio-selectivity Prediction</a>
-                        <a class="dropdown-item" href="{% url 'site_prediction' %}">Aromatic Site Selectivity</a>
+                        <a class="dropdown-item" href="{% url 'synth_interactive' %}?mode=sites">Aromatic Site Selectivity</a>
                         <div class="dropdown-divider"></div>
                         <h5 class="dropdown-header"><b>Utilities</b></h5>
-                        <a class="dropdown-item" href="{% url 'scscoring' %}">SCScore Evaluator</a>
                         <a class="dropdown-item" href="{% url 'buyables' %}">Buyable Look-up</a>
-                        <a class="dropdown-item" href="{% url 'atom_mapping' %}">Atom Mapping</a>
                         <a class="dropdown-item" href="{% url 'draw' %}">Drawing</a>
                     </div>
                 </li>
@@ -216,6 +214,8 @@
 </div>
 
 <script>
+var isAuth = {{ user.is_authenticated|yesno:"true,false" }}
+
 function submitSupport() {
   var mailtoString = "mailto:{{ support_emails }}"
   mailtoString += "?subject="+document.querySelector('#support-module').value

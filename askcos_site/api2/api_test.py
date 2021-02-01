@@ -392,6 +392,45 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
                                            'products': ['Cannot parse products smiles with rdkit.']})
 
+    def test_context_v2(self):
+        """Test /context-v2 endpoint"""
+        num_results = 5
+        data = {
+            'reactants': '[N:1]#[C:2][CH:3]([C:4](=O)[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1)[c:11]1[cH:12][cH:13][cH:14][cH:15][cH:16]1.[NH2:17][NH2:18]',
+            'products': '[NH2:1][c:2]1[nH:18][n:17][c:4]([c:3]1-[c:11]1[cH:16][cH:15][cH:14][cH:13][cH:12]1)-[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1',
+            'num_results': num_results,
+        }
+        response = self.post('/context-v2/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['products'], data['products'])
+        self.assertEqual(request['num_results'], data['num_results'])
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        time.sleep(30) # at least 10 sec is required, ~40 sec including model loading
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertEqual(len(result['output']), num_results)
+
+        # Test insufficient data
+        response = self.post('/context-v2/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['This field is required.'],
+                                           'products': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.post('/context-v2/', data={'reactants': 'X', 'products': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
+                                           'products': ['Cannot parse products smiles with rdkit.']})
+
     def test_descriptors(self):
         """Test /descriptors endpoint"""
         data = {
@@ -620,9 +659,9 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['products'], '')
         self.assertEqual(request['solvent'], '')
         self.assertEqual(request['top_k'], 3)
-        self.assertEqual(request['threshold'], 0.75)
+        self.assertEqual(request['threshold'], 0.2)
         self.assertEqual(request['predictor'], 'WLN forward predictor')
-        self.assertEqual(request['inspector'], 'Reaxys inspector')
+        self.assertEqual(request['inspector'], 'WLN forward inspector')
         self.assertEqual(request['mapper'], 'WLN atom mapper')
         self.assertTrue(request['check_mapping'])
 
@@ -711,7 +750,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check that we got expected result
-        self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1'})
+        self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1', 'type': 'mol'})
 
         # Test insufficient data
         response = self.post('/rdkit/smiles/canonicalize/', data={})
@@ -1094,7 +1133,7 @@ M  END
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
             'store_results': True,
         }
-        response = self.client.post('https://localhost/api/v2/tree-builder/', data=data)
+        response = self.post('/tree-builder/', data=data)
         self.assertEqual(response.status_code, 401)
         result = response.json()
         self.assertEqual(result['error'], 'You must be authenticated to store tree builder results.')
