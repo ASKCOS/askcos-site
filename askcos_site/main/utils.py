@@ -5,6 +5,16 @@ from urllib.request import urlopen
 import rdkit.Chem as Chem
 from django.http import JsonResponse
 
+from askcos.utilities.banned import BANNED_SMILES
+from .views.users import can_avoid_banned_chemicals
+
+
+def is_banned(request, smiles):
+    if can_avoid_banned_chemicals(request):
+        return False
+    if smiles in BANNED_SMILES:
+        return True
+    return False
 
 def ajax_error_wrapper(ajax_func):
     def ajax_func_call(*args, **kwargs):

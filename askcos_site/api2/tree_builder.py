@@ -5,6 +5,7 @@ from rest_framework.exceptions import NotAuthenticated
 
 from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+from askcos_site.main.utils import is_banned
 from .celery import CeleryTaskAPIView
 
 
@@ -44,6 +45,8 @@ class TreeBuilderSerializer(serializers.Serializer):
         mol = Chem.MolFromSmiles(value)
         if not mol:
             raise serializers.ValidationError('Cannot parse smiles with rdkit.')
+        if is_banned(self.context['request'], value):
+            raise serializers.ValidationError('ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.')
         return Chem.MolToSmiles(mol)
 
     def validate_chemical_property_logic(self, value):
