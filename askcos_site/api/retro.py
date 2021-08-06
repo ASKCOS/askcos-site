@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from rdkit import Chem
 
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
+from askcos_site.main.utils import is_banned
 
 TIMEOUT = 120
 
@@ -12,6 +13,11 @@ def singlestep(request):
     resp['request'] = dict(**request.GET)
     run_async = request.GET.get('async', False)
     target = request.GET.get('target')
+
+    if is_banned(request, target):
+        resp['error'] = 'ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.'
+        return JsonResponse(resp, status=400)
+
     max_num_templates = int(request.GET.get('num_templates', 100))
     max_cum_prob = float(request.GET.get('max_cum_prob', 0.995))
     fast_filter_threshold = float(request.GET.get('filter_threshold', 0.75))

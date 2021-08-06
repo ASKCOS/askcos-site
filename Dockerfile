@@ -1,6 +1,6 @@
 ARG CORE_VERSION=dev
 
-FROM registry.gitlab.com/mlpds_mit/askcos/askcos-core:$CORE_VERSION as core
+FROM askcos/askcos-core:$CORE_VERSION as core
 
 USER root
 
