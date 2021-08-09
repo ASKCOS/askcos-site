@@ -9,7 +9,7 @@ Web application for the prediction of feasible synthetic routes towards a desire
 
 ## Getting Started
 
-This package provides a web interface for the [`askcos-core`](https://github.com/ASKCOS/askcos-core) Python package. It is built using Django, with newer pages using Vue.js for dynamic content. Celery is also used for asyncronous task processing. We recommend deployment using Docker, for which scripts can be found in the [`askcos-deploy`](https://github.com/ASKCOS/askcos-deploy) repository. Additional information on deployment and releases can be found at [askcos.gitlab.io](https://askcos.gitlab.io).
+This package provides a web interface for the [`askcos-core`](https://github.com/ASKCOS/askcos-core) Python package. It is built using Django, with newer pages using Vue.js for dynamic content. Celery is also used for asyncronous task processing. We recommend deployment using Docker, for which scripts can be found in the [`askcos-deploy`](https://github.com/ASKCOS/askcos-deploy) repository. Additional information on deployment and releases can be found at [askcos.github.io](https://askcos.github.io).
 
 ### Building a Docker Image
 
