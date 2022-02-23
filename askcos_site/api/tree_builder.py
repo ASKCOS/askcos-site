@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from rdkit import Chem
 
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
+from askcos_site.main.utils import is_banned
 
 
 def tree_builder(request):
@@ -24,6 +25,11 @@ def tree_builder(request):
         return JsonResponse(resp, status=400)
 
     smiles = Chem.MolToSmiles(mol)
+
+    if is_banned(request, smiles):
+        resp['error'] = 'ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.'
+        return JsonResponse(resp, status=400)
+
     max_depth = int(request.GET.get('max_depth', 4))
     max_branching = int(request.GET.get('max_branching', 25))
     expansion_time = int(request.GET.get('expansion_time', 60))

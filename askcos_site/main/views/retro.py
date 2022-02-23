@@ -14,7 +14,7 @@ from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors
 from askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts import get_buyable_paths as get_buyable_paths_mcts
 from askcos_site.globals import retro_transformer, RETRO_CHIRAL_FOOTNOTE, pricer
 from askcos_site.main.models import BlacklistedReactions, BlacklistedChemicals, SavedResults
-from askcos_site.main.utils import ajax_error_wrapper, resolve_smiles
+from askcos_site.main.utils import ajax_error_wrapper, resolve_smiles, is_banned
 from askcos_site.main.views.users import can_control_robot
 
 
@@ -59,7 +59,7 @@ def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
             context['err'] = 'Could not parse!'
             return render(request, 'retro.html', context)
 
-    if smiles is not None:
+    if smiles is not None and not is_banned(request, smiles):
 
         # OLD: ALWAYS CHIRAL NOW
         # if 'retro_lit' in request.POST: return redirect('retro_lit_target', smiles=smiles)
@@ -146,6 +146,8 @@ def retro(request, smiles=None, chiral=True, mincount=0, max_n=200):
                     'ppg': '${}/g'.format(ppg) if ppg else 'cannot buy',
                 })
 
+    elif smiles is not None:
+        context['err'] = 'ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.'
     else:
 
 
@@ -235,6 +237,11 @@ def ajax_start_retro_mcts_celery(request):
     description = request.GET.get('description')
 
     smiles = request.GET.get('smiles', None)
+
+    if is_banned(request, smiles):
+        data['html_trees'] = 'ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.'
+        return JsonResponse(data)
+
     max_depth = int(request.GET.get('max_depth', 4))
     max_branching = int(request.GET.get('max_branching', 25))
     expansion_time = int(request.GET.get('expansion_time', 60))

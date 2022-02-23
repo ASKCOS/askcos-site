@@ -2,9 +2,9 @@ ARG KETCHER_VERSION=dev
 ARG CORE_VERSION=dev
 ARG BASE_VERSION=2020.03.6-gh2855-py37-conda
 
-FROM registry.gitlab.com/mlpds_mit/askcos/ketcher:$KETCHER_VERSION as ketcher
-FROM registry.gitlab.com/mlpds_mit/askcos/askcos-core:$CORE_VERSION as core
-FROM registry.gitlab.com/mlpds_mit/askcos/askcos-base:$BASE_VERSION as base
+FROM askcos/ketcher:$KETCHER_VERSION as ketcher
+FROM askcos/askcos-core:$CORE_VERSION as core
+FROM askcos/askcos-base:$BASE_VERSION as base
 
 COPY --chown=askcos:askcos --from=core /usr/local/askcos-core /usr/local/askcos-core
 COPY --chown=askcos:askcos . /usr/local/askcos-site

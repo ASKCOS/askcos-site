@@ -5,6 +5,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from askcos_site.askcos_celery.treebuilder.tb_c_worker import get_top_precursors, template_relevance, apply_one_template_by_idx
+from askcos_site.main.utils import is_banned
 from .celery import CeleryTaskAPIView
 
 
@@ -47,6 +48,8 @@ class RetroSerializer(serializers.Serializer):
         """Verify that the requested target is valid."""
         if not Chem.MolFromSmiles(value):
             raise serializers.ValidationError('Cannot parse target smiles with rdkit.')
+        if is_banned(self.context['request'], value):
+            raise serializers.ValidationError('ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.')
         return value
 
 
@@ -69,6 +72,8 @@ class TemplateRelevanceSerializer(serializers.Serializer):
         """Verify that the requested target is valid."""
         if not Chem.MolFromSmiles(value):
             raise serializers.ValidationError('Cannot parse target smiles with rdkit.')
+        if is_banned(self.context['request'], value):
+            raise serializers.ValidationError('ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.')
         return value
 
 
@@ -82,6 +87,8 @@ class ApplyOneTemplateByIdxSerializer(serializers.Serializer):
         """Verify that the requested target is valid."""
         if not Chem.MolFromSmiles(value):
             raise serializers.ValidationError('Cannot parse target smiles with rdkit.')
+        if is_banned(self.context['request'], value):
+            raise serializers.ValidationError('ASKCOS does not provide results for compounds on restricted lists such as the CWC and DEA schedules.')
         return value
 
 
