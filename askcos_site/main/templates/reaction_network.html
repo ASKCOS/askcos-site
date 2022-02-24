@@ -7,13 +7,20 @@
 <script src="{% static 'js/browser-compat.js' %}?v{{ static_version }}"></script>
 
 <script src="{% static 'js/vue.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/vis.min.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/vis-network-8.5.3.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/jspanel.min.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/network.css' %}?v{{ static_version }}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/splash.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/bootstrap-tourist.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/vue-modal.css' %}?v{{ static_version }}" type="text/css">
 <link rel="stylesheet" href="{% static 'css/tooltip.css' %}?v{{ static_version }}" type="text/css">
-<script src="{% static 'js/vis.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/keycharm-0.4.0.js' %}"></script>
+<script src="{% static 'js/vis-data-7.1.1.min.js' %}"></script>
+<script src="{% static 'js/vis-network-8.5.3.min.js' %}"></script>
+<script src="{% static 'js/jspanel.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/jspanel-vue.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/bootstrap-tourist.min.js' %}?v{{ static_version }}"></script>
+<script src="{% static 'js/uuidv4-8.3.0.min.js' %}"></script>
 {% endblock %}
 
 {% block page_title %}Interactive Path Planning{% endblock %}
@@ -21,8 +28,20 @@
 {% block page_body %}
 
 <div id="app">
+
+<div id="splash" class="splash-container d-flex flex-column align-items-center justify-content-center">
+    <h3>
+        ASKCOS Interactive Path Planning
+    </h3>
+    <div class="d-flex align-items-center justify-content-center">
+        <div class="spinner-grow spinner-grow-sm bounce-early"></div>
+        <div class="spinner-grow spinner-grow-sm mx-1"></div>
+        <div class="spinner-grow spinner-grow-sm bounce-late"></div>
+    </div>
+</div>
+
 <!-- drawing box -->
-{% include "drawing_modal.html" with vue=True %}
+{% include "ketcher_modal.html" with vue=True %}
     <main>
         <!-- json file upload modal -->
         <transition name="modal">
@@ -75,6 +94,79 @@
             </div>
         </transition>
 
+        <!-- recommended templates modal -->
+        <transition name="modal">
+            <div class="modal-mask" v-if="showRecTemplatesModal" @click.self="showRecTemplatesModal = false">
+                <div class="modal-dialog modal-dialog-scrollable modal-xl fade-d" style="max-width: 90%; max-height:90%">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Recommended Templates</h5>
+                            <button type="button" class="close" aria-label="Close" @click="showRecTemplatesModal = false">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <h3>Current Target</h3>
+                                <img :src=`/api/v2/draw/?&smiles=${encodeURIComponent(selected.smiles)}`>
+                            </div>
+                            <div class="btn-toolbar justify-content-center mb-3">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('first')">&lt;&lt;</button>
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('prev')">&lt;</button>
+                                    </div>
+                                    <div class="input-group-text justify-content-center" style="width: 8rem">Page %% rtmCurrentPage %% of %% rtmMaxPage %%</div>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('next')">&gt;</button>
+                                        <button class="btn btn-outline-dark" @click="changeTemplatePage('last')">&gt;&gt;</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="recommendedTemplates" class="table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">Rank</th>
+                                            <th class="text-center">Score</th>
+                                            <th class="text-center">Template</th>
+                                            <th class="text-center">Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="template in rtmItems">
+                                            <td class="text-center">%% template.rank %%</td>
+                                            <td class="text-center">
+                                                %% num2str(template.score, 5, true) %%
+                                            </td>
+                                            <td class="text-center">
+                                                <img :src=`/api/v2/draw/?input_type=template&smiles=${encodeURIComponent(template.reaction_smarts)}` :alt="template.reaction_smarts" loading="lazy">
+                                            </td>
+                                            <td class="text-center" v-if="template.results !== undefined">
+                                                <div v-if="!!template.results[0]">
+                                                    <img :src=`/api/v2/draw/?&smiles=${encodeURIComponent(template.results[0])}` loading="lazy">
+                                                </div>
+                                                <div v-else>
+                                                    No Precursors
+                                                </div>
+                                            </td>
+                                            <td class="text-center" v-else>
+                                                <button class="btn btn-primary" @click="applyTemplate(selected.smiles, template)">Apply Template</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-between">
+                            <button type="button" class="btn btn-info" @click="templateRelevance(selected.smiles)">Re-evaluate</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="showRecTemplatesModal = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
         <!-- cluster view modal -->
         <transition name="modal">
             <div class="modal-mask" v-if="showClusterPopoutModal" @click.self="closeClusterPopoutModal()">
@@ -91,13 +183,13 @@
                         <div class="modal-body">
                             <div class="text-center mb-3">
                                 <button class="btn btn-outline-dark" @click="clusterPopoutModalDecGroupID();"><i class="fas fa-arrow-left"></i></button>
-                                Cluster #%% num2str(clusterPopoutModalData['group_id']+1) %%
+                                Cluster #%% num2str(clusterPopoutModalData['clusterId']+1) %%
                                 <button class="btn btn-outline-dark" @click="clusterPopoutModalIncGroupID();"><i class="fas fa-arrow-right"></i></button>
                             </div>
                             <div class="scroll-list">
                                 <div class="grid-wrapper">
-                                    <template v-for="res in results[clusterPopoutModalData['selectedSmiles']]">
-                                        <div v-if="res.group_id == clusterPopoutModalData['group_id']" class="card">
+                                    <template v-for="res in currentClusterViewPrecursors">
+                                        <div class="card">
                                             <div class="container-fluid d-flex flex-column justify-content-between h-100">
                                                 <div class="row">
                                                     <div class="col-xs w-100">
@@ -109,23 +201,27 @@
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showScore">
                                                                     <td>Score</td>
-                                                                    <td>%% num2str(res.score, 3) %%</td>
+                                                                    <td>%% num2str(res.retroScore, 3) %%</td>
+                                                                </tr>
+                                                                <tr v-if="clusterPopoutModalData.optionsDisplay.showSCScore">
+                                                                    <td>Synthetic complexity</td>
+                                                                    <td>%% num2str(res.scscore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
-                                                                    <td>%% num2str(res.num_examples)%%</td>
+                                                                    <td>%% num2str(res.numExamples)%%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showTemplateScore">
                                                                     <td>Template score</td>
-                                                                    <td>%% num2str(res.template_score, 3) %%</td>
+                                                                    <td>%% num2str(res.templateScore, 3, true) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showPlausibility">
                                                                     <td>Plausibility</td>
-                                                                    <td>%% num2str(res.plausibility, 3) %%</td>
+                                                                    <td>%% num2str(res.ffScore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterPopoutModalData.optionsDisplay.showClusterId">
                                                                     <td>Reaction cluster</td>
-                                                                    <td>%% num2str(res.group_id+1) %%</td>
+                                                                    <td>%% num2str(res.clusterId+1) %%</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -138,8 +234,8 @@
                                                 </div>
                                                 <div class="row justify-content-end">
                                                     <div class="col-xs">
-                                                        <button v-show="!res.inViz" class="addRes btn btn-sm btn-success" :data-rank="res.rank" @click="addFromResults(clusterPopoutModalData['selected'], res)"><i class="fas fa-plus"></i></button>
-                                                        <button v-show="res.inViz" class="remRes btn btn-sm btn-danger" :data-rank="res.rank" @click="remFromResults(clusterPopoutModalData['selected'], res)"><i class="fas fa-minus"></i></button>
+                                                        <button v-show="!(clusterPopoutModalData.selected.id in res.inVis)" class="addRes btn btn-sm btn-success" :data-rank="res.rank" @click="addFromResults(clusterPopoutModalData.selected, res)"><i class="fas fa-plus"></i></button>
+                                                        <button v-show="clusterPopoutModalData.selected.id in res.inVis" class="remRes btn btn-sm btn-danger" :data-rank="res.rank" @click="remFromResults(clusterPopoutModalData.selected, res)"><i class="fas fa-minus"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -150,16 +246,18 @@
                         </div> <!-- end modal body -->
                         <div class="modal-footer justify-content-between">
                             <div>
-                                <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterPopoutModalData['selectedSmiles'], clusterPopoutModalData['group_id']);" title="Add precursor">
+                                <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterPopoutModalData['selectedSmiles'], clusterPopoutModalData['clusterId']);" title="Add precursor">
                                     <i class="fas fa-plus"></i>
                                 </button>
-                                <button class="btn btn-outline-dark" @click="showClusterPopoutModal = false; openClusterEditModal(clusterPopoutModalData['selected'], clusterPopoutModalData['group_id']); closeClusterPopoutModal();" title="Edit clusters">
+                                <button class="btn btn-outline-dark" @click="showClusterPopoutModal = false; openClusterEditModal(clusterPopoutModalData['selected'], clusterPopoutModalData['clusterId']); closeClusterPopoutModal();" title="Edit clusters">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
                             <div class="form-check-inline">
                                 <input class="form-check-input" id="cpShowScore" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showScore"/>
                                 <label class="form-check-label mr-2" for="cpShowScore">Score</label>
+                                <input class="form-check-input" id="cpShowSCScore" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showSCScore"/>
+                                <label class="form-check-label mr-2" for="cpShowSCScore">Synthetic complexity</label>
                                 <input class="form-check-input" id="cpShowNumEx" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showNumExample"/>
                                 <label class="form-check-label mr-2" for="cpShowNumEx"># Examples</label>
                                 <input class="form-check-input" id="cpShowTemp" type="checkbox" v-model="clusterPopoutModalData.optionsDisplay.showTemplateScore"/>
@@ -190,13 +288,13 @@
                         <div class="modal-body">
                             <div class="text-center mb-3">
                                 <button class="btn btn-outline-dark" @click="clusterEditModalDecGroupID();"><i class="fas fa-arrow-left"></i></button>
-                                Cluster #%% num2str(clusterEditModalData['group_id']+1) %%
+                                Cluster #%% num2str(clusterEditModalData['clusterId']+1) %%
                                 <button class="btn btn-outline-dark" @click="clusterEditModalIncGroupID();"><i class="fas fa-arrow-right"></i></button>
                             </div>
                             <div class="scroll-list-x mb-3">
                                 <div class="grid-wrapper-onerow">
-                                    <template v-for="res in results[clusterEditModalData['selectedSmiles']]">
-                                        <div v-if="res.group_id == clusterEditModalData['group_id']" class="card" v-on:dragstart="clusteredit_dragstart_handler(res, $event)" v-on:dragend="clusteredit_dragend_handler($event);" draggable="true">
+                                    <template v-for="res in currentClusterEditPrecursors">
+                                        <div class="card" v-on:dragstart="clusteredit_dragstart_handler(res, $event)" v-on:dragend="clusteredit_dragend_handler($event);" draggable="true">
                                             <div class="container-fluid d-flex flex-column justify-content-between h-100">
                                                 <div class="row">
                                                     <div class="col-xs w-100">
@@ -208,23 +306,27 @@
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showScore">
                                                                     <td>Score</td>
-                                                                    <td>%% num2str(res.score, 3) %%</td>
+                                                                    <td>%% num2str(res.retroScore, 3) %%</td>
+                                                                </tr>
+                                                                <tr v-if="clusterEditModalData.optionsDisplay.showSCScore">
+                                                                    <td>Synthetic complexity</td>
+                                                                    <td>%% num2str(res.scscore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showNumExample">
                                                                     <td># Examples</td>
-                                                                    <td>%% num2str(res.num_examples)%%</td>
+                                                                    <td>%% num2str(res.numExamples)%%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showTemplateScore">
                                                                     <td>Template score</td>
-                                                                    <td>%% num2str(res.template_score, 3) %%</td>
+                                                                    <td>%% num2str(res.templateScore, 3, true) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showPlausibility">
                                                                     <td>Plausibility</td>
-                                                                    <td>%% num2str(res.plausibility, 3) %%</td>
+                                                                    <td>%% num2str(res.ffScore, 3) %%</td>
                                                                 </tr>
                                                                 <tr v-if="clusterEditModalData.optionsDisplay.showClusterId">
                                                                     <td>Reaction cluster</td>
-                                                                    <td>%% num2str(res.group_id+1) %%</td>
+                                                                    <td>%% num2str(res.clusterId+1) %%</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -233,13 +335,6 @@
                                                 <div class="row">
                                                     <div class="col-xs">
                                                         <img v-bind:src="getMolDrawEndPoint(res)" style="max-width: 100%; pointer-events: none;" draggable="false" ondragstart="disable_dragstart_handler(event);"/>
-                                                    </div>
-                                                </div>
-                                                <div v-if="clusterOptions.allowRemovePrecursor" class="row justify-content-end">
-                                                    <div class="col-xs">
-                                                        <button class="btn btn-sm btn-danger" @click="clusterEditModalDeletePrecursor(clusterEditModalData['selectedSmiles'], res.smiles);">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -251,12 +346,12 @@
                             <div class="scroll-list-x">
                                 <div class="grid-wrapper-onerow">
                                     <template v-for="res in clusteredResults[selected.smiles]">
-                                        <div class="card" style="pointer-events: all" @drop="clusteredit_drop_handler(res[0], $event);" ondragover="clusteredit_dragover_handler(event);" ondragenter="clusteredit_dragenter_handler(event);" ondragleave="clusteredit_dragleave_handler(event);" @click="clusterEditModalData['group_id'] = res[0].group_id;$forceUpdate();">
+                                        <div class="card" style="pointer-events: all" @drop="clusteredit_drop_handler(res, $event);" ondragover="clusteredit_dragover_handler(event);" ondragenter="clusteredit_dragenter_handler(event);" ondragleave="clusteredit_dragleave_handler(event);" @click="clusterEditModalData['clusterId'] = res.clusterId;$forceUpdate();">
                                             <div class="container-fluid nopointer text-center">
-                                                <h4 class="nonselectable nopointer">Reaction Cluster %% num2str(res[0].group_id+1) %%</h4>
+                                                <h4 class="nonselectable nopointer">Reaction Cluster %% num2str(res.clusterId+1) %%</h4>
                                                 <div class="row nopointer">
                                                     <div class="col-xs nopointer">
-                                                        <img v-bind:src="getMolDrawEndPoint(res[0])" style="max-width: 100%; pointer-events: none;" draggable="false" ondragstart="disable_dragstart_handler(event);"/>
+                                                        <img v-bind:src="getMolDrawEndPoint(res)" style="max-width: 100%; pointer-events: none;" draggable="false" ondragstart="disable_dragstart_handler(event);"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -273,7 +368,7 @@
                         </div> <!-- end modal body -->
                         <div class="modal-footer justify-content-between">
                             <div>
-                                <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterEditModalData['selectedSmiles'], clusterEditModalData['group_id']);" title="Add precursor">
+                                <button class="btn btn-success" @click="openAddNewPrecursorModal(clusterEditModalData['selectedSmiles'], clusterEditModalData['clusterId']);" title="Add precursor">
                                     <i class="fas fa-plus"></i>
                                 </button>
                                 <button class="btn btn-outline-dark" @click="openModal('settings');" title="Open settings">
@@ -283,6 +378,8 @@
                             <div class="form-check-inline">
                                 <input class="form-check-input" id="ceShowScore" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showScore"/>
                                 <label class="form-check-label mr-2" for="ceShowScore">Score</label>
+                                <input class="form-check-input" id="ceShowSCScore" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showSCScore"/>
+                                <label class="form-check-label mr-2" for="ceShowSCScore">Synthetic complexity</label>
                                 <input class="form-check-input" id="ceShowNumEx" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showNumExample"/>
                                 <label class="form-check-label mr-2" for="ceShowNumEx"># Examples</label>
                                 <input class="form-check-input" id="ceShowTemp" type="checkbox" v-model="clusterEditModalData.optionsDisplay.showTemplateScore"/>
@@ -315,7 +412,7 @@
                             <div class="form-inline mb-2">
                                 <label class="mr-2" for="precursor">Precursor: </label>
                                 <div class="input-group">
-                                    <input id="precursor" type="text" class="form-control text-center" v-model="addNewPrecursorModal['newprecursorsmiles']">
+                                    <input id="precursor" type="text" class="form-control text-center" v-model="addNewPrecursorModal['newPrecursorSmiles']">
                                     <div v-if="enableResolve" class="input-group-append">
                                         <button class="btn btn-outline-dark" type="button" @click="toggleResolver">
                                             <i v-if="allowResolve" style="color: darkgreen" class="fas fa-server" title="Connection to NIH name resolver is ON, structures may be sent to an external service. This can be turned off in the settings menu, or by clicking this icon."></i>
@@ -326,14 +423,14 @@
                             </div>
                             <div class="form-inline mb-2">
                                 <label class="mr-2" for="precursorCluster">Group:</label>
-                                <select id="precursorCluster" v-model="addNewPrecursorModal['group_id']" class="form-control">
+                                <select id="precursorCluster" v-model="addNewPrecursorModal['clusterId']" class="form-control">
                                     <option value="undefined">New cluster</option>
                                     <option v-for="idx in clusteredResultsIndex[addNewPrecursorModal['selectedSmiles']]" :value="idx.toString()">%% idx+1 %%</option>
                                 </select>
                             </div>
                             <div class="form-inline mb-2">
-                                <input class="form-check-input" id="nodupcheck" type="checkbox" v-model="addNewPrecursorModal['nodupcheck']">
-                                <label class="form-check-label" for="nodupcheck">No duplicate check</label>
+                                <input class="form-check-input" id="noDupCheck" type="checkbox" v-model="addNewPrecursorModal['noDupCheck']">
+                                <label class="form-check-label" for="noDupCheck">No duplicate check</label>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -391,6 +488,24 @@
                                     </template>
                                 </select>
                             </div>
+                            <div v-if="templateAttributes && templateAttributes[tb.settings.templateSet] && templateAttributes[tb.settings.templateSet].length" class="form-inline mb-2">
+                                <i title="Template attribute filters to use during retrosynthetic prediction. These are attributes that are defined for each template, and only those templates that satisfy the filter provided here will be considered. Normally, only the top 'Max. Num. templates' will be applied - with these filters, the top 'Max. Num. templates' that satisfy the filters will be applied." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label>Template attribute filters: <i style="cursor: pointer" @click="addAttributeFilter" class="fas fa-plus ml-1"></i></label>
+                            </div>
+                            <div class="form-inline mb-2 ml-3" v-for="(filter, idx) in tb.settings.attributeFilter">
+                                <i @click="tb.settings.attributeFilter.pop(idx)" class="fas fa-times mr-2" style="cursor: pointer"></i>
+                                <select class="form-control form-control-sm mr-2" v-model="filter.name">
+                                    <option v-for="attribute in templateAttributes[tb.settings.templateSet]" :value="attribute">%% attribute %%</option>
+                                </select>
+                                <select class="form-control form-control-sm mr-2" v-model="filter.logic">
+                                    <option value=">">&gt;</option>
+                                    <option value=">=">&ge;</option>
+                                    <option value="<">&lt;</option>
+                                    <option value="<=">&le;</option>
+                                    <option value="==">=</option>
+                                </select>
+                                <input class="form-control form-control-sm mr-2" type="number" v-model="filter.value">
+                            </div>
                             <div class="form-inline mb-2">
                                 <i title="When multiple versions of a template relevance model are available for a given template set, you can choose between them here." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="templateSetVersion">Relevance model version:</label>
@@ -405,7 +520,6 @@
                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="precursorScoring">Precursor scoring:</label>
                                 <select id="precursorScoring" v-model="tb.settings.precursorScoring" class="form-control form-control-sm">
-                                    <option value="Heuristic">Heuristic</option>
                                     <option value="RelevanceHeuristic">Relevance+Heuristic</option>
                                     <option value="SCScore">SCScore</option>
                                 </select>
@@ -418,18 +532,27 @@
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="This is the cumulative template score after which templates will stop being applied to your target.
-                                    For example, if the sum of the scores of the top two templates exceeds this value, only those two template application results will be returned.
-                                    For computational efficiency, this value is limited to a maximum value of 0.99999. Please directly use the asynchronous API if you need to apply all templates."
+For example, if the sum of the scores of the top two templates exceeds this value, only those two template application results will be returned.
+For computational efficiency, this value is limited to a maximum value of 0.99999. Please directly use the asynchronous API if you need to apply all templates."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="maxCumProb">Max. cum. prob.:</label>
-                                <input id="maxCumProb" style="width: 100px" type="number" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control form-control-sm text-center">
+                                <input id="maxCumProb" style="width: 100px" type="number" min="0" max="1" step="0.000001" v-model.number="tb.settings.maxCumProb" @change="tb.settings.maxCumProb = Math.min(0.99999, tb.settings.maxCumProb)" class="form-control form-control-sm text-center">
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="This is the minimum plausibility that a predictor transformation must receive from the Fast Filter model in order to be kept and returned as a result.
-                                    The plausibility score can help filter out bad suggestions, but in some cases can be over conservative and filter out false negatives."
+The plausibility score can help filter out bad suggestions, but in some cases can be over conservative and filter out false negatives."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="minPlausibility">Min. plausibility:</label>
-                                <input id="minPlausibility" style="width: 100px" type="number" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
+                                <input id="minPlausibility" style="width: 100px" type="number" min="0" max="1" step="0.000001" v-model.number="tb.settings.minPlausibility" class="form-control form-control-sm text-center">
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="This setting changes the regioselectivity model used to predict product probabilities."
+                                   class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="selectivityModel">Regio-selectivity model:</label>
+                                <select id="selectivityModel" v-model="selectivityModel" class="form-control form-control-sm">
+                                    <option value="qm_GNN">QM-WLN</option>
+                                    <option value="GNN">WLN</option>
+                                </select>
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="When enabled, will automatically identify reactions which have potential regio-selectivity considerations." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
@@ -438,20 +561,40 @@
                             </div>
                             <hr>
                             <h4>MCTS Tree Builder Settings:</h4>
+                            <h5>MCTS algorithm options</h5>
+                            <div class="form-inline mb-2">
+                                <i title="Which tree builder algorithm to use."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="tbVersion">Tree builder version:</label>
+                                <select id="tbVersion" v-model="tb.settings.version" class="form-control form-control-sm">
+                                    <option value="1">v1</option>
+                                    <option value="2">v2</option>
+                                </select>
+                            </div>
                             <div class="form-inline mb-2">
                                 <i title="This is how long the server is allowed to search for template applications.
-                                    It is roughly how long it will take for results to be returned, however there is an additional pathway resolution step following expansion that may take some time as well."
+It is roughly how long it will take for results to be returned, however there is an additional pathway resolution step following expansion that may take some time as well."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="expansionTime">Expansion time (seconds):</label>
                                 <input id="expansionTime" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" max="300" step="1" v-model.number="tb.settings.expansionTime">
                             </div>
-                            <div class="form-inline mb-2">
-                                <i title="This is the maximum price for a chemical that will satisfy the stopping criteria for a MCTS search.
-                                    In other words, the search algorithm will not try to find precursors for chemicals below this price,
-                                    and these will appear as leaf nodes in the resulting pathway graphs."
+                            <div v-if="tb.settings.version==2" class="form-inline mb-2">
+                                <i title="This is how many iterations the MCTS algorithm is allowed to perform before returning results."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <label class="mr-2" for="maxPPG">Max chemical price ($/g):</label>
-                                <input id="maxPPG" style="width: 100px" class="form-control form-control-sm text-center" type="number" v-model.number="tb.settings.maxPPG">
+                                <label class="mr-2" for="maxIterations">Maximum iterations:</label>
+                                <input id="maxIterations" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxIterations">
+                            </div>
+                            <div v-if="tb.settings.version==2" class="form-inline mb-2">
+                                <i title="This is how many chemicals the MCTS algorithm is allowed to explore before returning results."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxChemicals">Maximum chemicals:</label>
+                                <input id="maxChemicals" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxChemicals">
+                            </div>
+                            <div v-if="tb.settings.version==2" class="form-inline mb-2">
+                                <i title="This is how many reactions the MCTS algorithm is allowed to explore before returning results."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxReactions">Maximum reactions:</label>
+                                <input id="maxReactions" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxReactions">
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="This is the maximum depth (or number of steps) for any given reaction pathway return by the search algorithm." class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
@@ -464,8 +607,74 @@
                                 <label class="mr-2" for="maxDepth">Max branching:</label>
                                 <input id="maxBranching" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" max="50" step="1" v-model.number="tb.settings.maxBranching">
                             </div>
+                            <h5>Terminal chemical criteria</h5>
+                            <p>The following options allow you to set additional criteria to be used in determining whether a precursor is terminal. All AND criteria must be satisfied simultaneously. Any OR criteria are sufficient on their own.</p>
                             <div class="form-inline mb-2">
-                                <i title="The chemical property logic parameters allow you to include additional stopping criteria for the search, by setting the maximum number of atoms by element. This can be used to set an arbitrary molecular size as a stopping criteria instead of relying on our buyables database."
+                                <i title="Restrict buyables database lookup to specific sources. Note that this also applies to one-step predictions."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <span class="mr-2" for="buyablesSourceType">Buyables sources:</span>
+                                <div class="dropdown">
+                                    <button class="form-control form-control-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        %% tb.settings.buyablesSourceAll ? 'All' : tb.settings.buyablesSource.length ? tb.settings.buyablesSource.toString() : 'Select Sources' %%
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <form>
+                                            <div class="form-check justify-content-start m-2">
+                                                <input class="form-check-input" id="buyablesCheckAll" type="checkbox" value="all" v-model="tb.settings.buyablesSourceAll" @change="tb.settings.buyablesSource = []">
+                                                <label class="form-check-label" for="buyablesCheckAll">All</label>
+                                            </div>
+                                            <div class="form-check justify-content-start m-2" v-for="source in buyablesSources">
+                                                <input class="form-check-input" :id="'buyablesCheck' + source" type="checkbox" :value="source" v-model="tb.settings.buyablesSource" :disabled="tb.settings.buyablesSourceAll">
+                                                <label class="form-check-label" :for="'buyablesCheck' + source">%% source == 'none' ? 'No Source' : source %%</label>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="Sets the logic type for considering buyability. This only checks for existence in the buyables database and does not consider price."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="buyableLogic">Buyability logic:</label>
+                                <select id="buyableLogic" v-model="tb.settings.buyableLogic" class="form-control form-control-sm">
+                                    <option value="none">None</option>
+                                    <option value="or">Or</option>
+                                    <option value="and">And</option>
+                                </select>
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="Sets the logic type for considering max chemical price."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="ppgLogic">Chemical price logic:</label>
+                                <select id="ppgLogic" v-model="tb.settings.maxPPGLogic" class="form-control form-control-sm">
+                                    <option value="none">None</option>
+                                    <option value="or">Or</option>
+                                    <option value="and">And</option>
+                                </select>
+                            </div>
+                            <div v-if="tb.settings.maxPPGLogic!='none'" class="form-inline mb-2 ml-3">
+                                <i title="This is the maximum price below which a precursor will be considered terminal in the MCTS search."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxPPG">Max chemical price ($/g):</label>
+                                <input id="maxPPG" style="width: 100px" class="form-control form-control-sm text-center" type="number" v-model.number="tb.settings.maxPPG">
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="Sets the logic type for considering max scscore."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="scscoreLogic">Chemical SCScore logic:</label>
+                                <select id="scscoreLogic" v-model="tb.settings.maxScscoreLogic" class="form-control form-control-sm">
+                                    <option value="none">None</option>
+                                    <option value="or">Or</option>
+                                    <option value="and">And</option>
+                                </select>
+                            </div>
+                            <div v-if="tb.settings.maxScscoreLogic!='none'" class="form-inline mb-2 ml-3">
+                                <i title="This is the maximum synthetic complexity score below which a precursor will be considered terminal in the MCTS search. Values range from 1-5, with 5 being most synthetically complex."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxScscore">Max chemical SCScore (1-5):</label>
+                                <input id="maxScscore" style="width: 100px" class="form-control form-control-sm text-center" type="number" min=1 max=5 v-model.number="tb.settings.maxScscore">
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="Sets the logic type for considering maximum chemical size in terms of element counts."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="chemPropLogic">Chemical property logic:</label>
                                 <select id="chemPropLogic" v-model="tb.settings.chemicalPropertyLogic" class="form-control form-control-sm">
@@ -474,7 +683,9 @@
                                     <option value="and">And</option>
                                 </select>
                             </div>
-                            <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-2">
+                            <div v-if="tb.settings.chemicalPropertyLogic!='none'" class="form-inline mb-2 ml-3">
+                                <i title="This is the maximum number of each element below which a precursor will be considered terminal in the MCTS search."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <div class="mr-2">Max atoms:</div>
                                 <div class="form-group">
                                     <label class="mx-2" for="chemPropC">C &le;</label>
@@ -494,7 +705,7 @@
                                 </div>
                             </div>
                             <div class="form-inline mb-2">
-                                <i title="The chemical popularity options allow you to set additional stopping criteria based on the number of times a chemical appeared in the training data for the template relevance machine learning model. "
+                                <i title="Sets the logic type for considering the number of times a chemical appeared in the training data for the template relevance machine learning model. "
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <label class="mr-2" for="chemPopLogic">Chemical popularity logic:</label>
                                 <select id="chemPopLogic" v-model="tb.settings.chemicalPopularityLogic" class="form-control form-control-sm">
@@ -503,22 +714,31 @@
                                     <option value="and">And</option>
                                 </select>
                             </div>
-                            <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-2">
-                                <div class="mr-2">Minimum occurrences:</div>
+                            <div v-if="tb.settings.chemicalPopularityLogic!='none'" class="form-inline mb-2 ml-3">
+                                <i title="This is the minimum number of prior occurrences above which a precursor will be considered terminal in the MCTS search."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <div class="mr-2">Min occurrences:</div>
                                 <div class="form-group">
                                     <label class="mx-2" for="chemPopR">As reactant &ge;</label>
-                                    <input id="chemPopR" style="width: 75px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityReactants">
+                                    <input id="chemPopR" style="width: 5rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityReactants">
                                 </div>
                                 <div class="form-group">
                                     <label class="mx-2" for="chemPopP">As product &ge;</label>
-                                    <input id="chemPopP" style="width: 75px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityProducts">
+                                    <input id="chemPopP" style="width: 5rem" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.chemicalPopularityProducts">
                                 </div>
                             </div>
+                            <h5>Result output options</h5>
                             <div class="form-inline mb-2">
                                 <i title="This setting will make the tree search algorithm terminate upon finding any pathway with terminal nodes that meet the stopping criteria (price, and or property/popularity logic)."
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <input class="form-check-input" id="returnFirst" type="checkbox" v-model="tb.settings.returnFirst" {{ tb.settings.returnFirst }}/>
                                 <label class="form-check-label" for="returnFirst">Return ASAP?</label>
+                            </div>
+                            <div class="form-inline mb-2">
+                                <i title="This allows limiting how many pathways are returned by the tree builder. Note that the cutoff is checked during depth-first pathway enumeration, so there is no guarantee on which pathways are returned."
+                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                <label class="mr-2" for="maxTrees">Maximum pathways to return:</label>
+                                <input id="maxTrees" style="width: 100px" class="form-control form-control-sm text-center" type="number" min="1" step="1" v-model.number="tb.settings.maxTrees">
                             </div>
                             <div class="form-inline mb-2">
                                 <i title="This setting allows you to redirect to the entire graph visualization of the tree builder results in this IPP interface instead of the pathway visualization page that lets you view individual pathways one at a time."
@@ -539,12 +759,6 @@
                                     class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
                                 <input class="form-check-input" id="isAltColor" type="checkbox" ref="clusterOptions.isAlternatingColor" v-model="clusterOptions.isAlternatingColor" {{ clusterOptions.isAlternatingColor }}/>
                                 <label class="form-check-label" for="isAltColor">Show alternating color for different reaction clusters?</label>
-                            </div>
-                            <div class="form-inline mb-2">
-                                <i title="When enabled, users can remove precursor results completely using the delete button in the clustering UI."
-                                    class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
-                                <input class="form-check-input" id="allowRemovePrecursor" type="checkbox" ref="clusterOptions.allowRemovePrecursor" v-model="clusterOptions.allowRemovePrecursor" {{ clusterOptions.allowRemovePrecursor }}/>
-                                <label class="form-check-label" for="allowRemovePrecursor">Allow to remove precursors?</label>
                             </div>
                             <div class="form-inline mb-2">
                                 <div class="form-group mr-2">
@@ -648,7 +862,7 @@
                             </div>
                             <input id="target" type="text" class="form-control text-center" v-model="target">
                             <div class="input-group-append">
-                                <button class="input-group-text" type="button" data-toggle="modal" data-target="#drawingbox" @click="drawBox('target')">
+                                <button class="input-group-text" type="button" @click="drawBoxKetcher('target')">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
@@ -715,12 +929,22 @@
                     <button id="download-btn" class="btn btn-outline-dark mx-1" @click="openModal('download')" title="Download reaction network"><i class="fas fa-download"></i></button>
                     <button id="load-btn" class="btn btn-outline-dark mx-1" @click="openModal('load')" title="Upload reaction network"><i class="fas fa-upload"></i></button>
                     <button class="btn btn-outline-dark mx-1" @click="startTour" title="Start tutorial"><i class="fas fa-question"></i></button>
+                    <span class="mx-2">|</span>
+                    <div class="custom-control custom-switch d-flex align-items-center">
+                        <input type="checkbox" class="custom-control-input" id="treeViewSwitch" v-model="treeViewEnabled">
+                        <label class="custom-control-label" for="treeViewSwitch">Tree View (Beta)</label>
+                        <i title="Highlight individual retrosynthetic pathways and display statistics."
+                            class="fas fa-question-circle ml-1" style="cursor: pointer"></i>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-center align-items-center my-2">
                     <i @click="showSettingsModal = true" class="fas fa-edit" style="cursor: pointer"></i>&nbsp;
                     Using template set&nbsp;<samp><code>%% tb.settings.templateSet %%</code></samp>&nbsp;
                     version&nbsp;<samp><code>%% tb.settings.templateSetVersion %%</code></samp>
+                    <div v-if="templateAttributes && templateAttributes[tb.settings.templateSet] && tb.settings.attributeFilter.length">
+                        &nbsp;with <samp><code>%% tb.settings.attributeFilter.length %%</code></samp> active attribute filters
+                    </div>
                 </div>
 
                 <div id="network" class="mx-auto my-2"></div>
@@ -742,13 +966,16 @@
                                         </span>
                                     </div>
                                     <div>
-                                        <b>Price ($/g): </b>%% selected.ppg %%
+                                        <b>Price ($/g): </b>%% selected.data.ppg %%
                                     </div>
                                     <div v-if="selected.source">
-                                        <b>Source: </b>%% selected.source %%
+                                        <b>Source: </b>%% selected.data.source %%
                                     </div>
-                                    <div class="my-2">
-                                        <img v-bind:src="selected.image" style="max-width: 100%"/>
+                                    <div class="my-2" style="position: relative">
+                                        <iframe id="ketcher-iframe-min" src="{% url 'ketcher_iframe_min' %}" width="160" height="100" scrolling="no" style="border-width: 0"></iframe>
+                                        <div id="ketcher-iframe-min-spinner" class="spinner-border" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>  
                                     </div>
                                     <h3>
                                         Precursors
@@ -762,22 +989,42 @@
                                             <input id="allowCluster" type="checkbox" ref="allowCluster" v-model="allowCluster" @change="resetSortingCategory" {{ allowCluster }}/>
                                         </div>
                                         <div v-if="!allowCluster" class="form-group mb-2">
-                                            <label class="mr-2" for="sortingCategory">Reorder by:</label>
-                                            <select class="form-control" id="sortingCategory" @change="reorderResults" v-model="sortingCategory">
-                                                <option value="score">Score</option>
-                                                <option value="num_examples"># Examples</option>
-                                                <option value="template_score">Template score</option>
-                                                <option value="plausibility">Plausibility</option>
-                                                <option value="rms_molwt">Root mean square molecular weight (inverse)</option>
-                                                <option value="num_rings">Number of rings (inverse)</option>
-                                            </select>
+                                            <label class="mr-2" for="sortingCategory">Sort by:</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend" @click="sortOrderAscending = !sortOrderAscending">
+                                                    <button class="input-group-text" v-if="sortOrderAscending">Ascending <i class="fas fa-sort-amount-up ml-1"></i></button>
+                                                    <button class="input-group-text" v-else>Descending <i class="fas fa-sort-amount-down ml-1"></i></button>
+                                                </div>
+                                                <select class="form-control" id="sortingCategory" @change="selectSortingOrder" v-model="sortingCategory">
+                                                    <option value="retroScore">Score</option>
+                                                    <option value="scscore">Synthetic complexity</option>
+                                                    <option value="numExamples"># Examples</option>
+                                                    <option value="templateRank">Template rank</option>
+                                                    <option value="ffScore">Plausibility</option>
+                                                    <option value="rmsMolwt">Root mean square molecular weight</option>
+                                                    <option value="numRings">Number of rings</option>
+                                                </select>
+                                            </div>
                                         </div>
+                                        <div class="form-group mb-2">
+                                            <i title="Only display reactions where one or more of the atoms selected above participate in the reaction. Multiple atoms can be selected by dragging or holding shift."
+                                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                            <label class="mr-2" for="filterReactingAtoms">Filter for reacting atoms</label>
+                                            <input id="filterReactingAtoms" type="checkbox" ref="filterReactingAtoms" v-model="filterReactingAtoms" @change="applyFilterReactingAtoms" {{ filterReactingAtoms }}/>
+                                        </div>
+                                        <div class="form-group mb-2" v-show="filterReactingAtoms">
+                                            <i title="Invert the filter so that the displayed reactions do not affect the selected atoms."
+                                            class="fas fa-question-circle mr-1" style="cursor: pointer"></i>
+                                            <label class="mr-2" for="invertAtomFilter">Invert atom filter</label>
+                                            <input id="invertAtomFilter" type="checkbox" v-model="invertAtomFilter"/>
+                                        </div>
+                                        <a href="#" @click="openRecTemplatesModal(selected.smiles)">View Recommended Templates</a>
                                     </div>
                                 </div>
                             </div>
                             <div class="scroll-list" style="max-height: calc(100vh - 40rem)">
                                 <div class="text-center">
-                                    <template v-if="typeof(results[selected.smiles]) == 'undefined'">
+                                    <template v-if="!resultsAvailable">
                                         <div class="text-center" style="margin-top: 10px">
                                             <h5>Click button below to expand this node and predict precursors for this target.</h5>
                                             <button id="expand-btn-side" class="btn btn-success" v-on:click="expandNode">Expand node</button>
@@ -790,71 +1037,13 @@
                                             </div>
                                         </div>
                                     </template>
-                                    <template v-if="allowCluster">
-                                        <ul v-bind:class="{'card-list-alternating':clusterOptions.isAlternatingColor, 'ul-card':true}">
-                                            <template v-for="cluster in clusteredResults[selected.smiles]">
-                                                <li>
-                                                    <template v-for="(res, index) in cluster">
-                                                        <template v-if="res.show">
-                                                            <div v-bind:class="{'card-first': index==0, 'card-rest': index!=0}">
-                                                                <div class="container-fluid">
-                                                                    <div class="row no-gutters">
-                                                                        <div class="col-sm">
-                                                                            <img v-bind:src="getMolDrawEndPoint(res, undefined, true)" style="max-width: 100%"/>
-                                                                        </div>
-                                                                        <div class="col-sm">
-                                                                            <table class="table table-sm table-bordered m-0">
-                                                                                <tbody>
-                                                                                    <tr>
-                                                                                        <td>Rank</td>
-                                                                                        <td>#%% res.rank %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Score</td>
-                                                                                        <td>%% num2str(res.score, 3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td># Examples</td>
-                                                                                        <td>%% num2str(res.num_examples) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Template score</td>
-                                                                                        <td>%% num2str(res.template_score, 3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Plausibility</td>
-                                                                                        <td>%% num2str(res.plausibility, 3) %%</td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Reaction cluster</td>
-                                                                                        <td>%% num2str(res.group_id+1) %%</td>
-                                                                                    </tr>
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="row">
-                                                                        <div class="col text-center my-2">
-                                                                            <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
-                                                                            <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
-                                                                            <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </template>
-                                                    </template>
-                                                </li>
-                                            </template>
-                                        </ul>
-                                    </template>
                                     <template v-else>
-                                        <template v-for="res in results[selected.smiles]">
+                                        <template v-for="res in currentPrecursors">
                                             <div class="card">
                                                 <div class="container-fluid">
                                                     <div class="row no-gutters">
                                                         <div class="col-sm">
-                                                            <img v-bind:src="getMolDrawEndPoint(res)" style="max-width: 100%"/>
+                                                            <img v-bind:src="getMolDrawEndPoint(res, undefined, true)" style="max-width: 100%"/>
                                                         </div>
                                                         <div class="col-sm">
                                                             <table class="table table-sm table-bordered m-0">
@@ -865,23 +1054,31 @@
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Score</td>
-                                                                        <td>%% num2str(res.score, 3) %%</td>
+                                                                        <td>%% num2str(res.retroScore, 3) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Synthetic complexity</td>
+                                                                        <td>%% num2str(res.scscore, 3) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td># Examples</td>
-                                                                        <td>%% num2str(res.num_examples) %%</td>
+                                                                        <td>%% num2str(res.numExamples) %%</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td>Template rank</td>
+                                                                        <td>%% num2str(res.templateRank) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Template score</td>
-                                                                        <td>%% num2str(res.template_score, 3) %%</td>
+                                                                        <td>%% num2str(res.templateScore, 3, true) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Plausibility</td>
-                                                                        <td>%% num2str(res.plausibility, 3) %%</td>
+                                                                        <td>%% num2str(res.ffScore, 3) %%</td>
                                                                     </tr>
                                                                     <tr>
                                                                         <td>Reaction cluster</td>
-                                                                        <td>%% num2str(res.group_id+1) %%</td>
+                                                                        <td>%% num2str(res.clusterId+1) %%</td>
                                                                     </tr>
                                                                 </tbody>
                                                             </table>
@@ -889,8 +1086,8 @@
                                                     </div>
                                                     <div class="row">
                                                         <div class="col text-center my-2">
-                                                            <button v-show="!res.inViz" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
-                                                            <button v-show="res.inViz" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
+                                                            <button v-show="!(selected.id in res.inVis)" class="addRes btn btn-success" :data-rank="res.rank" @click="addFromResults(selected, res)"><i class="fas fa-plus"></i></button>
+                                                            <button v-show="selected.id in res.inVis" class="remRes btn btn-danger" :data-rank="res.rank" @click="remFromResults(selected, res)"><i class="fas fa-minus"></i></button>
                                                             <button class="btn btn-outline-dark" :data-rank="res.rank" @click="openClusterPopoutModal(selected, res)"><i class="fa fa-th-large"></i></button>
                                                         </div>
                                                     </div>
@@ -908,35 +1105,60 @@
                                         <div id="selected-smiles" class="customtooltip" @click="copySelectedSmiles">
                                             <i class="far fa-copy"></i>
                                             <b>Smiles: </b>
-                                            %% selected.reactionSmiles %%
+                                            %% selected.smiles %%
                                             <span id="copy-tooltip" class="customtooltiptext">
                                                 Click to copy!
                                             </span>
                                         </div>
-                                        <img v-bind:src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.reactionSmiles)" style="max-width: 100%"/>
+                                        <img v-bind:src="'/api/v2/draw/?smiles='+encodeURIComponent(selected.smiles)" style="max-width: 100%"/>
                                     </div>
                                     <div class="text-center my-2">
-                                        <a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.reactionSmiles)" target="_blank">
+                                        <a :href="'/synth_interactive/?mode=context&rxnsmiles='+encodeURIComponent(selected.smiles)" target="_blank">
                                             Evaluate reaction in new tab
                                         </a>
                                     </div>
-                                    <div><b>Retroscore: </b>%% selected.retroscore %%</div>
-                                    <div><b>Template score: </b>%% selected.templateScore %%</div>
-                                    <div><b>Plausibility: </b>%% selected.ffScore %%</div>
-                                    <div><b>Num. Examples: </b>%% selected.numExamples %%</div>
-                                    <div><b>Supporting templates:</b>
-                                        <ul>
-                                            <li v-for="id in selected.templateIds">
-                                                <a v-bind:href="'/template/?id='+id" target="_blank">%% id %% (%% templateNumExamples[id] %% examples)</a>
-                                            </li>
-                                        </ul>
+                                    <div>
+                                        <table class="table table-sm table-bordered m-0">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Score</th>
+                                                    <td>%% num2str(selected.data.retroScore, 3) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Template rank</th>
+                                                    <td>%% num2str(selected.data.templateRank) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Template score</th>
+                                                    <td>%% num2str(selected.data.templateScore, 3, true) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Plausibility</th>
+                                                    <td>%% num2str(selected.data.ffScore, 3) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th># Examples</th>
+                                                    <td>%% num2str(selected.data.numExamples) %%</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Supporting templates</th>
+                                                    <td>
+                                                        <ul>
+                                                            <li v-for="id in selected.data.templateIds">
+                                                                <a v-bind:href="'/template/?id='+id" target="_blank">%% id %% (%% templateNumExamples[id] %% examples)</a>
+                                                            </li>
+                                                        </ul>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
-                            <div class="alert alert-warning" v-if="selected['selec_error']">
+                            <div class="alert alert-warning" v-if="selected.data.selecError">
                                 Could not check regio-selectivity for this reaction, possibly due to stereochemistry in the product.
                             </div>
-                            <template v-if="'outcomes' in selected">
+                            <template v-if="'outcomes' in selected.data">
                                 <hr class="my-2">
                                 <div class="text-center mb-2">
                                     <h3>Regio-selective Products</h3>
@@ -944,18 +1166,18 @@
                                 </div>
                                 <div class="scroll-list" style="max-height: calc(100vh - 50rem)">
                                     <div class="grid-wrapper">
-                                        <template v-for="(res, index) in selected.outcomes">
+                                        <template v-for="(res, index) in selected.data.outcomes">
                                             <div class="card">
                                                 <div class="container-fluid d-flex flex-column h-100 justify-content-between">
                                                     <div class="row">
                                                         <div class="col-sm">
-                                                            <img v-bind:src="getMolDrawEndPoint(res)" class="m-1" :class="res === selected.reactionSmiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
+                                                            <img v-bind:src="getMolDrawEndPoint(res)" class="m-1" :class="res === selected.smiles.split('>>')[1] ? 'grey-border' : ''" style="max-width: 100%"/>
                                                         </div>
                                                     </div>
                                                     <div class="row">
-                                                        <div class="col-sm" v-if="selected.selectivity[index]">
-                                                            Score %% num2str(selected.selectivity[index], 3) %%
-                                                            <span v-if="selected.selectivity[index] === Math.max(...selected.selectivity)">
+                                                        <div class="col-sm" v-if="selected.data.selectivity[index]">
+                                                            Score %% num2str(selected.data.selectivity[index], 3) %%
+                                                            <span v-if="selected.data.selectivity[index] === Math.max(...selected.data.selectivity)">
                                                                 <i class="fas fa-check"></i>
                                                             </span>
                                                             <span v-else>
@@ -977,6 +1199,53 @@
                 </div>
             </div>
         </div>
+        <jspanel :visible="treeViewEnabled" :options="infoPanelOptions">
+            <div>
+                <div class="btn-toolbar justify-content-center my-2">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('first')" :disabled="!treeViewEnabled">&lt;&lt;</button>
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('prev')" :disabled="!treeViewEnabled">&lt;</button>
+                        </div>
+                        <div class="input-group-text justify-content-center" style="width: 8rem">Tree %% treeViewEnabled ? `${currentTreeIndex+1} of ${trees.length}` : 'N/A' %%</div>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('next')" :disabled="!treeViewEnabled">&gt;</button>
+                            <button class="btn btn-outline-dark" @click="changeTreeIndex('last')" :disabled="!treeViewEnabled">&gt;&gt;</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Index:</th>
+                        <td>%% currentTreeProps.index %%</td>
+                    </tr>
+                    <tr>
+                        <th>Depth:</th>
+                        <td>%% currentTreeProps.depth %%</td>
+                    </tr>
+                    <tr>
+                        <th># Reactions:</th>
+                        <td>%% currentTreeProps.numReactions %%</td>
+                    </tr>
+                    <tr>
+                        <th>Avg. Plausibility:</th>
+                        <td>%% currentTreeProps.avgPlausibility %%</td>
+                    </tr>
+                    <tr>
+                        <th>Min. Plausibility:</th>
+                        <td>%% currentTreeProps.minPlausibility %%</td>
+                    </tr>
+                    <tr>
+                        <th>Avg. Template Score:</th>
+                        <td>%% currentTreeProps.avgTempScore %%</td>
+                    </tr>
+                    <tr>
+                        <th>Min. Template Score:</th>
+                        <td>%% currentTreeProps.minTempScore %%</td>
+                    </tr>
+                </table>
+            </div>
+        </jspanel>
     </main>
 </div>
 
@@ -985,10 +1254,7 @@
 {% endblock %}
 
 {% block javascript %}
-<script>
-var isAuth = '{{ user.is_authenticated }}' == 'True'
-</script>
-
+<script src="{% static 'js/graph.js' %}?v{{ static_version }}"></script>
 <script src="{% static 'js/network.js' %}?v{{ static_version }}"></script>
 
 <script>

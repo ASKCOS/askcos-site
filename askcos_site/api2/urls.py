@@ -18,21 +18,26 @@ router.register(r'banlist/reactions', api2.banlist.BannedReactionsViewSet, basen
 urlpatterns = router.urls
 
 urlpatterns += [
+    path('apply-one-template', api2.retro.apply_one_template, name='apply_one_template_api'),
     path('atom-mapper/', api2.atom_mapper.atom_mapper, name='atom_mapper_api'),
     path('celery/', api2.celery.celery_status, name='celery_api'),
     path('cluster/', api2.cluster.cluster, name='cluster_api'),
     path('context/', api2.context.neural_network, name='context_api'),
+    path('context-v2/', api2.context_v2.context, name='context_v2_api'),
     path('draw/', api2.draw.drawer, name='draw_api'),
     path('fast-filter/', api2.fast_filter.fast_filter, name='fast_filter_api'),
     path('forward/', api2.forward.template_free, name='forward_api'),
     path('impurity/', api2.impurity.impurity_predict, name='impurity_api'),
+    path('path-ranking/', api2.path_ranking.path_ranker, name='path_ranking_api'),
     path('reactions/', api2.reactions.reactions, name='reactions_api'),
     path('retro/', api2.retro.singlestep, name='retro_api'),
     path('retro/models/', api2.retro.models, name='retro_models_api'),
     path('scscore/', api2.scscore.scscore, name='scscore_api'),
     path('selectivity/', api2.selectivity.selectivity, name='selectivity_api'),
     path('general-selectivity/', api2.general_selectivity.selectivity, name='general_selectivity_api'),
+    path('template-relevance/', api2.retro.temprel, name='template_relevance_api'),
     path('tree-builder/', api2.tree_builder.tree_builder, name='tree_builder_api'),
+    path('descriptors/', api2.descriptors.descriptors, name='descriptors_api'),
 
     path('token-auth/', obtain_jwt_token, name='token_auth_api'),
     path('token-refresh/', refresh_jwt_token, name='token_refresh_api'),

@@ -255,4 +255,32 @@ input::-webkit-inner-spin-button {
     width: 10rem;
     height: 10rem;
     border-width: 0.5rem;
+    z-index: 3000;
+}
+
+.launchcard-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 100px;
+}
+
+/* Ketcher extras (not in dist) */
+#ketcher-spinner, #ketcher-iframe-min-spinner {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: auto;
+    margin: auto;
+    width: 50px;
+    height: 50px;
+}
+
+#process {
+    display: none;
 }

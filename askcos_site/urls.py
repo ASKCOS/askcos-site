@@ -33,6 +33,8 @@ urlpatterns = [
     re_path(r'^help/tutorial$', views.tutorial, name='tutorial'),
     re_path(r'^help/faq$', views.faq, name='faq'),
 
+    re_path(r'^launchpad/$', views.launchpad, name='launchpad'),
+
     # Retrosynthesis
     re_path(r'^retro/$', views.retro, name='retro_home'),
     re_path(r'^retro/target=(?P<smiles>.+)$', views.retro_target, name='retro_target'),
@@ -110,6 +112,10 @@ urlpatterns = [
     # Atom mapping
     re_path(r'^atom_mapping/$', views.atom_mapping, name='atom_mapping'),
     re_path(r'^ajax/find_atom_mapping/$', views.ajax_find_atom_mapping, name='ajax_find_atom_mapping'),
+
+    # Ketcher
+    re_path(r'^ketcher/iframe/$', views.ketcher_iframe, name='ketcher_iframe'),
+    re_path(r'^ketcher/iframe/min/$', views.ketcher_iframe_min, name='ketcher_iframe_min'),
 
     # API endpoints
     path('api/', include('askcos_site.api.urls')),

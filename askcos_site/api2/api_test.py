@@ -74,6 +74,7 @@ class TestAPI(unittest.TestCase):
         request = result['request']
         self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
         self.assertEqual(request['mapper'], 'WLN atom mapper')
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -96,6 +97,18 @@ class TestAPI(unittest.TestCase):
         response = self.post('/atom-mapper/', data={'rxnsmiles': 'X>>Y'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reactants using rdkit.']})
+
+        # Test task priority argument
+        data = {
+            'rxnsmiles': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'priority': 2,
+        }
+        response = self.post('/atom-mapper/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     @unittest.skipIf(not (username and password), 'Requires login credentials.')
     def test_banlist_chemicals(self):
@@ -247,8 +260,9 @@ class TestAPI(unittest.TestCase):
 
         # Post request to add buyable
         data = {
-            'smiles': 'C1CCC1',
+            'smiles': 'C1CC2(C1)CCC2',
             'ppg': '2.0',
+            'source': 'test',
             'allowOverwrite': False,
         }
         response = self.post('/buyables/', data=data)
@@ -257,8 +271,8 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(result['success'])
         _id = result['inserted']['_id']
 
-        # Post request to upload buyables (both are duplicates)
-        filedata = '[{"smiles": "C1CCC1","ppg": "2.0"},{"smiles": "C1CCCC1","ppg": "3.0"}]'
+        # Post request to upload buyables (duplicate entry)
+        filedata = '[{"smiles": "C1CC2(C1)CCC2","ppg": "2.0","source": "test"}]'
         files = {'file': ('upload.json', filedata)}
         data = {'format': 'json', 'allowOverwrite': False}
         response = self.post('/buyables/upload/', data=data, files=files)
@@ -267,22 +281,29 @@ class TestAPI(unittest.TestCase):
         self.assertTrue(result['success'])
         self.assertEqual(result['inserted'], [])
         self.assertEqual(result['updated'], [])
-        self.assertEqual(result['duplicate_count'], 2)
-        self.assertEqual(result['total'], 2)
+        self.assertEqual(result['duplicate_count'], 1)
+        self.assertEqual(result['total'], 1)
 
         # Get request with query
-        response = self.get('/buyables/?q=C1CCC1')
+        response = self.get('/buyables/?q=C1CC2(C1)CCC2')
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(len(result['result']), 1)
-        self.assertEqual(result['result'][0]['smiles'], 'C1CCC1')
+        self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
+
+        # Get request with source query
+        response = self.get('/buyables/?source=test')
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(len(result['result']), 1)
+        self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
 
         # Get request for specific buyable
         response = self.get('/buyables/{0}/'.format(_id))
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(len(result['result']), 1)
-        self.assertEqual(result['result'][0]['smiles'], 'C1CCC1')
+        self.assertEqual(result['result'][0]['smiles'], 'C1CC2(C1)CCC2')
 
         # Delete request for specific buyable
         response = self.delete('/buyables/{0}/'.format(_id))
@@ -370,6 +391,94 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
                                            'products': ['Cannot parse products smiles with rdkit.']})
+
+    def test_context_v2(self):
+        """Test /context-v2 endpoint"""
+        num_results = 5
+        data = {
+            'reactants': '[N:1]#[C:2][CH:3]([C:4](=O)[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1)[c:11]1[cH:12][cH:13][cH:14][cH:15][cH:16]1.[NH2:17][NH2:18]',
+            'products': '[NH2:1][c:2]1[nH:18][n:17][c:4]([c:3]1-[c:11]1[cH:16][cH:15][cH:14][cH:13][cH:12]1)-[c:5]1[cH:6][cH:7][cH:8][cH:9][cH:10]1',
+            'num_results': num_results,
+        }
+        response = self.post('/context-v2/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['products'], data['products'])
+        self.assertEqual(request['num_results'], data['num_results'])
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        time.sleep(30) # at least 10 sec is required, ~40 sec including model loading
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertEqual(len(result['output']), num_results)
+
+        # Test insufficient data
+        response = self.post('/context-v2/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['This field is required.'],
+                                           'products': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.post('/context-v2/', data={'reactants': 'X', 'products': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
+                                           'products': ['Cannot parse products smiles with rdkit.']})
+
+    def test_descriptors(self):
+        """Test /descriptors endpoint"""
+        data = {
+            'smiles': 'CCCC',
+        }
+        response = self.post('/descriptors/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        output = result['output']
+        self.assertIsInstance(output, dict)
+        self.assertEqual(output['smiles'], data['smiles'])
+        self.assertIsInstance(output['partial_charge'], list)
+        self.assertIsInstance(output['fukui_neu'], list)
+        self.assertIsInstance(output['fukui_elec'], list)
+        self.assertIsInstance(output['NMR'], list)
+        self.assertIsInstance(output['bond_order'], list)
+        self.assertIsInstance(output['bond_length'], list)
+
+        # Test insufficient data
+        response = self.post('/descriptors/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['This field is required.']})
+
+        # Test unparseable smiles
+        response = self.post('/descriptors/', data={'smiles': 'X'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Cannot parse reactants smiles with rdkit.']})
+
+        # Test unsupported element
+        response = self.post('/descriptors/', data={'smiles': '[Ne]'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Unsupported element Ne found in smiles [Ne]']})
+
+        # Test radical
+        response = self.post('/descriptors/', data={'smiles': '[H]'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'smiles': ['Charge or radical found in smiles [H]']})
 
     def test_drawing(self):
         """Test /draw endpoint"""
@@ -495,6 +604,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['reagents'], '')
         self.assertEqual(request['solvent'], '')
         self.assertEqual(request['num_results'], data['num_results'])
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -520,6 +630,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.']})
 
+        # Test task priority argument
+        data = {
+            'reactants': 'CN(C)CCCl.OC(c1ccccc1)c1ccccc1',
+            'num_results': 5,
+            'priority': 2,
+        }
+        response = self.post('/forward/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
+
     def test_impurity(self):
         """Test /impurity endpoint"""
         data = {
@@ -536,9 +659,9 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(request['products'], '')
         self.assertEqual(request['solvent'], '')
         self.assertEqual(request['top_k'], 3)
-        self.assertEqual(request['threshold'], 0.75)
+        self.assertEqual(request['threshold'], 0.2)
         self.assertEqual(request['predictor'], 'WLN forward predictor')
-        self.assertEqual(request['inspector'], 'Reaxys inspector')
+        self.assertEqual(request['inspector'], 'WLN forward inspector')
         self.assertEqual(request['mapper'], 'WLN atom mapper')
         self.assertTrue(request['check_mapping'])
 
@@ -554,6 +677,51 @@ class TestAPI(unittest.TestCase):
         response = self.post('/impurity/', data={'reactants': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'reactants': ['Cannot parse smiles with rdkit.']})
+
+    def test_path_ranking(self):
+        """Test /path-ranking endpoint"""
+        data = {
+            'trees': """[{"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9988686442375183, "template_score": 0.07315370440483093, "tforms": ["5e1f4b6e6348832850997243"], "num_examples": 185, "necessary_reagent": "", "id": 10, "is_reaction": true, "children": [{"smiles": "BrC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 9, "is_chemical": true, "children": []}, {"smiles": "CN(C)CCO", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 5, "is_chemical": true, "children": []}], "smiles": "BrC(c1ccccc1)c1ccccc1.CN(C)CCO>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9775225520133972, "template_score": 0.17757552862167358, "tforms": ["5e1f4b6e6348832850996b90"], "num_examples": 266, "necessary_reagent": "", "id": 6, "is_reaction": true, "children": [{"smiles": "CN(C)CCO", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 5, "is_chemical": true, "children": []}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "CN(C)CCO.OC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9868380427360535, "template_score": 0.016103610396385193, "tforms": ["5e1f4b6e634883285099626f"], "num_examples": 697, "necessary_reagent": "", "id": 18, "is_reaction": true, "children": [{"smiles": "BrCCOC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 16, "is_chemical": true, "children": [{"plausibility": 0.915161669254303, "template_score": 0.07843249291181564, "tforms": ["5e1f4b6e6348832850995fbf", "5e1f4b6e6348832850995f00"], "num_examples": 3287, "necessary_reagent": "", "id": 20, "is_reaction": true, "children": [{"smiles": "BrCCBr", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 19, "is_chemical": true, "children": []}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "BrCCBr.OC(c1ccccc1)c1ccccc1>>BrCCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CNC", "ppg": 13.0, "as_reactant": 0, "as_product": 0, "id": 17, "is_chemical": true, "children": []}], "smiles": "BrCCOC(c1ccccc1)c1ccccc1.CNC>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9411429762840271, "template_score": 0.010665317997336388, "tforms": ["5e1f4b6e6348832850995d9c"], "num_examples": 13475, "necessary_reagent": "", "id": 53, "is_reaction": true, "children": [{"smiles": "CN(C)C(=O)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 52, "is_chemical": true, "children": [{"plausibility": 0.9692589640617371, "template_score": 0.00962438341230154, "tforms": ["5e1f4b6e6348832850995e68"], "num_examples": 3231, "necessary_reagent": "", "id": 61, "is_reaction": true, "children": [{"smiles": "CNC", "ppg": 13.0, "as_reactant": 0, "as_product": 0, "id": 17, "is_chemical": true, "children": []}, {"smiles": "O=C(Cl)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 60, "is_chemical": true, "children": [{"plausibility": 0.9996992349624634, "template_score": 0.8562169075012207, "tforms": ["5e1f4b6e6348832850995d80"], "num_examples": 26695, "necessary_reagent": "[Cl]", "id": 59, "is_reaction": true, "children": [{"smiles": "O=C(O)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 58, "is_chemical": true, "children": [{"plausibility": 0.9207471013069153, "template_score": 0.053130947053432465, "tforms": ["5e1f4b6e6348832850995d76"], "num_examples": 112035, "necessary_reagent": "", "id": 71, "is_reaction": true, "children": [{"smiles": "COC(=O)COC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 70, "is_chemical": true, "children": [{"plausibility": 0.9830392599105835, "template_score": 0.1137804239988327, "tforms": ["5e1f4b6e634883285099602f"], "num_examples": 1201, "necessary_reagent": "", "id": 69, "is_reaction": true, "children": [{"smiles": "COC(=O)CBr", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 68, "is_chemical": true, "children": []}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "COC(=O)CBr.OC(c1ccccc1)c1ccccc1>>COC(=O)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "COC(=O)COC(c1ccccc1)c1ccccc1>>O=C(O)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "O=C(O)COC(c1ccccc1)c1ccccc1>>O=C(Cl)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "CNC.O=C(Cl)COC(c1ccccc1)c1ccccc1>>CN(C)C(=O)COC(c1ccccc1)c1ccccc1"}]}], "smiles": "CN(C)C(=O)COC(c1ccccc1)c1ccccc1>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CN(C)CCOC(c1ccccc1)c1ccccc1", "ppg": 6.0, "as_reactant": 0, "as_product": 0, "id": 4, "is_chemical": true, "children": [{"plausibility": 0.9868380427360535, "template_score": 0.016103610396385193, "tforms": ["5e1f4b6e634883285099626f"], "num_examples": 697, "necessary_reagent": "", "id": 18, "is_reaction": true, "children": [{"smiles": "BrCCOC(c1ccccc1)c1ccccc1", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 16, "is_chemical": true, "children": [{"plausibility": 0.9061155915260315, "template_score": 0.014876967296004295, "tforms": ["5e1f4b6e6348832850996936"], "num_examples": 319, "necessary_reagent": "", "id": 27, "is_reaction": true, "children": [{"smiles": "BrCCI", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 26, "is_chemical": true, "children": [{"plausibility": 0.9610458612442017, "template_score": 0.05479388311505318, "tforms": ["5e1f4b6e6348832850996027"], "num_examples": 1208, "necessary_reagent": "[I]", "id": 33, "is_reaction": true, "children": [{"smiles": "CS(=O)(=O)OCCBr", "ppg": 0.0, "as_reactant": 0, "as_product": 0, "id": 32, "is_chemical": true, "children": [{"plausibility": 0.9341546893119812, "template_score": 0.011639130301773548, "tforms": ["5e1f4b6e634883285099633a"], "num_examples": 615, "necessary_reagent": "[Br]", "id": 36, "is_reaction": true, "children": [{"smiles": "CS(=O)(=O)OCCOS(C)(=O)=O", "ppg": 21.0, "as_reactant": 0, "as_product": 0, "id": 35, "is_chemical": true, "children": []}], "smiles": "CS(=O)(=O)OCCOS(C)(=O)=O>>CS(=O)(=O)OCCBr"}]}], "smiles": "CS(=O)(=O)OCCBr>>BrCCI"}]}, {"smiles": "OC(c1ccccc1)c1ccccc1", "ppg": 1.0, "as_reactant": 0, "as_product": 0, "id": 2, "is_chemical": true, "children": []}], "smiles": "BrCCI.OC(c1ccccc1)c1ccccc1>>BrCCOC(c1ccccc1)c1ccccc1"}]}, {"smiles": "CNC", "ppg": 13.0, "as_reactant": 0, "as_product": 0, "id": 17, "is_chemical": true, "children": []}], "smiles": "BrCCOC(c1ccccc1)c1ccccc1.CNC>>CN(C)CCOC(c1ccccc1)c1ccccc1"}]}]""",
+        }
+        response = self.post('/path-ranking/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertTrue(request['cluster'])
+        self.assertEqual(request['cluster_method'], 'hdbscan')
+        self.assertEqual(request['min_samples'], 5)
+        self.assertEqual(request['min_cluster_size'], 5)
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+
+        output = result['output']
+        self.assertIn('scores', output)
+        self.assertEqual(len(output['scores']), 5)
+        self.assertEqual(output['scores'][0], -1)
+        self.assertEqual(output['scores'][1], -1)
+
+        self.assertIn('encoded_trees', output)
+        self.assertEqual(len(output['encoded_trees']), 5)
+        self.assertEqual(len(output['encoded_trees'][0]), 0)
+        self.assertEqual(len(output['encoded_trees'][1]), 0)
+        self.assertEqual(len(output['encoded_trees'][2]), 512)
+        self.assertEqual(len(output['encoded_trees'][3]), 512)
+        self.assertEqual(len(output['encoded_trees'][4]), 512)
+
+        self.assertIn('clusters', output)
+        self.assertEqual(output['clusters'], [-1, -1, 0, 1, 2])
+
+        # Test insufficient data
+        response = self.post('/path-ranking/', data={})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'trees': ['This field is required.']})
 
     def test_reactions(self):
         """Test /reactions endpoint"""
@@ -582,7 +750,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check that we got expected result
-        self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1'})
+        self.assertEqual(response.json(), {'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1', 'type': 'mol'})
 
         # Test insufficient data
         response = self.post('/rdkit/smiles/canonicalize/', data={})
@@ -714,6 +882,7 @@ M  END
         self.assertEqual(request['cluster_fp_type'], 'morgan')
         self.assertEqual(request['cluster_fp_length'], 512)
         self.assertEqual(request['cluster_fp_radius'], 1)
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -732,6 +901,18 @@ M  END
         response = self.post('/retro/', data={'target': 'X'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'target': ['Cannot parse target smiles with rdkit.']})
+
+        # Test task priority argument
+        data = {
+            'target': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'priority': 2,
+        }
+        response = self.post('/retro/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     def test_retro_models(self):
         """Test /retro/models endpoint"""
@@ -814,7 +995,13 @@ M  END
     def test_selectivity_gen(self):
         """Test /general-selectivity endpoint"""
         data = {
-            'rxnsmiles': '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12>O>[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2',
+            'reactants': '[Br:1][Br:2].[NH2:3][c:4]1[n:5][cH:6][n:7][c:8]2[nH:9][cH:10][n:11][c:12]12',
+            'reagents': 'O',
+            'product': '[Br:2][c:10]1[nH:9][c:8]2[n:7][cH:6][n:5][c:4]([NH2:3])[c:12]2[n:11]1.[Br:2][c:6]1[n:5][c:4]([NH2:3])[c:12]2[c:8]([n:7]1)[nH:9][cH:10][n:11]2',
+            'mapped': True,
+            'all_outcomes': True,
+            'verbose': False,
+            'mode': 'GNN',
         }
         response = self.post('/general-selectivity/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -822,7 +1009,13 @@ M  END
         # Confirm that request was interpreted correctly
         result = response.json()
         request = result['request']
-        self.assertEqual(request['rxnsmiles'], data['rxnsmiles'])
+        self.assertEqual(request['reactants'], data['reactants'])
+        self.assertEqual(request['reagents'], data['reagents'])
+        self.assertEqual(request['product'], data['product'])
+        self.assertEqual(request['mapped'], data['mapped'])
+        self.assertEqual(request['all_outcomes'], data['all_outcomes'])
+        self.assertEqual(request['verbose'], data['verbose'])
+        self.assertEqual(request['mode'], data['mode'])
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -838,12 +1031,14 @@ M  END
         # Test insufficient data
         response = self.post('/general-selectivity/', data={})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'rxnsmiles': ['This field is required.']})
+        self.assertEqual(response.json(), {'reactants': ['This field is required.'],
+                                           'product': ['This field is required.']})
 
         # Test unparseable smiles
-        response = self.post('/general-selectivity/', data={'rxnsmiles': 'X'})
+        response = self.post('/general-selectivity/', data={'reactants': 'X', 'product': 'Y'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'rxnsmiles': ['Cannot parse reaction smiles.']})
+        self.assertEqual(response.json(), {'reactants': ['Cannot parse reactants smiles with rdkit.'],
+                                           'product': ['Cannot parse product smiles with rdkit.']})
 
     def test_template(self):
         """Test /template endpoint"""
@@ -894,7 +1089,9 @@ M  END
         """Test /tree-builder endpoint"""
         data = {
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
             'return_first': True,
+            'json_format': 'nodelink',
         }
         response = self.post('/tree-builder/', data=data)
         self.assertEqual(response.status_code, 200)
@@ -908,6 +1105,7 @@ M  END
         self.assertEqual(request['chemical_popularity_logic'], 'none')
         self.assertEqual(request['template_set'], 'reaxys')
         self.assertEqual(request['template_prioritizer_version'], 0)
+        self.assertEqual(request['priority'], 1)
 
         # Test that we got the celery task id
         self.assertIsInstance(result['task_id'], str)
@@ -917,7 +1115,8 @@ M  END
         self.assertTrue(result['complete'])
         self.assertIsInstance(result['output'], list)
         self.assertIsInstance(result['output'][0], dict)
-        self.assertIsInstance(result['output'][0]['children'], list)
+        self.assertIsInstance(result['output'][0]['nodes'], list)
+        self.assertIsInstance(result['output'][0]['edges'], list)
 
         # Test insufficient data
         response = self.post('/tree-builder/', data={})
@@ -934,10 +1133,74 @@ M  END
             'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
             'store_results': True,
         }
-        response = self.client.post('https://localhost/api/v2/tree-builder/', data=data)
+        response = self.post('/tree-builder/', data=data)
         self.assertEqual(response.status_code, 401)
         result = response.json()
         self.assertEqual(result['error'], 'You must be authenticated to store tree builder results.')
+
+        # Test task priority argument
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
+            'return_first': True,
+            'priority': 2,
+        }
+        response = self.post('/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
+
+    def test_tree_builder_v2(self):
+        """Test /tree-builder endpoint for tree-builder v2"""
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
+            'return_first': True,
+            'version': 2,
+            'json_format': 'nodelink',
+        }
+        response = self.post('/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        # Confirm that request was interpreted correctly
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['smiles'], data['smiles'])
+        self.assertEqual(request['version'], 2)
+        self.assertEqual(request['return_first'], True)
+        self.assertEqual(request['chemical_property_logic'], 'none')
+        self.assertEqual(request['chemical_popularity_logic'], 'none')
+        self.assertEqual(request['template_set'], 'reaxys')
+        self.assertEqual(request['template_prioritizer_version'], 0)
+        self.assertEqual(request['priority'], 1)
+
+        # Test that we got the celery task id
+        self.assertIsInstance(result['task_id'], str)
+
+        # Try retrieving task output
+        result = self.get_result(result['task_id'])
+        self.assertTrue(result['complete'])
+        self.assertIsInstance(result['output'], list)
+        self.assertIsInstance(result['output'][0], dict)
+        self.assertIsInstance(result['output'][0]['nodes'], list)
+        self.assertIsInstance(result['output'][0]['edges'], list)
+
+        # Test task priority argument
+        data = {
+            'smiles': 'CN(C)CCOC(c1ccccc1)c1ccccc1',
+            'buyable_logic': 'or',
+            'return_first': True,
+            'version': 2,
+            'priority': 2,
+        }
+        response = self.post('/tree-builder/', data=data)
+        self.assertEqual(response.status_code, 200)
+
+        result = response.json()
+        request = result['request']
+        self.assertEqual(request['priority'], 2)
 
     @classmethod
     def tearDownClass(cls):

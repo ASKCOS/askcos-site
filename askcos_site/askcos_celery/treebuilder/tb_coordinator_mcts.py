@@ -22,6 +22,8 @@ lg.setLevel(RDLogger.CRITICAL)
 CORRESPONDING_QUEUE = 'tb_coordinator_mcts'
 
 results_collection = db_client['results']['results']
+tree_builder = None
+pathway_ranker = None
 
 
 def update_result_state(id_, state):
@@ -56,10 +58,13 @@ def configure_coordinator(options={}, **kwargs):
     print('### STARTING UP A TREE BUILDER MCTS COORDINATOR ###')
 
     from .tree_builder_celery import MCTSCelery
+    from .path_ranking_worker import TSPathwayRanker
 
-    global treeBuilder
+    global tree_builder
+    tree_builder = MCTSCelery(celery=True, nproc=8)  # 8 active pathways
 
-    treeBuilder = MCTSCelery(celery=True, nproc=8)  # 8 active pathways
+    global pathway_ranker
+    pathway_ranker = TSPathwayRanker(hostname='ts-pathway-ranker', model_name='pathway-ranker').scorer
     print('Finished initializing treebuilder MCTS coordinator')
 
 
@@ -74,21 +79,26 @@ def get_buyable_paths(*args, **kwargs):
     """
     run_async = kwargs.pop('run_async', False)
     paths_only = kwargs.pop('paths_only', False)
+    
+    settings = {'smiles': args[0], 'version': 1}  # Refers to tree builder version
+    settings.update(kwargs)
 
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
     if template_prioritizer_version:
-        treeBuilder.template_prioritizer_version = template_prioritizer_version
+        tree_builder.template_prioritizer_version = template_prioritizer_version
 
+    if kwargs.get('score_trees'):
+        kwargs['pathway_ranker'] = pathway_ranker
 
     print('Treebuilder MCTS coordinator was asked to expand {}'.format(args[0]))
     _id = get_buyable_paths.request.id
     try:
-        status, paths = treeBuilder.get_buyable_paths(*args, **kwargs)
-        graph = treeBuilder.return_chemical_results()
+        paths, status, graph = tree_builder.get_buyable_paths(*args, **kwargs)
         result_doc = {
             'status': status,
             'paths': paths,
-            'graph': graph
+            'graph': graph,
+            'version': 2,  # Refers to graph version
         }
     except:
         if run_async:
@@ -96,9 +106,6 @@ def get_buyable_paths(*args, **kwargs):
         raise
     if run_async:
         update_result_state(_id, 'completed')
-        settings = {'smiles': args[0]}
-        settings.update(kwargs)
-        settings['template_prioritizer_version'] = template_prioritizer_version
         save_results(result_doc, settings, _id)
     print('Task completed, returning results.')
 

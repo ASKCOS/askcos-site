@@ -41,7 +41,7 @@ class BuyableUploadSerializer(serializers.Serializer):
 class BuyableQuerySerializer(serializers.Serializer):
     """Serializer for a buyable query"""
     q = serializers.CharField(default='')
-    source = serializers.CharField(default='')
+    source = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False, allow_empty=True)
     regex = serializers.BooleanField(default=False)
     returnLimit = serializers.IntegerField(default=100)
     canonicalize = serializers.BooleanField(default=True)
@@ -55,11 +55,11 @@ class BuyablesViewSet(ViewSet):
 
     Query Parameters:
 
-    - `q` (str): search query, e.g. SMILES string
-    - `source` (str): source of buyables data
-    - `regex` (bool): whether or not to treat `q` as regex pattern
-    - `returnLimit` (int): maximum number of results to return
-    - `canonicalize` (bool): whether or not to canonicalize `q`
+    - `q` (str, optional): search query, e.g. SMILES string
+    - `source` (list, optional): list of source(s) to consider when looking up buyables
+    - `regex` (bool, optional): whether or not to treat `q` as regex pattern (default: False)
+    - `returnLimit` (int, optional): maximum number of results to return (default: 100)
+    - `canonicalize` (bool, optional): whether or not to canonicalize `q` (default: True)
 
     Returns:
 
@@ -72,8 +72,8 @@ class BuyablesViewSet(ViewSet):
 
     - `smiles` (str): SMILES string of buyable
     - `ppg` (float): price of buyable
-    - `source` (float): source of data
-    - `allowOverwrite` (bool): whether or not to overwrite existing duplicates
+    - `source` (str, optional): source of data (default: '')
+    - `allowOverwrite` (bool, optional): whether or not to overwrite existing duplicates (default: True)
 
     Returns:
 
@@ -100,6 +100,15 @@ class BuyablesViewSet(ViewSet):
 
     - `success`: true if deletion was successful
     - `error`: error message if encountered
+
+    ----------
+    Query available buyables sources (`/api/v2/buyables/sources/`):
+
+    Method: GET
+
+    Returns:
+
+    - `sources`: list of available buyables sources
     """
 
     authentication_classes = [SessionAuthentication, JSONWebTokenAuthentication]
@@ -111,7 +120,7 @@ class BuyablesViewSet(ViewSet):
         data = serializer.validated_data
 
         search = data['q']
-        source = data['source']
+        source = data.get('source')
         regex = data['regex']
         limit = data['returnLimit']
         canon = data['canonicalize']
@@ -127,8 +136,15 @@ class BuyablesViewSet(ViewSet):
                         search = Chem.MolToSmiles(mol, isomericSmiles=True)
                 query['smiles'] = search
 
-        if source:
-            query['source'] = source
+        if source is not None:
+            if '[]' in source:
+                # Special case to allow requesting empty list via query params
+                source = []
+            elif 'none' in source:
+                # Include both null and empty string source in query
+                source.remove('none')
+                source.extend([None, ''])
+            query['source'] = {'$in': source}
 
         search_result = list(buyables_db.find(query, {'smiles': 1, 'ppg': 1, 'source': 1}).limit(limit))
 
@@ -206,6 +222,23 @@ class BuyablesViewSet(ViewSet):
         if result.get('updated'):
             resp['updated'] = result['updated']
 
+        return Response(resp)
+
+    @action(detail=False, methods=['GET'])
+    def sources(self, request):
+        """
+        Returns available buyables sources that exist in mongodb.
+        Excludes empty string from result, if entries with empty source exist.
+
+        Method: GET
+
+        Returns:
+
+        - `sources`: list of sources present in buyables database
+        """
+        resp = {'sources': [s for s in buyables_db.distinct('source') if s]}
+        if buyables_db.find_one(filter={'source': {'$in': [None, '']}}) is not None:
+            resp['sources'].append('none')
         return Response(resp)
 
     @action(detail=False, methods=['post'])
@@ -340,7 +373,7 @@ class BuyablesViewSet(ViewSet):
             'source': source
         }
 
-        existing_doc = buyables_db.find_one({'smiles': smiles})
+        existing_doc = buyables_db.find_one({'smiles': smiles, 'source': source})
         if existing_doc and allow_overwrite:
             buyables_db.update_one(
                 {'smiles': smiles},

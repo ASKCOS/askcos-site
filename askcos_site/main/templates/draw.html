@@ -15,6 +15,9 @@
 
 <div id="app">
 
+<!-- drawing box -->
+{% include "ketcher_modal.html" with vue=True %}
+
     <div class="row">
         <div class="col-12">
             <p class="lead">
@@ -31,7 +34,7 @@
                 </div>
                 <input class='form-control text-center' type="text" v-model="smiles" id="smiles"/>
                 <div class='input-group-append'>
-                    <button type="button" class="input-group-text" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBox('smiles')"><i class="fas fa-edit"></i></button>
+                    <button type="button" class="input-group-text" title="Open drawer" data-toggle="modal" data-target="#drawingbox" @click="drawBoxKetcher('smiles')"><i class="fas fa-edit"></i></button>
                     <button type="button" class="input-group-text" title="Copy" @click="copyToClipboard(smiles)"><i class="fas fa-copy"></i></button>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="draw-settings">
                         <div class="m-2">
@@ -63,9 +66,6 @@
             </div>
         </div>
     </div>
-
-<!-- drawing box -->
-{% include "drawing_modal.html" with vue=True %}
 
 </div>
 

@@ -9,6 +9,7 @@ class AtomMapperSerializer(serializers.Serializer):
     """Serializer for atom mapping task parameters."""
     rxnsmiles = serializers.CharField()
     mapper = serializers.CharField(default='WLN atom mapper')
+    priority = serializers.IntegerField(default=1)
 
     def validate_rxnsmiles(self, value):
         """Verify that the requested reaction smiles is valid."""
@@ -33,6 +34,7 @@ class AtomMapperAPIView(CeleryTaskAPIView):
 
     - `rxnsmiles` (str): reaction SMILES string
     - `mapper` (str, optional): atom mapping backend to use (currently only 'WLN atom mapper')
+    - `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
     Returns:
 
@@ -45,7 +47,11 @@ class AtomMapperAPIView(CeleryTaskAPIView):
         """
         Execute fast filter task and return celery result object.
         """
-        result = get_atom_mapping.delay(data['rxnsmiles'], mapper=data['mapper'])
+        args = (data['rxnsmiles'],)
+        kwargs = {
+            'mapper': data['mapper'],
+        }
+        result = get_atom_mapping.apply_async(args, kwargs, priority=data['priority'])
         return result
 
 

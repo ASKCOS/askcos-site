@@ -10,7 +10,9 @@
     - [Retrosynthetic prediction](#retrosynthetic-prediction)
     - [Site selectivity prediction](#site-selectivity-prediction)
     - [General selectivity prediction](#general-selectivity-prediction)
+    - [Retrosynthetic path ranking prediction](#retrosynthetic-path-ranking-prediction)
     - [Retrosynthetic tree builder tool](#retrosynthetic-tree-builder-tool)
+    - [Quantum descriptor prediction](#quantum-descriptor-prediction)
 - [SMILES API](#smiles-api)
     - [Canonicalize](#canonicalize)
     - [Validate](#validate)
@@ -20,6 +22,7 @@
     - [Main buyables endpoint](#main-buyables-endpoint)
     - [Specific buyable endpoint](#specific-buyable-endpoint)
     - [Upload buyables endpoint](#upload-buyables-endpoint)
+    - [Buyables source query](#buyables-source-query)
 - [Template API](#template-api)
     - [Specific template endpoint](#specific-template-endpoint)
     - [Reaxys query export](#reaxys-query-export)
@@ -28,6 +31,8 @@
     - [Main results endpoint](#main-results-endpoint)
     - [Specific result endpoint](#specific-result-endpoint)
     - [Check result endpoint](#check-result-endpoint)
+    - [IPP result endpoint](#ipp-result-endpoint)
+    - [Tree result endpoint](#tree-result-endpoint)
 - [Banlist API](#banlist-api)
     - [Main banlist endpoints](#main-banlist-endpoints)
     - [Specific banlist entry endpoints](#specific-banlist-entry-endpoints)
@@ -80,6 +85,7 @@ Parameters:
 
 - `rxnsmiles` (str): reaction SMILES string
 - `mapper` (str, optional): atom mapping backend to use (currently only 'WLN atom mapper')
+- `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
 Returns:
 
@@ -135,6 +141,7 @@ Parameters:
 - `solvent` (str, optional): SMILES string of solvent
 - `num_results` (int, optional): max number of results to return
 - `atommap` (bool, optional): Flag to keep atom mapping from the prediction (default=False)
+- `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
 Returns:
 
@@ -179,6 +186,7 @@ Parameters:
 - `filter_threshold` (float, optional): fast filter threshold
 - `template_set` (str, optional): reaction template set to use
 - `template_prioritizer_version` (int, optional): version number of template relevance model to use
+- `precursor_prioritizer` (str, optional): name of precursor prioritizer to use (Relevanceheuristic or SCScore)
 - `cluster` (bool, optional): whether or not to cluster results
 - `cluster_method` (str, optional): method for clustering results
 - `cluster_feature` (str, optional): which feature to use for clustering
@@ -186,6 +194,8 @@ Parameters:
 - `cluster_fp_length` (int, optional): fingerprint length for clustering
 - `cluster_fp_radius` (int, optional): fingerprint radius for clustering
 - `selec_check` (bool, optional): whether or not to check for potential selectivity issues
+- `attribute_filter` (list[dict], optional): template attribute filter to apply before template application
+- `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
 
 Returns:
 
@@ -216,7 +226,36 @@ Method: POST
 
 Parameters:
 
-- `reaction_smiles` (str): reaction smiles with map atom number
+- `reactants` (str): SMILES string of reactants
+- `product` (str): SMILES string of product
+- `reagents` (str, optional): SMILES string of reagents
+- `solvent` (str, optional): SMILES string of solvent
+- `mapped` (bool, optional): whether input is already atom mapped, default False
+- `all_outcomes` (bool, optional): whether to return all outcomes, default False
+- `verbose` (bool, optional): if True, return a json document, default True
+- `mapper` (str, optional): which atom mapper to use ('Transformer' or 'WLN atom mapper')
+- `no_map_reagents` (bool, optional): do not map reagents, default True
+- `mode` (str, optional): which regioselectivity model to use ('GNN' or 'qm_GNN')
+
+Returns:
+
+- `task_id`: celery task ID
+
+
+### Retrosynthetic path ranking prediction
+API endpoint for retrosynthetic path ranking task.
+
+URL: `/api/v2/path-ranking/`
+
+Method: POST
+
+Parameters:
+
+- `trees` (str): list of trees to rank as a json string
+- `cluster` (bool, optional): whether or not to cluster pathways
+- `cluster_method` (str, optional): hdbscan or kmeans
+- `min_samples` (int, optional): min samples for hdbscan
+- `min_cluster_size` (int, optional): min cluster size for hdbscan
 
 Returns:
 
@@ -233,28 +272,57 @@ Method: POST
 Parameters:
 
 - `smiles` (str): SMILES string of target
-- `max_depth` (int, optional): maximum depth of returned trees
-- `max_branching` (int, optional): maximum branching in returned trees
+- `version` (int, optional): tree builder version to use
+- `max_depth` (int, optional): maximum depth of returned pathways
+- `max_branching` (int, optional): maximum branching during pathway exploration
 - `expansion_time` (int, optional): time limit for tree expansion
-- `max_ppg` (int, optional): maximum price for buyable termination
 - `template_count` (int, optional): number of templates to consider
 - `max_cum_prob` (float, optional): maximum cumulative probability of templates
-- `chemical_property_logic` (str, optional): logic type for chemical property termination
+- `buyable_logic` (str, optional): logic type for buyable termination (none/and/or)
+- `max_ppg_logic` (str, optional): logic type for price based termination (none/and/or)
+- `max_ppg` (int, optional): maximum price for price based termination
+- `max_scscore_logic` (str, optional): logic type for synthetic complexity termination (none/and/or)
+- `max_scscore` (int, optional): maximum scscore for synthetic complexity termination
+- `chemical_property_logic` (str, optional): logic type for chemical property termination (none/and/or)
 - `max_chemprop_c` (int, optional): maximum carbon count for termination
 - `max_chemprop_n` (int, optional): maximum nitrogen count for termination
 - `max_chemprop_o` (int, optional): maximum oxygen count for termination
 - `max_chemprop_h` (int, optional): maximum hydrogen count for termination
-- `chemical_popularity_logic` (str, optional): logic type for chemical popularity termination
+- `chemical_popularity_logic` (str, optional): logic type for chemical popularity termination (none/and/or)
 - `min_chempop_reactants` (int, optional): minimum reactant precedents for termination
 - `min_chempop_products` (int, optional): minimum product precedents for termination
 - `filter_threshold` (float, optional): fast filter threshold
 - `template_set` (str, optional): template set to use
 - `template_prioritizer_version` (int, optional): version number of template relevance model to use
+- `buyables_source` (list[str], optional): list of source(s) to consider when looking up buyables
 - `return_first` (bool, optional): whether to return upon finding the first pathway
+- `max_trees` (int, optional): maximum number of pathways to return
+- `score_trees` (bool, optional): whether to score trees using pathway ranking model
+- `cluster_trees` (bool, optional): whether to cluster trees
+- `cluster_method` (bool, optional): method to use for clustering, supports 'hdbscan' or 'kmeans'
+- `cluster_min_samples` (bool, optional): minimum number of samples when using 'hdbscan'
+- `cluster_min_size` (bool, optional): minimum cluster size when using 'hdbscan'
+- `json_format` (str, optional): return format for trees, either 'treedata' or 'nodelink'
 - `store_results` (bool, optional): whether to permanently save this result
 - `description` (str, optional): description to associate with stored result
-- `banned_reactions` (list, optional): list of reactions to not consider
-- `banned_chemicals` (list, optional): list of molecules to not consider
+- `banned_reactions` (list[str], optional): list of reactions to not consider
+- `banned_chemicals` (list[str], optional): list of molecules to not consider
+- `priority` (int, optional): set priority for celery task (0 = low, 1 = normal (default), 2 = high)
+
+Returns:
+
+- `task_id`: celery task ID
+
+### Quantum descriptor prediction
+API endpoint for descriptor-predictor prediction task.
+
+URL: `/api/v2/descriptors/`
+
+Method: POST
+
+Parameters:
+
+- `smiles` (str): SMILES string
 
 Returns:
 
@@ -343,11 +411,11 @@ Method: GET
 
 Query Parameters:
 
-- `q` (str): search query, e.g. SMILES string
-- `source` (str): source of buyables data
-- `regex` (bool): whether or not to treat `q` as regex pattern
-- `returnLimit` (int): maximum number of results to return
-- `canonicalize` (bool): whether or not to canonicalize `q`
+- `q` (str, optional): search query, e.g. SMILES string
+- `source` (list, optional): list of source(s) to consider when looking up buyables
+- `regex` (bool, optional): whether or not to treat `q` as regex pattern (default: False)
+- `returnLimit` (int, optional): maximum number of results to return (default: 100)
+- `canonicalize` (bool, optional): whether or not to canonicalize `q` (default: True)
 
 Returns:
 
@@ -360,8 +428,8 @@ Parameters:
 
 - `smiles` (str): SMILES string of buyable
 - `ppg` (float): price of buyable
-- `source` (float): source of data
-- `allowOverwrite` (bool): whether or not to overwrite existing duplicates
+- `source` (str, optional): source of data (default: '')
+- `allowOverwrite` (bool, optional): whether or not to overwrite existing duplicates (default: True)
 
 Returns:
 
@@ -418,6 +486,17 @@ Returns:
 - `count`: total number of successfully uploaded entries
 - `total`: total number of uploaded entries, including errors
 
+### Buyables source query
+API endpoint to query available buyables sources.
+
+URL: `/api/v2/buyables/sources/`
+
+Method: GET
+
+Returns:
+
+- `sources`: list of available buyables sources
+
 
 ## Template API
 The API endpoints in this section are for accessing retrosynthetic template data.
@@ -456,6 +535,7 @@ Method: GET
 Returns:
 
 - `template_sets`: list of available template sets
+- `attributes`: list of attribute names for each available template set
 
 ## Saved Results API
 The API endpoints in this section are for accessing saved results.
@@ -507,6 +587,36 @@ Method: GET
 Returns:
 
 - `state`: current state of the job
+- `error`: error message if encountered
+
+### IPP result endpoint
+API endpoint which processes results for display in IPP.
+Returns a single tree obtained by merging individual pathways and a dictionary of precursor results.
+The result ID can be obtained from the main results endpoint.
+
+URL: `/api/v2/results/<result id>/ipp/`
+
+Method: GET
+
+Returns:
+
+- `id`: the requested result id
+- `result`: the requested result, containing `settings` and `result`
+- `error`: error message if encountered
+
+### Tree result endpoint
+API endpoint which processes results for display in tree results page.
+Returns list of trees in nodelink format.
+The result ID can be obtained from the main results endpoint.
+
+URL: `/api/v2/results/<result id>/tree/`
+
+Method: GET
+
+Returns:
+
+- `id`: the requested result id
+- `result`: the requested result, containing `settings` and `result`
 - `error`: error message if encountered
 
 

@@ -35,6 +35,7 @@ class TemplateViewSet(ViewSet):
     Returns:
 
     - `template_sets`: list of available template sets
+    - `attributes`: list of attribute names for each available template set
     """
 
     def list(self, request):
@@ -70,7 +71,14 @@ class TemplateViewSet(ViewSet):
     @action(detail=False, methods=['GET'])
     def sets(self, request):
         """Returns available template sets that exist in mongodb"""
-        resp = {'template_sets': retro_templates.distinct('template_set')}
+        names = retro_templates.distinct('template_set')
+        attributes = {}
+        for name in names:
+            attributes[name] = list(retro_templates.find_one(
+                    {'template_set': name},
+                    {'attributes': 1}
+                ).get('attributes', {}).keys())
+        resp = {'template_sets': names, 'attributes': attributes}
         return Response(resp)
 
     @action(detail=True, methods=['GET'])

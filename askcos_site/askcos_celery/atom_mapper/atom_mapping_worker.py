@@ -3,11 +3,15 @@ from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
 import time
+
+from askcos_site.askcos_celery.torchserve_api import TorchserveAPI
+
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
 wln_mapper = None
 heuristic_mapper = None
+transformer_mapper = None
 CORRESPONDING_QUEUE = 'atom_mapping_worker'
 
 @celeryd_init.connect
@@ -21,10 +25,12 @@ def configure_worker(options={}, **kwargs):
     from askcos.synthetic.atom_mapper.wln_mapper import WLN_AtomMapper
     global wln_mapper
     global heuristic_mapper
+    global transformer_mapper
 
     try:
         wln_mapper = WLN_AtomMapper()
         heuristic_mapper = None
+        transformer_mapper = TorchserveAPI(hostname='ts-rxnmapper', model_name='rxnmapper')
     except Exception as e:
         print(e)
         raise (e)
@@ -55,6 +61,12 @@ def get_atom_mapping(rxnsmiles, mapper='WLN atom mapper'):
         except Exception as e:
             print(e)
 
+    if mapper == 'Transformer':
+        try:
+            results = transformer_mapper.predict([rxnsmiles])
+            rxnsmiles_mapped = results[0]['mapped_rxn']
+        except Exception as e:
+            print(e)
     if not rxnsmiles_mapped:
         print('Failed to map the given reaction smiles')
 

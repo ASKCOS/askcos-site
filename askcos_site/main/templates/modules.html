@@ -12,61 +12,230 @@
 
 {% block page_body %}
 
-<div class="jumbotron">
-    <a href="{% url 'retro_network' %}"><h1 class="display-3">Interactive Path Planning</h1></a>
-    <p class="lead">Interactively explore reaction pathways by chaining together one-step retrosynthesis predictions</p>
-    <hr class="my-4">
-    <p>This module allows you to build your own reaction pathways by chaining together one-step retrosynthesis predictions. The growing reaction pathways are stored in a graph structure, that you can interact with by expanding terminal nodes with new one-step predictions or prune the tree by removing undesirable results. The predictions use the same model as the above one-step retrosynthesis module, supporting the same settings available there. This module is designed to be used by an expert chemist who would prefer to evaluate favorable reaction steps manually and guide synthesis in their own desired direction.</p>
+<div class="card-columns" style="column-count: 2">
+
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'retro_network' %}">Interactive Path Planning and Tree Builder</a>
+            </h3>
+            <p class="card-text lead">
+                Interactive tool for manually and automatically exploring retrosynthesis predictions
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module allows you to build a retrosynthetic tree by combining multiple one-step retrosynthesis
+                predictions. The interface also offers the ability to start automatic tree generation jobs using MCTS
+                tree search algorithms combined with the same one-step retrosynthetic predictions.
+            </p>
+            <p class="card-text">
+                The current one-step retrosynthesis model is template-based, using a neural network to predict the most
+                relevant retrosynthetic templates for a given target molecule.
+                (<a href="https://doi.org/10.1002/chem.201605499" target="_blank">Chem. Eur. J. 2017, 23, 25, 5966-5971</a>,
+                <a href="https://doi.org/10.1021/acs.jcim.0c00403" target="_blank">J. Chem. Inf. Model. 2020, 60, 7, 3398–3407</a>)
+            </p>
+        </div>
+    </div>
 </div>
 
-<div class="jumbotron">
-    <a href="{% url 'retro_interactive_mcts' %}"><h1 class="display-3">Tree Builder</h1></a>
-    <p class="lead">Generate and view possible synthesis plans, with manual step-wise evaluation</p>
-    <hr class="my-4">
-    <p>This module allows you to run a time-limited tree expansion that will recursively apply retrosynthetic transforms in a parallelized best-first tree search until it reaches either (a) a buyable chemical, or (b) the maximum depth. Once the expansion time has elapsed and (ideally) candidate pathways are found and displayed, you can interact with those suggestions by hovering over the reaction nodes to evaluate the reaction using the Synthesis Predictor tool or to see the transform rules upon which the suggestion is based. It is also possible to "hide all" of the tree suggestions that use a certain reaction if you know that reaction to be improbable. A more extreme option is to ban that reaction, which will add it to a user-specific list of forbidden reactions. Any subsequent tree expansions you perform will exclude that reaction. The same can be done for chemicals if a particular intermediate should be avoided. You can access your banned reactions or chemicals and activate/deactivate/delete them from the My Banlist page.</p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'synth_interactive' %}?mode=forward">Forward Synthesis Predictor</a>
+            </h3>
+            <p class="card-text lead">
+                Evaluate a reaction in the forward direction, considering reaction conditions and impurities
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module allows you to predict most likely outcomes of a chemical reaction using a template-free WLN model trained to predict likely bond changes.
+                (<a href="https://doi.org/10.1039/C8SC04228D" target="_blank">Chem. Sci., 2019, 10, 370-377</a>)
+            </p>
+        </div>
+    </div>
 </div>
 
-<div class="jumbotron">
-    <a href="/synth_interactive/"><h1 class="display-3">Synthesis Predictor</h1></a>
-    <p class="lead">Evaluate a reaction in the forward direction, considering reaction condtions and impurities</p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'synth_interactive' %}?mode=context">Reaction Condition Recommender</a>
+            </h3>
+            <p class="card-text lead">
+                Predict reaction conditions for a given reaction
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module allows you to predict reagents, catalysts, solvents and temperature for a desired transformation using a neural network model.
+                (<a href="https://doi.org/10.1021/acscentsci.8b00357" target="_blank">ACS Cent. Sci., 2018, 4, 1465-1476</a>)
+            </p>
+            <p class="card-text">
+                The 2021.01 release adds a new version of the model which can provide quantitative condition predictions.
+            </p>
+        </div>
+    </div>
 </div>
 
-<div class="jumbotron">
-    <a href="{% url 'site_prediction' %}"><h1 class="display-3">Aromatic C-H Site Selectivity Prediction</h1></a>
-    <p class="lead">Predict reactive aromatic C-H sites</p>
-    <hr class="my-4">
-    <p>This module allows you to predict the selectivity of 123 aromatic C-H functionalization reactions</p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'synth_interactive' %}?mode=impurity">Reaction Impurity Prediction</a>
+            </h3>
+            <p class="card-text lead">
+                Predict likely reaction impurities
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module allows you to predict likely impurities for a chemical reaction. The algorithm considers
+                minor products, over-reaction, dimerization, solvent adducts, and subsets of reactants. It relies on the
+                template-free forward prediction model.
+                (<a href="https://doi.org/10.1039/C8SC04228D" target="_blank">Chem. Sci., 2019, 10, 370-377</a>)
+            </p>
+        </div>
+    </div>
 </div>
 
-<div class="jumbotron">
-    <a href="{% url 'scscoring' %}"><h1 class="display-3">SCScore Evaluator</h1></a>
-    <p class="lead">Analyze a chemical's perceived synthetic complexity</p>
-    <hr class="my-4">
-    <p>This module is a utility to evaluate the SCScore (a learned synthetic complexity metric) for arbitrary target chemicals. The model was trained on reactions in Reaxys in an attempt to understand the nuance of synthetic complexity, e.g., when protections and deprotections are constructive. It is designed to perceive a monotonic increase in complexity throughout a linear synthesis.</p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'synth_interactive' %}?mode=selectivity">Universal Regioselectivity Prediction</a>
+            </h3>
+            <p class="card-text lead">
+                Predict selectivity of regio-selective reactions
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module allows you to predict selectivity of regio-selective reactions. The QM-GNN model combines
+                a WLN graph encoding with predicted quantum descriptors as input to a multitask neural network.
+                (<a href="https://chemrxiv.org/s/a59c768f5b60d4ad19f9" target="_blank">ChemRxiv 2020</a>)
+            </p>
+        </div>
+    </div>
 </div>
 
-<div class="jumbotron">
-    <a href="{% url 'buyables' %}"><h1 class="display-3">Buyable Look-up</h1></a>
-    <p class="lead">Check to see if a chemical is in the buyables database</p>
-    <hr class="my-4">
-    <p>This module is a utility to check if a certain compound is contained in our very-imperfect database of buyable compounds. Currently, we have approximately 175,000 chemicals (not all unique) from eMolecules, Sigma Aldrich with prices up to $100 per gram. </p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'synth_interactive' %}?mode=sites">Aromatic C-H Site Selectivity Prediction</a>
+            </h3>
+            <p class="card-text lead">
+                Predict reactive aromatic C-H sites
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module allows you to predict site selectivity of 123 aromatic C-H functionalization reactions with a multitask neural network that uses a WLN graph encoding.
+                (<a href="https://doi.org/10.1039/D0RE00071J" target="_blank">React. Chem. Eng., 2020, 5, 896-902</a>)
+            </p>
+        </div>
+    </div>
 </div>
 
-<div class="jumbotron">
-    <a href="{% url 'atom_mapping' %}"><h1 class="display-3">Atom mapping</h1></a>
-    <p class="lead">Use WLN or heuristics to map a reaction SMILES. </p>
-    <hr class="my-4">
-    <p>Atom mapping </p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'index' %}">SCScore Evaluator</a>
+            </h3>
+            <p class="card-text lead">
+                Analyze a chemical's perceived synthetic complexity
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module is a utility to evaluate the SCScore (a learned synthetic complexity metric) for arbitrary
+                target chemicals. The model was trained on reactions in Reaxys in an attempt to understand the nuance
+                of synthetic complexity, e.g., when protections and deprotections are constructive. It is designed to
+                perceive a monotonic increase in complexity throughout a linear synthesis.
+                (<a href="https://doi.org/10.1021/acs.jcim.7b00622" target="_blank">J. Chem. Inf. Model. 2018, 58, 2, 252-261</a>)
+            </p>
+            <p class="card-text">
+                Search for a molecule SMILES on the homepage to evaluate its SCScore.
+            </p>
+        </div>
+    </div>
 </div>
 
- <div class="jumbotron">
-    <a href="{% url 'draw' %}"><h1 class="display-3">Drawing</h1></a>
-    <p class="lead">Draw molecules, reactions, or templates from SMILES/SMARTS strings</p>
-    <hr class="my-4">
-    <p>This module is a utility to draw SMILES strings describing chemicals, reactions, or SMARTS strings describing templates. Note that you can also copy a SMILES string and "Paste special" in Chemdraw (highly recommended), although this does not work very well for templates.</p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'buyables' %}">Buyable Look-up</a>
+            </h3>
+            <p class="card-text lead">
+                Check to see if a chemical is in the buyables database
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module is a utility to check if a certain compound is included in the building block database.
+                By default, the database includes approximately 280,000 database entries from eMolecules, LabNetwork,
+                and Sigma Aldrich with prices up to $100 per gram.
+            </p>
+            <p class="card-text">
+                Users can also add custom building blocks to the database, which will be reflected in the Interactive
+                Path Planner and Tree Builder modules.
+            </p>
+        </div>
+    </div>
 </div>
 
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'index' %}">Atom Mapping</a>
+            </h3>
+            <p class="card-text lead">
+                Generate atom mapping for a reaction SMILES
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module provides a utility for generating atom mappings for reactions. Currently, there are two
+                models available: a WLN atom mapper using the template-free forward prediction model,
+                (<a href="https://doi.org/10.1039/C8SC04228D" target="_blank">Chem. Sci., 2019, 10, 370-377</a>)
+                and the RXNMapper transformer model.
+                (<a href="http://dx.doi.org/10.26434/chemrxiv.12298559" target="_blank">ChemRxiv 2020</a>)
+            </p>
+            <p class="card-text">
+                Search for a reaction SMILES on the homepage to generate an atom mapping.
+            </p>
+        </div>
+    </div>
+</div>
 
-<p>THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+<div class="card">
+    <div class="card-body">
+        <div class="card-body">
+            <h3 class="card-title">
+                <a href="{% url 'draw' %}">Drawing</a>
+            </h3>
+            <p class="card-text lead">
+                Draw molecules, reactions, or templates from SMILES/SMARTS strings
+            </p>
+            <hr class="my-3">
+            <p class="card-text">
+                This module is a utility to draw SMILES strings describing chemicals, reactions, or SMARTS strings
+                describing templates. Note that you can also copy a SMILES string and "Paste special" in Chemdraw
+                (highly recommended), although this does not work very well for templates.
+            </p>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<p><small>
+    THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+    OF SUCH DAMAGE.
+</small></p>
+
 {% endblock %}

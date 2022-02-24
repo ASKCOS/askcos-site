@@ -3,13 +3,16 @@ container.classList.remove('container')
 container.classList.add('container-fluid')
 container.style.width=null;
 
+const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+const BG_OPACITY = 0.2 // Background opacity
+
 function updateObj(dest, src) {
     // take properties of src and overwrite matching properties of dest
     // ignores properties in src if they do not exist in dest
     // modifies dest object in place
     for (let p in src) {
         if (src.hasOwnProperty(p) && dest.hasOwnProperty(p)) {
-            if ( typeof dest[p] === 'object' ) {
+            if ( typeof dest[p] === 'object' && !Array.isArray(dest[p]) ) {
                 updateObj(dest[p], src[p])
             } else {
                 dest[p] = src[p];
@@ -18,250 +21,22 @@ function updateObj(dest, src) {
     }
 }
 
-function num2str(n, len) {
-    if (len == undefined) {
-        return n == undefined || isNaN(n) ? 'N/A' : n.toString();
+function num2str(n, len, exp = false) {
+    if (len === undefined) {
+        return n === undefined || isNaN(n) ? 'N/A' : n.toString();
+    } else if (exp) {
+        return n === undefined || isNaN(n) ? 'N/A' : n.toExponential(len);
     } else {
-        return n == undefined || isNaN(n) ? 'N/A' : n.toFixed(len);
+        return n === undefined || isNaN(n) ? 'N/A' : n.toFixed(len);
     }
 }
 
-// check whether the set on which the  
-// method is invoked is the subset of  
-// otherset or not 
-function subSet(s, otherSet) {
-    if(s.size > otherSet.size) {
-        return false;
+function edgeScaling(min, max, total, value) {
+    if (value >= 0.25) {
+        return 1.0
     } else {
-        for(var elem of s) {
-            // if any of the element of
-            // this is not present in the
-            // otherset then return false
-            if(!otherSet.has(elem))
-                return false;
-        }
-        return true;
+        return 16 * value * value
     }
-};
-
-function ctaToNode(cta, id) {
-    if (cta.is_reaction) {
-        return {
-            id: id,
-            graphId: cta.id,
-            plausibility: cta.plausibility,
-            numExamples: cta.num_examples,
-            reactionSmiles: cta.smiles,
-            templateIds: cta.tforms,
-            templateScore: cta.template_score,
-            retroscore: cta.template_score,
-            type: 'reaction',
-        }
-    }
-    else {
-        let node = {
-            id: id,
-            graphId: cta.id,
-            asProduct: cta.as_product,
-            asReactant: cta.as_reactant,
-            type: 'chemical',
-            ppg: cta.ppg,
-            smiles: cta.smiles,
-            image: "/api/v2/draw/?smiles="+encodeURIComponent(cta.smiles),
-            shape: 'image',
-            borderWidth: 2
-        }
-        if (node.ppg == 0) {
-            node.color = {border: '#880000'}
-        }
-        else {
-            node.color = {border: '#008800'}
-        }
-        return node
-    }
-}
-
-function addReactions(reactions, sourceNode, nodes, edges, reactionLimit) {
-    var added = 0
-    for (r of reactions) {
-        if (added >= reactionLimit) {
-            break;
-        }
-        if (r.show) {
-            addReaction(r, sourceNode, nodes, edges);
-            added += 1;
-        }
-    }
-}
-
-function addReaction(reaction, sourceNode, nodes, edges) {
-    var rId = nodes.max('id').id+1;
-    var node = {
-        id: rId,
-        label: '#'+reaction['rank'],
-        rank: reaction['rank'],
-        ffScore: num2str(reaction['plausibility'] ,3),
-        retroscore: num2str(reaction['score'], 3),
-        templateScore: num2str(reaction['template_score'], 3),
-        numExamples: num2str(reaction['num_examples']),
-        templateIds: reaction['templates'],
-        reactionSmiles: reaction.smiles+'>>'+sourceNode.smiles,
-        type: 'reaction'
-    }
-
-    if ('outcomes' in reaction) {
-        node['outcomes'] = reaction['outcomes'].split('.')
-        node['selectivity'] = new Array(node.outcomes.length)
-        node['mappedReactionSmiles'] = reaction.mapped_precursors+'>>'+reaction['mapped_outcomes']
-        node['borderWidth'] = 2
-        node['color'] = { border: '#ff4444' }
-        node['title'] = "Selectivity warning! Select this node to see more details"
-    } else if ('selec_error' in reaction) {
-        node['selec_error'] = reaction['selec_error']
-        node['borderWidth'] = 2
-        node['color'] = { border: '#ffbb00' }
-    }
-
-    nodes.add(node)
-    if (edges.max('id')) {
-        var eId = edges.max('id').id+1
-    }
-    else {
-        var eId = 0
-    }
-
-    edges.add({
-        id: eId,
-        from: sourceNode.id,
-        to: rId,
-        scaling: {
-            min: 1,
-            max: 5,
-            customScalingFunction: function(min, max, total, value) {
-                if (value > 0.25) {
-                    return 1.0
-                }
-                else{
-                    return 16*value*value
-                }
-            }
-        },
-        color: {
-            color: '#000000',
-            inherit: false
-        },
-        value: Number(reaction['template_score'])
-    })
-    for (n in reaction['smiles_split']) {
-        var smi = reaction['smiles_split'][n];
-        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
-        .then(resp => resp.json())
-        .then(json => {
-            var mysmi = json['search'];
-            if (json.buyables.length > 0) {
-                var ppg = json.buyables[0].ppg
-                var buyable = true
-                var source = json.buyables[0].source
-            }
-            else {
-                var ppg = "not buyable"
-                var buyable = false
-                var source = ''
-            }
-            if (buyable) {
-                var color = "#008800"
-            }
-            else {
-                var color = "#880000"
-            }
-            var nId = nodes.max('id').id+1;
-            nodes.add({
-                id: nId,
-                smiles: mysmi,
-                image: app.getMolDrawEndPoint(mysmi),
-                shape: "image",
-                borderWidth: 2,
-                type: 'chemical',
-                ppg: ppg,
-                source: source,
-                color: {
-                    border: color
-                }
-            })
-            edges.add({
-                id: edges.max('id').id+1,
-                from: rId,
-                to: nId,
-                scaling: {
-                    min: 1,
-                    max: 5,
-                    customScalingFunction: function(min, max, total, value) {
-                        if (value > 0.25) {
-                            return 1.0
-                        }
-                        else{
-                            return 16*value*value
-                        }
-                    }
-                },
-                color: {
-                    color: '#000000',
-                    inherit: false
-                },
-                value: Number(reaction['template_score'])
-            })
-        })
-        reaction.inViz = true;
-    }
-}
-
-function parentOf(id, nodes, edges) {
-    var parentId = -1;
-    edges.forEach(function(e) {
-        if (e!=null && e.to==id) {
-            parentId = e.from
-        }
-    })
-    return parentId
-}
-
-function childrenOf(id, nodes, edges) {
-    var children = [];
-    edges.forEach(function(e) {
-        if (e!=null && e.from==id) {
-            children.push(e.to)
-        }
-    })
-    return children
-}
-
-function allChildrenOf(id, nodes, edges) {
-    var children = [];
-    edges.forEach(function(e) {
-        if (e!=null && e.from==id) {
-            children.push(e.to);
-            var tmpChildren = allChildrenOf(e.to, nodes, edges);
-            for (n in tmpChildren) {
-                var child = tmpChildren[n];
-                children.push(child);
-            }
-        }
-    })
-    return children
-}
-
-function removeChildrenFrom(id, nodes, edges) {
-    var children = allChildrenOf(id, nodes, edges);
-    nodes.remove(children);
-}
-
-function cleanUpEdges(nodes, edges) {
-    var nodeIds = nodes.getIds();
-    edges.forEach(function(edge) {
-        if (!nodeIds.includes(edge.from) | !nodeIds.includes(edge.to)) {
-            edges.remove(edge.id)
-        }
-    })
 }
 
 /* DnD */
@@ -287,10 +62,18 @@ function clusteredit_dragleave_handler(event) {
 
 const tbSettingsDefault = {
     quick: "normal",
+    version: 1,
     maxDepth: 5,
     maxBranching: 20,
     expansionTime: 60,
+    maxChemicals: null,
+    maxReactions: null,
+    maxIterations: null,
+    buyableLogic: 'and',
+    maxPPGLogic: 'none',
     maxPPG: 100,
+    maxScscoreLogic: 'none',
+    maxScscore: 0,
     chemicalPropertyLogic: 'none',
     chemicalPropertyC: 0,
     chemicalPropertyN: 0,
@@ -299,7 +82,10 @@ const tbSettingsDefault = {
     chemicalPopularityLogic: 'none',
     chemicalPopularityReactants: 0,
     chemicalPopularityProducts: 0,
+    buyablesSource: [],
+    buyablesSourceAll: true,
     returnFirst: false,
+    maxTrees: 500,
     templateSet: "reaxys",
     templateSetVersion: 1,
     precursorScoring: "RelevanceHeuristic",
@@ -307,6 +93,7 @@ const tbSettingsDefault = {
     maxCumProb: 0.999,
     minPlausibility: 0.1,
     allowSelec: true,
+    attributeFilter: []
 };
 
 const visjsOptionsDefault = {
@@ -338,6 +125,7 @@ const visjsOptionsDefault = {
             parentCentralization: true,
             direction: 'UD',
             sortMethod: 'directed',
+            shakeTowards: 'roots',
         }
     },
     interaction:{
@@ -411,12 +199,14 @@ function getVisjsUserOptions(obj) {
 
 const ippSettingsDefault = {
     allowCluster: true,
+    filterReactingAtoms: false,
     allowResolve: false,
     isHighlightAtom: true,
     reactionLimit: 5,
-    sortingCategory: "score",
+    sortingCategory: "retroScore",
+    sortOrderAscending: false,
+    selectivityModel: "qm_GNN",
     clusterOptions: {
-        allowRemovePrecursor: true,
         feature: 'original',
         fingerprint:'morgan',
         fpRadius: 1, fpBits: 512,
@@ -434,15 +224,20 @@ var app = new Vue({
             height: 0,
         },
         target: '',
-        data: {
-            nodes: {},
-            edges: {}
-        },
-        results: {},
+        dataGraph: new RetroGraph(),
+        dispGraph: new RetroGraph(),
+        treeView: null,
+        treeViewEnabled: false,
+        trees: [],
+        currentTreeIndex: 0,
         templateSets: {},
+        templateAttributes: {},
+        buyablesSources: [],
         templateNumExamples: {},
-        nodeStructure: {},
         allowCluster: ippSettingsDefault.allowCluster,
+        filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
+        invertAtomFilter: false,
+        refreshFilter: 1,
         allowResolve: ippSettingsDefault.allowResolve,
         showSettingsModal: false,
         showLoadModal: false,
@@ -450,8 +245,8 @@ var app = new Vue({
         showClusterPopoutModal: false,
         showClusterEditModal: false,
         showAddNewPrecursorModal: false,
+        showRecTemplatesModal: false,
         downloadName: "network.json",
-        modalData: {},
         tb: {
             settings: JSON.parse(JSON.stringify(tbSettingsDefault)),
             modes: {
@@ -497,6 +292,7 @@ var app = new Vue({
         clusterPopoutModalData: {
             optionsDisplay : {
                 showScore: false,
+                showSCScore: false,
                 showNumExample: true,
                 showTemplateScore: false,
                 showPlausibility: true,
@@ -517,18 +313,30 @@ var app = new Vue({
         selected: null,
         isHighlightAtom: ippSettingsDefault.isHighlightAtom,
         reactionLimit: ippSettingsDefault.reactionLimit,
+        selectivityModel: ippSettingsDefault.selectivityModel,
         sortingCategory: ippSettingsDefault.sortingCategory,
+        sortOrderAscending: ippSettingsDefault.sortOrderAscending,
         networkOptions: JSON.parse(JSON.stringify(visjsOptionsDefault)),
+        recommendedTemplates: {},
+        rtmItemsPerPage: 20,  // For recommended templates modal
+        rtmCurrentPage: 1,  // For recommended templates modal
+        pendingTasks: 0,  // Counter for displaying loading spinner
+        recompute: 0,  // Dummy property to trigger computed properties depending on dataGraph or dispGraph
+        infoPanelOptions: {
+            id: 'infoPanel',
+            headerTitle: 'Tree Info',
+            headerControls: {size: 'sm', close: 'remove', maximize: 'remove', normalize: 'remove', minimize: 'remove'},
+            position: {my: 'left-top', at: 'left-top', of: '#network'},
+            panelSize: {width: 250, height: 280},
+        },
     },
     beforeMount: function() {
         this.enableResolve = this.$el.querySelector('[ref="enableResolve"]').checked;
-        this.allowResolve = this.$el.querySelector('[ref="allowResolve"]').checked;
     },
     created: function() {
         window.addEventListener('resize', this.handleResize);
         this.handleResize();
-    },
-    mounted: function() {
+
         this.loadNetworkOptions()
         this.loadTarget()
         this.loadTbSettings()
@@ -550,6 +358,7 @@ var app = new Vue({
         fetch('/api/v2/template/sets/')
             .then(resp => resp.json())
             .then(json => {
+                this.templateAttributes = json.attributes
                 for (templateSet of json.template_sets) {
                     this.templateSets[templateSet] = { versions: [] }
                     fetch('/api/v2/retro/models/?template_set='+templateSet)
@@ -561,21 +370,26 @@ var app = new Vue({
                         })
                 }
             })
+        fetch('/api/v2/buyables/sources/')
+            .then(resp => resp.json())
+            .then(json => {this.buyablesSources = json.sources})
+    },
+    mounted: function() {
+        setTimeout(() => {
+            document.querySelector('#splash').classList.replace("d-flex", "d-none")
+        }, 1000)
     },
     destroyed: function() {
         window.removeEventListener('resize', this.handleResize);
     },
     methods: {
         initializeNetwork(data) {
-            var container = document.getElementById('network');
-            this.network = new vis.Network(container, data, this.networkOptions);
-            this.network.on("beforeDrawing",  function(ctx) {
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-                ctx.restore();
-            })
+            this.pendingTasks += 1
+            let container = document.getElementById('network')
+            this.network = new vis.Network(container, data, this.networkOptions)
+            this.network.on('selectNode', this.showInfo)
+            this.network.on('deselectNode', this.clearSelection)
+            this.network.once('afterDrawing', () => {this.pendingTasks -= 1})
         },
         centerGraph() {
             if (!!this.network) {
@@ -598,10 +412,13 @@ var app = new Vue({
             if (!storageAvailable('localStorage')) return
             const obj = {
                 allowCluster: this.allowCluster,
+                filterReactingAtoms: ippSettingsDefault.filterReactingAtoms,
                 allowResolve: this.allowResolve,
                 isHighlightAtom: this.isHighlightAtom,
                 reactionLimit: this.reactionLimit,
+                selectivityModel: this.selectivityModel,
                 sortingCategory: this.sortingCategory,
+                sortOrderAscending: this.sortOrderAscending,
                 clusterOptions: this.clusterOptions,
             }
             localStorage.setItem('ippSettings', encodeURIComponent(JSON.stringify(obj)))
@@ -633,6 +450,9 @@ var app = new Vue({
             const settings = localStorage.getItem('ippSettings')
             if (!settings) return
             const obj = JSON.parse(decodeURIComponent(settings))
+            if (obj.sortingCategory === 'score') {
+                obj.sortingCategory = 'retroScore'
+            }
             updateObj(this, obj)
         },
         handleResize: function() {
@@ -703,16 +523,25 @@ var app = new Vue({
             var body = {
                 description: description,
                 smiles: this.target,
+                version: this.tb.settings.version,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
                 max_depth: this.tb.settings.maxDepth,
                 max_branching: this.tb.settings.maxBranching,
                 expansion_time: this.tb.settings.expansionTime,
+                max_chemicals: this.tb.settings.maxChemicals,
+                max_reactions: this.tb.settings.maxReactions,
+                max_iterations: this.tb.settings.maxIterations,
+                buyable_logic: this.tb.settings.buyableLogic,
+                max_ppg_logic: this.tb.settings.maxPPGLogic,
                 max_ppg: this.tb.settings.maxPPG,
+                max_scscore_logic: this.tb.settings.maxScscoreLogic,
+                max_scscore: this.tb.settings.maxScscore,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,
                 return_first: this.tb.settings.returnFirst,
+                max_trees: this.tb.settings.maxTrees,
                 store_results: true,
                 chemical_property_logic: this.tb.settings.chemicalPropertyLogic,
                 max_chemprop_c: this.tb.settings.chemicalPropertyC,
@@ -721,7 +550,11 @@ var app = new Vue({
                 max_chemprop_h: this.tb.settings.chemicalPropertyH,
                 chemical_popularity_logic: this.tb.settings.chemicalPopularityLogic,
                 min_chempop_reactants: this.tb.settings.chemicalPopularityReactants,
-                min_chempop_products: this.tb.settings.chemicalPopularityProducts
+                min_chempop_products: this.tb.settings.chemicalPopularityProducts,
+                json_format: 'nodelink',
+            }
+            if (!this.tb.settings.buyablesSourceAll) {
+                body.buyables_source = this.tb.settings.buyablesSource
             }
             fetch(url, {
                 method: 'POST', 
@@ -810,7 +643,7 @@ var app = new Vue({
                     }
                 })
                 .catch(error => {
-                    if (error instanceof TypeError) {
+                    if (error instanceof TypeError && error.message === 'Failed to fetch') {
                         console.log('Unable to fetch tree builder results due to connection error. Will keep trying.')
                         setTimeout(() => this.pollForTbResult(), 2000)
                     } else {
@@ -818,14 +651,21 @@ var app = new Vue({
                     }
                 });
         },
+        addAttributeFilter: function() {
+            this.tb.settings.attributeFilter.push({
+                name: this.templateAttributes[this.tb.settings.templateSet][0],
+                logic: '>',
+                value: 0.5
+            })
+        },
         requestRetro: function(smiles, callback) {
-            showLoader()
+            this.pendingTasks += 1;
             const url = '/api/v2/retro/';
             const body = {
                 target: smiles,
                 template_set: this.tb.settings.templateSet,
                 template_prioritizer_version: this.tb.settings.templateSetVersion,
-                precursor_prioritization: this.tb.settings.precursorScoring,
+                precursor_prioritizer: this.tb.settings.precursorScoring,
                 num_templates: this.tb.settings.numTemplates,
                 max_cum_prob: this.tb.settings.maxCumProb,
                 filter_threshold: this.tb.settings.minPlausibility,
@@ -835,6 +675,7 @@ var app = new Vue({
                 cluster_fp_length: this.clusterOptions.fpBits,
                 cluster_fp_radius: this.clusterOptions.fpRadius,
                 selec_check: this.tb.settings.allowSelec,
+                attribute_filter: this.tb.settings.attributeFilter,
             };
             fetch(url,{
                 method: 'POST',
@@ -855,20 +696,21 @@ var app = new Vue({
                     setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
                 })
                 .catch(error => {
-                    hideLoader();
+                    this.pendingTasks -= 1;
                     alert('There was an error predicting precursors for this target: '+error)
                 })
         },
         pollCeleryResult: function(taskId, callback) {
+            // Check celery task status in 1s intervals
+            // Results in -1 pendingTasks upon completion or failure
             fetch(`/api/v2/celery/task/${taskId}/`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.complete) {
                     callback(json.output);
-                    hideLoader();
+                    this.pendingTasks -= 1;
                 }
                 else if (json.failed) {
-                    hideLoader();
                     throw Error('Celery task failed.');
                 }
                 else {
@@ -876,19 +718,19 @@ var app = new Vue({
                 }
             })
             .catch(error => {
-                if (error instanceof TypeError) {
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
                     console.log('Unable to fetch celery results due to connection error. Will keep trying.')
                     setTimeout(() => {this.pollCeleryResult(taskId, callback)}, 2000)
                 } else {
+                    this.pendingTasks -= 1;
                     console.error('There was a problem fetching results:', error);
                 }
             });
         },
         resolveChemName: function(name) {
             if (this.enableResolve && this.allowResolve) {
-                var url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
-                console.log(url)
-                var text = fetch(url)
+                let url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+encodeURIComponent(name)+'/property/IsomericSMILES/txt'
+                return fetch(url)
                     .then(resp => {
                         if (resp.status == 404) {
                             throw Error(resp.statusText);
@@ -899,15 +741,24 @@ var app = new Vue({
                     .catch(err => {
                         throw Error('Cannot resolve "'+name+'" to smiles: '+err.message);
                     })
-                return text;
             } else {
                 throw Error('Resolving chemical name using external server is not allowed.');
             }
         },
-        validatesmiles: function(s, iswarning) {
-            var url = '/api/validate-chem-name/?smiles='+encodeURIComponent(s)
-            console.log(url)
-            var res = fetch(url)
+        validatesmiles: function(smiles, iswarning) {
+            return fetch(
+                '/api/v2/rdkit/smiles/validate/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        smiles: smiles
+                    })
+                }
+            )
                 .then(resp => {
                     if (!resp.ok) {
                         throw 'Unable to connect to server: error code '+resp.status;
@@ -926,10 +777,62 @@ var app = new Vue({
                         return true
                     }
                 })
-            return res;
+        },
+        lookupPrice: function(smiles) {
+            let url = `/api/v2/buyables/?q=${encodeURIComponent(smiles)}&canonicalize=True`
+            if (!this.tb.settings.buyablesSourceAll) {
+                if (this.tb.settings.buyablesSource.length) {
+                    this.tb.settings.buyablesSource.forEach(source => {url += '&source=' + source})
+                } else{
+                    url += '&source=[]'
+                }
+            }
+            return fetch(url)
+                .then(resp => resp.json())
+                .then(json => {
+                    let result = {
+                        'search': json.search,
+                        'ppg': 'not buyable',
+                        'source': '',
+                    }
+                    if (json.result.length > 0) {
+                        result.ppg = json.result[0].ppg;
+                        result.source = json.result[0].source;
+                        for (entry of json.result) {
+                            if (entry.ppg < result.ppg) {
+                                result.ppg = entry.ppg;
+                                result.source = entry.source;
+                            }
+                        }
+                    }
+                    return result
+                })
+        },
+        updatePrice: function(smiles) {
+            // Lookup price and then update corresponding nodes in dataGraph and dispGraph
+            this.lookupPrice(smiles)
+                .then(result => {
+                    this.dataGraph.nodes.update({id: smiles, ppg: result.ppg, source: result.source})
+                    let nodeIds = this.dispGraph.nodes.getIds({filter: item => item.smiles === smiles})
+                    this.dispGraph.nodes.update(nodeIds.map(nodeId => ({
+                        id: nodeId,
+                        color: this.getNodeColor(smiles, result.ppg),
+                    })))
+                })
+        },
+        getNodeColor: function(smiles, ppg) {
+            let obj = {}
+            if (smiles === this.target) {
+                obj.border = '#000088'
+            } else if (ppg === 'not buyable') {
+                obj.border = '#880000'
+            } else if (ppg !== undefined) {
+                obj.border = '#008800'
+            }
+            return obj
         },
         changeTarget: function() {
-            showLoader();
+            this.pendingTasks += 1;
             this.saveTbSettings()
             this.saveNetworkOptions()
             this.saveIppSettings()
@@ -941,45 +844,32 @@ var app = new Vue({
                     return this.resolveChemName(this.target)
                 }
             })
-            .then(x => {
-                this.target = x;
+            .then(smiles => this.canonicalize(smiles, 'target'))
+            .then(() => {
                 this.saveTarget()
-                if (this.target != undefined) {
+                if (this.target !== undefined) {
                     const smi = this.target;
                     const app = this;
                     function callback(precursors) {
-                        app.data.nodes = new vis.DataSet([
-                            app.createTargetNode(smi)
-                        ]);
-                        app.data.edges = new vis.DataSet([]);
-                        app.initializeNetwork(app.data);
-                        app.network.on('selectNode', app.showInfo);
-                        app.network.on('deselectNode', app.clearSelection);
-                        app.$set(app.results, smi, precursors);
-                        app.initClusterShowCard(smi); // must be called immediately after adding results
-                        addReactions(app.results[smi], app.data.nodes.get(0), app.data.nodes, app.data.edges, app.reactionLimit);
-                        app.getTemplateNumExamples(app.results[smi]);
-                        fetch('/api/buyables/search/?q='+encodeURIComponent(smi)+'&canonicalize=True')
-                            .then(resp => resp.json())
-                            .then(json => {
-                                if (json.buyables.length > 0) {
-                                    var ppg = json.buyables[0].ppg
-                                }
-                                else {
-                                    var ppg = "not buyable"
-                                }
-                                app.data.nodes.update({id: 0, ppg: ppg});
-                                app.network.selectNodes([0]);
-                                app.selected = app.data.nodes.get(0);
-                        })
+                        app.dataGraph.clear()
+                        app.dispGraph.clear()
+                        app.initTargetDataNode()
+                        app.initTargetDispNode()
+                        let addedReactions = app.addRetroResultToDataGraph(precursors, smi)
+                        let reactionsToAdd = addedReactions.filter(reactionSmiles => {
+                            return !app.allowCluster || app.dataGraph.nodes.get(reactionSmiles).clusterRep
+                        }).slice(0, app.reactionLimit)
+                        app.addRetroResultToDispGraph(reactionsToAdd, NIL_UUID)
+                        app.initializeNetwork(app.dispGraph)
+                        app.network.selectNodes([NIL_UUID])
+                        app.showInfo({'nodes': [NIL_UUID]})
                     }
                     this.requestRetro(smi, callback);
-                } else {
-                    hideLoader();
                 }
+                this.pendingTasks -= 1;
             })
             .catch(error => {
-                hideLoader();
+                this.pendingTasks -= 1;
                 var error_msg = 'unknown error'
                 if ('message' in error) {
                     error_msg = error.name+':'+error.message
@@ -988,6 +878,264 @@ var app = new Vue({
                 }
                 alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
             })
+        },
+        initTargetDataNode() {
+            this.dataGraph.nodes.add({
+                id: this.target,
+                type: 'chemical',
+            })
+            this.lookupPrice(this.target)
+                .then(result => {
+                    this.dataGraph.nodes.update({id: this.target, ppg: result.ppg, source: result.source})
+                })
+        },
+        initTargetDispNode() {
+            this.dispGraph.nodes.add({
+                id: NIL_UUID,
+                smiles: this.target,
+                borderWidth: 3,
+                color: this.getNodeColor(this.target),
+                shape: 'image',
+                image: this.getMolDrawEndPoint(this.target),
+                type: 'chemical',
+            })
+        },
+        addRetroResultToDataGraph(data, parentSmiles) {
+            // Add results as reaction and chemical nodes under the specified parent chemical
+            // Arguments should be list of outcome objects and the SMILES of the parent node
+            let clusterTracker = new Set(this.clusteredResultsIndex[parentSmiles]);
+            let addedReactions = [];
+            for (let reaction of data) {
+                let reactionSmiles = reaction['smiles'] + '>>' + parentSmiles
+                addedReactions.push(reactionSmiles)
+                let node = {
+                    id: reactionSmiles,
+                    rank: reaction['rank'],
+                    ffScore: reaction['plausibility'],
+                    retroScore: reaction['score'],
+                    templateScore: reaction['template_score'],
+                    templateRank: reaction['template_rank'],
+                    templateIds: reaction['templates'],
+                    clusterId: reaction['group_id'],
+                    clusterRep: !clusterTracker.has(reaction['group_id']),  // Tag first result in each cluster as the representative
+                    precursors: reaction['smiles_split'],
+                    precursorSmiles: reaction['smiles'],
+                    numExamples: reaction['num_examples'],
+                    necessaryReagent: reaction['necessary_reagent'],
+                    mappedSmiles: reaction['mapped_smiles'],
+                    reactingAtoms: reaction['reacting_atoms'],
+                    numRings: reaction['num_rings'],
+                    rmsMolwt: reaction['rms_molwt'],
+                    scscore: reaction['scscore'],
+                    type: 'reaction',
+                    inVis: {},  // Tracks associated nodes in display graph (key: parent ID, value: node ID)
+                }
+
+                clusterTracker.add(reaction['group_id'])
+                if (node.templateIds) {
+                    node.templateIds.forEach(template => this.apiTemplateCount(template))
+                }
+
+                if ('outcomes' in reaction) {
+                    node['outcomes'] = reaction['outcomes'].split('.')
+                    node['selectivity'] = new Array(node.outcomes.length)
+                    node['mappedPrecursors'] = reaction['mapped_precursors']
+                    node['mappedOutcomes'] = reaction['mapped_outcomes']
+                } else if ('selec_error' in reaction) {
+                    node['selecError'] = reaction['selec_error']
+                }
+
+                this.dataGraph.nodes.add(node)
+                this.dataGraph.edges.add({
+                    id: uuidv4(),
+                    from: parentSmiles,
+                    to: reactionSmiles,
+                })
+
+                for (let precursorSmiles of node.precursors) {
+                    if (!this.dataGraph.nodes.get(precursorSmiles)) {
+                        this.dataGraph.nodes.add({
+                            id: precursorSmiles,
+                            type: 'chemical',
+                        })
+                        this.updatePrice(precursorSmiles)
+                    }
+                    this.dataGraph.edges.add({
+                        id: uuidv4(),
+                        from: reactionSmiles,
+                        to: precursorSmiles,
+                    })
+                }
+            }
+            this.recompute += 1  // Force recompute of properties
+            return addedReactions
+        },
+        addRetroResultToDispGraph(data, parentId) {
+            // Add reaction and chemical nodes with display properties under the specified parent chemical
+            // Arguments should be list of reaction smiles to add and the ID of the parent node
+            for (let reactionSmiles of data) {
+                let reactionObj = this.dataGraph.nodes.get(reactionSmiles)
+                let reactionId = uuidv4()
+                reactionObj['inVis'][parentId] = reactionId
+
+                let node = {
+                    id: reactionId,
+                    smiles: reactionSmiles,
+                    label: '#' + reactionObj['rank'],
+                    type: 'reaction',
+                }
+
+                if ('outcomes' in reactionObj) {
+                    node['borderWidth'] = 2
+                    node['color'] = { border: '#ff4444' }
+                    node['title'] = "Selectivity warning! Select this node to see more details"
+                } else if ('selecError' in reactionObj) {
+                    node['borderWidth'] = 2
+                    node['color'] = { border: '#ffbb00' }
+                }
+
+                this.dispGraph.nodes.add(node)
+                this.dispGraph.edges.add({
+                    id: uuidv4(),
+                    from: parentId,
+                    to: reactionId,
+                    scaling: {
+                        min: 1,
+                        max: 5,
+                        customScalingFunction: edgeScaling,
+                    },
+                    color: {
+                        color: '#000000',
+                        inherit: false,
+                    },
+                    value: reactionObj['templateScore'],
+                })
+
+                for (let precursorSmiles of reactionObj.precursors) {
+                    let precursorObj = this.dataGraph.nodes.get(precursorSmiles)
+                    let precursorId = uuidv4()
+                    this.dispGraph.nodes.add({
+                        id: precursorId,
+                        smiles: precursorSmiles,
+                        borderWidth: 2,
+                        color: this.getNodeColor(precursorSmiles, precursorObj.ppg),
+                        shape: 'image',
+                        image: this.getMolDrawEndPoint(precursorSmiles),
+                        type: 'chemical',
+                    })
+                    this.dispGraph.edges.add({
+                        id: uuidv4(),
+                        from: reactionId,
+                        to: precursorId,
+                        scaling: {
+                            min: 1,
+                            max: 5,
+                            customScalingFunction: edgeScaling,
+                        },
+                        color: {
+                            color: '#000000',
+                            inherit: false,
+                        },
+                        value: reactionObj['templateScore'],
+                    })
+                }
+            }
+            this.recompute += 1  // Force recompute of properties
+        },
+        addTreeBuilderResultToDataGraph(data) {
+            this.dataGraph.nodes.add(data.nodes.map(node => {
+                if (node.type === 'chemical') {
+                    return {
+                        id: node['id'],
+                        asReactant: node['as_reactant'],
+                        asProduct: node['as_product'],
+                        ppg: (node['purchase_price'] === 0) ? 'not buyable' : node['purchase_price'],
+                        terminal: node['terminal'],
+                        type: node['type'],
+                    }
+                } else {
+                    node['tforms'].forEach(template => this.apiTemplateCount(template))
+                    return {
+                        id: node['id'],
+                        rank: node['rank'],
+                        ffScore: node['plausibility'],
+                        retroScore: node['template_score'],
+                        templateScore: node['template_score'],
+                        templateIds: node['tforms'],
+                        precursors: node['precursor_smiles'].split('.'),
+                        precursorSmiles: node['precursor_smiles'],
+                        numExamples: node['num_examples'],
+                        necessaryReagent: node['necessary_reagent'],
+                        numRings: node['num_rings'],
+                        rmsMolwt: node['rms_molwt'],
+                        scscore: node['scscore'],
+                        type: node['type'],
+                        inVis: {},
+                    }
+                }
+            }))
+            this.dataGraph.edges.add(data.links.map(edge => {
+                return {
+                    id: edge['id'],
+                    from: edge['source'],
+                    to: edge['target'],
+                }
+            }))
+            this.recompute += 1  // Force recompute of properties
+        },
+        addTreeBuilderResultToDispGraph(data) {
+            this.dispGraph.nodes.add(data.nodes.map(node => {
+                let dataObj = this.dataGraph.nodes.get(node['smiles'])
+                if ('ppg' in node && !('ppg' in dataObj)) {
+                    // When loading old tree builder results, ppg needs to be transferred from tree
+                    dataObj.ppg = (node['ppg'] === 0) ? 'not buyable' : node['ppg']
+                }
+                if (node.type === 'chemical') {
+                    return {
+                        id: node['id'],
+                        smiles: node['smiles'],
+                        borderWidth: (node['smiles'] === this.target) ? 3 : 2,
+                        color: this.getNodeColor(node['smiles'], dataObj['ppg']),
+                        shape: 'image',
+                        image: this.getMolDrawEndPoint(node['smiles']),
+                        type: 'chemical',
+                    }
+                } else {
+                    return {
+                        id: node['id'],
+                        smiles: node['smiles'],
+                        label: '#' + node['rank'],
+                        type: 'reaction',
+                    }
+                }
+            }))
+            this.dispGraph.edges.add(data.edges.map(edge => {
+                let from = this.dispGraph.nodes.get(edge['from'])
+                let to = this.dispGraph.nodes.get(edge['to'])
+                let reactionObj
+                if (from['type'] === 'reaction') {
+                    reactionObj = this.dataGraph.nodes.get(from['smiles'])
+                } else {
+                    reactionObj = this.dataGraph.nodes.get(to['smiles'])
+                    reactionObj.inVis[from['id']] = to['id']
+                }
+                return {
+                    id: edge['id'],
+                    from: edge['from'],
+                    to: edge['to'],
+                    scaling: {
+                        min: 1,
+                        max: 5,
+                        customScalingFunction: edgeScaling,
+                    },
+                    color: {
+                        color: '#000000',
+                        inherit: false,
+                    },
+                    value: reactionObj['templateScore'],
+                }
+            }))
+            this.recompute += 1  // Force recompute of properties
         },
         updateNetworkOptions() {
             if (typeof(this.network) != 'undefined') {
@@ -1003,11 +1151,9 @@ var app = new Vue({
             if (this.isModalOpen() || typeof(this.network) == "undefined") {
                 return
             }
-            showLoader();
             var selected = this.network.getSelectedNodes();
-            if (selected.length != 1) {
-              hideLoader();
-              if (selected.length == 0) {
+            if (selected.length !== 1) {
+              if (selected.length === 0) {
                   alert('Please select a terminal chemical node to expand')
               }
               else {
@@ -1018,43 +1164,34 @@ var app = new Vue({
             var nodeId = selected[0];
             if (typeof(nodeId) == 'string' && nodeId.startsWith('cluster')) {
                 alert('Cannot expand collpased node! To toggle collpased state, click collapse toggle button again with collapsed cluster selected.')
-                hideLoader();
                 return
             }
-            var node = this.data.nodes.get(nodeId)
-            if (node.type != 'chemical') {
+            var node = this.dispGraph.nodes.get(nodeId)
+            if (node.type !== 'chemical') {
                 alert('Cannot expand reaction; try expanding with a chemical node selected');
-                hideLoader();
                 return
             }
-            var childrenOfSelected = childrenOf(nodeId, this.data.nodes, this.data.edges);
-            if (childrenOfSelected.length != 0) {
+            var childrenOfSelected = this.dispGraph.getSuccessors(nodeId)
+            if (childrenOfSelected.length !== 0) {
                 alert("You've already expanded this node. If you would like to re-expand, please use the 'Remove children nodes' button to clear results in the visualization for this chemical. Please note that this will replace the previously predicted results for this chemical (for example, if you've changed any settings)")
-                hideLoader();
                 return
             }
             const smi = node.smiles;
             const app = this;
             function callback(precursors) {
-                app.$set(app.results, smi, precursors);
                 if (precursors.length === 0) {
                     alert('No precursors found!')
+                } else {
+                    let addedReactions = app.addRetroResultToDataGraph(precursors, smi)
+                    let reactionsToAdd = addedReactions.filter(reactionSmiles => {
+                        return !app.allowCluster || app.dataGraph.nodes.get(reactionSmiles).clusterRep
+                    }).slice(0, app.reactionLimit)
+                    app.addRetroResultToDispGraph(reactionsToAdd, nodeId)
+                    app.showInfo({'nodes': [nodeId]})
+                    app.network.fit()
                 }
-                app.initClusterShowCard(smi); // must be called immediately after adding results
-                addReactions(app.results[smi], app.data.nodes.get(nodeId), app.data.nodes, app.data.edges, app.reactionLimit);
-                app.getTemplateNumExamples(app.results[smi]);
-                app.selected = node;
-                app.reorderResults();
-                app.network.fit()
             }
             this.requestRetro(smi, callback);
-        },
-        getTemplateNumExamples: function(reactions) {
-            for (reaction of reactions) {
-                for (templateId of reaction['templates']) {
-                    this.apiTemplateCount(templateId);
-                }
-            }
         },
         apiTemplateCount: function(templateId) {
             if (typeof(this.templateNumExamples[templateId]) == 'undefined') {
@@ -1074,12 +1211,11 @@ var app = new Vue({
                 return
             }
             let selected = this.network.getSelectedNodes();
-            for (let n in selected) {
-                const nodeId = selected[n];
-                const node = this.data.nodes.get(nodeId);
+            for (let nodeId of selected) {
+                let node = this.dispGraph.nodes.get(nodeId)
                 if (node === null) {
                     // the node does not exist, it may have already been deleted
-                    return
+                    continue
                 }
                 if (node.type === 'chemical') {
                     this.deleteChildren(node)
@@ -1087,33 +1223,39 @@ var app = new Vue({
                     this.deleteNode(node)
                 }
             }
-        },
-        deleteNode: function(node) {
-            // delete the specified node and its children from the graph
-            const nodeId = node.id
-            const parentNodeId = parentOf(nodeId, this.data.nodes, this.data.edges);
-            const parentNode = this.data.nodes.get(parentNodeId);
-            for (result of this.results[parentNode.smiles]) {
-                if (result.rank === node.rank) {
-                    result.inViz = false;
-                    break;
-                }
-            }
-            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-            this.data.nodes.remove(nodeId);
-            cleanUpEdges(this.data.nodes, this.data.edges);
-            this.selected = null;
-        },
-        deleteChildren: function(node) {
-            // delete the children for the specified node from the graph
-            const nodeId = node.id
-            for (result of this.results[node.smiles]) {
-                result.inViz = false;
-            }
-            removeChildrenFrom(nodeId, this.data.nodes, this.data.edges);
-            cleanUpEdges(this.data.nodes, this.data.edges);
             this.selected = null;
             this.network.unselectAll();
+        },
+        deleteNode: function(node) {
+            // Delete the specified node and its children from the graph
+            if (node.type !== 'reaction') {
+                console.warn('Attempted to delete chemical node. Use deleteChildren instead.')
+                return
+            }
+            // Delete children of children
+            const childrenIds = this.dispGraph.getSuccessors(node.id)
+            const children = this.dispGraph.nodes.get(childrenIds)
+            children.forEach(this.deleteChildren)
+            // Delete children
+            this.dispGraph.nodes.remove(childrenIds)
+            // Update inVis property of corresponding node in dataGraph
+            const dataObj = this.dataGraph.nodes.get(node.smiles)
+            const parentNodeId = this.dispGraph.getPredecessors(node.id)[0]
+            delete dataObj.inVis[parentNodeId]
+            // Delete selected node
+            this.dispGraph.nodes.remove(node.id)
+            this.dispGraph.trimDanglingEdges()
+        },
+        deleteChildren: function(node) {
+            // Delete children of the specified node from the graph
+            if (node.type !== 'chemical') {
+                console.warn('Attempted to delete children of reaction node. Use deleteNode instead.')
+                return
+            }
+            const childrenIds = this.dispGraph.getSuccessors(node.id)
+            const children = this.dispGraph.nodes.get(childrenIds)
+            children.forEach(this.deleteNode)
+            this.dispGraph.trimDanglingEdges()
         },
         toggleResolver: function() {
             if (this.allowResolve) {
@@ -1124,167 +1266,247 @@ var app = new Vue({
             }
         },
         download: function() {
-            if (this.data.nodes.length == null) {
-                alert("There's no network to download!")
-                return
+            let data = {
+                dataGraph: this.dataGraph,
+                dispGraph: this.dispGraph,
+                version: 1.0,
             }
-            var downloadData = {nodes: [], edges: [], results: this.results}
-            this.data.nodes.forEach(function(e) {
-                downloadData.nodes.push(e)
-            })
-            this.data.edges.forEach(function(e) {
-                downloadData.edges.push(e)
-            })
-            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(downloadData));
-            var dlAnchorElem = document.getElementById('downloadAnchorElem');
-            dlAnchorElem.setAttribute("href",     dataStr     );
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+            let dlAnchorElem = document.getElementById('downloadAnchorElem');
+            dlAnchorElem.setAttribute("href", dataStr);
             dlAnchorElem.setAttribute("download", this.downloadName);
             dlAnchorElem.click();
         },
-        hasUndefinedGroupid: function() {
-            // check if this.results has group_id
-            for (s in this.results) {
-                var precursors = this.results[s];
-                for (i of precursors) {
-                    if (i.group_id == undefined) {
-                        return true;
-                    }
+        hasUndefinedClusterId: function() {
+            for (let rxn of this.dataGraph.nodes.get({filter: node => node.type === 'reaction'})) {
+                if (rxn.clusterId === undefined) {
+                    return true
                 }
             }
-            return false;
+            return false
         },
         load: function() {
-            var file = document.getElementById("loadNetwork").files[0];
-            var reader = new FileReader();
-            var app = this;
-            reader.onload = (function(theFile) {return function(e) {
-                var data = JSON.parse(e.target.result);
-                app.target = data.nodes[0].smiles;
-                app.data.nodes = new vis.DataSet(data.nodes);
-                app.data.edges = new vis.DataSet(data.edges);
-                app.results = data.results;
-                if (app.hasUndefinedGroupid()) {
-                    let res = confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "OK" to re-cluster all of them. This will erase existing reaction cluster information. Select "Cancel" to skip, however, reaction cluster function may not work correctly until you re-cluster manually.');
-                    if (res) {
-                        for (s in app.results) {
-                            app.requestClusterId(s);
-                        }
+            if (this.clear()) {
+                this.pendingTasks += 1;
+                let file = document.getElementById("loadNetwork").files[0];
+                let reader = new FileReader();
+                reader.readAsText(file)
+                reader.onload = function(e) {
+                    let data = JSON.parse(e.target.result)
+                    if (data.version === 1.0) {
+                        app.importDataV1(data)
                     } else {
-                        app.allowCluster = false;
+                        app.importDataV0(data)
                     }
+                    app.pendingTasks -= 1;
                 }
-                app.initializeNetwork(app.data)
-                app.network.on('selectNode', app.showInfo);
-                app.network.on('deselectNode', app.clearSelection);
-            }})(file);
-            reader.readAsText(file)
+            }
+        },
+        importDataV0: function(data) {
+            // Parse old data download format, before version numbers were introduced
+            // Top level properties should be nodes, edges, and results
+            // This converts the data to the current format for subsequent downloads
+            this.target = data.nodes[0].smiles
+            this.initTargetDataNode()
+            for (let [chem, precursors] of Object.entries(data.results)) {
+                this.addRetroResultToDataGraph(precursors, chem)
+            }
+            this.dispGraph.nodes.add(data.nodes.map(node => {
+                if (node.type === 'chemical') {
+                    let dataObj = this.dataGraph.nodes.get(node['smiles'])
+                    // Transfer properties which were not in the results object
+                    dataObj.ppg = node['ppg']
+                    dataObj.source = node['source']
+                    return {
+                        id: node['id'],
+                        smiles: node['smiles'],
+                        borderWidth: node['borderWidth'],
+                        color: node['color'],
+                        shape: 'image',
+                        image: this.getMolDrawEndPoint(node['smiles']),
+                        type: 'chemical',
+                    }
+                } else {
+                    let dataObj = this.dataGraph.nodes.get(node['reactionSmiles'])
+                    // Transfer properties which were not in the results object
+                    dataObj.selectivity = node['selectivity']
+                    let newNode = {
+                        id: node['id'],
+                        smiles: node['reactionSmiles'],
+                        label: node['label'],
+                        type: 'reaction',
+                    }
+                    for (let key of ['borderWidth', 'color', 'title']) {
+                        if (key in node) {
+                            newNode[key] = node[key]
+                        }
+                    }
+                    return newNode
+                }
+            }))
+            this.dispGraph.edges.add(data.edges.map(edge => {
+                let from = this.dispGraph.nodes.get(edge['from'])
+                let to = this.dispGraph.nodes.get(edge['to'])
+                let reactionObj
+                if (from['type'] === 'reaction') {
+                    reactionObj = this.dataGraph.nodes.get(from['smiles'])
+                } else {
+                    reactionObj = this.dataGraph.nodes.get(to['smiles'])
+                    reactionObj.inVis[from['id']] = to['id']
+                }
+                return {
+                    id: edge['id'],
+                    from: edge['from'],
+                    to: edge['to'],
+                    scaling: {
+                        min: 1,
+                        max: 5,
+                        customScalingFunction: edgeScaling,
+                    },
+                    color: edge['color'],
+                    value: edge['value'],
+                }
+            }))
+            if (this.hasUndefinedClusterId()) {
+                if (confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "Ok" to re-cluster all of them. Select "Cancel" to disable clustering.')) {
+                    this.updateAllClusters()
+                } else {
+                    this.allowCluster = false;
+                }
+            }
+            this.initializeNetwork(this.dispGraph)
+        },
+        importDataV1: function(data) {
+            // Parse data format version 1.0
+            // Top level properties should be dataGraph, dispGraph, and version
+            this.dataGraph.nodes.add(data.dataGraph.nodes)
+            this.dataGraph.edges.add(data.dataGraph.edges)
+            this.dispGraph.nodes.add(data.dispGraph.nodes)
+            this.dispGraph.edges.add(data.dispGraph.edges)
+            this.target = this.dispGraph.nodes.get(NIL_UUID).smiles
+            if (this.hasUndefinedClusterId()) {
+                if (confirm('The uploaded json file does not have reaction cluster information for some precursors. Select "Ok" to re-cluster all of them. Select "Cancel" to disable clustering.')) {
+                    this.updateAllClusters()
+                } else {
+                    this.allowCluster = false;
+                }
+            }
+            this.initializeNetwork(this.dispGraph)
+        },
+        updateAllClusters: function () {
+            // Recompute cluster IDs for all results
+            for (let target of this.dataGraph.nodes.getIds({filter: node => node.type === 'chemical'})) {
+                if (this.dataGraph.getSuccessors(target).length > 0) {
+                    this.requestClusterId(target)
+                }
+            }
         },
         clear: function(skipConfirm = false) {
+            // Returns true or false depending on whether results were cleared
             if (skipConfirm || confirm('This will clear all of your current results. Continue anyway?')) {
                 this.target = '';
                 this.selected = null;
-                if (this.network) {
-                    this.data.nodes.remove(this.data.nodes.getIds());
-                    this.data.edges.remove(this.data.edges.getIds());
-                }
+                this.dataGraph.clear();
+                this.dispGraph.clear();
+                return true
+            } else {
+                return false
             }
         },
         clearSelection: function() {
             this.selected = null;
         },
         copySelectedSmiles: function() {
-            var copyTooltip = document.querySelector('#copy-tooltip')
-            if (this.selected.type == 'chemical') {
-                copyToClipboard(this.selected.smiles)
-            }
-            else {
-                copyToClipboard(this.selected.reactionSmiles)
-            }
+            let copyTooltip = document.querySelector('#copy-tooltip')
+            copyToClipboard(this.selected.smiles)
             copyTooltip.innerHTML = 'Copied!'
             setTimeout(() => {copyTooltip.innerHTML = "Click to copy!"}, 2000)
         },
         collapseNode: function() {
-            var selected = this.network.getSelectedNodes();
-            var type = typeof selected[0];
-            if (type == "string") {
-                this.network.openCluster(selected[0])
-            }
-            else {
-                var forCluster = allChildrenOf(selected[0], app.data.nodes, app.data.edges)
-                var options = {
-                    joinCondition:function(nodeOptions) {
-                        if (forCluster.includes(nodeOptions.id) | nodeOptions.id==selected[0]) {
-                            return true;
+            let selected = this.network.getSelectedNodes();
+            selected.forEach(node => {
+                if (this.network.clustering.isCluster(node)) {
+                    this.network.openCluster(node)
+                } else {
+                    let forCluster = this.dispGraph.getAllSuccessors(node);
+                    let options = {
+                        joinCondition: (nodeOptions) => {
+                            return forCluster.includes(nodeOptions.id) || nodeOptions.id === node
                         }
-                    }
+                    };
+                    this.network.clustering.cluster(options);
                 }
-                this.network.clustering.cluster(options);
-            }
+            })
         },
         addFromResults: function(selected, reaction) {
-            if (reaction.inViz) {
+            if (selected.id in reaction.inVis) {
                 return
             }
-            addReaction(reaction, selected, this.data.nodes, this.data.edges);
-            reaction.inViz = true;
+            this.addRetroResultToDispGraph([reaction.id], selected.id)
             document.querySelector('.addRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
             document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='';
         },
         remFromResults: function(selected, reaction) {
-            var rsmi = reaction.smiles+'>>'+selected.smiles;
-            var selectedChildren = this.data.nodes.get(childrenOf(selected.id, this.data.nodes, this.data.edges));
-            for (var child of selectedChildren) {
-                if (child.reactionSmiles == rsmi) {
-                    removeChildrenFrom(child.id, this.data.nodes, this.data.edges);
-                    this.data.nodes.remove(child.id);
-                    cleanUpEdges(this.data.nodes, this.data.edges);
-                    document.querySelector('.addRes[data-rank="'+Number(reaction.rank)+'"]').style.display='';
-                    document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
-                    reaction.inViz = false;
-                    break;
-                }
-            }
+            let node = this.dispGraph.nodes.get(reaction.inVis[selected.id])
+            this.deleteNode(node)
+            document.querySelector('.addRes[data-rank="'+Number(reaction.rank)+'"]').style.display='';
+            document.querySelector('.remRes[data-rank="'+Number(reaction.rank)+'"]').style.display='none';
         },
         resetSortingCategory: function() {
-            this.sortingCategory = 'score'
-            this.reorderResults()
+            this.sortingCategory = 'retroScore'
+            this.selectSortingOrder()
         },
-        reorderResults: function() {
-            var sortingCategory = this.sortingCategory;
-            if (this.selected.type != 'chemical') {
-                return
+        selectSortingOrder: function() {
+            this.sortOrderAscending = ["rmsMolwt", "numRings", "scscore", "templateRank"].includes(this.sortingCategory) || (this.sortingCategory === 'retroScore' && this.tb.settings.precursorScoring === 'SCScore');
+        },
+        applyFilterReactingAtoms: function() {
+            // Not in use right now, but could come in handy later.
+            return 
+        },
+        checkFilter: function(result)
+        {
+            // If Ketcher is not active, there is no way for user to interact with filter;
+            // the filter should pass
+            const ketcher = $('#ketcher-iframe-min')[0]
+            if (!ketcher) { return true }
+
+            let reactingAtoms = result.reactingAtoms.map((el) => el-1);
+            let reactingAtomsArray = Array.from(reactingAtoms.values());
+
+            let selection = ketcher.contentWindow.ketcher.editor.selection();
+            let selectionAtomsArray = []
+            if (selection && selection.atoms) {
+                selectionAtomsArray = Array.from(selection.atoms.values());
             }
-            var smiles = this.selected.smiles;
-            var results = this.results[smiles];
-            if (typeof(results) == 'undefined') {
-                return
+
+            let filterResult = reactingAtomsArray.some(element => selectionAtomsArray.includes(element));
+
+            if (this.invertAtomFilter) {
+                filterResult = !filterResult
             }
-            results.sort((a, b) => {
-                var a_ = a[sortingCategory] == undefined ? 0 : a[sortingCategory];
-                var b_ = b[sortingCategory] == undefined ? 0 : b[sortingCategory];
-                return b_ - a_;
-            })
-            var prevSelected = this.selected;
-            this.selected = undefined;
-            this.selected = prevSelected;
+
+            return filterResult
         },
         showInfo: function(obj) {
-            var nodeId = obj.nodes[obj.nodes.length-1];
-            var node = this.data.nodes.get(nodeId);
-            if (node == null) {
-                return
-            }
-            this.selected = node;
-            this.reorderResults();
-            if (node.type == 'chemical' && !!!node.source) {
-                fetch('/api/v2/buyables/?q='+encodeURIComponent(node.smiles))
-                    .then(resp => resp.json())
-                    .then(json => {
-                        if (json.result.length) {
-                            this.data.nodes.update({id: node.id, source: json.result[0].source})
-                            this.$set(this.selected, 'source', json.result[0].source)
-                        }
-                    })
+            let nodeId = obj.nodes[obj.nodes.length-1];
+            let dispObj = this.dispGraph.nodes.get(nodeId);
+            if (!dispObj) return
+            let dataObj = this.dataGraph.nodes.get(dispObj.smiles);
+            if (!dataObj) return
+
+            this.selected = {
+                'id': dispObj.id,
+                'smiles': dispObj.smiles,
+                'type': dispObj.type,
+                'data': dataObj,
+                'disp': dispObj,
+            };
+
+            if (dispObj.type === 'chemical') {
+                setSmilesDrawingKetcherMin(dataObj.id);
+                if (!dataObj.source) {
+                    this.updatePrice(dataObj.id)
+                }
             }
         },
         openModal: function(modalName) {
@@ -1305,21 +1527,14 @@ var app = new Vue({
             }
         },
         openClusterPopoutModal: function(selected, res) {
-            if(selected == undefined) {
+            if(selected === undefined) {
                 alert('No target molecule selected. Please select a molecule in the tree.')
                 return
             }
-            /*
-             * cannot deselect
-            this.clearSelection();
-            if (network) {
-                network.unselectAll();
-            }
-            */
             this.$set(this.clusterPopoutModalData, 'selected', selected);
             this.$set(this.clusterPopoutModalData, 'selectedSmiles', selected.smiles);
             this.$set(this.clusterPopoutModalData, 'res', res);
-            this.$set(this.clusterPopoutModalData, 'group_id', res.group_id);
+            this.$set(this.clusterPopoutModalData, 'clusterId', res.clusterId);
             this.showClusterPopoutModal = true;
         },
         closeClusterPopoutModal: function() {
@@ -1327,57 +1542,46 @@ var app = new Vue({
             this.clusterPopoutModalData['selected'] = undefined;
             this.clusterPopoutModalData['selectedSmiles'] = undefined;
             this.clusterPopoutModalData['res'] = undefined;
-            this.clusterPopoutModalData['group_id'] = undefined;
+            this.clusterPopoutModalData['clusterId'] = undefined;
         },
         clusterPopoutModalIncGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterPopoutModalData['group_id']);
-            if (idx == all_ids.length-1) {
-            } else {
-                this.clusterPopoutModalData['group_id'] = all_ids[idx+1];
+            let allIds = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterPopoutModalData['clusterId']);
+            if (idx !== allIds.length-1) {
+                this.$set(this.clusterPopoutModalData, 'clusterId', allIds[idx+1]);
             }
-            this.$forceUpdate();
         },
         clusterPopoutModalDecGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterPopoutModalData['group_id']);
-            if (idx == 0) {
-            } else {
-                this.clusterPopoutModalData['group_id'] = all_ids[idx-1];
+            let allIds = this.clusteredResultsIndex[this.clusterPopoutModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterPopoutModalData['clusterId']);
+            if (idx !== 0) {
+                this.$set(this.clusterPopoutModalData, 'clusterId', allIds[idx-1]);
             }
-            this.$forceUpdate();
         },
-        openClusterEditModal: function(selected, group_id) {
-            if(selected == undefined) {
+        openClusterEditModal: function(selected, clusterId) {
+            if(selected === undefined) {
                 alert('No target molecule selected. Please select a molecule in the tree.')
                 return
             }
-            /*
-             * cannot deselect
-            this.clearSelection();
-            if (network) {
-                network.unselectAll();
-            }
-            */
-            if(group_id == undefined) {
-                group_id = 0
+            if(clusterId === undefined) {
+                clusterId = 0
             }
             this.$set(this.clusterEditModalData, 'selected', selected);
             this.$set(this.clusterEditModalData, 'selectedSmiles', selected.smiles);
-            this.$set(this.clusterEditModalData, 'group_id', group_id);
+            this.$set(this.clusterEditModalData, 'clusterId', clusterId);
             this.showClusterEditModal = true;
         },
         closeClusterEditModal: function() {
             this.showClusterEditModal = false;
             this.clusterEditModalData['selected'] = undefined;
             this.clusterEditModalData['selectedSmiles'] = undefined;
-            this.clusterEditModalData['group_id'] = undefined;
+            this.clusterEditModalData['clusterId'] = undefined;
         },
         clusteredit_dragstart_handler: function(precursor, event) {
             event.target.style.opacity = '0.4';
-            event.dataTransfer.setData('text/plain', precursor.smiles);
+            event.dataTransfer.setData('text/plain', precursor.id);
             var img = new Image();
-            img.src = this.getMolDrawEndPoint(precursor.smiles);
+            img.src = this.getMolDrawEndPoint(precursor.precursorSmiles);
             // set opacity does not work..
             event.dataTransfer.setDragImage(img, 10, 10);
             event.dataTransfer.effectAllowed = 'all';
@@ -1393,236 +1597,167 @@ var app = new Vue({
         },
         clusteredit_drop_handler: function(target, event) {
             event.preventDefault(); // important
-            var s = event.dataTransfer.getData('text/plain'); // precursor.simles
-            var r = this.results[this.clusterEditModalData['selectedSmiles']];
-            // find precursor
-            var old_gid;
-            for (let x of r) {
-                if (x.smiles == s) {
-                    old_gid = x.group_id;
-                    x.group_id = target.group_id;
-                    break
-                }
-            }
+            let smi = event.dataTransfer.getData('text/plain')  // precursor.id
+            let obj = this.dataGraph.nodes.get(smi)
+            let oldId = obj.clusterId
+            obj.clusterId = target.clusterId
             this.clusteredit_dragend_handler(event);
             clusteredit_dragleave_handler(event);
-            this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
+            this.updateClusterReps(this.clusterEditModalData['selectedSmiles'], [oldId, obj.clusterId])
         },
         clusteredit_drop_handler_newcluster: function(event) {
             event.preventDefault(); // important
-            var s = event.dataTransfer.getData('text/plain'); // precursor.simles
-            var r = this.results[this.clusterEditModalData['selectedSmiles']];
-            var all_ids = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
-            var new_gid = all_ids[all_ids.length-1]+1;
-            var old_gid;
-            for (let x of r) {
-                if (x.smiles == s) {
-                    old_gid = x.group_id;
-                    x.group_id = new_gid;
-                    break
-                }
-            }
-            
+            let smi = event.dataTransfer.getData('text/plain');  // precursor.id
+            let obj = this.dataGraph.nodes.get(smi)
+            let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']]
+            let oldId = obj.clusterId
+            obj.clusterId = allIds[allIds.length - 1] + 1;
             this.clusteredit_dragend_handler(event);
             clusteredit_dragleave_handler(event);
-            this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
+            this.updateClusterReps(this.clusterEditModalData['selectedSmiles'], [oldId, obj.clusterId])
         },
-        detectClusterDeletion: function(selected, old_gid) {
-            var all_ids = this.clusteredResultsIndex[selected];
-            if (all_ids.indexOf(old_gid) == -1) {
-                if (all_ids.length > 0) {
-                    var idx = all_ids.findIndex(function(e){return e>old_gid});
-                    if (idx == -1) idx = all_ids.length-1;
-                    this.clusterEditModalData['group_id'] = all_ids[idx];
-                } else {
-                    this.clusterEditModalData['group_id'] = 0;
-                }
-                this.$forceUpdate();
+        updateClusterReps(target, clusterIds) {
+            // Update the cluster representatives for the specified clusterIds
+            for (let clusterId of clusterIds) {
+                let options = {filter: item => item.clusterId === clusterId}
+                let precursorSmiles = this.dataGraph.getSuccessors(target)
+                let precursors = this.dataGraph.nodes.get(precursorSmiles, options)
+                precursors.forEach((item, index) => item.clusterRep = index === 0)  // Set first item as cluster rep
             }
+            this.recompute += 1
         },
         clusterEditModalIncGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterEditModalData['group_id']);
-            if (idx == all_ids.length-1) {
-            } else {
-                this.clusterEditModalData['group_id'] = all_ids[idx+1];
+            let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterEditModalData['clusterId']);
+            if (idx !== allIds.length-1) {
+                this.$set(this.clusterEditModalData, 'clusterId', allIds[idx+1]);
             }
-            this.$forceUpdate();
         },
         clusterEditModalDecGroupID: function() {
-            var all_ids = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
-            var idx = all_ids.indexOf(this.clusterEditModalData['group_id']);
-            if (idx == 0) {
-            } else {
-                this.clusterEditModalData['group_id'] = all_ids[idx-1];
-            }
-            this.$forceUpdate();
-        },
-        clusterEditModalDeletePrecursor: function(selected, smiles) {
-            let res = confirm('This will remove the precursor completely and cannot be undone! Continue?')
-            if (res) {
-                var r = this.results[selected];
-                var idx = r.findIndex(function(e){return e.smiles==smiles;});
-                var old_gid = r[idx].group_id;
-                r.splice(idx, 1);
-                this.detectClusterDeletion(this.clusterEditModalData['selectedSmiles'], old_gid);
+            let allIds = this.clusteredResultsIndex[this.clusterEditModalData['selectedSmiles']];
+            let idx = allIds.indexOf(this.clusterEditModalData['clusterId']);
+            if (idx !== 0) {
+                this.$set(this.clusterEditModalData, 'clusterId', allIds[idx-1]);
             }
         },
-        // gid == undefined is to add a new cluster
-        clusterEditModalAddPrecursor: function(selectedSmiles, smiles, gid) {
-            var isshow = false;
-            if (this.results[selectedSmiles] == undefined) {
-                this.results[selectedSmiles] = [];
-                gid = 0;
-                isshow = true;
-            }
-            var all_ids = this.clusteredResultsIndex[selectedSmiles];
-            if (gid == undefined) {
-                isshow = true;
-                if (all_ids.length == 0) {
-                    gid = 0;
+        clusterEditModalAddPrecursor: function(selectedSmiles, smiles, clusterId) {
+            // clusterId == undefined is to add a new cluster
+            let successors = this.dataGraph.getSuccessors(selectedSmiles)
+            let allIds = this.clusteredResultsIndex[selectedSmiles]
+            if (clusterId === undefined) {
+                if (successors.length === 0 || allIds.length === 0) {
+                    clusterId = 0
                 } else {
-                    gid = all_ids[all_ids.length-1]+1;
+                    clusterId = allIds[allIds.length - 1] + 1
                 }
             }
-            var rank = 0;
-            for (let i of this.results[selectedSmiles]) {
-                rank = Math.max(rank, i.rank);
+            let rank = Math.max(...this.dataGraph.nodes.get(successors).map(s => s.rank)) + 1;
+            let res = {
+                smiles: smiles,
+                smiles_split: smiles.split('.'),
+                rank: rank,
+                group_id: clusterId,
             }
-            rank += 1;
-            var r = {
-                'show': isshow,
-                'smiles': smiles,
-                'smiles_split': smiles.split('.'),
-                'group_id': gid,
-                'score': undefined,
-                'plausibility': undefined,
-                'rank': rank,
-                'num_examples': undefined,
-                'necessary_reagent': undefined,
-                'template_score': undefined,
-                'templates': undefined,
-            };
-            this.results[selectedSmiles].push(r);
+            this.addRetroResultToDataGraph([res], selectedSmiles)
         },
-        // if group_id == undefined, add to a new group
-        openAddNewPrecursorModal: function(selectedSmiles, group_id) {
+        openAddNewPrecursorModal: function(selectedSmiles, clusterId) {
+            // if clusterId == undefined, add to a new group
             this.showAddNewPrecursorModal = true;
-            this.$set(this.addNewPrecursorModal, 'selectedSmiles', selectedSmiles == undefined ? this.selected.smiles : selectedSmiles);
-            this.$set(this.addNewPrecursorModal, 'group_id', group_id == undefined ? 'undefined' : group_id.toString());
-            this.$set(this.addNewPrecursorModal, 'newprecursorsmiles', '');
-            this.$set(this.addNewPrecursorModal, 'nodupcheck', false);
+            this.$set(this.addNewPrecursorModal, 'selectedSmiles', selectedSmiles === undefined ? this.selected.smiles : selectedSmiles);
+            this.$set(this.addNewPrecursorModal, 'clusterId', clusterId);
+            this.$set(this.addNewPrecursorModal, 'newPrecursorSmiles', '');
+            this.$set(this.addNewPrecursorModal, 'noDupCheck', false);
         },
         closeAddNewPrecursorModal: function() {
             this.showAddNewPrecursorModal = false;
             this.addNewPrecursorModal['selectedSmiles'] = '';
-            this.addNewPrecursorModal['group_id'] = '';
-            this.addNewPrecursorModal['newprecursorsmiles'] = '';
-            this.addNewPrecursorModal['nodupcheck'] = false;
+            this.addNewPrecursorModal['clusterId'] = '';
+            this.addNewPrecursorModal['newPrecursorSmiles'] = '';
+            this.addNewPrecursorModal['noDupCheck'] = false;
         },
         checkDuplicatePrecursor: function(selectedSmiles, p) {
-            var p_splited = new Set(p.split("."));
-            for (s of this.results[selectedSmiles]) {
-                var s_set = new Set(s['smiles_split']);
-                if (subSet(s_set, p_splited) || subSet(p_splited, s_set)) {
-                    return s;
-                }
-            }
-            return undefined;
+            let existing = this.dataGraph.getSuccessors(selectedSmiles)
+            return (existing.includes(p)) ? this.dataGraph.nodes.get(p) : undefined
         },
-        addNewPrecursorModalSubmit: async function() {
-            var gid;
-            if (this.addNewPrecursorModal['group_id'] == "undefined") {
-                gid = undefined;
-            } else {
-                gid = Number(this.addNewPrecursorModal['group_id']);
-            }
-            try {
-                isvalid = await this.validatesmiles(
-                    this.addNewPrecursorModal['newprecursorsmiles'],
-                    !this.allowResolve
-                );
-                if (!isvalid) {
-                    this.addNewPrecursorModal['newprecursorsmiles'] =
-                        await this.resolveChemName(
-                            this.addNewPrecursorModal['newprecursorsmiles']
-                        );
-                }
-            } catch(error) {
-                var error_msg = 'unknown error';
-                if ('message' in error) {
-                    error_msg = error.name+':'+error.message;
-                } else if (typeof(error) == 'string') {
-                    error_msg = error;
-                }
-                alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg);
-                return
-            }
-            if (this.addNewPrecursorModal['newprecursorsmiles'] == undefined) {
-                alert('There was an error during adding the precursor.');
-            } else {
-                if (!this.addNewPrecursorModal['nodupcheck']) {
-                    var s = this.checkDuplicatePrecursor(
-                        this.addNewPrecursorModal['selectedSmiles'],
-                        this.addNewPrecursorModal['newprecursorsmiles']
-                    );
-                    if (s != undefined) {
-                        alert('There may be a duplicated precursor: rank: '+s.rank+' cluster: '+s.group_id+'. If you still want to proceed, please select "No duplicate check" option.');
-                        return
+        addNewPrecursorModalSubmit: function() {
+            let gid = this.addNewPrecursorModal['clusterId']
+            let smi = this.addNewPrecursorModal['newPrecursorSmiles']
+            this.validatesmiles(smi, !this.allowResolve)
+                .then(isValid => {
+                    return isValid ? smi : this.resolveChemName(smi)
+                })
+                .then(smi => this.canonicalize(smi, (res) => this.addNewPrecursorModal['newPrecursorSmiles'] = res))
+                .then(() => {
+                    if (this.addNewPrecursorModal['newPrecursorSmiles'] !== undefined) {
+                        if (!this.addNewPrecursorModal['noDupCheck']) {
+                            let s = this.checkDuplicatePrecursor(this.addNewPrecursorModal['selectedSmiles'], this.addNewPrecursorModal['newPrecursorSmiles'])
+                            if (s !== undefined) {
+                                alert('There may be a duplicated precursor: rank: '+s.rank+' cluster: '+s.clusterId+'. If you still want to proceed, please select "No duplicate check" option.')
+                                return
+                            }
+                        }
+                        this.clusterEditModalAddPrecursor(this.addNewPrecursorModal['selectedSmiles'], this.addNewPrecursorModal['newPrecursorSmiles'], gid)
+                        this.closeAddNewPrecursorModal();
                     }
-                }
-                this.clusterEditModalAddPrecursor(
-                    this.addNewPrecursorModal['selectedSmiles'],
-                    this.addNewPrecursorModal['newprecursorsmiles'],
-                    gid);
-                this.$forceUpdate();
-                this.closeAddNewPrecursorModal();
-            }
+                })
+                .catch(error => {
+                    var error_msg = 'unknown error'
+                    if ('message' in error) {
+                        error_msg = error.name+':'+error.message
+                    } else if (typeof(error) == 'string') {
+                        error_msg = error
+                    }
+                    alert('There was an error fetching precursors for this target with the supplied settings: '+error_msg)
+                })
         },
         getMolDrawEndPoint: function(precursor, isHighlight, isTransparent) {
             //  precursor can be
             //      1) a smiles string,
-            //      2) a dict has properties "reacting_atoms" and "mapped_smiles"
-            //      3) a dict has property "smiles"
+            //      2) a object with properties "reactingAtoms" and "mappedSmiles"
+            //      3) a object with property "smiles"
+            //      4) an object with property "precursorSmiles"
             //  isTransparent is false by default
             //  isHighlight is set to this.isHighlight by default, but can be overidden
-            if (isHighlight == undefined) {
+            if (isHighlight === undefined) {
                 isHighlight = this.isHighlightAtom;
             }
-            if (isTransparent == undefined) {
+            if (isTransparent === undefined) {
                 isTransparent = false;
             }
-            var smiles;
-            var mapped_smiles;
-            var reacting_atoms;
+            let smiles;
+            let mappedSmiles;
+            let reactingAtoms;
+            let url;
             if (typeof(precursor) == "string") {
                 smiles = precursor;
                 isHighlight = false;
             } else if (typeof(precursor) == "object") {
-                if (precursor.mapped_smiles != undefined && precursor.reacting_atoms != undefined) {
-                    mapped_smiles = precursor.mapped_smiles;
-                    reacting_atoms = precursor.reacting_atoms;
+                if (precursor.mappedSmiles !== undefined && precursor.reactingAtoms !== undefined) {
+                    mappedSmiles = precursor.mappedSmiles;
+                    reactingAtoms = precursor.reactingAtoms;
                 }
-                if (precursor.smiles != undefined) {
+                if (precursor.smiles !== undefined) {
                     smiles = precursor.smiles;
+                } else if (precursor.precursorSmiles !== undefined) {
+                    smiles = precursor.precursorSmiles
                 }
             }
-            if (isHighlight && mapped_smiles != undefined && reacting_atoms != undefined) {
-                var res = `/api/v2/draw/?smiles=${encodeURIComponent(mapped_smiles)}&highlight=true`
-                for (ra of reacting_atoms) {
-                    res += `&reacting_atoms=${ra}`
+            if (isHighlight && mappedSmiles !== undefined && reactingAtoms !== undefined) {
+                url = `/api/v2/draw/?smiles=${encodeURIComponent(mappedSmiles)}&highlight=true`
+                for (let ra of reactingAtoms) {
+                    url += `&reacting_atoms=${ra}`
                 }
             } else {
-                if (smiles == undefined) {
-                    console.log('Error: cannot plot precursor='+precursor)
+                if (smiles === undefined) {
+                    console.log('Error: cannot plot precursor=' + precursor)
                     return ''
                 }
-                var res = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
+                url = `/api/v2/draw/?smiles=${encodeURIComponent(smiles)}`
             }
             if (isTransparent) {
-                res += '&transparent=true';
+                url += '&transparent=true';
             }
-            return res;
+            return url;
         },
         isModalOpen: function() {
             var res = false;
@@ -1640,124 +1775,64 @@ var app = new Vue({
                 tour.restart();
             }
         },
-        initClusterShowCard: function(selected) {
-            // always sort first
-            var reactionSorting = this.sortingCategory;
-            // this.results[selected].sort(function(a, b) {
-            //     var a_ = a[reactionSorting] == undefined ? 0 : a[reactionSorting];
-            //     var b_ = b[reactionSorting] == undefined ? 0 : b[reactionSorting];
-            //     return b_ - a_;
-            // })
-            // init show to false
-            // init first reactionLimit clusters/precursors to true
-            var numShow = 0;
-            var visited_groups = new Set();
-            for (precursor of this.results[selected]) {
-                if (this.allowCluster) {
-                    if (visited_groups.has(precursor.group_id)) {
-                        this.$set(precursor, 'show', false);
-                    } else {
-                        this.$set(precursor, 'show', true);
-                        visited_groups.add(precursor.group_id);
-                    }
-                } else { // !allowCluster
-                    this.$set(precursor, 'show', true);
-                }
-            }
-        },
-        groupPrecursors: function(precursors) {
-            var grouped = {};
-            for (let i = 0; i < precursors.length; i++) {
-                var precursor = precursors[i];
-                if (grouped[precursor.group_id]) {
-                    grouped[precursor.group_id].push(precursor);
-                }
-                else {
-                    grouped[precursor.group_id] = new Array(precursor);
-                }
-            }
-            return Object.values(grouped);
-        },
-        requestClusterId: function(selected) {
-            showLoader();
-            var all_smiles = [];
-            var all_scores = [];
-            var i;
-            for (i = 0; i < this.results[selected].length; i++) {
-                all_smiles.push(this.results[selected][i].smiles);
-                var s = this.results[selected][i].score;
-                if (s == undefined) {
-                    s = 0;
-                }
-                all_scores.push(s);
-            }
-            var url = '/api/cluster/?';
-            var params = {
-                original:       selected,
-                outcomes:       all_smiles,
-                feature:        this.clusterOptions.feature,
-                fp_name:        this.clusterOptions.fingerprint,
-                fpradius:       this.clusterOptions.fpRadius,
-                fpnbits:        this.clusterOptions.fpBits,
+        requestClusterId: function(smiles) {
+            this.pendingTasks += 1;
+            let rxns = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(smiles))
+            let outcomes = rxns.map(rxn => rxn.precursorSmiles)
+            let scores = rxns.map(rxn => rxn.score || 0)
+            let url = '/api/v2/cluster/'
+            let body = {
+                original: smiles,
+                outcomes: outcomes,
+                feature: this.clusterOptions.feature,
+                fp_name: this.clusterOptions.fingerprint,
+                fpradius: this.clusterOptions.fpRadius,
+                fpnbits: this.clusterOptions.fpBits,
                 cluster_method: this.clusterOptions.cluster_method,
-                scores:          all_scores,
-            };
-            var queryString = Object.keys(params).map((key) => {
-                return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
-            }).join('&');
-            
-            fetch_param = {
+                scores: scores,
+            }
+
+            fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: queryString,
-            };
-            
-            fetch(url, fetch_param)
-            .then(resp => {
-                if (!resp.ok) {
-                    throw resp.status;
-                }
-                return resp;
+                body: JSON.stringify(body),
             })
-            .then(resp => resp.json())
-            .then(resp_json => {
-                if ('error' in resp_json) {
-                    hideLoader()
-                    throw resp_json['error'];
-                } else {
-                    var group_ids = resp_json['group_id'];
-                    var i;
-                    for (i = 0; i < this.results[selected].length; i++) {
-                        this.$set(this.results[selected][i], 'group_id', group_ids[i]);
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw resp.statusText;
                     }
-                    hideLoader()
-                }
-            })
-            .catch((error) => {
-                hideLoader()
-                var error_msg = 'unknown error'
-                if (typeof(error) == 'number') {
-                    error_msg = 'Error code: ' + error;
-                } else if (typeof(error) == 'string') {
-                    error_msg = error;
-                } else if ('message' in error) {
-                    error_msg = error.name+':'+error.message;
-                }
-                alert('There was an error fetching cluster results for this target with the supplied settings: '+error_msg)
-            })
+                    return resp
+                })
+                .then(resp => resp.json())
+                .then(json => {
+                    let clusterTracker = new Set()
+                    rxns.forEach((rxn, i) => {
+                        let cid = json.output[i]
+                        rxn.clusterId = cid
+                        rxn.clusterRep = !clusterTracker.has(cid)
+                        clusterTracker.add(cid)
+                    })
+                    this.pendingTasks -= 1;
+                })
+                .catch(error => {
+                    this.pendingTasks -= 1;
+                    alert('There was an error fetching cluster results for this target with the supplied settings: '+error)
+                })
         },
         predictSelectivity: function(){
-            showLoader();
-            var selected = this.network.getSelectedNodes();
-            var rid = selected[0]
-            var node = this.data.nodes.get(rid)
-            var smi = node.mappedReactionSmiles;
-            var url = '/api/v2/general-selectivity/';
-            var body = {
-                rxnsmiles: smi,
+            this.pendingTasks += 1;
+            let data = this.selected.data
+            let url = '/api/v2/general-selectivity/';
+            let body = {
+                reactants: data.mappedPrecursors,
+                product: data.mappedOutcomes,
+                mapped: true,
+                all_outcomes: true,
+                verbose: false,
+                mode: this.selectivityModel,
             }
             fetch(url, {
                 method: 'POST',
@@ -1776,152 +1851,67 @@ var app = new Vue({
                 .then(resp => resp.json())
                 .then(json => {
                     function callback(result) {
-                        app.data.nodes.update({id:rid, selectivity: result});
-                        app.selected = app.data.nodes.get(rid)
+                        if (Array.isArray(result)) {
+                            data.selectivity = result;
+                        } else {
+                            alert('Could not predict selectivity for this reaction.')
+                        }
                     }
                     setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
                 })
                 .catch(error => {
-                    hideLoader();
+                    this.pendingTasks -= 1;
                     alert('There was an error predicting selectivity for this reaction: '+error)
                 })
         },
-        createTargetNode: function(target) {
-            return {
-                id: 0,
-                smiles: target,
-                image: this.getMolDrawEndPoint(target),
-                shape: "image",
-                borderWidth: 3,
-                type: 'chemical',
-                color: {
-                    border: '#000088'
-                }
-            }
-        },
-        alreadyAddedToresults: function(chemical, results) {
-            for (var res of results) {
-              if (chemical.reactant_smiles.join('.') == res.smiles) {
-                  return true
-              }
-            }
-            return false
-        },
-        addResultsFromTreeBuilder: function(graph, target) {
-            this.target = target
-            this.data.nodes = new vis.DataSet([])
-            this.data.nodes.add(this.createTargetNode(target))
-            this.data.edges = new vis.DataSet([]);
-            for (smiles in graph) {
-              if (!this.results[smiles]) {
-                this.results[smiles] = new Array()
-              }
-              let rank = 1
-              graph[smiles].sort((a, b) => b.template_score - a.template_score)
-              for (chemical of graph[smiles]) {
-                if (this.alreadyAddedToresults(chemical, this.results[smiles])) {
-                    continue
-                }
-                this.results[smiles].push({
-                  rank: rank,
-                  smiles_split: chemical.reactant_smiles,
-                  smiles: chemical.reactant_smiles.join('.'),
-                  plausibility: chemical.plausibility,
-                  visit_count: chemical.visit_count,
-                  price: chemical.price,
-                  estimate_price: chemical.estimate_price,
-                  template_score: chemical.template_score,
-                  score: chemical.template_score
-                })
-                rank += 1
-              }
-            }
-        },
-        addPathsFromTreeBuilder: function(trees) {
-            for (tree of trees) {
-                this.walkTree(tree, 0)
-              }
-            this.networkOptions.layout.hierarchical.enabled = true
-            this.initializeNetwork(this.data);
-            this.network.on('selectNode', this.showInfo);
-            this.network.on('deselectNode', this.clearSelection);
-        },
-        walkTree: function(obj, parent) {
-            var node = undefined
-            for (graphNode of this.data.nodes.get()) {
-                if (graphNode.graphId == obj.id) {
-                    let graphParent = parentOf(graphNode.id, this.data.nodes, this.data.edges)
-                    if (graphParent == -1) {
-                        node = graphNode
-                    } else {
-                        graphParent = this.data.nodes.get(graphParent)
-                        if ((graphParent.graphId == parent.graphId) && (graphParent.id == parent.id)) {
-                            node = graphNode
-                            break
-                        }
-                    }
-                }
-                if (graphNode.id == 0 && graphNode.smiles == obj.smiles) {
-                    node = graphNode
-                    continue
-                }
-            }
-            if (!node) {
-                node = ctaToNode(obj, this.data.nodes.length)
-                if (node.type == 'reaction') {
-                    for (templateId of node.templateIds) {
-                        this.apiTemplateCount(templateId)
-                    }
-                    smi_split = node.reactionSmiles.split('>>')
-                    for (reaction of this.results[smi_split[1]]) {
-                        if (reaction.smiles == smi_split[0]) {
-                            node.rank = reaction.rank
-                            node.label = '#'+node.rank
-                            reaction.inViz = true
-                            break
-                        }
-                    }
-                }
-                this.data.nodes.add(node)
-                if (parent != 0) {
-                    this.data.edges.add({
-                        from: parent.id,
-                        to: node.id,
-                        length: 0
-                    })
-                }
-            }
-            for (child of obj.children) {
-                this.walkTree(child, node)
-            }
-        },
         loadFromTreeBuilder: function(objectId, numTrees) {
             this.allowCluster = false
-            showLoader()
-            fetch('/api/get-result/?id='+objectId)
-            .then(resp => resp.json())
-            .then(json => {
-              if (json.error) {
-                  alert(json.error)
-              }
-              var result = json['result'];
-              var target = result['settings']['smiles'];
-              var stats = result['result']['status'];
-              var trees = result['result']['paths'];
-              var graph = result['result']['graph'];
-              this.addResultsFromTreeBuilder(graph, target)
-              if (numTrees == 'all') {
-                this.addPathsFromTreeBuilder(trees)
-              }
-              else {
-                this.addPathsFromTreeBuilder(trees.slice(0, Number(numTrees)))
-              }
-            })
-            .finally(() => hideLoader())
+            this.pendingTasks += 1;
+            let url = `/api/v2/results/${objectId}/ipp/`
+            if (numTrees !== 'all') {
+                url += `?num=${numTrees}`
+            }
+            fetch(url)
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw Error(resp.statusText)
+                    }
+                    return resp.json()
+                })
+                .then(json => {
+                    if (json.error) {
+                        alert(json.error)
+                    }
+                    let resultObj = json['result'];
+                    this.target = resultObj['settings']['smiles'];
+                    let graph = resultObj['result']['graph']
+                    let results = resultObj['result']['results']
+                    let tree = resultObj['result']['tree']
+                    if (!!graph) {
+                        this.addTreeBuilderResultToDataGraph(graph)
+                    } else if (!!results) {
+                        this.initTargetDataNode()
+                        for (let [chem, precursors] of Object.entries(results)) {
+                            this.addRetroResultToDataGraph(precursors, chem)
+                        }
+                    }
+                    if (!!tree) {
+                        this.addTreeBuilderResultToDispGraph(tree)
+                    } else {
+                        this.initTargetDispNode()
+                    }
+                    this.networkOptions.layout.hierarchical.enabled = true
+                    this.initializeNetwork(this.dispGraph);
+                    this.pendingTasks -= 1;
+                })
+                .catch(error => {
+                    this.pendingTasks -= 1;
+                    console.error('There was a problem loading tree builder results:', error);
+                });
         },
         canonicalize(smiles, input) {
             return fetch(
-                '/api/rdkit/canonicalize/',
+                '/api/v2/rdkit/smiles/canonicalize/',
                 {
                     method: 'POST',
                     headers: {
@@ -1935,52 +1925,334 @@ var app = new Vue({
             )
             .then(resp => resp.json())
             .then(json => {
-                this[input] = json.smiles
+                if (json.smiles) {
+                    if (typeof input === 'string') {
+                        this[input] = json.smiles
+                    } else if (input instanceof Function) {
+                        input(json.smiles)
+                    }
+                }
             })
         },
-        updateSmilesFromJSME() {
-            var smiles = jsmeApplet.smiles();
-            this.target = smiles
+        updateSmilesFromKetcher() {
+            let smiles = ketcher.getSmiles();
             this.canonicalize(smiles, drawBoxId)
         },
         resetTemplateSetVersion(event) {
+            this.tb.settings.attributeFilter = []
             this.tb.settings.templateSetVersion = this.templateSets[event.target.value][0]
-        }
-
+        },
+        enableTreeView() {
+            this.treeViewEnabled = true
+            this.trees = this.dispGraph.getPaths(NIL_UUID, this.tb.settings.maxDepth, this.tb.settings.maxTrees)
+            this.updateTreeOpacity()
+        },
+        disableTreeView() {
+            this.treeViewEnabled = false
+            this.resetOpacity()
+        },
+        updateTreeOpacity() {
+            this.resetOpacity()
+            let tree = this.trees[this.currentTreeIndex]
+            let nodes = this.dispGraph.nodes.getIds().map(node => ({
+                id: node,
+                opacity: tree.nodes.includes(node) ? undefined : BG_OPACITY
+            }))
+            let edges = this.dispGraph.edges.getIds().map(edge => ({
+                id: edge,
+                color: {
+                    color: '#000000',
+                    inherit: false,
+                    opacity: tree.edges.includes(edge) ? undefined : BG_OPACITY
+                }
+            }))
+            this.dispGraph.nodes.update(nodes)
+            this.dispGraph.edges.update(edges)
+        },
+        resetOpacity() {
+            let nodes = this.dispGraph.nodes.getIds().map(node => ({
+                id: node,
+                opacity: undefined
+            }))
+            let edges = this.dispGraph.edges.getIds().map(edge => ({
+                id: edge,
+                color: {
+                    color: '#000000',
+                    inherit: false,
+                    opacity: undefined
+                }
+            }))
+            this.dispGraph.nodes.update(nodes)
+            this.dispGraph.edges.update(edges)
+        },
+        changeTreeIndex(op) {
+            let max = this.trees.length - 1
+            switch (op) {
+                case 'next':
+                    if (this.currentTreeIndex < max) {
+                        this.currentTreeIndex += 1
+                    }
+                    break;
+                case 'prev':
+                    if (this.currentTreeIndex > 0) {
+                        this.currentTreeIndex -= 1
+                    }
+                    break;
+                case 'first':
+                    this.currentTreeIndex = 0
+                    break;
+                case 'last':
+                    this.currentTreeIndex = max
+                    break;
+                default:
+                    console.error(`Unexpected operation '${op}' for changeTreeIndex.`);
+            }
+            this.updateTreeOpacity()
+        },
+        openRecTemplatesModal: function(smiles) {
+            if (!this.recommendedTemplates[smiles]) {
+                this.templateRelevance(smiles)
+            } else {
+                this.showRecTemplatesModal = true
+            }
+        },
+        templateRelevance: function(smiles) {
+            this.pendingTasks += 1
+            const url = '/api/v2/template-relevance/'
+            const body = {
+                smiles: smiles,
+                template_set: this.tb.settings.templateSet,
+                template_prioritizer_version: this.tb.settings.templateSetVersion,
+                num_templates: this.tb.settings.numTemplates,
+                max_cum_prob: this.tb.settings.maxCumProb,
+                attribute_filter: this.tb.settings.attributeFilter,
+                return_templates: true
+            }
+            const app = this
+            const callback = function(output) {
+                app.$set(app.recommendedTemplates, smiles, Object.fromEntries(output.map(item => [item._id, item])))
+                // Update templates with existing results
+                let precursorSmiles = app.dataGraph.getSuccessors(smiles)
+                let precursors = app.dataGraph.nodes.get(precursorSmiles)
+                for (let p of precursors) {
+                    for (let t of p.templateIds) {
+                        if (app.recommendedTemplates[smiles][t].results === undefined) {
+                            app.recommendedTemplates[smiles][t].results = [p.precursorSmiles]
+                        } else {
+                            app.recommendedTemplates[smiles][t].results.push(p.precursorSmiles)
+                        }
+                    }
+                }
+                app.showRecTemplatesModal = true
+            }
+            fetch(url,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(body)
+            })
+                .then(resp => resp.json())
+                .then(json => {
+                    setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+                })
+                .catch(error => {
+                    this.pendingTasks -= 1;
+                    console.error('Could not retrieve template relevance prediction:', error)
+                })
+        },
+        applyTemplate: function(smiles, template) {
+            this.pendingTasks += 1
+            const app = this
+            const callback = function(output) {
+                app.recommendedTemplates[smiles][template._id].results = output.map(item => item.precursors.join('.'))
+                app.$forceUpdate()
+            }
+            fetch('/api/v2/apply-one-template', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    smiles: smiles,
+                    template_idx: template.index,
+                    template_set: template.template_set,
+                })
+            })
+            .then(resp => resp.json())
+            .then(json => {
+                setTimeout(() => this.pollCeleryResult(json.task_id, callback), 1000)
+            })
+            .catch(error => {
+                this.pendingTasks -= 1
+            })
+        },
+        changeTemplatePage(op) {
+            switch (op) {
+                case 'next':
+                    if (this.rtmCurrentPage < this.rtmMaxPage) {
+                        this.rtmCurrentPage += 1
+                    }
+                    break;
+                case 'prev':
+                    if (this.rtmCurrentPage > 1) {
+                        this.rtmCurrentPage -= 1
+                    }
+                    break;
+                case 'first':
+                    this.rtmCurrentPage = 1
+                    break;
+                case 'last':
+                    this.rtmCurrentPage = this.rtmMaxPage
+                    break;
+                default:
+                    console.error(`Unexpected operation '${op}' for changeTemplatePage.`);
+            }
+        },
     },
     computed: {
-        // {'target_smiles0':[[{result0}, {result1}, ...], [...]], ...}
         clusteredResults: function() {
-            var res = {};
-            var x;
-            for (x in this.results) {
-                res[x] = this.groupPrecursors(this.results[x]);
-                vueApp = this
-                res[x].sort(function(a, b) {
-                    let maxPropA = Math.max.apply(Math, a.map(function(obj) {
-                        return obj[vueApp.sortingCategory]
-                    }))
-                    let maxPropB = Math.max.apply(Math, b.map(function(obj) {
-                        return obj[vueApp.sortingCategory]
-                    }))
-                    return maxPropB - maxPropA
-                })
+            // Mapping of target smiles to list of cluster representatives
+            // {'targetSmiles0':[{cluster0_rep}, {cluster1_rep},...], ...}
+            let recompute = this.recompute
+            let res = {}
+            let options = {
+                filter: (item) => item.clusterRep,
+                order: (a, b) => a.clusterId - b.clusterId,
             }
-            return res;
+            for (let target of this.dataGraph.nodes.getIds({filter: node => node.type === 'chemical'})) {
+                res[target] = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(target), options)
+            }
+            return res
         },
-        // {'target_smiles0':[all possible unique group_ids sorted in accending order], ...}
         clusteredResultsIndex: function() {
-            var res = {};
-            var x;
-            for (x in this.results) {
-                var ids = new Set();
-                for (let i of this.results[x]) {
-                    ids.add(i.group_id);
-                }
-                res[x] = Array.from(ids).sort(function(a, b){return a-b});
+            // Mapping of target smiles to list of cluster IDs in ascending order
+            // {'targetSmiles0':[unique cluster Ids in ascending order], ...}
+            let recompute = this.recompute
+            let res = {}
+            for (let target of this.dataGraph.nodes.getIds({filter: node => node.type === 'chemical'})) {
+                let precursors = this.dataGraph.nodes.get(this.dataGraph.getSuccessors(target))
+                res[target] = [...new Set(precursors.map(rxn => rxn.clusterId))]
+                res[target].sort((a, b) => a - b)
             }
-            return res;
+            return res
+        },
+        currentClusterViewPrecursors: function() {
+            let recompute = this.recompute
+            let smi = this.clusterPopoutModalData.selectedSmiles
+            let cid = this.clusterPopoutModalData.clusterId
+            let precursorSmiles = this.dataGraph.getSuccessors(smi)
+            let options = {
+                filter: (item) => item.clusterId === cid
+            }
+            return this.dataGraph.nodes.get(precursorSmiles, options)
+        },
+        currentClusterEditPrecursors: function () {
+            let recompute = this.recompute
+            let smi = this.clusterEditModalData.selectedSmiles
+            let cid = this.clusterEditModalData.clusterId
+            let precursorSmiles = this.dataGraph.getSuccessors(smi)
+            let options = {
+                filter: (item) => item.clusterId === cid
+            }
+            return this.dataGraph.nodes.get(precursorSmiles, options)
+        },
+        resultsAvailable: function() {
+            // Boolean of whether the selected chemical has been expanded
+            // Returns false if a reaction node is selected
+            let recompute = this.recompute
+            if (this.selected.type !== 'chemical') {
+                return false
+            } else {
+                return this.dataGraph.getSuccessors(this.selected.smiles).length !== 0
+            }
+        },
+        currentPrecursors: function() {
+            // Array of precursors corresponding to the selected chemical
+            let recompute = this.recompute
+            let refreshFilter = this.refreshFilter
+            if (this.selected.type !== 'chemical') {
+                return []
+            }
+            let precursorSmiles = this.dataGraph.getSuccessors(this.selected.smiles)
+            let cmp = (this.sortOrderAscending) ? (a, b) => {return a - b} : (a, b) => {return b - a};
+            let options = {
+                filter: (item) => {
+                    if (this.allowCluster && !item.clusterRep) {
+                        return false
+                    }
+                    if (this.filterReactingAtoms && !this.checkFilter(item)) {
+                        return false
+                    }
+                    return true
+                },
+                order: (a, b) => {
+                    let a_ = a[this.sortingCategory] === undefined ? 0 : a[this.sortingCategory];
+                    let b_ = b[this.sortingCategory] === undefined ? 0 : b[this.sortingCategory];
+                    if (a_ === b_) {
+                        return a.rank - b.rank
+                    }
+                    return cmp(a_, b_);
+                }
+            }
+            return this.dataGraph.nodes.get(precursorSmiles, options)
+        },
+        rtmItems: function() {
+            if (!!this.recommendedTemplates[this.selected.smiles]) {
+                const start = (this.rtmCurrentPage - 1) * this.rtmItemsPerPage
+                const end = start + this.rtmItemsPerPage
+                return Object.values(this.recommendedTemplates[this.selected.smiles]).slice(start, end)
+            } else {
+                return []
+            }
+        },
+        rtmMaxPage: function() {
+            if (!!this.recommendedTemplates[this.selected.smiles]) {
+                return Math.ceil(Object.keys(this.recommendedTemplates[this.selected.smiles]).length / this.rtmItemsPerPage)
+            } else {
+                return 1
+            }
+        },
+        currentTreeProps: function() {
+            // Calculates various properties of the current tree
+            if (!this.trees.length) {
+                return {}
+            }
+            let tree = this.trees[this.currentTreeIndex]
+            let rxns = tree.nodes.map(node => this.dispGraph.nodes.get(node)).filter(node => node.type === 'reaction')
+            let data = rxns.map(node => this.dataGraph.nodes.get(node.smiles))
+            let ffscores = data.map(node => node.ffScore)
+            let tscores = data.map(node => node.templateScore)
+            return {
+                index: this.currentTreeIndex + 1,
+                depth: tree.depth,
+                numReactions: rxns.length,
+                avgPlausibility: num2str(ffscores.reduce((a, b) => a + b, 0) / ffscores.length, 4),
+                minPlausibility: num2str(Math.min(...ffscores), 4),
+                avgTempScore: num2str(tscores.reduce((a, b) => a + b, 0) / tscores.length, 4, true),
+                minTempScore: num2str(Math.min(...tscores), 4, true),
+            }
         }
+    },
+    watch: {
+        pendingTasks: function(newVal) {
+            if (newVal > 0) {
+                showLoader()
+            } else if (newVal === 0) {
+                hideLoader()
+            } else {
+                throw 'Encountered negative pendingTasks!'
+            }
+        },
+        treeViewEnabled: function (newVal) {
+            if (newVal) {
+                this.enableTreeView()
+            } else {
+                this.disableTreeView()
+            }
+        },
     },
     delimiters: ['%%', '%%'],
 });
@@ -2001,7 +2273,7 @@ var tour = new Tour({
             content: "You start the retrosynthetic planning by entering a target compounds SMILES formatted string here. If the name resolver is enabled (server icon to the left is green) you can also enter a chemical name. The name will be resolved using a third-party server (PubChem). If you wish to turn the name resolving feature off, click the server icon and it will turn red. For this tutorial we're going to explore an example reaction for <a href='https://en.wikipedia.org/wiki/Fluconazole' target='_blank'>Fluconazole</a>. Press 'Next' to continue!",
             placement: "bottom",
             onNext: function() {
-                app.target = 'OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F'
+                app.target = 'OC(Cn1cncn1)(Cn1cncn1)c1ccc(F)cc1F'
             }
         },
         {
@@ -2010,7 +2282,7 @@ var tour = new Tour({
             content: "Here's the SMILES string for Fluconazole. If you're unfamiliar with the SMILES format, click on the edit icon to open the drawing tool or try using software like ChemDraw to draw a structure and copy it's SMILES string (right click -> molecule -> copy as -> SMILES). Click 'Next to continue!",
             placement: "bottom",
             onNext: function() {
-                if (app.data.nodes.length == null | app.data.nodes.length == 0) {
+                if (app.dataGraph.nodes.length === 0) {
                     app.changeTarget();
                 }
             }
@@ -2027,8 +2299,10 @@ var tour = new Tour({
             title: "Predicted reactions",
             content: "The children node(s) of your target molecule represent predicted <b>reactions</b> that may result in your target molecule. The number inside this node is the rank of the precursor, scored by the precursor prioritization method currently selected (more on this later). On the left you can see that the highest ranked prediction is highlighted.",
             onShown: function () {
-                app.network.selectNodes([1]);
-                app.selected = app.data.nodes.get(1);
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn1cncn1)c1ccc(F)cc1F'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             },
             placement: 'right',
         },
@@ -2038,12 +2312,10 @@ var tour = new Tour({
             content: "The children node(s) of <b>reactions</b> represent <b>chemicals</b>, and are the predicted reactants for this reaction. Chemicals in a <span class='red-text'>red</span> box were not found in the buyables database. <b>Chemicals</b> in a <span class='green-text'>green</span> box were found in the database and are buyable.",
             placement: 'right',
             onNext: function() {
-                app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             }
         },
         {
@@ -2086,12 +2358,10 @@ var tour = new Tour({
             content: "You may also notice there are many more precursor results shown on the right side here than were added into the network visualization (it's a scrolling list) - this is to keep things tidy in the visualization. By default, only the top 5 results (scored by retro 'score') are added to the visualization (this can be changed in the settings menu). The plus (+) and minus (-) buttons, when shown below the reaction, can be used to add or remove that reaction to or from the visualization. Go ahead and give it a try if you'd like. Click 'Next' to continue.",
             placement: "left",
             onNext: function() {
-                app.data.nodes.forEach(function(n) {
-                    if (n.reactionSmiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1.c1nc[nH]n1>>OC(Cn1cncn1)(Cn1cncn1)c1ccc(F)cc1F'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             }
         },
         {
@@ -2100,12 +2370,10 @@ var tour = new Tour({
             content: "If you have a reaction node selected, Rank number 1 in this example, the right side of your screen will show you details for that reaction. At the top you can see the reaction SMILES, a 2d rendering, and similar reaction scores that you have seen before. You will also see a list of links to templates that support the reaction. Clicking one will open a new tab with more details about each template. There is also a link to 'Evaluate reaction in new tab', which will let you predict reaction conditions and evaluate the reaction in the forward direction.",
             placement: "left",
             onNext: function() {
-                app.data.nodes.forEach(function(n) {
-                    if (n.smiles == 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1') {
-                        app.network.selectNodes([n.id])
-                        app.selected = app.data.nodes.get(n.id);
-                    }
-                })
+                let smiles = 'Fc1ccc(C2(Cn3cncn3)CO2)c(F)c1'
+                let node = app.dispGraph.nodes.get({filter: item => item.smiles === smiles})[0]
+                app.network.selectNodes([node.id])
+                app.showInfo({'nodes': [node.id]})
             }
         },
         /*  Start of cluster section */
@@ -2133,7 +2401,7 @@ var tour = new Tour({
             content: "You may want to view the clusters to see which predictions have been grouped together. Each cluster set is displayed in a box that shows the reactants, Rank, Score etc. You will also notice the Red or Green box and another button with 4 squares in it, this is the view cluster button. Click 'Next' to view the clusters.",
             placement: "left",
             onNext: function() {
-		        app.openClusterPopoutModal(app.selected, app.results[app.selected.smiles][0]);
+                app.openClusterPopoutModal(app.selected, app.currentPrecursors[0]);
             }
         },
         {
@@ -2144,7 +2412,7 @@ var tour = new Tour({
                 app.closeClusterPopoutModal()
             }
         },
-	/* End of cluster section */
+        /* End of cluster section */
         {
             element: "#network",
             title: "Understanding the network",
@@ -2241,5 +2509,5 @@ function closeAll() {
 }
 
 /* key binding */
-var keys = vis.keycharm();
+var keys = keycharm();
 keys.bind("esc", closeAll, 'keyup');

@@ -1,7 +1,5 @@
-from __future__ import absolute_import, unicode_literals, print_function
 import os
 from celery import Celery
-from django.conf import settings
 
 # Set the Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'askcos_site.settings')
@@ -9,41 +7,52 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'askcos_site.settings')
 # Define readable names for celery workers for status reporting
 READABLE_NAMES = {
     'cr_network_worker': 'Context Recommender Worker',
+    'cr_network_v2_worker': 'Context Recommender V2 Worker',
     'tb_c_worker': 'One-Step/Tree Builder Retrosynthesis Worker',
     'tb_coordinator_mcts': 'Tree Builder Coordinator',
+    'tb_coordinator_mcts_v2': 'Tree Builder v2 Coordinator',
     'sites_worker': 'Site Selectivity Worker',
     'impurity_worker': 'Impurity Worker',
     'atom_mapping_worker': 'Atom Mapping Worker',
     'tffp_worker': 'Template-free Forward Predictor',
     'selec_worker': 'General Selectivity Worker',
+    'path_ranking_worker': 'Pathway Ranking Worker',
+    'descriptors_worker': 'Descriptor Predictor Worker'
 }
 
 # Note: cannot use guest for authenticating with broker unless on localhost
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
-RABBIT_HOST = os.environ.get('RABBIT_HOST', 'localhost')
-RABBIT_PORT = os.environ.get('RABBITMQ_NODE_PORT', '5672')
-app = Celery('askcos_site', broker='amqp://{}:{}'.format(RABBIT_HOST, RABBIT_PORT),
-    backend='redis://{}:{}'.format(REDIS_HOST, REDIS_PORT),
-    include=[
-        'askcos_site.askcos_celery.treebuilder.tb_c_worker',
-        'askcos_site.askcos_celery.treebuilder.tb_coordinator_mcts',
-        'askcos_site.askcos_celery.contextrecommender.cr_network_worker',
-        'askcos_site.askcos_celery.treeevaluator.template_free_forward_predictor_worker',
-        'askcos_site.askcos_celery.siteselectivity.sites_worker',
-        'askcos_site.askcos_celery.impurity.impurity_worker',
-        'askcos_site.askcos_celery.impurity.impurity_predictor_worker',
-        'askcos_site.askcos_celery.atom_mapper.atom_mapping_worker',
-        'askcos_site.askcos_celery.generalselectivity.selec_worker',
-    ]
+redis_host = os.environ.get('REDIS_HOST', 'localhost')
+redis_port = os.environ.get('REDIS_PORT', '6379')
+redis_password = os.environ.get('REDIS_PASSWORD', '')
+if redis_password:
+    redis_password = ':{0}@'.format(redis_password)
+redis_url = 'redis://{password}{host}:{port}'.format(
+    password=redis_password,
+    host=redis_host,
+    port=redis_port,
+)
+
+rabbit_host = os.environ.get('RABBIT_HOST', 'localhost')
+rabbit_port = os.environ.get('RABBITMQ_NODE_PORT', '5672')
+rabbit_username = os.environ.get('RABBITMQ_USERNAME', 'guest')
+rabbit_password = os.environ.get('RABBITMQ_PASSWORD', 'guest')
+rabbit_url = 'amqp://{username}:{password}@{host}:{port}'.format(
+    username=rabbit_username,
+    password=rabbit_password,
+    host=rabbit_host,
+    port=rabbit_port,
+)
+
+app = Celery(
+    main='askcos_site',
+    broker=rabbit_url,
+    backend=redis_url,
 )
 
 # Using a string here means the worker don't have to serialize
 # the configuration object to child processes.
-# - namespace='CELERY' means all celery-related configuration keys
-#   should have a `CELERY_` prefix.
-app.config_from_object('django.conf:settings', namespace='CELERY')
-app.conf.task_queue_max_priority = 20 # necessary for new tb_worker queues to be priority
+app.config_from_object('askcos_site.askcos_celery.celeryconfig')
+
 
 if __name__ == '__main__':
     app.start()

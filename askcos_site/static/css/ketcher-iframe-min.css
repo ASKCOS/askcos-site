@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+}
+main[role=application] .cellar {
+    display: none;
+}
+main[role=application] #canvas {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: 0;
+}
+.measure-log {
+    display: none;
+}
+main[role=application] [role=toolbar] {
+    display: none;
+}

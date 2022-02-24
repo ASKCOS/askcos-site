@@ -9,16 +9,17 @@ transformer and grabs templates from the database.
 """
 
 import numpy as np
-import requests
-import rdkit.Chem as Chem
 from celery import shared_task
 from celery.signals import celeryd_init
 from rdkit import RDLogger
-from rdkit.Chem import AllChem
-from scipy.special import softmax
 
-from askcos.utilities.fingerprinting import create_rxn_Morgan2FP_separately
-from ..tfserving import TFServingAPIModel
+from askcos.prioritization.precursors.relevanceheuristic import RelevanceHeuristicPrecursorPrioritizer
+from askcos_site.globals import scscorer, retro_templates
+from .tfx_relevance_template_prioritizer import TFXRelevanceTemplatePrioritizer
+from .tfx_fast_filter import TFXFastFilter
+
+relevance_heuristic_prioritizer = RelevanceHeuristicPrecursorPrioritizer()
+relevance_heuristic_prioritizer.load_model()
 
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
@@ -26,106 +27,7 @@ CORRESPONDING_QUEUE = 'tb_c_worker'
 CORRESPONDING_RESERVABLE_QUEUE = 'tb_c_worker_reservable'
 retroTransformer = None
 
-
-class TemplateRelevanceAPIModel(TFServingAPIModel):
-    """Template relevance Tensorflow API Model. Overrides input and output transformation methods with template relevance specific methods.
-
-    Attributes:
-        hostname (str): hostname of service serving tf model.
-        model_name (str): Name of model provided to tf serving.
-        version (int): version of the model to use when serving
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.metaurl = self.baseurl+'/metadata'
-        self.fp_length = self.get_input_dim()
-
-    def get_input_dim(self):
-        resp = requests.get(self.metaurl)
-        metadata = resp.json()['metadata']['signature_def']['signature_def']['serving_default']
-        input_dim = int(list(metadata['inputs'].values())[0]['tensor_shape']['dim'][1]['size'])
-        return input_dim
-
-    def transform_input(self, smiles, fp_radius=2, **kwargs):
-        """Transforms the input for the API model from a SMILES string to a fingerprint bit vector
-
-        Args:
-            smiles (str): SMILES string of input molecule
-            fp_radius (int): Radius of desired fingerprint. Should agree with parameter sed when model was trained
-
-        Returns:
-            list: Fingerprint bit vector as a list
-        """
-        mol = Chem.MolFromSmiles(smiles)
-        if not mol:
-            return np.zeros((self.fp_length,), dtype=np.float32)
-        return np.array(
-            AllChem.GetMorganFingerprintAsBitVect(
-                mol, fp_radius, nBits=self.fp_length, useChirality=True
-            ), dtype=np.float32
-        ).reshape(1, -1).tolist()
-    
-    def transform_output(self, pred, max_num_templates=100, max_cum_prob=0.995, **kwargs):
-        """Transforms output of API model to return the top scores and indices for the output classes (templates)
-
-        Args:
-            pred (np.array): numpy array of output from prediction
-            max_num_templates (int): Maximum number of template scores/indices to return from the prediction
-            max_cum_prob (float): Maximum cumulative probability of templates to be returned. This offers another convenient way to limit the number of templates returned to those are have been given high scores
-        """
-        scores = softmax(pred)
-        indices = np.argsort(-scores)[:max_num_templates]
-        scores = scores[indices]
-        cum_scores = np.cumsum(scores)
-        if max_cum_prob >= cum_scores[-1]:
-            truncate = -1
-        else:
-            truncate = np.argmax(cum_scores > max_cum_prob)
-        return scores[:truncate], indices[:truncate]
-
-
-class FastFilterAPIModel(TFServingAPIModel):
-    """Fast filter Tensorflow API Model. Overrides input and output transformation methods with fast filter specific methods.
-
-    Attributes:
-        hostname (str): hostname of service serving tf model.
-        model_name (str): Name of model provided to tf serving.
-        version (int): version of the model to use when serving
-    """
-    def transform_input(self, reactant_smiles, target, rxnfpsize=2048, pfpsize=2048, useFeatures=False):
-        """Transforms the input for the API model from SMILES strings to product and reaction fingerprints
-
-        Args:
-            reactant_smiles (str): SMILES string of the reactants
-            target (str): SMILES string of the target
-            rxnfpsize (int): Length of desired fingerprint for the reaction. Must agree with model input shape
-            pfpsize (int): Length of desired fingerprint for the product. Must agree with model input shape
-            useFeatures (bool): Flag to use features or not when generating fingerprint. Should agree with how model was trained
-
-        Returns:
-            list of dict: Input fingerprints, formatted for a call to the tensorflow API model
-        """
-        pfp, rfp = create_rxn_Morgan2FP_separately(
-            reactant_smiles, target, rxnfpsize=rxnfpsize, pfpsize=pfpsize, useFeatures=useFeatures
-        )
-        pfp = np.asarray(pfp, dtype='float32')
-        rfp = np.asarray(rfp, dtype='float32')
-        rxnfp = pfp - rfp
-        return [{
-            'input_1': pfp.tolist(),
-            'input_2': rxnfp.tolist()
-        }]
-    
-    def transform_output(self, pred):
-        """Transforms the output of the prediction into the fast filter score
-
-        Args:
-            pred (np.array): numpy array of the output of the prediction
-
-        Returns
-            float: the first element of the prediction is returned
-        """
-        return pred[0]
+db_comparison_map = {'>': '$gt', '>=': '$gte', '<': '$lt', '<=': '$lte', '==': '$eq'}
 
 
 @celeryd_init.connect
@@ -142,12 +44,12 @@ def configure_worker(options={}, **kwargs):
         return
     print('### STARTING UP A TREE BUILDER WORKER ###')
 
-    from askcos.retrosynthetic.transformer import RetroTransformer
+    from askcos_site.askcos_celery.treebuilder.retro_transformer_celery import RetroTransformerCelery
 
     # Instantiate and load retro transformer
     global retroTransformer
-    retroTransformer = RetroTransformer(template_prioritizer=None, fast_filter=None)
-    retroTransformer.load()
+    retroTransformer = RetroTransformerCelery(template_prioritizer=None, fast_filter=None, scscorer=scscorer.get_max_score_from_joined_smiles)
+    retroTransformer.load(load_templates=False)
     print('### TREE BUILDER WORKER STARTED UP ###')
 
 
@@ -158,7 +60,7 @@ def get_top_precursors(
         max_cum_prob=1, fast_filter_threshold=0.75,
         cluster=True, cluster_method='kmeans', cluster_feature='original',
         cluster_fp_type='morgan', cluster_fp_length=512, cluster_fp_radius=1,
-        postprocess=False, selec_check=False,
+        postprocess=False, selec_check=False, attribute_filter=[]
     ):
     """Get the precursors for a chemical defined by its SMILES.
 
@@ -186,6 +88,7 @@ def get_top_precursors(
         cluster_fp_radius (int, optional): Radius to use for fingerprint generation. (default: {1})
         postprocess (bool): Flag for performing post processing.
         selec_check (bool, optional): apply selectivity checking for precursors to find other outcomes. (default: False)
+        attribute_filter (list[dict], optional): template atrtibute filter to apply before template application
 
     Returns:
         2-tuple of (str, list of dict): SMILES string of input and top
@@ -193,12 +96,12 @@ def get_top_precursors(
     """
 
     template_relevance_hostname = 'template-relevance-{}'.format(template_set)
-    template_prioritizer = TemplateRelevanceAPIModel(
+    template_prioritizer = TFXRelevanceTemplatePrioritizer(
         hostname=template_relevance_hostname, model_name='template_relevance', version=template_prioritizer_version
     )
 
     fast_filter_hostname = 'fast-filter'
-    fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter').predict
+    fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter').predict
 
     cluster_settings = {
         'cluster_method': cluster_method,
@@ -208,6 +111,11 @@ def get_top_precursors(
         'fp_radius': cluster_fp_radius,
     }
 
+    if precursor_prioritizer == 'SCScore':
+        precursor_prioritizer = scscorer.reorder_precursors
+    else:
+        precursor_prioritizer = relevance_heuristic_prioritizer.reorder_precursors
+
     global retroTransformer
     result = retroTransformer.get_outcomes(
         smiles, template_set=template_set,
@@ -215,6 +123,7 @@ def get_top_precursors(
         fast_filter_threshold=fast_filter_threshold, template_prioritizer=template_prioritizer,
         precursor_prioritizer=precursor_prioritizer, fast_filter=fast_filter,
         cluster_precursors=cluster, cluster_settings=cluster_settings, selec_check=selec_check,
+        attribute_filter=attribute_filter
     )
     
     if postprocess:
@@ -225,24 +134,81 @@ def get_top_precursors(
         return smiles, result
 
 @shared_task
-def template_relevance(
-    smiles, max_num_templates, max_cum_prob, 
-    template_set='reaxys', template_prioritizer_version=None,
-    ):
+def template_relevance(smiles, max_num_templates, max_cum_prob,
+                       template_set='reaxys', template_prioritizer_version=None,
+                       return_templates=False, attribute_filter=None):
+    """
+    Celery task for template_relevance prediction.
+
+    If return_templates = True, return as list of dictionaries containing
+    template information.
+    """
     global retroTransformer
+
     hostname = 'template-relevance-{}'.format(template_set)
-    template_prioritizer = TemplateRelevanceAPIModel(
-        hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
+    template_prioritizer = TFXRelevanceTemplatePrioritizer(
+        hostname=hostname,
+        model_name='template_relevance',
+        version=template_prioritizer_version,
     )
 
-    scores, indices = template_prioritizer.predict(
-        smiles, max_num_templates=max_num_templates, max_cum_prob=max_cum_prob
-    )
+    scores, indices = template_prioritizer.predict(smiles, max_num_templates=None, max_cum_prob=None)
+
+    # Filter results by template attributes if needed
+    if attribute_filter:
+        query = {
+            'index': {'$in': indices.tolist()},
+            'template_set': template_set
+        }
+        for item in attribute_filter:
+            query['attributes.{}'.format(item['name'])] = {
+                db_comparison_map[item['logic']]: item['value']
+            }
+
+        result_proj = ['_id', 'index', 'reaction_smarts'] if return_templates else ['index']
+        cursor = retro_templates.find(query, result_proj)
+
+        template_map = {x['index']: x for x in cursor}
+        bool_mask = np.array([i in template_map for i in indices.tolist()])
+        scores = scores[bool_mask]
+        indices = indices[bool_mask]
+    else:
+        template_map = None
+
+    # Then trim results based on max_num_templates and max_cum_prob
+    if max_num_templates is not None:
+        scores = scores[:max_num_templates]
+        indices = indices[:max_num_templates]
+
+    if max_cum_prob is not None:
+        bool_mask = np.cumsum(scores) <= max_cum_prob
+        scores = scores[bool_mask]
+        indices = indices[bool_mask]
+
     if not isinstance(scores, list):
         scores = scores.tolist()
     if not isinstance(indices, list):
         indices = indices.tolist()
-    return scores, indices
+
+    if return_templates:
+        if template_map is None:
+            cursor = retro_templates.find({
+                    'index': {'$in': indices},
+                    'template_set': template_set
+                }, ['_id', 'index', 'reaction_smarts'])
+
+            template_map = {x['index']: x for x in cursor}
+
+        templates = [template_map[i] for i in indices]
+
+        # Add score to template document
+        for i, (score, template) in enumerate(zip(scores, templates)):
+            template['rank'] = i + 1
+            template['score'] = score
+
+        return templates
+    else:
+        return scores, indices
 
 @shared_task
 def apply_one_template_by_idx(*args, **kwargs):
@@ -254,23 +220,37 @@ def apply_one_template_by_idx(*args, **kwargs):
     """
     global retroTransformer
 
+    postprocess = kwargs.pop('postprocess', False)
+
     template_set = kwargs.get('template_set', 'reaxys')
     template_prioritizer_version = kwargs.pop('template_prioritizer_version', None)
 
     hostname = 'template-relevance-{}'.format(template_set)
-    template_prioritizer = TemplateRelevanceAPIModel(
+    template_prioritizer = TFXRelevanceTemplatePrioritizer(
         hostname=hostname, model_name='template_relevance', version=template_prioritizer_version
     )
 
     fast_filter_hostname = 'fast-filter'
-    fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter').predict
+    fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter').predict
 
     kwargs.update({
         'template_prioritizer': template_prioritizer,
         'fast_filter': fast_filter
     })
 
-    return retroTransformer.apply_one_template_by_idx(*args, **kwargs)
+    result = retroTransformer.apply_one_template_by_idx(*args, **kwargs)
+
+    if postprocess:
+        # Unpack result into list of dicts
+        # First item is the tree builder path ID which is not needed
+        result = [{
+            'smiles': r[1],
+            'template_idx': r[2],
+            'precursors': r[3],
+            'ffscore': r[4],
+        } for r in result]
+
+    return result
 
 @shared_task
 def fast_filter_check(*args, **kwargs):
@@ -284,7 +264,7 @@ def fast_filter_check(*args, **kwargs):
     """
     print('got request for fast filter')
     fast_filter_hostname = 'fast-filter'
-    fast_filter = FastFilterAPIModel(fast_filter_hostname, 'fast_filter')
+    fast_filter = TFXFastFilter(fast_filter_hostname, 'fast_filter')
     return fast_filter.predict(*args, **kwargs)
 
 
