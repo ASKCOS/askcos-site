@@ -1,8 +1,8 @@
-ARG KETCHER_VERSION=dev
+ARG KETCHER_VERSION=2.1
 ARG CORE_VERSION=dev
 ARG BASE_VERSION=2020.03.6-gh2855-py37-conda
 
-FROM askcos/ketcher:$KETCHER_VERSION as ketcher
+FROM askcos/askcos-ketcher:$KETCHER_VERSION as ketcher
 FROM askcos/askcos-core:$CORE_VERSION as core
 FROM askcos/askcos-base:$BASE_VERSION as base
 
